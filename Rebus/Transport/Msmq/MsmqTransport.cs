@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -134,12 +135,13 @@ namespace Rebus.Transport.Msmq
 
             var messageQueueTransaction = context.GetOrAdd(CurrentTransactionKey, () =>
             {
-                var messageQueueTransaction1 = new MessageQueueTransaction();
-                messageQueueTransaction1.Begin();
+                var transaction = new MessageQueueTransaction();
 
-                context.OnCommitted(async () => messageQueueTransaction1.Commit());
+                transaction.Begin();
 
-                return messageQueueTransaction1;
+                context.OnCommitted(async () => transaction.Commit());
+
+                return transaction;
             });
 
             var sendQueues = context.GetOrAdd(CurrentOutgoingQueuesKey, () =>
@@ -166,7 +168,14 @@ namespace Rebus.Transport.Msmq
                 return messageQueue;
             });
 
-            sendQueue.Send(logicalMessage, messageQueueTransaction);
+            try
+            {
+                sendQueue.Send(logicalMessage, messageQueueTransaction);
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not sent to MSMQ queue with path '{sendQueue.Path}'");
+            }
         }
 
         /// <summary>
