@@ -16,7 +16,10 @@ namespace Rebus.ServiceProvider.Tests
 
         public void CleanUp()
         {
-            _serviceCollection.Clear();
+            var serviceProvider = _serviceCollection.BuildServiceProvider();
+            var bus = serviceProvider.GetService<IBus>();
+
+            bus.Dispose();
         }
 
         public IHandlerActivator GetActivator()
