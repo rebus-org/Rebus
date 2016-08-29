@@ -234,11 +234,17 @@ namespace Rebus.AmazonSQS
                                 var messageAttributes = CreateAttributesFromHeaders(headers);
                                 var delaySeconds = GetDelaySeconds(headers);
 
-                                return new SendMessageBatchRequestEntry(messageId, body)
+                                var entry = new SendMessageBatchRequestEntry(messageId, body)
                                 {
                                     MessageAttributes = messageAttributes,
-                                    DelaySeconds = delaySeconds,
                                 };
+
+                                if (delaySeconds != null)
+                                {
+                                    entry.DelaySeconds = delaySeconds.Value;
+                                }
+
+                                return entry;
                             })
                             .ToList();
 
@@ -256,10 +262,10 @@ namespace Rebus.AmazonSQS
                 );
         }
 
-        static int GetDelaySeconds(IReadOnlyDictionary<string, string> headers)
+        static int? GetDelaySeconds(IReadOnlyDictionary<string, string> headers)
         {
             string deferUntilTime;
-            if (!headers.TryGetValue(Headers.DeferredUntil, out deferUntilTime)) return 0;
+            if (!headers.TryGetValue(Headers.DeferredUntil, out deferUntilTime)) return null;
 
             var deferUntilDateTimeOffset = deferUntilTime.ToDateTimeOffset();
 

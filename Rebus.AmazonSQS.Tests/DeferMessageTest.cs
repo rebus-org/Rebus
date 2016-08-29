@@ -57,13 +57,13 @@ namespace Rebus.AmazonSQS.Tests
             });
 
             var bus = _configurer.Start();
+            var sendTime = DateTime.UtcNow;
 
             await bus.Defer(TimeSpan.FromSeconds(10), "hej med dig!");
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(20));
 
-            var now = DateTime.UtcNow;
-            var elapsed = now - receiveTime;
+            var elapsed = receiveTime - sendTime;
 
             Assert.That(elapsed, Is.GreaterThan(TimeSpan.FromSeconds(8)));
         }
