@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using Rebus.Tests.Contracts.Sagas;
-using Rebus.Tests.Persistence.SqlServer;
 
 namespace Rebus.AzureStorage.Tests.Sagas
 {
@@ -8,8 +7,8 @@ namespace Rebus.AzureStorage.Tests.Sagas
     public class AzureStorageSagaStorageBasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<AzureStorageSagaStorageFactory> { }
 
     [TestFixture, Category(TestCategory.Azure)]
-    public class AzureStoragerSagaStorageConcurrencyHandling : ConcurrencyHandling<SqlServerSagaStorageFactory> { }
+    public class AzureStoragerSagaStorageConcurrencyHandling : ConcurrencyHandling<AzureStorageSagaStorageFactory> { }
 
     [TestFixture, Category(TestCategory.Azure)]
-    public class AzureStorageSagaStorageSagaIntegrationTests : SagaIntegrationTests<SqlServerSagaStorageFactory> { }
+    public class AzureStorageSagaStorageSagaIntegrationTests : SagaIntegrationTests<AzureStorageSagaStorageFactory> { }
 }

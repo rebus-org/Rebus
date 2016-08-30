@@ -11,15 +11,6 @@ using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Integration.ManyMessages
 {
-    [TestFixture]
-    public class MsmqTestManyMessages : TestManyMessages<MsmqBusFactory> { }
-
-    [TestFixture]
-    public class InMemTestManyMessages : TestManyMessages<InMemoryBusFactory> { }
-
-    [TestFixture]
-    public class SqlServerTestManyMessages : TestManyMessages<SqlServerBusFactory> { }
-
     public abstract class TestManyMessages<TBusFactory> : FixtureBase where TBusFactory : IBusFactory, new()
     {
         TBusFactory _busFactory;

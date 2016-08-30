@@ -10,18 +10,10 @@ using Rebus.Handlers;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 using Rebus.Tests.Extensions;
-using Rebus.Tests.Persistence.InMem;
-using Rebus.Tests.Persistence.SqlServer;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
-    public class TestSagaCorrelationInMem : TestSagaCorrelation<InMemorySagaStorageFactory> { }
-
-    [TestFixture]
-    public class TestSagaCorrelationSql : TestSagaCorrelation<SqlServerSagaStorageFactory> { }
-
     public abstract class TestSagaCorrelation<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         TFactory _factory;

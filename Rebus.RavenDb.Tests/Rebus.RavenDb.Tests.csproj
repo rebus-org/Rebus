@@ -110,10 +110,6 @@
       <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
       <Name>Rebus.Tests.Contracts</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rebus.Tests\Rebus.Tests.csproj">
-      <Project>{959c65ab-d21a-4582-bc4f-06d1425ff274}</Project>
-      <Name>Rebus.Tests</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7d7b7b36-6298-4e85-9a0e-1b415c5b9d12}</Project>
       <Name>Rebus</Name>

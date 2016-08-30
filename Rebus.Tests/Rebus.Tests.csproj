@@ -107,7 +107,11 @@
     <Compile Include="DataBus\TestSqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Encryption\TestDisableEncryption.cs" />
-    <Compile Include="Integration\ManyMessages\IBusFactory.cs" />
+    <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
+    <Compile Include="Persistence\SqlServer\TestSagaCorrelationSql.cs" />
+    <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
+    <Compile Include="Transport\Msmq\MsmqTestManyMessages.cs" />
+    <Compile Include="Transport\SqlServer\SqlServerTestManyMessages.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />
@@ -201,13 +205,11 @@
     <Compile Include="Integration\TestBugWhenSendingMessagesInParallel.cs" />
     <Compile Include="Integration\TestEncryptionAndCompressionTogether.cs" />
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
-    <Compile Include="Integration\ManyMessages\TestManyMessages.cs" />
     <Compile Include="Integration\TestHandlerReordering.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageExpiration.cs" />
     <Compile Include="Integration\TestNumberOfSqlConnections.cs" />
     <Compile Include="Integration\TestPolymorphicDispatch.cs" />
-    <Compile Include="Integration\TestSagaCorrelation.cs" />
     <Compile Include="Integration\TestSqlAllTheWay.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Integration\TestAsyncHandler.cs" />
