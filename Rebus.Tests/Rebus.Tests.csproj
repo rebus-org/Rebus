@@ -169,9 +169,6 @@
     <Compile Include="Sagas\TestIdCorrelation\Scenario1.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
-    <Compile Include="Serialization\Default\BigObject.cs" />
-    <Compile Include="Serialization\Default\RootObject.cs" />
-    <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\JsonSerializerTests.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
@@ -227,8 +224,6 @@
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManagerFactory.cs" />
     <Compile Include="Pipeline\TestPipelineLogging.cs" />
     <Compile Include="Pipeline\TestPipelineStepInjector.cs" />
-    <Compile Include="Serialization\BasicSerializationTests.cs" />
-    <Compile Include="Serialization\Default\TestDynamicJil.cs" />
     <Compile Include="Serialization\JsonSerializerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="Timers\TestAsyncTask.cs" />

@@ -67,6 +67,11 @@
     <Compile Include="Extensions\TestEx.cs" />
     <Compile Include="Extensions\TestTransportEx.cs" />
     <Compile Include="FixtureBase.cs" />
+    <Compile Include="Serialization\BasicSerializationTests.cs" />
+    <Compile Include="Serialization\Default\BigObject.cs" />
+    <Compile Include="Serialization\Default\RootObject.cs" />
+    <Compile Include="Serialization\Default\TestDynamicJil.cs" />
+    <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="TestConfig.cs" />
     <Compile Include="Utilities\ListLoggerFactory.cs" />
     <Compile Include="Utilities\LogLine.cs" />
