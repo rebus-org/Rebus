@@ -100,6 +100,10 @@
       <Project>{0b17644e-52c5-4756-8745-d78f2a52c08f}</Project>
       <Name>Rebus.ServiceProvider</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
+      <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
+      <Name>Rebus.Tests.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.Tests\Rebus.Tests.csproj">
       <Project>{959c65ab-d21a-4582-bc4f-06d1425ff274}</Project>
       <Name>Rebus.Tests</Name>

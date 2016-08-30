@@ -4,5 +4,7 @@ using Rebus.Tests.Contracts.Sagas;
 namespace Rebus.PostgreSql.Tests.Sagas
 {
     [TestFixture, Category(TestCategory.Postgres)]
-    public class SagaIntegrationTests : SagaIntegrationTests<PostgreSqlSagaStorageFactory> { }
+    public class SagaIntegrationTests : SagaIntegrationTests<PostgreSqlSagaStorageFactory>
+    {
+    }
 }

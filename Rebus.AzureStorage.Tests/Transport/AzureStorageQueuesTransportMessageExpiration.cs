@@ -4,5 +4,7 @@ using Rebus.Tests.Contracts.Transports;
 namespace Rebus.AzureStorage.Tests.Transport
 {
     [TestFixture, Category(TestCategory.Azure)]
-    public class AzureStorageQueuesTransportMessageExpiration : MessageExpiration<AzureStorageQueuesTransportFactory> { }
+    public class AzureStorageQueuesTransportMessageExpiration : MessageExpiration<AzureStorageQueuesTransportFactory>
+    {
+    }
 }

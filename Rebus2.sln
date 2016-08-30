@@ -224,6 +224,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ServiceProvider", "Re
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ServiceProvider.Tests", "Rebus.ServiceProvider.Tests\Rebus.ServiceProvider.Tests.csproj", "{9A24DD7A-7C30-49B6-B949-BF8F360E9F51}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Tests.Contracts", "Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj", "{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -486,6 +488,10 @@ Global
 		{9A24DD7A-7C30-49B6-B949-BF8F360E9F51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A24DD7A-7C30-49B6-B949-BF8F360E9F51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A24DD7A-7C30-49B6-B949-BF8F360E9F51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -592,5 +598,6 @@ Global
 		{A4EE4FB9-85F7-4217-BB5F-E570914BD81A} = {CC6FE9CA-29DB-4A6B-99D2-44772F47AE05}
 		{0B17644E-52C5-4756-8745-D78F2A52C08F} = {A4EE4FB9-85F7-4217-BB5F-E570914BD81A}
 		{9A24DD7A-7C30-49B6-B949-BF8F360E9F51} = {A4EE4FB9-85F7-4217-BB5F-E570914BD81A}
+		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB} = {63AB64A3-A453-4663-BDB6-530F2136609D}
 	EndGlobalSection
 EndGlobal

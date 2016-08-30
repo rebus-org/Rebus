@@ -96,6 +96,10 @@
       <Project>{DD32B8FB-6D0D-4FF1-9659-EDAA6DB5A93F}</Project>
       <Name>Rebus.AzureServiceBus</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
+      <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
+      <Name>Rebus.Tests.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.Tests\Rebus.Tests.csproj">
       <Project>{959C65AB-D21A-4582-BC4F-06D1425FF274}</Project>
       <Name>Rebus.Tests</Name>

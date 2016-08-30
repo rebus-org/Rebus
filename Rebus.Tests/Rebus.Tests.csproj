@@ -132,8 +132,6 @@
     <Compile Include="Contracts\Sagas\TestCorrelationProperty.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
-    <Compile Include="Contracts\Timeouts\BasicStoreAndRetrieveOperations.cs" />
-    <Compile Include="Contracts\Timeouts\ITimeoutManagerFactory.cs" />
     <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
     <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
@@ -239,7 +237,6 @@
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
     <Compile Include="Extensions\TestEx.cs" />
     <Compile Include="Extensions\TestTransportEx.cs" />
-    <Compile Include="FixtureBase.cs" />
     <Compile Include="Integration\TestAsyncHandler.cs" />
     <Compile Include="Integration\TestConfigurationApi.cs" />
     <Compile Include="Integration\TestPublishSubscribe.cs" />
@@ -279,6 +276,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
+      <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
+      <Name>Rebus.Tests.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
       <Name>Rebus</Name>

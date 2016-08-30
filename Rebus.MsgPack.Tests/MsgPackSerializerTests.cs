@@ -4,5 +4,7 @@ using Rebus.Tests.Serialization;
 namespace Rebus.MsgPack.Tests
 {
     [TestFixture]
-    public class MsgPackSerializerTests : BasicSerializationTests<MsgPackSerializerFactory> { }
+    public class MsgPackSerializerTests : BasicSerializationTests<MsgPackSerializerFactory>
+    {
+    }
 }
