@@ -28,8 +28,8 @@ namespace Rebus.Tests
         public static string QueueName(string nameBase)
         {
             var queueName = GenerateQueueName(nameBase);
-            
-            Console.WriteLine("Using queue name {0}", queueName);
+
+            Console.WriteLine($"Using queue name {queueName}");
             
             return queueName;
         }
