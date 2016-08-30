@@ -3,7 +3,7 @@ using System.Configuration;
 using System.IO;
 using Microsoft.WindowsAzure.Storage;
 
-namespace Rebus.AzureStorage.Tests.Transport
+namespace Rebus.AzureStorage.Tests
 {
     public class AzureStorageFactoryBase
     {

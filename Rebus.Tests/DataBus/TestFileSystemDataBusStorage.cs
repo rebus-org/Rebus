@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.DataBus.FileSystem;
 using Rebus.Logging;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 
 namespace Rebus.Tests.DataBus

@@ -1,7 +1,7 @@
 ﻿using System;
 using Rebus.Logging;
 
-namespace Rebus.Tests
+namespace Rebus.Tests.Contracts.Utilities
 {
     public class LogLine
     {

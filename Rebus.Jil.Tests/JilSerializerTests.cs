@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Rebus.Tests.Serialization;
+using Rebus.Tests.Contracts.Serialization;
 
 namespace Rebus.Jil.Tests
 {

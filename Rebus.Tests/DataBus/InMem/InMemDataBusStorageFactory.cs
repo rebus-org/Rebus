@@ -1,7 +1,8 @@
 using Rebus.DataBus;
 using Rebus.DataBus.InMem;
+using Rebus.Tests.Contracts.DataBus;
 
-namespace Rebus.Tests.Contracts.DataBus.Factories
+namespace Rebus.Tests.DataBus.InMem
 {
     public class InMemDataBusStorageFactory : IDataBusStorageFactory
     {

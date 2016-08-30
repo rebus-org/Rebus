@@ -13,7 +13,7 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Timer = System.Timers.Timer;
 
-namespace Rebus.Tests.Extensions
+namespace Rebus.Tests.Contracts.Extensions
 {
     public static class TestEx
     {

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Testing;
 using Rebus.Testing.Events;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Testing
 {

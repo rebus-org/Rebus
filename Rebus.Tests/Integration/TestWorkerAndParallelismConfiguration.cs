@@ -3,6 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 using Rebus.Workers;
 

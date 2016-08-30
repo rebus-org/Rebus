@@ -6,10 +6,10 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Serialization.Default
+namespace Rebus.Tests.Contracts.Serialization.Default
 {
     [TestFixture]
     public class TestDynamicCapabilityOfDefaultSerializer : FixtureBase

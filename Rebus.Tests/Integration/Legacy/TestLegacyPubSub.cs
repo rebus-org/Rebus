@@ -13,6 +13,8 @@ using Rebus.Extensions;
 using Rebus.Legacy;
 using Rebus.Routing.TypeBased;
 using Rebus.Subscriptions;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
 

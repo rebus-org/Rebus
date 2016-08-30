@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using SimpleInjector;
 
 namespace Rebus.SimpleInjector.Tests

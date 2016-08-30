@@ -5,6 +5,7 @@ using Owin;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Owin.Tests

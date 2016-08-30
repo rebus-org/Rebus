@@ -8,7 +8,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Rebus.Compression;
 using Rebus.DataBus;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Time;
 
 namespace Rebus.Tests.Contracts.DataBus

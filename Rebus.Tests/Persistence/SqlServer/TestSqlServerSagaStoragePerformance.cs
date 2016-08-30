@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {

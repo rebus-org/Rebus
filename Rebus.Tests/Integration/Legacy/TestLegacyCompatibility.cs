@@ -11,6 +11,8 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Legacy;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
 

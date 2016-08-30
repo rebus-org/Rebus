@@ -3,6 +3,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
 namespace Rebus.XmlConfig.Tests

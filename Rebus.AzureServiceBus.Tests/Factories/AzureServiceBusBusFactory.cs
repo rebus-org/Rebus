@@ -7,7 +7,8 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests;
-using Rebus.Tests.Integration.ManyMessages;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Transports;
 using Rebus.Threading.TaskParallelLibrary;
 
 namespace Rebus.AzureServiceBus.Tests.Factories

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Sagas;
 using Rebus.Testing;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Testing
 {

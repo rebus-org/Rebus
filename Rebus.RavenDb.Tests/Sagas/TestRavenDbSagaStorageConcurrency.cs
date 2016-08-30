@@ -11,7 +11,8 @@ using Rebus.RavenDb.Sagas;
 using Rebus.RavenDb.Tests.Sagas.Models;
 using Rebus.Sagas;
 using Rebus.Tests;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 
 namespace Rebus.RavenDb.Tests.Sagas

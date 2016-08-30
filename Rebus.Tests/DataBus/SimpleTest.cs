@@ -11,6 +11,8 @@ using Rebus.Config;
 using Rebus.DataBus;
 using Rebus.DataBus.InMem;
 using Rebus.Routing.TypeBased;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 

@@ -8,6 +8,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Tests.Contracts;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;
 

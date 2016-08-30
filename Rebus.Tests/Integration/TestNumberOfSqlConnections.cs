@@ -9,6 +9,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
+using Rebus.Tests.Contracts;
 using Rebus.Threading;
 using Rebus.Transport.SqlServer;
 using Timer = System.Timers.Timer;

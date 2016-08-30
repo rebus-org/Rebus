@@ -8,11 +8,10 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Sagas;
-using Rebus.Tests.Contracts.Sagas;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Contracts.Sagas
 {
     public abstract class TestSagaCorrelation<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {

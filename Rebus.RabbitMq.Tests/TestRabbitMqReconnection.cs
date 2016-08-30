@@ -11,6 +11,8 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
+
 #pragma warning disable 1998
 
 namespace Rebus.RabbitMq.Tests

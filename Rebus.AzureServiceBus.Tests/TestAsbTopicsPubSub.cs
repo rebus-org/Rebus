@@ -7,7 +7,8 @@ using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Tests;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 
 namespace Rebus.AzureServiceBus.Tests
 {

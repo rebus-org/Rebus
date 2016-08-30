@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Sagas;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 
 namespace Rebus.Tests.Contracts.Sagas
 {

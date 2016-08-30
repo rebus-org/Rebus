@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Handlers;
+using Rebus.Tests.Contracts;
 using Rebus.Transport;
 
 namespace Rebus.Tests.Activation

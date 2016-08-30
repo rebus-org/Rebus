@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rebus.Tests
+namespace Rebus.Tests.Contracts
 {
     public class TestConfig
     {

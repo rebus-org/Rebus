@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Subscriptions;
+using Rebus.Tests.Contracts;
 using Rebus.Transport;
 
 namespace Rebus.Tests.Integration

@@ -5,6 +5,7 @@ using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Logging;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration

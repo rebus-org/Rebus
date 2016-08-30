@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using Rebus.Encryption;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Encryption
 {

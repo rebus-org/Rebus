@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Time;
 
-namespace Rebus.Tests
+namespace Rebus.Tests.Contracts
 {
     public abstract class FixtureBase
     {

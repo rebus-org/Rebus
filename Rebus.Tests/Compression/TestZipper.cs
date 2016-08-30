@@ -5,6 +5,7 @@ using System.Text;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Compression;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Compression
 {

@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
 
-namespace Rebus.Tests.Extensions
+namespace Rebus.Tests.Contracts.Extensions
 {
     public static class TestTransportEx
     {

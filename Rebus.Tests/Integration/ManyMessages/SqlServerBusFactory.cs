@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport.SqlServer;
 
 namespace Rebus.Tests.Integration.ManyMessages

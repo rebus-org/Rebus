@@ -8,6 +8,8 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Retry.Simple;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 

@@ -14,6 +14,8 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 

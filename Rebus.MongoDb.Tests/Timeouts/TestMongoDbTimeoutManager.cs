@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.MongoDb.Timeouts;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Timeouts;
 using Rebus.Timeouts;
 

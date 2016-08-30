@@ -7,8 +7,8 @@
     <ProjectGuid>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rebus.Contracts</RootNamespace>
-    <AssemblyName>Rebus.Contracts</AssemblyName>
+    <RootNamespace>Rebus.Tests.Contracts</RootNamespace>
+    <AssemblyName>Rebus.Tests.Contracts</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -28,6 +28,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Rebus.Tests.Contracts.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FluentAssertions, Version=4.13.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">

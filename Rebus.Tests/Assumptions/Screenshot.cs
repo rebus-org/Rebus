@@ -2,6 +2,7 @@
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Assumptions.Worker.Messages;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Assumptions

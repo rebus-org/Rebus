@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
+using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Sagas;
 
 namespace Rebus.Tests.Bugs

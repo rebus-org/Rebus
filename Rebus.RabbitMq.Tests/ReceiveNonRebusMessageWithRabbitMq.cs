@@ -11,7 +11,8 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Tests;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 
 #pragma warning disable 1998
 

@@ -10,6 +10,8 @@ using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Routing.TransportMessages;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;

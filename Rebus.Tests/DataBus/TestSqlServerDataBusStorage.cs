@@ -9,6 +9,8 @@ using NUnit.Framework;
 using Rebus.DataBus.SqlServer;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 
 namespace Rebus.Tests.DataBus

@@ -8,7 +8,7 @@ using Rebus.AmazonSQS.Config;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
-using Rebus.Tests.Integration.ManyMessages;
+using Rebus.Tests.Contracts.Transports;
 using Rebus.Threading.TaskParallelLibrary;
 
 namespace Rebus.AmazonSQS.Tests

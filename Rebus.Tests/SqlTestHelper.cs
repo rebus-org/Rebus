@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using Rebus.Persistence.SqlServer;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests
 {

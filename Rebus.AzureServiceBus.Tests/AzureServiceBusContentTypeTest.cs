@@ -4,6 +4,7 @@ using Rebus.Activation;
 using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Config;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.AzureServiceBus.Tests
 {

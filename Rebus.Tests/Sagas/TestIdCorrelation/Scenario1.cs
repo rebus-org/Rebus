@@ -5,6 +5,8 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Sagas.TestIdCorrelation

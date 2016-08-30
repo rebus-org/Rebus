@@ -1,7 +1,7 @@
 ﻿using ProtoBuf.Meta;
 using Rebus.Serialization;
-using Rebus.Tests.Serialization;
-using Rebus.Tests.Serialization.Default;
+using Rebus.Tests.Contracts.Serialization;
+using Rebus.Tests.Contracts.Serialization.Default;
 
 namespace Rebus.Protobuf.Tests
 {

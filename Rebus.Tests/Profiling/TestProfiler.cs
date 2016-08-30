@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Profiling;
+using Rebus.Tests.Contracts;
 using Rebus.Transport;
 
 namespace Rebus.Tests.Profiling

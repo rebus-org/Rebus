@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Rebus.Bus;
 
-namespace Rebus.Tests.Integration.ManyMessages
+namespace Rebus.Tests.Contracts.Transports
 {
     public interface IBusFactory
     {

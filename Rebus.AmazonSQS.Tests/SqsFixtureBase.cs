@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Rebus.Messages;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests

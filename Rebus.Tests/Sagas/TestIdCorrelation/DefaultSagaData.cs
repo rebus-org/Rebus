@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Rebus.Sagas;
+using Rebus.Tests.Contracts.Utilities;
 
 namespace Rebus.Tests.Sagas.TestIdCorrelation
 {

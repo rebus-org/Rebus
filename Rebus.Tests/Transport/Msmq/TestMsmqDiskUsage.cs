@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Transport.Msmq

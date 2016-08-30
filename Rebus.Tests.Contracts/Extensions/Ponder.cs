@@ -1,7 +1,7 @@
 using System;
 using System.Linq.Expressions;
 
-namespace Rebus.Tests.Extensions
+namespace Rebus.Tests.Contracts.Extensions
 {
     class Reflect
     {

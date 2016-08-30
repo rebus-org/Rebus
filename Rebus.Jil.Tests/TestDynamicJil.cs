@@ -7,7 +7,8 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Jil.Tests

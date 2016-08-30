@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration.ManyMessages

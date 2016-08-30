@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.RavenDb.Tests.Subscriptions
 {

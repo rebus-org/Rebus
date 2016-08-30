@@ -4,6 +4,9 @@ using Rebus.Activation;
 using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Config;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Utilities;
+
 #pragma warning disable 1998
 
 namespace Rebus.AzureServiceBus.Tests

@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 using Timer = System.Timers.Timer;
 
-namespace Rebus.Tests
+namespace Rebus.Tests.Contracts.Utilities
 {
     /// <summary>
     /// Shared counter that can be used across threads to perform some specific number of actions

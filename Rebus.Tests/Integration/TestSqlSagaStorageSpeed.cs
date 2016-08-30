@@ -8,6 +8,8 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration

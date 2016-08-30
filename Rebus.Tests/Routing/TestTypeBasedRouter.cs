@@ -5,6 +5,8 @@ using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Routing.TypeBased;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Utilities;
 
 namespace Rebus.Tests.Routing
 {

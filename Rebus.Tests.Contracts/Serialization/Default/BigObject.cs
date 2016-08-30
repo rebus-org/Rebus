@@ -1,4 +1,4 @@
-﻿namespace Rebus.Tests.Serialization.Default
+﻿namespace Rebus.Tests.Contracts.Serialization.Default
 {
     public class BigObject
     {

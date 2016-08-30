@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Integration

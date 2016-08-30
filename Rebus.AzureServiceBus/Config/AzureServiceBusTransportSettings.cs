@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rebus.Config
+namespace Rebus.AzureServiceBus.Config
 {
     /// <summary>
     /// Allows for configuring additional options for the Azure Service Bus transport

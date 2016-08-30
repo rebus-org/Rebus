@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Contracts;
 using Rebus.Tests.Timers.Factories;
 
 #pragma warning disable 1998

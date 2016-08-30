@@ -3,8 +3,9 @@ using System.IO;
 using Rebus.DataBus;
 using Rebus.DataBus.FileSystem;
 using Rebus.Logging;
+using Rebus.Tests.Contracts.DataBus;
 
-namespace Rebus.Tests.Contracts.DataBus.Factories
+namespace Rebus.Tests.DataBus.FileSystem
 {
     public class FileSystemDataBusStorageFactory : IDataBusStorageFactory
     {

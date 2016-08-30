@@ -7,6 +7,7 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Async.Tests

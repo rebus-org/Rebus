@@ -10,6 +10,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.RabbitMq.Tests
 {

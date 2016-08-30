@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Rebus.Logging;
 
-namespace Rebus.Tests
+namespace Rebus.Tests.Contracts.Utilities
 {
     public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine>
     {

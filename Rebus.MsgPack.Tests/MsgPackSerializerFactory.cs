@@ -1,5 +1,5 @@
 ﻿using Rebus.Serialization;
-using Rebus.Tests.Serialization;
+using Rebus.Tests.Contracts.Serialization;
 
 namespace Rebus.MsgPack.Tests
 {

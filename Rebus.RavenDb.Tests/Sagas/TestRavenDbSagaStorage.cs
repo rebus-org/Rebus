@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Rebus.RavenDb.Tests.Sagas.Models;
 using Rebus.Sagas;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Sagas;
 
 namespace Rebus.RavenDb.Tests.Sagas

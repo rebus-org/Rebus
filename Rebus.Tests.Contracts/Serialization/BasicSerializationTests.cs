@@ -8,9 +8,9 @@ using Rebus.DataBus;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Serialization;
-using Rebus.Tests.Serialization.Default;
+using Rebus.Tests.Contracts.Serialization.Default;
 
-namespace Rebus.Tests.Serialization
+namespace Rebus.Tests.Contracts.Serialization
 {
     public class BasicSerializationTests<TSerializerFactory> : FixtureBase where TSerializerFactory : ISerializerFactory, new()
     {

@@ -10,7 +10,7 @@ using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.Handlers;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998

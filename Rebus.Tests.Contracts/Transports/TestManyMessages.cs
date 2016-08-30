@@ -5,11 +5,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Extensions;
 using Timer = System.Timers.Timer;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration.ManyMessages
+namespace Rebus.Tests.Contracts.Transports
 {
     public abstract class TestManyMessages<TBusFactory> : FixtureBase where TBusFactory : IBusFactory, new()
     {

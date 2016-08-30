@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Tests;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.AmazonSQS.Tests
 {

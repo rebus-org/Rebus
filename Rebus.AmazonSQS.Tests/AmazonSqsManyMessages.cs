@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Rebus.Tests.Integration.ManyMessages;
+using Rebus.Tests.Contracts.Transports;
 
 namespace Rebus.AmazonSQS.Tests
 {

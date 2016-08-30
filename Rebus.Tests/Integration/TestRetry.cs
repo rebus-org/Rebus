@@ -10,6 +10,8 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Retry.Simple;
 using Rebus.Routing.TypeBased;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
 #pragma warning disable 1998
