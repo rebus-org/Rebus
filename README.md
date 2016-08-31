@@ -1,12 +1,6 @@
 # Rebus 2
 
-#### _"As friendly as machinely possible."_
-
-NOTE: This is Rebus2 - if you've used Rebus before up until version 0.84.0, you will experience a minor bump in the road when you update to 0.90.0, which functions as the beta versions until Rebus 2.0.0 is ready!
-
-Moreover - since the wiki actually contains quite a bit of content - please be patient until the content has been updated to reflect Rebus 2 :)
-
-![Bedford OB](https://raw.githubusercontent.com/rebus-org/Rebus/master/artwork/little_rebusbus2_copy-200x200.png)
+![](https://raw.githubusercontent.com/rebus-org/Rebus/master/artwork/little_rebusbus2_copy-200x200.png)
 
 [![install from nuget](https://img.shields.io/nuget/v/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
 
