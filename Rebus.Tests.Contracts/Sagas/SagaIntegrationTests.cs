@@ -155,7 +155,7 @@ namespace Rebus.Tests.Contracts.Sagas
                 })
                 .Start();
 
-            const int millisecondsDelay = 300;
+            const int millisecondsDelay = 500;
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -178,8 +178,8 @@ namespace Rebus.Tests.Contracts.Sagas
             Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
             await bus.SendLocal(new SagaMessage { Id = 70 });
             await Task.Delay(millisecondsDelay);
-            await Task.Delay(millisecondsDelay);
-            await Task.Delay(millisecondsDelay);
+
+            await Task.Delay(3 * millisecondsDelay);
 
             var expected = new[]
             {
