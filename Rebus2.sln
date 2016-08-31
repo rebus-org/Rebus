@@ -12,10 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus", "Rebus\Rebus.csproj
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{1692C59F-82DB-43D3-9982-C883B99E38B2}"
 	ProjectSection(SolutionItems) = preProject
-		scripts\build.bat = scripts\build.bat
-		scripts\build.proj = scripts\build.proj
-		scripts\push.bat = scripts\push.bat
-		scripts\release.bat = scripts\release.bat
+		scripts\build.cmd = scripts\build.cmd
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.NewtonsoftJson", "Rebus.NewtonsoftJson\Rebus.NewtonsoftJson.csproj", "{9D2E0972-0006-4CBA-8DC9-3B5A0D3571ED}"
