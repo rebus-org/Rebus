@@ -4,7 +4,7 @@ set version=%1
 
 set clean=%~dp0\clean.cmd
 set buildpackage=%~dp0\build-package.cmd
-
+set push=%~dp0\push.cmd
 
 
 
@@ -21,6 +21,10 @@ if not exist "%buildpackage%" (
   exit /b 1
 )
 
+if not exist "%push%" (
+  echo Could not find %push%
+  exit /b 1
+)
 
 
 
@@ -52,5 +56,17 @@ if %ERRORLEVEL% neq 0 (
 call %buildpackage% Rebus.Forklift.Common %1
 if %ERRORLEVEL% neq 0 (
   echo Could not build Rebus common forklift things.
+  exit /b 1
+)
+
+
+
+
+
+REM == PUSH PACKAGES ==
+
+call %push% %1
+if %ERRORLEVEL% neq 0 (
+  echo Could not push packages.
   exit /b 1
 )
