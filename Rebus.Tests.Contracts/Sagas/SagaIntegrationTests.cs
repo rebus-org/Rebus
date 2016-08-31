@@ -181,15 +181,32 @@ namespace Rebus.Tests.Contracts.Sagas
             await Task.Delay(millisecondsDelay);
             await Task.Delay(millisecondsDelay);
 
-            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
-            Assert.That(events.ToArray(), Is.EqualTo(new[]
+            var expected = new[]
             {
                 "70:1",
                 "70:2",
                 "70:3", // it is marked as completed here
                 "70:1",
                 "70:2",
-            }));
+            };
+
+            var actual = events.ToArray();
+
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
+            Assert.That(actual, Is.EqualTo(expected), $@"Received events 
+
+{string.Join(Environment.NewLine, actual)}
+
+did not match expected
+
+{string.Join(Environment.NewLine, expected)}
+
+Five events with ID = 70 are sent. The saga stamps 'events' down along with the number of
+messages it has processed - e.g. 70:2 means 'Message with ID 70 handled as the 2nd message'.
+
+The saga was supposed to receive the first three events and then mark itself as completed.
+After that, the last two events should have been received.
+");
         }
 
         class TestSaga : Saga<TestSagaData>, IAmInitiatedBy<SagaMessage>
