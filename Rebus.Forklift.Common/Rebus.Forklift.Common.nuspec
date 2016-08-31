@@ -1,26 +1,25 @@
 <?xml version="1.0"?>
 <package>
   <metadata>
-    <id>Rebus.AzureServiceBus</id>
+    <id>Rebus.Forklift.Common</id>
     <version>$version$</version>
-    <title>Rebus.AzureServiceBus</title>
+    <title>Rebus.Forklift.Common</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
     <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Azure Service Bus transport for Rebus</description>
+    <description>common forklift stuff to help with new implementations</description>
     <copyright>Copyright 2012-2016</copyright>
-    <tags>rebus azure azure-service-bus</tags>
+    <tags>rebus queue messaging service bus</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="Microsoft.WindowsAzure.ConfigurationManager" version="3.1.0" />
-        <dependency id="WindowsAzure.ServiceBus" version="3.2.1" />
+      <dependency id="Rebus" version="0.99.74" />
+      <dependency id="GoCommando" version="0.3" />
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Rebus.AzureServiceBus.dll" target="lib\NET45" />
-    <file src="bin\Release\Rebus.AzureServiceBus.xml" target="lib\NET45" />
+    <file src="bin\Release\Rebus.Forklift.Common.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.Forklift.Common.xml" target="lib\NET45" />
   </files>
 </package>
