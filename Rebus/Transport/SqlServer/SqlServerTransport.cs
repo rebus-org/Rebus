@@ -347,12 +347,12 @@ VALUES
                     {
                         command.CommandText =
                             $@"
-DELETE FROM [{_tableName}] 
-    WHERE [id] IN (
-        SELECT TOP 1 [id] FROM [{_tableName}] WITH (ROWLOCK, READPAST)
-            WHERE [recipient] = @recipient 
-                AND [expiration] < getdate()
-    )
+;with TopCTE as (
+	SELECT TOP 1 [id] FROM [{_tableName}] WITH (ROWLOCK, READPAST)
+				WHERE [recipient] = @recipient 
+					AND [expiration] < getdate()
+)
+DELETE FROM TopCTE
 ";
                         command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
