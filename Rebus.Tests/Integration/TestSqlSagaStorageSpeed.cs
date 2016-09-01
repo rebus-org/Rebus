@@ -17,8 +17,8 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestSqlSagaStorageSpeed : FixtureBase
     {
-        readonly string _dataTableName = TestConfig.QueueName("sagas");
-        readonly string _indexTableName = TestConfig.QueueName("sagaindex");
+        readonly string _dataTableName = TestConfig.GetName("sagas");
+        readonly string _indexTableName = TestConfig.GetName("sagaindex");
 
         BuiltinHandlerActivator _activator;
 

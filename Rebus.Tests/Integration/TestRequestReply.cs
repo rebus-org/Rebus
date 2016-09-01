@@ -18,7 +18,7 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(Categories.Msmq)]
     public class TestRequestReply : FixtureBase
     {
-        static readonly string InputQueueName = TestConfig.QueueName("test.input");
+        static readonly string InputQueueName = TestConfig.GetName("test.input");
 
         IBus _bus;
         BuiltinHandlerActivator _handlerActivator;

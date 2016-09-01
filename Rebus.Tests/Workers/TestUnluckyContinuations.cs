@@ -24,7 +24,7 @@ namespace Rebus.Tests.Workers
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            var queueName = TestConfig.QueueName("unlucky_continuations");
+            var queueName = TestConfig.GetName("unlucky_continuations");
 
             MsmqUtil.PurgeQueue(queueName);
 

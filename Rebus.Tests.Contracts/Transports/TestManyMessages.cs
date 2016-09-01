@@ -33,7 +33,7 @@ namespace Rebus.Tests.Contracts.Transports
             var sentMessages = 0;
             var receivedMessages = 0;
             var stopWatch = new Stopwatch();
-            var inputQueueAddress = TestConfig.QueueName("input1");
+            var inputQueueAddress = TestConfig.GetName("input1");
 
             var bus1 = _busFactory.GetBus<MessageWithId>(inputQueueAddress, async msg =>
                  {

@@ -16,7 +16,7 @@ namespace Rebus.Tests.Integration.ManyMessages
 
         public IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler)
         {
-            var queueName = TestConfig.QueueName(inputQueueAddress);
+            var queueName = TestConfig.GetName(inputQueueAddress);
             MsmqUtil.Delete(queueName);
 
             var builtinHandlerActivator = new BuiltinHandlerActivator();

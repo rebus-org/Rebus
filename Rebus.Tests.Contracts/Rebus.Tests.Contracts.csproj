@@ -52,8 +52,6 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Activation\BuiltinContainerAdapterFactory.cs" />
-    <Compile Include="Activation\BuiltinHandlerActivatorContainerTests.cs" />
     <Compile Include="Activation\ContainerTests.cs" />
     <Compile Include="Activation\IContainerAdapterFactory.cs" />
     <Compile Include="Activation\RealContainerTests.cs" />
@@ -103,9 +101,7 @@
       <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataBus\Factories\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

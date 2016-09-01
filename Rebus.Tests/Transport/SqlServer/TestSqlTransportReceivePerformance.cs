@@ -20,7 +20,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
         const string QueueName = "perftest";
 
-        static readonly string TableName = TestConfig.QueueName("Messages");
+        static readonly string TableName = TestConfig.GetName("Messages");
 
         static readonly string IndexCreationScriptToCheck = $@"
 CREATE INDEX IX_{TableName.ToUpperInvariant()}_ID

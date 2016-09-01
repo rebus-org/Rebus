@@ -49,10 +49,10 @@ namespace Rebus.Tests.Routing
             var transportConfigurer = GetTransportConfigurer(transportType);
 
             var workers = new[] {"worker1", "worker2", "worker3", "worker4"}
-                .Select(TestConfig.QueueName)
+                .Select(TestConfig.GetName)
                 .ToArray();
 
-            var distributorQueueName = TestConfig.QueueName("distributor");
+            var distributorQueueName = TestConfig.GetName("distributor");
 
             if (transportType == "msmq")
             {

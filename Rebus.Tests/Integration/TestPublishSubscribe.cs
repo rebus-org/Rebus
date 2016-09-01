@@ -17,8 +17,8 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestPublishSubscribe : FixtureBase
     {
-        static readonly string SubscriberInputQueue = TestConfig.QueueName("test.pubsub.subscriber@" + Environment.MachineName);
-        static readonly string PublisherInputQueue = TestConfig.QueueName("test.pubsub.publisher@" + Environment.MachineName);
+        static readonly string SubscriberInputQueue = TestConfig.GetName("test.pubsub.subscriber@" + Environment.MachineName);
+        static readonly string PublisherInputQueue = TestConfig.GetName("test.pubsub.publisher@" + Environment.MachineName);
 
         BuiltinHandlerActivator _subscriberHandlers;
 

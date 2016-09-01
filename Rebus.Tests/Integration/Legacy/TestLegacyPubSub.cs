@@ -58,8 +58,8 @@ namespace Rebus.Tests.Integration.Legacy
 
         protected override void SetUp()
         {
-            _newEndpoint = TestConfig.QueueName("newendpoint");
-            _oldEndpoint = TestConfig.QueueName("oldendpoint");
+            _newEndpoint = TestConfig.GetName("newendpoint");
+            _oldEndpoint = TestConfig.GetName("oldendpoint");
 
             MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(_newEndpoint));
             MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(_oldEndpoint));

@@ -33,7 +33,7 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task HasOneWayClient()
         {
-            var receiverQueue = TestConfig.QueueName("receiver");
+            var receiverQueue = TestConfig.GetName("receiver");
             
             var client = _factory.CreateOneWayClient();
             var receiver = _factory.Create(receiverQueue);
@@ -58,7 +58,7 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task EmptyQueueReturnsNull()
         {
-            var emptyQueue = _factory.Create(TestConfig.QueueName("empty"));
+            var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
 
             await WithContext(async context =>
             {
@@ -71,8 +71,8 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task CanSendAndReceive()
         {
-            var input1QueueName = TestConfig.QueueName("input1");
-            var input2QueueName = TestConfig.QueueName("input2");
+            var input1QueueName = TestConfig.GetName("input1");
+            var input2QueueName = TestConfig.GetName("input2");
 
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
@@ -94,8 +94,8 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task MessageIsNotSentWhenTransactionIsNotCompleted()
         {
-            var input1QueueName = TestConfig.QueueName("input1");
-            var input2QueueName = TestConfig.QueueName("input2");
+            var input1QueueName = TestConfig.GetName("input1");
+            var input2QueueName = TestConfig.GetName("input2");
 
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
@@ -117,8 +117,8 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task MessageIsReturnedToQueueWhenReceivingTransactionIsNotCommitted()
         {
-            var input1QueueName = TestConfig.QueueName("input1");
-            var input2QueueName = TestConfig.QueueName("input2");
+            var input1QueueName = TestConfig.GetName("input1");
+            var input2QueueName = TestConfig.GetName("input2");
 
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
@@ -156,7 +156,7 @@ namespace Rebus.Tests.Contracts.Transports
         [TestCase(false)]
         public async Task MultipleSentMessagesCanBeRolledBack(bool commitAndExpectTheMessagesToBeSent)
         {
-            var inputQueueName = TestConfig.QueueName("input");
+            var inputQueueName = TestConfig.GetName("input");
             var input = _factory.Create(inputQueueName);
 
             await WithContext(async ctx =>

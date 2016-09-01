@@ -17,7 +17,7 @@ namespace Rebus.Tests.Integration.Sql
     [TestFixture, Category(Categories.SqlServer)]
     public class NativeDeferTest : FixtureBase
     {
-        static readonly string QueueName = TestConfig.QueueName("input");
+        static readonly string QueueName = TestConfig.GetName("input");
         BuiltinHandlerActivator _activator;
         IBus _bus;
 

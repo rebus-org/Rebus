@@ -15,7 +15,7 @@ namespace Rebus.Tests.Transport.Msmq
             var activator = Using(new BuiltinHandlerActivator());
 
             Configure.With(activator)
-                .Transport(t => t.UseMsmq(TestConfig.QueueName("idle")))
+                .Transport(t => t.UseMsmq(TestConfig.GetName("idle")))
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(20);

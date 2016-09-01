@@ -15,7 +15,7 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(Categories.Msmq)]
     public class TestMessageExpiration : FixtureBase
     {
-        readonly string _inputQueueName = TestConfig.QueueName("expiration");
+        readonly string _inputQueueName = TestConfig.GetName("expiration");
 
         protected override void SetUp()
         {

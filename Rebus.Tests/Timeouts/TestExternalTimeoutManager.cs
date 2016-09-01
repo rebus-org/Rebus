@@ -22,8 +22,8 @@ namespace Rebus.Tests.Timeouts
     [TestFixture, Category(Categories.Msmq)]
     public class TestExternalTimeoutManager : FixtureBase
     {
-        readonly string _queueName = TestConfig.QueueName("client");
-        readonly string _queueNameTimeoutManager = TestConfig.QueueName("manager");
+        readonly string _queueName = TestConfig.GetName("client");
+        readonly string _queueNameTimeoutManager = TestConfig.GetName("manager");
 
         ManualResetEvent _gotTheMessage;
         IBus _bus;

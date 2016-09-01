@@ -28,7 +28,7 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task ReceivesNonExpiredMessage()
         {
-            var queueName = TestConfig.QueueName("expiration");
+            var queueName = TestConfig.GetName("expiration");
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
@@ -62,7 +62,7 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task DoesNotReceiveExpiredMessage()
         {
-            var queueName = TestConfig.QueueName("expiration");
+            var queueName = TestConfig.GetName("expiration");
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
@@ -96,7 +96,7 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task ReceivesAlmostExpiredMessage()
         {
-            var queueName = TestConfig.QueueName("expiration");
+            var queueName = TestConfig.GetName("expiration");
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 

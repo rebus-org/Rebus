@@ -15,7 +15,7 @@ namespace Rebus.Tests.Timeouts
     [TestFixture, Category(Categories.Msmq)]
     public class TestInternalTimeoutManager : FixtureBase
     {
-        readonly string _queueName = TestConfig.QueueName("timeouts");
+        readonly string _queueName = TestConfig.GetName("timeouts");
 
         [Test]
         public async Task WorksOutOfTheBoxWithInternalTimeoutManager()

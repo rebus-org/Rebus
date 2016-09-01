@@ -32,12 +32,12 @@ namespace Rebus.Tests.Integration
         {
             _receivedMessages = new ConcurrentQueue<string>();
 
-            _bus1 = CreateBus(TestConfig.QueueName("bus1"), async str => { });
-            _bus2 = CreateBus(TestConfig.QueueName("bus2"), async str =>
+            _bus1 = CreateBus(TestConfig.GetName("bus1"), async str => { });
+            _bus2 = CreateBus(TestConfig.GetName("bus2"), async str =>
             {
                 _receivedMessages.Enqueue("bus2 got " + str);
             });
-            _bus3 = CreateBus(TestConfig.QueueName("bus3"), async str =>
+            _bus3 = CreateBus(TestConfig.GetName("bus3"), async str =>
             {
                 _receivedMessages.Enqueue("bus3 got " + str);
             });

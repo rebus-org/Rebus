@@ -20,8 +20,8 @@ namespace Rebus.Tests.Persistence.SqlServer
             var loggerFactory = new ConsoleLoggerFactory(false);
             var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, loggerFactory);
 
-            var dataTableName = TestConfig.QueueName("sagas");
-            var indexTableName = TestConfig.QueueName("sagaindex");
+            var dataTableName = TestConfig.GetName("sagas");
+            var indexTableName = TestConfig.GetName("sagaindex");
 
             SqlTestHelper.DropTable(indexTableName);
             SqlTestHelper.DropTable(dataTableName);

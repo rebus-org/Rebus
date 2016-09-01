@@ -17,7 +17,7 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(Categories.Msmq)]
     public class TestReceivePerformance : FixtureBase
     {
-        static readonly string InputQueueName = TestConfig.QueueName("test.performance.input");
+        static readonly string InputQueueName = TestConfig.GetName("test.performance.input");
 
         protected override void SetUp()
         {

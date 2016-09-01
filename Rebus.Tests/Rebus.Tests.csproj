@@ -77,6 +77,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Activation\BuiltinContainerAdapterFactory.cs" />
+    <Compile Include="Activation\BuiltinHandlerActivatorContainerTests.cs" />
     <Compile Include="Activation\TestBuiltinHandlerActivator.cs" />
     <Compile Include="Assumptions\CanDoReflection.cs" />
     <Compile Include="Assumptions\Screenshot.cs" />
@@ -245,7 +247,9 @@
     <Compile Include="Workers\ThreadWorkerUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">

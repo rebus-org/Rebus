@@ -22,7 +22,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
         protected override void SetUp()
         {
-            var queueName = TestConfig.QueueName("connection_timeout");
+            var queueName = TestConfig.GetName("connection_timeout");
 
             _activator = new BuiltinHandlerActivator();
 

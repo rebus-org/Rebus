@@ -20,7 +20,7 @@ namespace Rebus.Tests.Transport.Msmq
             using (var activator = new BuiltinHandlerActivator())
             {
                 Configure.With(activator)
-                    .Transport(t => t.UseMsmq(TestConfig.QueueName("receive-timeout")))
+                    .Transport(t => t.UseMsmq(TestConfig.GetName("receive-timeout")))
                     .Start();
 
                 Thread.Sleep(1000);

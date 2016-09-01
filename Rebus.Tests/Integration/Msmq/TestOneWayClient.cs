@@ -22,7 +22,7 @@ namespace Rebus.Tests.Integration.Msmq
 
         protected override void SetUp()
         {
-            _serverInputQueueName = TestConfig.QueueName("server");
+            _serverInputQueueName = TestConfig.GetName("server");
             
             _server = Using(new BuiltinHandlerActivator());
 

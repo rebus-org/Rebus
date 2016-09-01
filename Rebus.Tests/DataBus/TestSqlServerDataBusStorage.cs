@@ -25,7 +25,7 @@ namespace Rebus.Tests.DataBus
             var loggerFactory = new ConsoleLoggerFactory(false);
             var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, loggerFactory);
 
-            var tableName = TestConfig.QueueName("data");
+            var tableName = TestConfig.GetName("data");
 
             SqlTestHelper.DropTable(tableName);
 

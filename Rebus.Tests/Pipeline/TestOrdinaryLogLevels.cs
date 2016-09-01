@@ -25,7 +25,7 @@ namespace Rebus.Tests.Pipeline
 
             Configure.With(_activator)
                 .Logging(l => l.Use(_logs))
-                .Transport(t => t.UseSqlServer(SqlTestHelper.ConnectionString, "messages", TestConfig.QueueName("log-levels")))
+                .Transport(t => t.UseSqlServer(SqlTestHelper.ConnectionString, "messages", TestConfig.GetName("log-levels")))
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);

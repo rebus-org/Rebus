@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Rebus.Tests.Contracts
 {
@@ -23,25 +24,30 @@ namespace Rebus.Tests.Contracts
         }
 
         /// <summary>
-        /// Gets a (possibly agent-qualified) queue name, which allows for tests to run in parallel
+        /// Gets a (possibly agent-qualified) name, which allows for tests to run in parallel.
+        /// Useful when there is a shared resource, like global or machine-wide queues, databases, etc.
         /// </summary>
-        public static string QueueName(string nameBase)
+        public static string GetName(string nameBase)
         {
-            var queueName = GenerateQueueName(nameBase);
+            var name = GenerateName(nameBase);
 
-            Console.WriteLine($"Using queue name {queueName}");
+            Console.WriteLine($"Generated name {name}");
             
-            return queueName;
+            return name;
         }
 
-        static string GenerateQueueName(string nameBase)
+        static string GenerateName(string nameBase)
         {
             if (nameBase.Contains("@"))
             {
                 var tokens = nameBase.Split('@');
 
-                return $"{tokens[0]}{Suffix}@{tokens[1]}";
+                var head = tokens.First();
+                var tail = string.Join("@", tokens.Skip(1));
+
+                return $"{head}{Suffix}@{tail}";
             }
+
             return $"{nameBase}{Suffix}";
         }
     }

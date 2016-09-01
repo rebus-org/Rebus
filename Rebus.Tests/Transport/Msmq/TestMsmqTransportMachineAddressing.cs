@@ -17,7 +17,7 @@ namespace Rebus.Tests.Transport.Msmq
     [TestFixture]
     public class TestMsmqTransportMachineAddressing : FixtureBase
     {
-        readonly string _queueName = TestConfig.QueueName("input");
+        readonly string _queueName = TestConfig.GetName("input");
         MsmqTransport _transport;
         CancellationToken _cancellationToken;
 

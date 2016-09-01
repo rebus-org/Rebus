@@ -13,7 +13,7 @@ namespace Rebus.Tests.Transport.Msmq
     [Description("Verify sane behavior when a mangled (possibly non-Rebus) message is received")]
     public class TestMsmqMangledMessage : FixtureBase
     {
-        readonly string _inputQueueName = TestConfig.QueueName("mangled-message");
+        readonly string _inputQueueName = TestConfig.GetName("mangled-message");
 
         protected override void SetUp()
         {

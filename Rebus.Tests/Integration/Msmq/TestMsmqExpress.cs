@@ -23,7 +23,7 @@ namespace Rebus.Tests.Integration.Msmq
 
         protected override void SetUp()
         {
-            var queueName = TestConfig.QueueName("expressperf");
+            var queueName = TestConfig.GetName("expressperf");
 
             MsmqUtil.Delete(queueName);
 

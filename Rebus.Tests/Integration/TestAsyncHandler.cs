@@ -18,7 +18,7 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestAsyncHandler : FixtureBase
     {
-        static readonly string InputQueueName = TestConfig.QueueName("test.async.input");
+        static readonly string InputQueueName = TestConfig.GetName("test.async.input");
         IBus _bus;
         BuiltinHandlerActivator _handlerActivator;
 
