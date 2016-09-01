@@ -230,7 +230,11 @@ After that, the last two events should have been received.
                 Data.CorrelationId = message.Id;
                 Data.NumberOfProcessedMessages++;
 
-                _stuff.Enqueue($"{Data.CorrelationId}:{Data.NumberOfProcessedMessages}");
+                var eventString = $"{Data.CorrelationId}:{Data.NumberOfProcessedMessages}";
+
+                Printt($"Enqueueing '{eventString}'");
+                
+                _stuff.Enqueue(eventString);
 
                 if (Data.NumberOfProcessedMessages >= _maxNumberOfProcessedMessages)
                 {
