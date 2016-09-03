@@ -67,7 +67,11 @@ namespace Rebus.Bus
         {
             _log.Info("Starting bus {0}", _busId);
 
+            _busLifetimeEvents.RaiseBusStarting();
+
             SetNumberOfWorkers(numberOfWorkers);
+
+            _busLifetimeEvents.RaiseBusStarted();
 
             _log.Info("Started");
         }

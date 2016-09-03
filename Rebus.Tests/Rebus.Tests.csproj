@@ -109,6 +109,7 @@
     <Compile Include="DataBus\TestSqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Encryption\TestDisableEncryption.cs" />
+    <Compile Include="Events\TestBusLifetimeEvents.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Persistence\SqlServer\TestSagaCorrelationSql.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
