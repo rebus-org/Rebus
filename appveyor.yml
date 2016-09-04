@@ -1,2 +1,6 @@
 before_build:
   - nuget restore
+
+
+services:
+  - mssql2016
