@@ -1043,6 +1043,9 @@
 * Update Autofac dependency to 4.0.1
 * Fix bug in Amazon SQS transport that would cause it to be unable to receive messages if the last created queue was not the transport's own input queue
 
+# 2.0.0-a2
+
+* Improve SQL transport expired messages cleanup to hit an index - thanks [xenoputtss]
 
 
 
