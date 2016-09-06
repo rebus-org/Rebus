@@ -30,6 +30,8 @@ namespace Rebus.Tests.Contracts.Utilities
                     {
                         Console.WriteLine($"Succeeded after {attempts} attempts");
                     }
+
+                    return;
                 }
                 catch (Exception exception)
                 {

@@ -19,7 +19,7 @@ namespace Rebus.Persistence.FileSystem
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (basePath == null) throw new ArgumentNullException(nameof(basePath));
 
-            configurer.Register(c => new FilesystemSagaStorage(basePath, c.Get<IRebusLoggerFactory>()));
+            configurer.Register(c => new FileSystemSagaStorage(basePath, c.Get<IRebusLoggerFactory>()));
         }
     }
 }

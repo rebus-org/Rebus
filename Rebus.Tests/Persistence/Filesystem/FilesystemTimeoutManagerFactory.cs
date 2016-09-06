@@ -14,7 +14,7 @@ namespace Rebus.Tests.Persistence.Filesystem
 
         public ITimeoutManager Create()
         {
-            return new FilesystemTimeoutManager(_basePath, new ConsoleLoggerFactory(false));
+            return new FileSystemTimeoutManager(_basePath, new ConsoleLoggerFactory(false));
         }
 
         public void Cleanup()

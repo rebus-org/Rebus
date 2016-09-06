@@ -14,7 +14,7 @@ namespace Rebus.Tests.Persistence.Filesystem
 
         public ISagaStorage GetSagaStorage()
         {
-            return new FilesystemSagaStorage(_basePath, new ConsoleLoggerFactory(false));
+            return new FileSystemSagaStorage(_basePath, new ConsoleLoggerFactory(false));
         }
 
         public void CleanUp()

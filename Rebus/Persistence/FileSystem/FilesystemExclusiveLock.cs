@@ -5,11 +5,12 @@ using Rebus.Logging;
 
 namespace Rebus.Persistence.FileSystem
 {
-    class FilesystemExclusiveLock : IDisposable
+    class FileSystemExclusiveLock : IDisposable
     {
         readonly FileStream _fileStream;
+        bool _disposed;
 
-        public FilesystemExclusiveLock(string pathToLock, ILog log)
+        public FileSystemExclusiveLock(string pathToLock, ILog log)
         {
             EnsureTargetFile(pathToLock, log);
 
@@ -67,7 +68,17 @@ namespace Rebus.Persistence.FileSystem
 
         public void Dispose()
         {
-            _fileStream.Unlock(0,1);
+            if (_disposed) return;
+
+            try
+            {
+                _fileStream.Unlock(0, 1);
+                _fileStream.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }

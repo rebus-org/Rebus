@@ -12,7 +12,7 @@ namespace Rebus.Persistence.FileSystem
     /// <summary>
     /// Implementation of <see cref="ISagaStorage"/> that uses the file system to store data
     /// </summary>
-    public class FilesystemSagaStorage : ISagaStorage
+    public class FileSystemSagaStorage : ISagaStorage
     {
         const string IdPropertyName = nameof(ISagaData.Id);
         readonly string _basePath;
@@ -22,7 +22,7 @@ namespace Rebus.Persistence.FileSystem
         /// <summary>
         /// Creates the saga storage using the given <paramref name="basePath"/> 
         /// </summary>
-        public FilesystemSagaStorage(string basePath, IRebusLoggerFactory rebusLoggerFactory)
+        public FileSystemSagaStorage(string basePath, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (basePath == null) throw new ArgumentNullException(nameof(basePath));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
@@ -36,9 +36,9 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            using (new FilesystemExclusiveLock(_lockFile, _log))
+            using (new FileSystemExclusiveLock(_lockFile, _log))
             {
-                var index = new FilesystemSagaIndex(_basePath);
+                var index = new FileSystemSagaIndex(_basePath);
                 if (propertyName == IdPropertyName)
                 {
                     var sagaData = index.FindById((Guid) propertyValue);
@@ -59,9 +59,9 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            using (new FilesystemExclusiveLock(_lockFile, _log))
+            using (new FileSystemExclusiveLock(_lockFile, _log))
             {
-                var index = new FilesystemSagaIndex(_basePath);
+                var index = new FileSystemSagaIndex(_basePath);
                 var id = GetId(sagaData);
                 if (sagaData.Revision != 0)
                 {
@@ -83,9 +83,9 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            using (new FilesystemExclusiveLock(_lockFile, _log))
+            using (new FileSystemExclusiveLock(_lockFile, _log))
             {
-                var index = new FilesystemSagaIndex(_basePath);
+                var index = new FileSystemSagaIndex(_basePath);
                 var id = GetId(sagaData);
                 var existingCopy = index.FindById(id);
                 if (existingCopy == null)
@@ -107,9 +107,9 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task Delete(ISagaData sagaData)
         {
-            using (new FilesystemExclusiveLock(_lockFile, _log))
+            using (new FileSystemExclusiveLock(_lockFile, _log))
             {
-                var index = new FilesystemSagaIndex(_basePath);
+                var index = new FileSystemSagaIndex(_basePath);
                 var id = sagaData.Id;
                 if (!index.Contains(id))
                 {
