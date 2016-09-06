@@ -41,7 +41,11 @@ namespace Rebus.Tests.Contracts.Sagas
 
             await _sagaStorage.Update(loadedData1, _noCorrelationProperties);
 
-            Assert.Throws<ConcurrencyException>(async () => await _sagaStorage.Update(loadedData2, _noCorrelationProperties));
+            var aggregateException = Assert.Throws<AggregateException>(() => _sagaStorage.Update(loadedData2, _noCorrelationProperties).Wait());
+
+            var baseException = aggregateException.GetBaseException();
+
+            Assert.That(baseException, Is.TypeOf<ConcurrencyException>());
         }
 
         class SomeSagaData : ISagaData
