@@ -142,7 +142,14 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaDataWithDefaultId = new AnotherSagaData { Id = Guid.Empty };
 
-            Assert.Throws<InvalidOperationException>(async () => await _sagaStorage.Insert(sagaDataWithDefaultId, _noCorrelationProperties));
+            var aggregateException = Assert.Throws<AggregateException>(() =>
+            {
+                _sagaStorage.Insert(sagaDataWithDefaultId, _noCorrelationProperties).Wait();
+            });
+
+            var baseException = aggregateException.GetBaseException();
+
+            Assert.That(baseException, Is.TypeOf<InvalidOperationException>());
         }
 
         [Test]
