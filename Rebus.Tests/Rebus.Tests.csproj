@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus.Tests</RootNamespace>
     <AssemblyName>Rebus.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -110,6 +111,7 @@
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Encryption\TestDisableEncryption.cs" />
     <Compile Include="Events\TestBusLifetimeEvents.cs" />
+    <Compile Include="LocalAddin.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Persistence\SqlServer\TestSagaCorrelationSql.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
@@ -150,7 +152,6 @@
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
     <Compile Include="Integration\TestTypeHeader.cs" />
     <Compile Include="Integration\TestWorkerAndParallelismConfiguration.cs" />
-    <Compile Include="LocalAddin.cs" />
     <Compile Include="Profiling\TestDispatchPerformance.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemSagaStorageBasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemSagaStorageConcurrencyHandling.cs" />
@@ -249,11 +250,6 @@
     <Compile Include="Workers\ThreadWorkerUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
       <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
       <Name>Rebus.Tests.Contracts</Name>
@@ -263,7 +259,9 @@
       <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
