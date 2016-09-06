@@ -14,6 +14,7 @@ using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Encryption
 {
@@ -56,6 +57,7 @@ namespace Rebus.Tests.Encryption
             const string plainTextMessage = "hej med dig min ven!!!";
 
             var gotTheMessage = new ManualResetEvent(false);
+
             _builtinHandlerActivator.Handle<string>(async str =>
             {
                 gotTheMessage.Set();
@@ -71,8 +73,8 @@ namespace Rebus.Tests.Encryption
             var sentMessageBodyAsString = Encoding.UTF8.GetString(sentMessage.Body);
             var receivedMessageBodyAsString = Encoding.UTF8.GetString(receivedMessage.Body);
 
-            Assert.That(sentMessageBodyAsString, Is.Not.StringContaining(plainTextMessage));
-            Assert.That(receivedMessageBodyAsString, Is.Not.StringContaining(plainTextMessage));
+            Assert.That(sentMessageBodyAsString, Does.Not.Contain(plainTextMessage));
+            Assert.That(receivedMessageBodyAsString, Does.Not.Contain(plainTextMessage));
         }
     }
 }

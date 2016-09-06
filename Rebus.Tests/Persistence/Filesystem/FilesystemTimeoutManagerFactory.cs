@@ -1,20 +1,17 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Persistence.FileSystem;
 using Rebus.Tests.Contracts.Timeouts;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Timeouts;
 
 namespace Rebus.Tests.Persistence.Filesystem
 {
-    [TestFixture, Category(Categories.Filesystem)]
-    public class FilesystemBasicStoreAndRetrieveOperations : BasicStoreAndRetrieveOperations<FilesystemTimeoutManagerFactory>
-    {
-    }
     public class FilesystemTimeoutManagerFactory : ITimeoutManagerFactory
     {
-        private string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,$"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
+        readonly string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
+
         public ITimeoutManager Create()
         {
             return new FilesystemTimeoutManager(_basePath, new ConsoleLoggerFactory(false));
@@ -22,11 +19,7 @@ namespace Rebus.Tests.Persistence.Filesystem
 
         public void Cleanup()
         {
-            try
-            {
-                Directory.Delete(_basePath, true);
-            }
-            catch(IOException ex) { }
+            DeleteHelper.DeleteDirectory(_basePath);
         }
 
         public string GetDebugInfo()

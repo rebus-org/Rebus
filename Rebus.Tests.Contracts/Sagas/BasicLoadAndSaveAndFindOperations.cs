@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Extensions;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Sagas
 {
@@ -92,7 +93,7 @@ namespace Rebus.Tests.Contracts.Sagas
             var invalidOperationException = ex.InnerExceptions.OfType<InvalidOperationException>().Single();
             Console.WriteLine(ex);
 
-            Assert.That(invalidOperationException.Message, Is.StringContaining("revision must be 0 on first insert"));
+            Assert.That(invalidOperationException.Message, Does.Contain("revision must be 0 on first insert"));
         }
 
         public class JustSomeSagaData : ISagaData

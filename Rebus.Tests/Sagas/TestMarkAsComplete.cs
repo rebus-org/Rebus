@@ -8,6 +8,7 @@ using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Sagas
 {

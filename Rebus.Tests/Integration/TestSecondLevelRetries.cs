@@ -12,7 +12,6 @@ using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -122,8 +121,8 @@ namespace Rebus.Tests.Integration
 
             Console.WriteLine(errorDetails);
 
-            Assert.That(errorDetails, Is.StringContaining("1st level!!"));
-            Assert.That(errorDetails, Is.StringContaining("2nd level!!"));
+            Assert.That(errorDetails, Does.Contain("1st level!!"));
+            Assert.That(errorDetails, Does.Contain("2nd level!!"));
         }
 
         [Test]

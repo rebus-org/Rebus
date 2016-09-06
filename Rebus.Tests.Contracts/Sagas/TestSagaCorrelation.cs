@@ -10,6 +10,7 @@ using Rebus.Handlers;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Sagas
 {

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Utilities;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Sagas.TestIdCorrelation
 {

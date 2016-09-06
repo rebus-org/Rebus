@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
 using Rebus.Transport.FileSystem;
 
@@ -29,10 +30,7 @@ namespace Rebus.Tests.Transport.FileSystem
 
         public void CleanUp()
         {
-            if (Directory.Exists(_baseDirectory))
-            {
-                Directory.Delete(_baseDirectory, true);
-            }
+            DeleteHelper.DeleteDirectory(_baseDirectory);
         }
     }
 }

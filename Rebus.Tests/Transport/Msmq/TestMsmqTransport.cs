@@ -439,7 +439,7 @@ namespace Rebus.Tests.Transport.Msmq
 
                             transaction.Commit();
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             transaction.Abort();
                         }

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Sagas;
 using Rebus.Testing;
 using Rebus.Tests.Contracts;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Testing
 {

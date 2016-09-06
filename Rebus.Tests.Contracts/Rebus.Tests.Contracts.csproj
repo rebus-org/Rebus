@@ -73,6 +73,7 @@
     <Compile Include="TestConfig.cs" />
     <Compile Include="Transports\IBusFactory.cs" />
     <Compile Include="Transports\TestManyMessages.cs" />
+    <Compile Include="Utilities\DeleteHelper.cs" />
     <Compile Include="Utilities\ListLoggerFactory.cs" />
     <Compile Include="Utilities\LogLine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -4,6 +4,7 @@ using Rebus.DataBus;
 using Rebus.DataBus.FileSystem;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.DataBus;
+using Rebus.Tests.Contracts.Utilities;
 
 namespace Rebus.Tests.DataBus.FileSystem
 {
@@ -33,7 +34,9 @@ namespace Rebus.Tests.DataBus.FileSystem
             if (!Directory.Exists(DirectoryPath)) return;
 
             Console.WriteLine($"Removing directory '{DirectoryPath}'");
-            Directory.Delete(DirectoryPath, true);
+
+            DeleteHelper.DeleteDirectory(DirectoryPath);
+
         }
     }
 }

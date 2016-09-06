@@ -10,7 +10,7 @@ using Rebus.DataBus.FileSystem;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
+using Rebus.Tests.Contracts.Utilities;
 
 namespace Rebus.Tests.DataBus
 {
@@ -23,10 +23,7 @@ namespace Rebus.Tests.DataBus
         {
             var directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "databustest");
 
-            if (Directory.Exists(directoryPath))
-            {
-                Directory.Delete(directoryPath, true);
-            }
+            DeleteHelper.DeleteDirectory(directoryPath);
 
             _storage = new FileSystemDataBusStorage(directoryPath, new ConsoleLoggerFactory(false));
             _storage.Initialize();

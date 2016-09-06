@@ -43,7 +43,9 @@ namespace Rebus.Tests.Workers
                 .Transport(t => t.UseInMemoryTransport(_network, "threadpool-workers-test"))
                 .Options(o =>
                 {
+#pragma warning disable 618
                     o.UseClassicRebusWorkersMessageDispatch();
+#pragma warning restore 618
 
                     o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(1);

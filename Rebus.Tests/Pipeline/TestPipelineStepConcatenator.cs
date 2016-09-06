@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Pipeline;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Pipeline
 {
@@ -63,6 +64,5 @@ namespace Rebus.Tests.Pipeline
         {
             public async Task Process(IncomingStepContext context, Func<Task> next) { }
         }
-
     }
 }

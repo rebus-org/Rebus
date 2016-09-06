@@ -4,6 +4,7 @@ using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
 {

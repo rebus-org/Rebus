@@ -8,6 +8,7 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Serialization.Default
 {
