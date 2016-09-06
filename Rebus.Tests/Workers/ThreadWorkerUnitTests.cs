@@ -16,12 +16,14 @@ using Rebus.Workers.ThreadBased;
 
 namespace Rebus.Tests.Workers
 {
-    [TestFixture]
+    [TestFixture, Ignore("ThreadWorker is obsolete anyway")]
     public class ThreadWorkerUnitTests
     {
         [Test, AutoData]
-        public void Dispose_WaitsDefinedTimeout_WhenPendingTasksTakeLonger(string workerName)
+        public void Dispose_WaitsDefinedTimeout_WhenPendingTasksTakeLonger()
         {
+            var workerName = $"worker-{DateTime.Now}";
+
             // arrange
             var transport = A.Fake<ITransport>();
             var pipeline = A.Fake<IPipeline>();
@@ -71,8 +73,10 @@ namespace Rebus.Tests.Workers
         }
 
         [Test, AutoData]
-        public void Dispose_DoesNotWaitDefinedTimeout_WhenNoPendingTasks(string workerName)
+        public void Dispose_DoesNotWaitDefinedTimeout_WhenNoPendingTasks()
         {
+            var workerName = $"worker-{DateTime.Now}";
+
             // arrange
             var transport = A.Fake<ITransport>();
             var pipeline = A.Fake<IPipeline>();
@@ -120,8 +124,10 @@ namespace Rebus.Tests.Workers
         }
 
         [Test, AutoData]
-        public void Dispose_WaitsForTaskToComplete_WhenItTakesLessThanDefinedTimeout(string workerName)
+        public void Dispose_WaitsForTaskToComplete_WhenItTakesLessThanDefinedTimeout()
         {
+            var workerName = $"worker-{DateTime.Now}";
+
             // arrange
             var transport = A.Fake<ITransport>();
             var pipeline = A.Fake<IPipeline>();
@@ -180,8 +186,10 @@ namespace Rebus.Tests.Workers
         }
 
         [Test, AutoData]
-        public async Task Stop_Logs_WhenOperationCanceledExceptionOccuresInTransport(string workerName)
+        public async Task Stop_Logs_WhenOperationCanceledExceptionOccuresInTransport()
         {
+            var workerName = $"worker-{DateTime.Now}";
+
             // arrange
             var transport = A.Fake<ITransport>();
             var pipeline = A.Fake<IPipeline>();
