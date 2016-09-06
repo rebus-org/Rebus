@@ -316,11 +316,11 @@ namespace Rebus.Config
                 return internalHandlersContributor;
             });
 
-            var butResolutionResult = _injectionist.Get<IBus>();
-            var busInstance = butResolutionResult.Instance;
+            var busResolutionResult = _injectionist.Get<IBus>();
+            var busInstance = busResolutionResult.Instance;
 
             // if there is a container adapter among the tracked instances, hand it the bus instance
-            var containerAdapter = butResolutionResult.TrackedInstances
+            var containerAdapter = busResolutionResult.TrackedInstances
                 .OfType<IContainerAdapter>()
                 .FirstOrDefault();
 
