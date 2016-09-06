@@ -36,8 +36,8 @@ namespace Rebus.Tests.Integration.Msmq
                 .Start();
         }
 
-        [TestCase(10000, true, Ignore = true)]
-        [TestCase(10000, false, Ignore = true)]
+        [TestCase(10000, true, Ignore = "takes a long time")]
+        [TestCase(10000, false, Ignore = "takes a long time")]
         [TestCase(100, true)]
         [TestCase(100, false)]
         public async Task TestPerformance(int messageCount, bool express)

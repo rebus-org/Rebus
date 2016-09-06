@@ -48,9 +48,9 @@ CREATE INDEX IX_{TableName.ToUpperInvariant()}_ID
         [TestCase(1000, true, false)]
         [TestCase(1000, true, true)]
         [TestCase(1000, false, false)]
-        [TestCase(10000, true, false, Ignore = true, IgnoreReason = "run manually")]
-        [TestCase(10000, true, true, Ignore = true, IgnoreReason = "run manually")]
-        [TestCase(10000, false, false, Ignore = true, IgnoreReason = "run manually")]
+        [TestCase(10000, true, false, Ignore = "run manually")]
+        [TestCase(10000, true, true, Ignore= "run manually")]
+        [TestCase(10000, false, false, Ignore= "run manually")]
         public async Task NizzleName(int messageCount, bool useNewIndexScript, bool dropOldIndex)
         {
             if (useNewIndexScript)

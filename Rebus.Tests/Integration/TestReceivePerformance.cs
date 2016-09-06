@@ -29,7 +29,7 @@ namespace Rebus.Tests.Integration
             MsmqUtil.Delete(InputQueueName);
         }
 
-        [TestCase(10000, 5, Ignore = true)]
+        [TestCase(10000, 5, Ignore = "takes a long time")]
         [TestCase(100, 5)]
         public async Task NizzleName(int numberOfMessages, int numberOfWorkers)
         {
