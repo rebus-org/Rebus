@@ -10,6 +10,7 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration.Msmq
 {
@@ -43,7 +44,7 @@ namespace Rebus.Tests.Integration.Msmq
 
             _server.Handle<string>(async str =>
             {
-                Console.WriteLine("Got string: {0}", str);
+                Console.WriteLine($"Got string: {str}");
                 gotIt.Set();
             });
 

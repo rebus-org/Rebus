@@ -9,6 +9,7 @@ using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {

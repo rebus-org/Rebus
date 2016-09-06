@@ -278,8 +278,6 @@
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
     <Compile Include="Subscriptions\ISubscriptionStorage.cs" />
-    <Compile Include="Routing\TopicBased\TopicBasedRouter.cs" />
-    <Compile Include="Routing\TopicBased\TopicBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Sagas\CorrelationProperty.cs" />
     <Compile Include="Sagas\ICorrelationConfig.cs" />
     <Compile Include="Sagas\ISagaStorage.cs" />

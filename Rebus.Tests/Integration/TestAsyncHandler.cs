@@ -57,16 +57,15 @@ namespace Rebus.Tests.Integration
             finishedHandled.WaitOrDie(TimeSpan.FromSeconds(10));
 
             Assert.That(events.Count, Is.EqualTo(4));
-            Assert.That(events[0], Is.StringStarting("event=1"));
-            Assert.That(events[1], Is.StringStarting("event=2"));
-            Assert.That(events[2], Is.StringStarting("event=3"));
-            Assert.That(events[3], Is.StringStarting("event=4"));
+            Assert.That(events[0], Does.StartWith("event=1"));
+            Assert.That(events[1], Does.StartWith("event=2"));
+            Assert.That(events[2], Does.StartWith("event=3"));
+            Assert.That(events[3], Does.StartWith("event=4"));
         }
 
-        async Task AppendEvent(List<string> events, string eventNumber)
+        static async Task AppendEvent(ICollection<string> events, string eventNumber)
         {
-            var text =
-                $"event={eventNumber};thread={Thread.CurrentThread.ManagedThreadId};time={DateTime.UtcNow.ToString("mm:ss")};context={AmbientTransactionContext.Current}";
+            var text = $"event={eventNumber};thread={Thread.CurrentThread.ManagedThreadId};time={DateTime.UtcNow:mm:ss};context={AmbientTransactionContext.Current}";
 
             Console.WriteLine(text);
 

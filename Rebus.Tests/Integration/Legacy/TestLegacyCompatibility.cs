@@ -15,6 +15,7 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration.Legacy
 {
