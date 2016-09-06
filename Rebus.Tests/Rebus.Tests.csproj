@@ -55,24 +55,11 @@
       <HintPath>..\packages\NUnit.3.4.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ploeh.AutoFixture, Version=3.45.3.0, Culture=neutral, PublicKeyToken=b24654c590009d4f, processorArchitecture=MSIL">
-      <HintPath>..\packages\AutoFixture.3.45.3\lib\net40\Ploeh.AutoFixture.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Ploeh.AutoFixture.NUnit2, Version=3.45.3.0, Culture=neutral, PublicKeyToken=b24654c590009d4f, processorArchitecture=MSIL">
-      <HintPath>..\packages\AutoFixture.NUnit2.3.45.3\lib\net40\Ploeh.AutoFixture.NUnit2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Ploeh.AutoFixture.NUnit2.Addins, Version=3.45.3.0, Culture=neutral, PublicKeyToken=b24654c590009d4f, processorArchitecture=MSIL">
-      <HintPath>..\packages\AutoFixture.NUnit2.3.45.3\lib\net40\Ploeh.AutoFixture.NUnit2.Addins.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -111,7 +98,6 @@
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Encryption\TestDisableEncryption.cs" />
     <Compile Include="Events\TestBusLifetimeEvents.cs" />
-    <Compile Include="LocalAddin.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Persistence\SqlServer\TestSagaCorrelationSql.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />

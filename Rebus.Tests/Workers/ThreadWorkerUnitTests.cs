@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
-using Ploeh.AutoFixture.NUnit2;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Pipeline;
@@ -19,7 +18,7 @@ namespace Rebus.Tests.Workers
     [TestFixture, Ignore("ThreadWorker is obsolete anyway")]
     public class ThreadWorkerUnitTests
     {
-        [Test, AutoData]
+        [Test]
         public void Dispose_WaitsDefinedTimeout_WhenPendingTasksTakeLonger()
         {
             var workerName = $"worker-{DateTime.Now}";
@@ -72,7 +71,7 @@ namespace Rebus.Tests.Workers
 
         }
 
-        [Test, AutoData]
+        [Test]
         public void Dispose_DoesNotWaitDefinedTimeout_WhenNoPendingTasks()
         {
             var workerName = $"worker-{DateTime.Now}";
@@ -123,7 +122,7 @@ namespace Rebus.Tests.Workers
                     .MustNotHaveHappened();
         }
 
-        [Test, AutoData]
+        [Test]
         public void Dispose_WaitsForTaskToComplete_WhenItTakesLessThanDefinedTimeout()
         {
             var workerName = $"worker-{DateTime.Now}";
@@ -185,7 +184,7 @@ namespace Rebus.Tests.Workers
                     .MustNotHaveHappened();
         }
 
-        [Test, AutoData]
+        [Test]
         public async Task Stop_Logs_WhenOperationCanceledExceptionOccuresInTransport()
         {
             var workerName = $"worker-{DateTime.Now}";
