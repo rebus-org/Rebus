@@ -1055,6 +1055,10 @@
 
 * Update NUnit dependency to 3.4.1
 
+# 2.0.0-a9
+
+* Fix file-based lock which was kept for longer than necessary (i.e. until GC would collect the `FileStream` that had not been properly disposed)
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
