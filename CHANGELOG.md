@@ -1047,6 +1047,9 @@
 
 * Improve SQL transport expired messages cleanup to hit an index - thanks [xenoputtss]
 
+# 2.0.0-a7
+
+* Update to .NET 4.5.2 because it is the lowest framework version currently supported by Microsoft
 
 
 ---
