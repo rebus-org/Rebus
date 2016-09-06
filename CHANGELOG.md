@@ -1051,6 +1051,9 @@
 
 * Update to .NET 4.5.2 because it is the lowest framework version currently supported by Microsoft
 
+# 2.0.0-a8
+
+* Update NUnit dependency to 3.4.1
 
 ---
 
