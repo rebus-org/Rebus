@@ -1059,6 +1059,14 @@
 
 * Fix file-based lock which was kept for longer than necessary (i.e. until GC would collect the `FileStream` that had not been properly disposed)
 
+# 2.0.0-a10
+
+* Experimentally multi-targeting .NET 4.5, 4.5.2, 4.6, and 4.6.1 (but it dit NOT work for 4.6 and 4.6.1)
+
+# 2.0.0-a11
+
+* Back to targeting .NET 4.5. only
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
