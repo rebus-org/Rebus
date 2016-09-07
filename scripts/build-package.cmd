@@ -75,7 +75,10 @@ if %ERRORLEVEL% neq 0 (
 )
 
 REM HACK - merge Newtonsoft into Rebus.dll
-if "%name%"=="rebus" (
+if "%name%"=="Rebus" (
+  if exist "%reporoot%\Rebus\bin\Release\merged" rd "%reporoot%\Rebus\bin\Release\merged" /s/q
+  mkdir "%reporoot%\Rebus\bin\Release\merged"
+
   "%ilmerge%" "%reporoot%\Rebus\bin\Release\merged\Rebus.dll" "%reporoot%\Rebus\bin\Release\Rebus.dll" "%reporoot%\Rebus\bin\Release\Newtonsoft.Json.dll" /targetplatform:"v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5" /internalize
   if %ERRORLEVEL% neq 0 (
     echo IlMerge failed.
