@@ -16,27 +16,38 @@ namespace Rebus.Tests.Backoff
     [TestFixture]
     public class TestCustomizedBackoff : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
-        CountingTransport _countingTransport;
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public void RunIdleForSomeTIme(bool customizeBackoffTimes)
+        [Test]
+        public void RunIdleForSomeTIme()
         {
-            StartBus(customizeBackoffTimes);
+            var receiveCalls = RunTest(false);
+            var receiveCallsWithCustomizedBackoff = RunTest(true);
 
-            Thread.Sleep(5000);
-
-            CleanUpDisposables();
-
-            Console.WriteLine($"5 s idle - #receive: {_countingTransport.ReceiveCount}");
+            Assert.That(receiveCallsWithCustomizedBackoff, Is.LessThan(receiveCalls),
+                "Expected less calls to Receive(...) on the transport because of the customized backoff");
         }
 
-        void StartBus(bool customizeBackoffTimes)
+        long RunTest(bool customizeBackoffTimes)
         {
-            _activator = Using(new BuiltinHandlerActivator());
+            var items = StartBus(customizeBackoffTimes);
+            var activator = items.Item1;
+            var countingTransport = items.Item2;
 
-            Configure.With(_activator)
+            using (activator)
+            {
+                Thread.Sleep(5000);
+            }
+
+            Console.WriteLine($"5 s idle - #receive: {countingTransport.ReceiveCount}");
+
+            return countingTransport.ReceiveCount;
+        }
+
+        Tuple<BuiltinHandlerActivator, CountingTransport> StartBus(bool customizeBackoffTimes)
+        {
+            var activator = new BuiltinHandlerActivator();
+            CountingTransport countingTransport = null;
+
+            Configure.With(activator)
                 .Logging(l => l.Console(minLevel: LogLevel.Warn))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "customized-backoff"))
                 .Options(o =>
@@ -44,8 +55,8 @@ namespace Rebus.Tests.Backoff
                     o.Decorate<ITransport>(c =>
                     {
                         var transport = c.Get<ITransport>();
-                        _countingTransport = new CountingTransport(transport);
-                        return _countingTransport;
+                        countingTransport = new CountingTransport(transport);
+                        return countingTransport;
                     });
 
                     o.SetNumberOfWorkers(20);
@@ -60,6 +71,8 @@ namespace Rebus.Tests.Backoff
                     }
                 })
                 .Start();
+
+            return Tuple.Create(activator, countingTransport);
         }
 
         class CountingTransport : ITransport
