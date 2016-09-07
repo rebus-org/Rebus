@@ -17,7 +17,7 @@
       <dependency id="Rebus" version="$version$" />
       <dependency id="FluentAssertions" version="4.13.0" />
       <dependency id="Newtonsoft.Json" version="9.0.1" />
-      <dependency id="NUnit" version="2.6.4" />
+      <dependency id="NUnit" version="3.4.1" />
     </dependencies>
   </metadata>
   <files>
