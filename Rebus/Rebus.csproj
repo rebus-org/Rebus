@@ -227,12 +227,12 @@
     <Compile Include="Transport\Msmq\MsmqTransportConfigurationBuilder.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
+    <Compile Include="Workers\IBackoffStrategy.cs" />
     <Compile Include="Workers\ISyncBackoffStrategy.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Backoff\SimpleConstantPollingBackoffStrategy.cs" />
-    <Compile Include="Workers\IBackoffStrategy.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorker.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />

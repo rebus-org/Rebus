@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rebus.Config;
 using Rebus.Workers;
+using Rebus.Workers.ThreadPoolBased;
 
 namespace Rebus.Backoff
 {
@@ -18,6 +19,9 @@ namespace Rebus.Backoff
         /// </summary>
         public static void SetBackoffTimes(this OptionsConfigurer configurer, params TimeSpan[] backoffTimes)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (backoffTimes == null) throw new ArgumentNullException(nameof(backoffTimes));
+
             SetBackoffTimes(configurer, (IEnumerable<TimeSpan>)backoffTimes);
         }
 
@@ -39,6 +43,7 @@ namespace Rebus.Backoff
             }
 
             configurer.Register<IBackoffStrategy>(c => new SimpleCustomizedBackoffStrategy(list));
+            configurer.Register<ISyncBackoffStrategy>(c => new DefaultSyncBackoffStrategy(list));
         }
     }
 }
