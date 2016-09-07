@@ -25,5 +25,7 @@
     <file src="bin\Release452\Rebus.Forklift.Common.xml" target="lib\NET452" />
     <file src="bin\Release46\Rebus.Forklift.Common.dll" target="lib\NET46" />
     <file src="bin\Release46\Rebus.Forklift.Common.xml" target="lib\NET46" />
+    <file src="bin\Release461\Rebus.Forklift.Common.dll" target="lib\NET461" />
+    <file src="bin\Release461\Rebus.Forklift.Common.xml" target="lib\NET461" />
   </files>
 </package>

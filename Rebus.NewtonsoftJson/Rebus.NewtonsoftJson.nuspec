@@ -25,5 +25,7 @@
     <file src="bin\Release452\Rebus.NewtonsoftJson.xml" target="lib\NET452" />
     <file src="bin\Release46\Rebus.NewtonsoftJson.dll" target="lib\NET46" />
     <file src="bin\Release46\Rebus.NewtonsoftJson.xml" target="lib\NET46" />
+    <file src="bin\Release461\Rebus.NewtonsoftJson.dll" target="lib\NET461" />
+    <file src="bin\Release461\Rebus.NewtonsoftJson.xml" target="lib\NET461" />
   </files>
 </package>

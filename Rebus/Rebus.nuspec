@@ -23,5 +23,7 @@
     <file src="bin\Release452\Rebus.xml" target="lib\NET452" />
     <file src="bin\Release46\merged\Rebus.dll" target="lib\NET46" />
     <file src="bin\Release46\Rebus.xml" target="lib\NET46" />
+    <file src="bin\Release461\merged\Rebus.dll" target="lib\NET461" />
+    <file src="bin\Release461\Rebus.xml" target="lib\NET461" />
   </files>
 </package>

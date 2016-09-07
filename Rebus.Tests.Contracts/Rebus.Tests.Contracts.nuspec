@@ -27,5 +27,7 @@
     <file src="bin\Release452\Rebus.Tests.Contracts.xml" target="lib\NET452" />
     <file src="bin\Release46\Rebus.Tests.Contracts.dll" target="lib\NET46" />
     <file src="bin\Release46\Rebus.Tests.Contracts.xml" target="lib\NET46" />
+    <file src="bin\Release461\Rebus.Tests.Contracts.dll" target="lib\NET461" />
+    <file src="bin\Release461\Rebus.Tests.Contracts.xml" target="lib\NET461" />
   </files>
 </package>
