@@ -68,15 +68,51 @@ if not exist "%destination%" (
   )
 )
 
-"%msbuild%" "%proj%" /p:Configuration=Release /t:rebuild
+"%msbuild%" "%proj%" /p:Configuration=Release45 /t:rebuild
+if %ERRORLEVEL% neq 0 (
+  echo Build failed - error %ERRORLEVEL%.
+  goto exit_fail
+)
+"%msbuild%" "%proj%" /p:Configuration=Release452 /t:rebuild
+if %ERRORLEVEL% neq 0 (
+  echo Build failed - error %ERRORLEVEL%.
+  goto exit_fail
+)
+"%msbuild%" "%proj%" /p:Configuration=Release46 /t:rebuild
 if %ERRORLEVEL% neq 0 (
   echo Build failed - error %ERRORLEVEL%.
   goto exit_fail
 )
 
 REM HACK - merge Newtonsoft into Rebus.dll
-if "%name%"=="rebus" (
-  "%ilmerge%" "%reporoot%\Rebus\bin\Release\merged\Rebus.dll" "%reporoot%\Rebus\bin\Release\Rebus.dll" "%reporoot%\Rebus\bin\Release\Newtonsoft.Json.dll" /targetplatform:"v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5" /internalize
+if "%name%"=="Rebus" (
+  if exist "%reporoot%\Rebus\bin\Release45\merged" rd "%reporoot%\Rebus\bin\Release45\merged" /s/q
+  if exist "%reporoot%\Rebus\bin\Release452\merged" rd "%reporoot%\Rebus\bin\Release452\merged" /s/q
+  if exist "%reporoot%\Rebus\bin\Release46\merged" rd "%reporoot%\Rebus\bin\Release46\merged" /s/q
+
+  mkdir "%reporoot%\Rebus\bin\Release45\merged"
+  mkdir "%reporoot%\Rebus\bin\Release452\merged"
+  mkdir "%reporoot%\Rebus\bin\Release46\merged"
+
+  echo Merging .NET 4.5...
+
+  "%ilmerge%" "%reporoot%\Rebus\bin\Release45\Rebus.dll" "%reporoot%\Rebus\bin\Release45\Newtonsoft.Json.dll" /targetplatform:"v4,%ProgramFiles(x86)%\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5" /internalize /out:"%reporoot%\Rebus\bin\Release45\merged\Rebus.dll"
+  if %ERRORLEVEL% neq 0 (
+    echo IlMerge failed.
+    goto exit_fail
+  )
+
+  echo Merging .NET 4.5.2...
+
+  "%ilmerge%" "%reporoot%\Rebus\bin\Release452\Rebus.dll" "%reporoot%\Rebus\bin\Release452\Newtonsoft.Json.dll" /targetplatform:"v4,%ProgramFiles(x86)%\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5" /internalize /out:"%reporoot%\Rebus\bin\Release452\merged\Rebus.dll"
+  if %ERRORLEVEL% neq 0 (
+    echo IlMerge failed.
+    goto exit_fail
+  )
+
+  echo Merging .NET 4.6...
+
+  "%ilmerge%" "%reporoot%\Rebus\bin\Release46\Rebus.dll" "%reporoot%\Rebus\bin\Release46\Newtonsoft.Json.dll" /targetplatform:"v4,%ProgramFiles(x86)%\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5" /internalize /out:"%reporoot%\Rebus\bin\Release46\merged\Rebus.dll"
   if %ERRORLEVEL% neq 0 (
     echo IlMerge failed.
     goto exit_fail

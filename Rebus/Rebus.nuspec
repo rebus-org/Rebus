@@ -17,7 +17,11 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\merged\Rebus.dll" target="lib\NET452" />
-    <file src="bin\Release\Rebus.xml" target="lib\NET452" />
+    <file src="bin\Release45\merged\Rebus.dll" target="lib\NET45" />
+    <file src="bin\Release45\Rebus.xml" target="lib\NET45" />
+    <file src="bin\Release452\merged\Rebus.dll" target="lib\NET452" />
+    <file src="bin\Release452\Rebus.xml" target="lib\NET452" />
+    <file src="bin\Release46\merged\Rebus.dll" target="lib\NET46" />
+    <file src="bin\Release46\Rebus.xml" target="lib\NET46" />
   </files>
 </package>

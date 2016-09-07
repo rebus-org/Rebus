@@ -17,11 +17,15 @@
       <dependency id="Rebus" version="$version$" />
       <dependency id="FluentAssertions" version="4.13.0" />
       <dependency id="Newtonsoft.Json" version="9.0.1" />
-      <dependency id="NUnit" version="2.6.4" />
+      <dependency id="NUnit" version="3.4.1" />
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Rebus.Tests.Contracts.dll" target="lib\NET452" />
-    <file src="bin\Release\Rebus.Tests.Contracts.xml" target="lib\NET452" />
+    <file src="bin\Release45\Rebus.Tests.Contracts.dll" target="lib\NET45" />
+    <file src="bin\Release45\Rebus.Tests.Contracts.xml" target="lib\NET45" />
+    <file src="bin\Release452\Rebus.Tests.Contracts.dll" target="lib\NET452" />
+    <file src="bin\Release452\Rebus.Tests.Contracts.xml" target="lib\NET452" />
+    <file src="bin\Release46\Rebus.Tests.Contracts.dll" target="lib\NET46" />
+    <file src="bin\Release46\Rebus.Tests.Contracts.xml" target="lib\NET46" />
   </files>
 </package>
