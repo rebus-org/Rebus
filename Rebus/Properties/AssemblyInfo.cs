@@ -35,6 +35,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: InternalsVisibleTo("Rebus.Tests")]
-
 [assembly: AssemblyVersion("$version$")]
 [assembly: AssemblyFileVersion("$version$")]

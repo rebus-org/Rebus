@@ -44,8 +44,9 @@
     <Compile Include="..\Rebus\Serialization\JsonSerializer.cs">
       <Link>JsonSerializer.cs</Link>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="NewtonsoftJsonConfigurationExtensions.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
@@ -58,6 +59,9 @@
     <None Include="Rebus.NewtonsoftJson.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>$(ProjectDir)\..\scripts\patch_assemblyinfo.cmd $(ProjectDir)</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
