@@ -68,6 +68,9 @@ if not exist "%destination%" (
   )
 )
 
+set assemblyinfo=%reporoot%\%name%\Properties\GeneratedAssemblyInfo.cs
+
+
 "%msbuild%" "%proj%" /p:Configuration=Release /t:rebuild
 if %ERRORLEVEL% neq 0 (
   echo Build failed - error %ERRORLEVEL%.
