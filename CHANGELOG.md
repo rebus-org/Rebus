@@ -1070,6 +1070,7 @@
 # 2.0.0-a13
 
 * Added ability to set up the advanced bus APIs for testing
+* Proper assembly versions on DLLs
 
 ---
 
