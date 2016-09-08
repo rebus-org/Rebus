@@ -24,6 +24,8 @@ namespace Rebus.Testing
         readonly ConcurrentQueue<FakeBusEvent> _events = new ConcurrentQueue<FakeBusEvent>();
         readonly List<Delegate> _callbacks = new List<Delegate>();
 
+        IAdvancedApi _advancedApi;
+
         /// <summary>
         /// Gets all events recorded at this point. Query this in order to check what happened to the fake bus while
         /// it participated in a test - e.g. like this:
@@ -103,7 +105,13 @@ namespace Rebus.Testing
         /// </summary>
         public IAdvancedApi Advanced
         {
-            get { throw new InvalidOperationException("Sorry, but FakeBus does not support recording any advanced operations yet."); }
+            get
+            {
+                if (_advancedApi != null) return _advancedApi;
+
+                throw new InvalidOperationException("This FakeBus instance does not have an advanced API - you can add one by setting the Advanced property, e.g. to an instance of FakeAdvancedApi that you can then customize to your needs");
+            }
+            set { _advancedApi = value; }
         }
 
         /// <summary>

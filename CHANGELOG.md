@@ -1067,6 +1067,10 @@
 
 * Back to targeting .NET 4.5. only
 
+# 2.0.0-a13
+
+* Added ability to set up the advanced bus APIs for testing
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

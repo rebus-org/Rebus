@@ -98,6 +98,7 @@
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Persistence\SqlServer\TestSagaCorrelationSql.cs" />
+    <Compile Include="Testing\TestDataBusTesting.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
     <Compile Include="Transport\Msmq\MsmqTestManyMessages.cs" />
     <Compile Include="Transport\SqlServer\SqlServerTestManyMessages.cs" />

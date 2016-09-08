@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Rebus.Messages;
 using Rebus.Transport;
 
@@ -12,6 +13,7 @@ namespace Rebus.Pipeline
     {
         MessageContext(ITransactionContext transactionContext)
         {
+            if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
             TransactionContext = transactionContext;
         }
 

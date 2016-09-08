@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Rebus.Pipeline;
+using Rebus.Testing;
 
 namespace Rebus.DataBus
 {
@@ -81,12 +82,25 @@ namespace Rebus.DataBus
 
         static IDataBusStorage GetDataBusStorage()
         {
+            return GetDataBusStorageForTesting()
+                   ?? GetDataBusStorageFromMessageContext();
+        }
+
+        static IDataBusStorage GetDataBusStorageForTesting()
+        {
+            return FakeDataBus.TestDataBusStorage;
+        }
+
+        static IDataBusStorage GetDataBusStorageFromMessageContext()
+        {
             var messageContext = MessageContext.Current;
 
             if (messageContext == null)
             {
-                throw new InvalidOperationException(
-                    "No message context is available - did you try to open a data bus attachment for reading OUTSIDE of a message handler?");
+                const string message =
+                    "No message context is available - did you try to open a data bus attachment for reading OUTSIDE of a message handler?";
+
+                throw new InvalidOperationException(message);
             }
 
             var storage = messageContext.IncomingStepContext
@@ -94,9 +108,12 @@ namespace Rebus.DataBus
 
             if (storage == null)
             {
-                throw new InvalidOperationException(
-                    $"Could not find data bus storage under the '{DataBusIncomingStep.DataBusStorageKey}' key in the current message context - did you remember to configure the data bus?");
+                var message =
+                    $"Could not find data bus storage under the '{DataBusIncomingStep.DataBusStorageKey}' key in the current message context - did you remember to configure the data bus?";
+
+                throw new InvalidOperationException(message);
             }
+
             return storage;
         }
     }
