@@ -16,9 +16,6 @@ _ReSharper.*
 *.suo
 *.cache
 ~$*
-asb_connection_string.txt
-sqs_connectionstring.txt
-azure_storage_connection_string.txt
 .vs
 .vs/*
 _NCrunch_*
