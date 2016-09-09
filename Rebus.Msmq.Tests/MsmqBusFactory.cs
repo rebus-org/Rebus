@@ -6,9 +6,8 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Transports;
-using Rebus.Transport.Msmq;
 
-namespace Rebus.Tests.Integration.ManyMessages
+namespace Rebus.Msmq.Tests
 {
     public class MsmqBusFactory : IBusFactory
     {

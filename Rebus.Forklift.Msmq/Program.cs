@@ -1,7 +1,7 @@
 ﻿using GoCommando;
 using GoCommando.Attributes;
 using Rebus.Forklift.Common;
-using Rebus.Transport.Msmq;
+using Rebus.Msmq;
 
 namespace Rebus.Forklift.Msmq
 {

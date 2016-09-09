@@ -4,20 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Messaging;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Serialization;
+using Rebus.Transport;
 using Message = System.Messaging.Message;
 #pragma warning disable 1998
 
-namespace Rebus.Transport.Msmq
+namespace Rebus.Msmq
 {
     /// <summary>
     /// Implementation of <see cref="ITransport"/> that uses MSMQ to do its thing
@@ -217,7 +217,7 @@ namespace Rebus.Transport.Msmq
                 context.OnCommitted(async () => messageQueueTransaction.Commit());
                 context.OnDisposed(() => message.Dispose());
 
-                var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
+                var headers = _extensionSerializer.Deserialize(message.Extension);
                 var body = new byte[message.BodyStream.Length];
 
                 await message.BodyStream.ReadAsync(body, 0, body.Length, cancellationToken);
@@ -358,43 +358,32 @@ namespace Rebus.Transport.Msmq
 
         class ExtensionSerializer
         {
-            public ExtensionSerializer()
-            {
-                Encoding = Encoding.UTF8;
-            }
+            readonly HeaderSerializer _utf8HeaderSerializer = new HeaderSerializer { Encoding = Encoding.UTF8 };
+            readonly HeaderSerializer _utf7HeaderSerializer = new HeaderSerializer { Encoding = Encoding.UTF7 };
 
-            public Encoding Encoding { get; set; }
+            public bool UseLegacyEncoding { get; set; }
 
             public byte[] Serialize(Dictionary<string, string> headers)
             {
-                var jsonString = JsonConvert.SerializeObject(headers);
-
-                return Encoding.GetBytes(jsonString);
+                return UseLegacyEncoding
+                    ? _utf7HeaderSerializer.Serialize(headers)
+                    : _utf8HeaderSerializer.Serialize(headers);
             }
 
-            public Dictionary<string, string> Deserialize(byte[] bytes, string msmqMessageId)
+            public Dictionary<string, string> Deserialize(byte[] bytes)
             {
-                var jsonString = IsUtf7(bytes)
-                    ? Encoding.UTF7.GetString(bytes)
-                    : Encoding.GetString(bytes);
-
-                try
-                {
-                    return JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                }
-                catch (Exception exception)
-                {
-                    throw new SerializationException($"Could not deserialize MSMQ extension for message with physical message ID {msmqMessageId} - expected valid JSON text, got '{jsonString}'", exception);
-                }
+                return IsUtf7(bytes)
+                    ? _utf7HeaderSerializer.Deserialize(bytes)
+                    : _utf8HeaderSerializer.Deserialize(bytes);
             }
 
             static bool IsUtf7(byte[] bytes)
             {
                 // auto-detect UTF7-encoded headers
-                // 43, 65, 72, 115, 45 == an UTF7-encoded '{'
-                if (bytes.Length < 5) return false;
+                // 43, 65, 72, 115 == an UTF7-encoded '{'
+                if (bytes.Length < 4) return false;
 
-                return bytes[0] == 43 && bytes[1] == 65 && bytes[2] == 72 && bytes[3] == 115 && bytes[4] == 45;
+                return bytes[0] == 43 && bytes[1] == 65 && bytes[2] == 72 && bytes[3] == 115;
             }
         }
 
@@ -421,7 +410,7 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public void UseLegacyHeaderSerialization()
         {
-            _extensionSerializer.Encoding = Encoding.UTF7;
+            _extensionSerializer.UseLegacyEncoding = true;
         }
     }
 }

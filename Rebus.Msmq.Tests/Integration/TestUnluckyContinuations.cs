@@ -9,10 +9,8 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
-using Rebus.Transport.Msmq;
 
-namespace Rebus.Tests.Workers
+namespace Rebus.Msmq.Tests.Integration
 {
     [TestFixture]
     [Description("Tests a scenario where a handler that awaits stuff is unfortunate and ends up being delayed because of the queue receive polling timeout")]

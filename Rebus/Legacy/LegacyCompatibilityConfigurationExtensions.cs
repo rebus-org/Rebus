@@ -1,12 +1,9 @@
 ﻿using System.Text;
 using Rebus.Config;
-using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Serialization;
-using Rebus.Transport;
-using Rebus.Transport.Msmq;
 using JsonSerializer = Rebus.Serialization.JsonSerializer;
 
 namespace Rebus.Legacy
@@ -22,6 +19,8 @@ namespace Rebus.Legacy
         /// </summary>
         public static void EnableLegacyCompatibility(this OptionsConfigurer configurer)
         {
+            configurer.Register(c => new LegacyFlag());
+
             configurer.Register<ISerializer>(c =>
             {
                 var specialSettings = LegacySubscriptionMessagesBinder.JsonSerializerSettings;
@@ -53,22 +52,6 @@ namespace Rebus.Legacy
                 //    .OnReceive(new HandleLegacySubscriptionRequestIncomingStep(c.Get<ISubscriptionStorage>(), c.Get<LegacySubscriptionMessageSerializer>()), PipelineRelativePosition.Before, typeof(MapLegacyHeadersIncomingStep));
 
                 return pipeline;
-            });
-
-            configurer.Decorate(c =>
-            {
-                var transport = c.Get<ITransport>();
-
-                if (transport is MsmqTransport)
-                {
-                    c.Get<IRebusLoggerFactory>()
-                        .GetCurrentClassLogger()
-                        .Info("MSMQ transport detected - changing to UTF7 for serialized message header encoding");
-
-                    ((MsmqTransport) transport).UseLegacyHeaderSerialization();
-                }
-
-                return transport;
             });
         }
     }

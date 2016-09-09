@@ -10,9 +10,8 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
-using Rebus.Transport.Msmq;
 
-namespace Rebus.Tests.Transport.Msmq
+namespace Rebus.Msmq.Tests
 {
     [TestFixture]
     public class TestMsmqTransportMachineAddressing : FixtureBase

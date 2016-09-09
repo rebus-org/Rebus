@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Rebus.Tests.Integration.Legacy
+namespace Rebus.Msmq.Tests.Legacy
 {
     public static class MsmqEx
     {

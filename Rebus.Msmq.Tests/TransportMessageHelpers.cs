@@ -2,7 +2,7 @@
 using System.Text;
 using Rebus.Messages;
 
-namespace Rebus.Tests
+namespace Rebus.Msmq.Tests
 {
     public static class TransportMessageHelpers
     {

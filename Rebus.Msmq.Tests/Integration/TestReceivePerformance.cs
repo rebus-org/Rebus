@@ -9,10 +9,10 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
-using Rebus.Transport.Msmq;
+
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Msmq.Tests.Integration
 {
     [TestFixture, Category(Categories.Msmq)]
     public class TestReceivePerformance : FixtureBase
@@ -34,7 +34,7 @@ namespace Rebus.Tests.Integration
         public async Task NizzleName(int numberOfMessages, int numberOfWorkers)
         {
             var activator = new BuiltinHandlerActivator();
-            var sentmessageIds = new ConcurrentDictionary<int, int>();
+            var sentMessageIds = new ConcurrentDictionary<int, int>();
             var receivedMessageIds = new ConcurrentDictionary<int, int>();
 
             activator.Handle<SomeMessage>(async message =>
@@ -58,7 +58,11 @@ namespace Rebus.Tests.Integration
 
             await Task.WhenAll(Enumerable
                 .Range(0, numberOfMessages)
-                .Select(id => bus.Send(new SomeMessage { Id = id })));
+                .Select(async id =>
+                {
+                    await bus.Send(new SomeMessage {Id = id});
+                    sentMessageIds[id] = 1;
+                }));
 
             var elapsedSending = sendStopwatch.Elapsed;
 
@@ -81,7 +85,7 @@ namespace Rebus.Tests.Integration
             Console.WriteLine("RECEIVED {0} messages in {1:0.0} s - that's {2:0.0}/s", 
                 numberOfMessages, elapsedReceiving.TotalSeconds, numberOfMessages/elapsedReceiving.TotalSeconds);
 
-            var sentButNotReceived = sentmessageIds.Keys.Except(receivedMessageIds.Keys).ToList();
+            var sentButNotReceived = sentMessageIds.Keys.Except(receivedMessageIds.Keys).ToList();
             var receivedMoreThanOnce = receivedMessageIds.Where(kvp => kvp.Value > 1).ToList();
 
             if (sentButNotReceived.Any())

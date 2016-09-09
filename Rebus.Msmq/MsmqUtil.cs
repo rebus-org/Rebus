@@ -6,7 +6,7 @@ using System.Threading;
 using Rebus.Exceptions;
 using Rebus.Logging;
 
-namespace Rebus.Transport.Msmq
+namespace Rebus.Msmq
 {
     /// <summary>
     /// Utils class for various MSMQ operations

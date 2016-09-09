@@ -4,9 +4,8 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
-using Rebus.Transport.Msmq;
 
-namespace Rebus.Tests.Transport.Msmq
+namespace Rebus.Msmq.Tests
 {
     public class MsmqTransportFactory : ITransportFactory
     {

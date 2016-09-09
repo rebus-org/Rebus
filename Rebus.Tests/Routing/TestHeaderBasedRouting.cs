@@ -12,10 +12,9 @@ using Rebus.Logging;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Rebus.Transport.Msmq;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Routing
@@ -39,26 +38,16 @@ namespace Rebus.Tests.Routing
             _network = new InMemNetwork();
         }
 
-        [TestCase("inmem", 100)]
-        [TestCase("msmq", 100)]
-        public async Task CanDistributeWork(string transportType, int numberOfMessages)
+        [TestCase(100)]
+        public async Task CanDistributeWork(int numberOfMessages)
         {
-            Console.WriteLine("TRANSPORT: {0}", transportType);
-            Console.WriteLine();
-
-            var transportConfigurer = GetTransportConfigurer(transportType);
+            var transportConfigurer = GetTransportConfigurer();
 
             var workers = new[] {"worker1", "worker2", "worker3", "worker4"}
                 .Select(TestConfig.GetName)
                 .ToArray();
 
             var distributorQueueName = TestConfig.GetName("distributor");
-
-            if (transportType == "msmq")
-            {
-                MsmqUtil.Delete(distributorQueueName);
-                workers.ForEach(MsmqUtil.Delete);
-            }
 
             workers.ForEach(name =>
             {
@@ -114,25 +103,12 @@ namespace Rebus.Tests.Routing
             Assert.That(workByWorker.Count, Is.EqualTo(workers.Length), "Expected that all workers got to do some work!");
         }
 
-        Action<StandardConfigurer<ITransport>, string> GetTransportConfigurer(string transportType)
+        Action<StandardConfigurer<ITransport>, string> GetTransportConfigurer()
         {
-            switch (transportType)
+            return (configurer, queueName) =>
             {
-                case "inmem":
-                    return (configurer, queueName) =>
-                    {
-                        configurer.UseInMemoryTransport(_network, queueName);
-                    };
-
-                case "msmq":
-                    return (configurer, queueName) =>
-                    {
-                        configurer.UseMsmq(queueName);
-                    };
-
-                default:
-                    throw new ArgumentOutOfRangeException($"Unknown transport type: {transportType}");
-            }
+                configurer.UseInMemoryTransport(_network, queueName);
+            };
         }
 
         void StartWorker(string queueName, Action<StandardConfigurer<ITransport>, string> transportConfigurer)

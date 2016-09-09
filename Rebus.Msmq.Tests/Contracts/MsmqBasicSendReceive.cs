@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using Rebus.Tests.Contracts.Transports;
 
-namespace Rebus.Tests.Transport.Msmq
+namespace Rebus.Msmq.Tests.Contracts
 {
     [TestFixture, Category(Categories.Msmq)]
     public class MsmqBasicSendReceive : BasicSendReceive<MsmqTransportFactory> { }

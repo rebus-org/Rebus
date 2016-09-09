@@ -1,8 +1,7 @@
 ﻿using NUnit.Framework;
 using Rebus.Tests.Contracts.Transports;
-using Rebus.Tests.Integration.ManyMessages;
 
-namespace Rebus.Tests.Transport.Msmq
+namespace Rebus.Msmq.Tests.Contracts
 {
     [TestFixture]
     public class MsmqTestManyMessages : TestManyMessages<MsmqBusFactory> { }

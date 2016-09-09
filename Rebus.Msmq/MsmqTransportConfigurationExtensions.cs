@@ -1,7 +1,9 @@
 ﻿using Rebus.Config;
+using Rebus.Legacy;
 using Rebus.Logging;
+using Rebus.Transport;
 
-namespace Rebus.Transport.Msmq
+namespace Rebus.Msmq
 {
     /// <summary>
     /// Configuration extensions for the MSMQ transport
@@ -20,6 +22,10 @@ namespace Rebus.Transport.Msmq
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var transport = new MsmqTransport(inputQueueName, rebusLoggerFactory);
                 builder.Configure(transport);
+                if (c.Has<LegacyFlag>())
+                {
+                    transport.UseLegacyHeaderSerialization();
+                }
                 return transport;
             });
 
@@ -38,6 +44,10 @@ namespace Rebus.Transport.Msmq
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var transport = new MsmqTransport(null, rebusLoggerFactory);
                 builder.Configure(transport);
+                if (c.Has<LegacyFlag>())
+                {
+                    transport.UseLegacyHeaderSerialization();
+                }
                 return transport;
             });
 

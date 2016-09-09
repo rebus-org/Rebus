@@ -4,16 +4,15 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
+using Rebus.Serialization;
 using Rebus.Threading;
 using Rebus.Time;
 using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
@@ -25,6 +24,8 @@ namespace Rebus.Transport.SqlServer
     /// </summary>
     public class SqlServerTransport : ITransport, IInitializable, IDisposable
     {
+        static readonly HeaderSerializer HeaderSerializer = new HeaderSerializer();
+
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(20);
 
         /// <summary>
@@ -372,21 +373,6 @@ DELETE FROM TopCTE
                 _log.Info(
                     "Performed expired messages cleanup in {0} - {1} expired messages with recipient {2} were deleted",
                     stopwatch.Elapsed, results, _inputQueueName);
-            }
-        }
-
-        static class HeaderSerializer
-        {
-            static readonly Encoding DefaultEncoding = Encoding.UTF8;
-
-            public static byte[] Serialize(Dictionary<string, string> headers)
-            {
-                return DefaultEncoding.GetBytes(JsonConvert.SerializeObject(headers));
-            }
-
-            public static Dictionary<string, string> Deserialize(byte[] bytes)
-            {
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
             }
         }
 

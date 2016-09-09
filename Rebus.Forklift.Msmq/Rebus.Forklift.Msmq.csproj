@@ -55,6 +55,10 @@
       <Project>{EE1EF14E-78B6-4F9C-B3C2-FAFF43A7DF1B}</Project>
       <Name>Rebus.Forklift.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.Msmq\Rebus.Msmq.csproj">
+      <Project>{F1AE1512-8301-4C47-8C15-DE7872A03BEB}</Project>
+      <Name>Rebus.Msmq</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
       <Name>Rebus</Name>

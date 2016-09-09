@@ -41,7 +41,6 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Messaging" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Transactions" />
@@ -49,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
+    <Compile Include="Legacy\LegacyFlag.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="Auditing\Messages\AuditHeaders.cs" />
     <Compile Include="Auditing\Messages\AuditingHelper.cs" />
@@ -227,8 +227,8 @@
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
     <Compile Include="Config\OneWayClientBusDecorator.cs" />
-    <Compile Include="Transport\Msmq\MsmqTransportConfigurationBuilder.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
+    <Compile Include="Serialization\HeaderSerializer.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\IBackoffStrategy.cs" />
     <Compile Include="Workers\ISyncBackoffStrategy.cs" />
@@ -293,7 +293,6 @@
     <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />
     <Compile Include="Transport\InMem\InMemTransportMessage.cs" />
     <Compile Include="Transport\InMem\InMemTransportMessageExtensions.cs" />
-    <Compile Include="Transport\Msmq\MsmqTransportConfigurationExtensions.cs" />
     <Compile Include="Pipeline\DefaultPipeline.cs" />
     <Compile Include="Pipeline\IPipelineInvoker.cs" />
     <Compile Include="Pipeline\IStep.cs" />
@@ -307,9 +306,7 @@
     <Compile Include="Routing\TypeBased\TypeBasedRouter.cs" />
     <Compile Include="Routing\TypeBased\TypeBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Transport\ITransport.cs" />
-    <Compile Include="Transport\Msmq\MsmqTransport.cs" />
     <Compile Include="Messages\TransportMessage.cs" />
-    <Compile Include="Transport\Msmq\MsmqUtil.cs" />
     <None Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Routing\IRouter.cs" />
@@ -327,7 +324,9 @@
     <Compile Include="Workers\ThreadPoolBased\DedicatedRebusWorkersConfigurationExtensions.cs" />
     <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkerFactory.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Transport\Msmq\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Rebus.nuspec" />

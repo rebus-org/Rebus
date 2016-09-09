@@ -90,11 +90,16 @@ namespace Rebus.Injection
         /// </summary>
         public bool Has<TService>(bool primary = true)
         {
+            return ResolverHaveRegistrationFor<TService>(primary, _resolvers);
+        }
+
+        static bool ResolverHaveRegistrationFor<TService>(bool primary, Dictionary<Type, Handler> resolvers)
+        {
             var key = typeof(TService);
 
-            if (!_resolvers.ContainsKey(key)) return false;
+            if (!resolvers.ContainsKey(key)) return false;
 
-            var handler = _resolvers[key];
+            var handler = resolvers[key];
 
             if (handler.PrimaryResolver != null) return true;
 
@@ -181,6 +186,11 @@ namespace Rebus.Injection
                 _serviceTypeRequested = serviceTypeRequested;
             }
 
+            public bool Has<TService>(bool primary = true)
+            {
+                return ResolverHaveRegistrationFor<TService>(primary, _resolvers);
+            }
+
             public TService Get<TService>()
             {
                 var serviceType = typeof(TService);
@@ -262,6 +272,11 @@ namespace Rebus.Injection
         /// Gets all instances resolved within this resolution context at this time.
         /// </summary>
         IEnumerable TrackedInstances { get; }
+
+        /// <summary>
+        /// Gets whether there exists a primary registration for the <typeparamref name="TService"/> type
+        /// </summary>
+        bool Has<TService>(bool primary = true);
     }
 
     /// <summary>

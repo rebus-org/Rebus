@@ -13,11 +13,10 @@ using Rebus.Extensions;
 using Rebus.Legacy;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
-using Rebus.Transport.Msmq;
+
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration.Legacy
+namespace Rebus.Msmq.Tests.Legacy
 {
     [TestFixture]
     public class TestLegacyCompatibility : FixtureBase
@@ -30,7 +29,7 @@ namespace Rebus.Tests.Integration.Legacy
   ""$type"": ""System.Object[], mscorlib"",
   ""$values"": [
     {
-      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""$type"": ""Rebus.Msmq.Tests.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Msmq.Tests"",
       ""KeyChar"": ""g""
     }
   ]
@@ -40,15 +39,15 @@ namespace Rebus.Tests.Integration.Legacy
   ""$type"": ""System.Object[], mscorlib"",
   ""$values"": [
     {
-      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""$type"": ""Rebus.Msmq.Tests.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Msmq.Tests"",
       ""KeyChar"": ""a""
     },
     {
-      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""$type"": ""Rebus.Msmq.Tests.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Msmq.Tests"",
       ""KeyChar"": ""b""
     },
     {
-      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""$type"": ""Rebus.Msmq.Tests.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Msmq.Tests"",
       ""KeyChar"": ""c""
     }
   ]

@@ -15,10 +15,8 @@ using Rebus.Routing.TypeBased;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
-using Rebus.Transport.Msmq;
 
-namespace Rebus.Tests.Integration.Legacy
+namespace Rebus.Msmq.Tests.Legacy
 {
     [TestFixture]
     public class TestLegacyPubSub : FixtureBase

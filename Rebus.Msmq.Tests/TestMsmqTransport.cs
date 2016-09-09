@@ -13,10 +13,9 @@ using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
-using Rebus.Transport.Msmq;
 using Timer = System.Timers.Timer;
 
-namespace Rebus.Tests.Transport.Msmq
+namespace Rebus.Msmq.Tests
 {
     [TestFixture, Ignore("not an actual test"), Category(Categories.Msmq)]
     public class TestMsmqTransport : FixtureBase
