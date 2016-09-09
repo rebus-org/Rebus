@@ -1,5 +1,2 @@
 before_build:
   - nuget restore
-
-test_script:
-  - nunit3-console Rebus.Tests\bin\Debug\Rebus.Tests.dll --result=myresults.xml;format=AppVeyor
