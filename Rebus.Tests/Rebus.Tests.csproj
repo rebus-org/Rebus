@@ -182,10 +182,8 @@
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
     <Compile Include="Pipeline\TestDefaultPipelineInvoker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Workers\TestClassisDedicatedRebusWorkers.cs" />
     <Compile Include="Workers\TestSetNumberOfWorkers.cs" />
     <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
-    <Compile Include="Workers\ThreadWorkerUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
