@@ -43,18 +43,6 @@ if %ERRORLEVEL% neq 0 (
   exit /b 1
 )
 
-call %buildpackage% Rebus.Msmq %1
-if %ERRORLEVEL% neq 0 (
-  echo Could not build Rebus.Msmq.
-  exit /b 1
-)
-
-call %buildpackage% Rebus.SqlServer %1
-if %ERRORLEVEL% neq 0 (
-  echo Could not build Rebus.SqlServer.
-  exit /b 1
-)
-
 call %buildpackage% Rebus.Tests.Contracts %1
 if %ERRORLEVEL% neq 0 (
   echo Could not build Rebus contracts.
