@@ -17,9 +17,17 @@ namespace Rebus.Serialization
         /// </summary>
         public byte[] Serialize(object obj)
         {
-            var jsonString = JsonConvert.SerializeObject(obj, Settings);
+            var jsonString = SerializeToString(obj);
 
             return TextEncoding.GetBytes(jsonString);
+        }
+
+        /// <summary>
+        /// Serializes the given object into a string
+        /// </summary>
+        public string SerializeToString(object obj)
+        {
+            return JsonConvert.SerializeObject(obj, Settings);
         }
 
         /// <summary>
@@ -29,13 +37,21 @@ namespace Rebus.Serialization
         {
             var jsonString = TextEncoding.GetString(bytes);
 
+            return DeserializeFromString(jsonString);
+        }
+
+        /// <summary>
+        /// Deserializes the given string into an object
+        /// </summary>
+        public object DeserializeFromString(string str)
+        {
             try
             {
-                return JsonConvert.DeserializeObject(jsonString, Settings);
+                return JsonConvert.DeserializeObject(str, Settings);
             }
             catch (Exception exception)
             {
-                throw new JsonSerializationException($"Could not deserialize '{jsonString}'", exception);
+                throw new JsonSerializationException($"Could not deserialize '{str}'", exception);
             }
         }
     }

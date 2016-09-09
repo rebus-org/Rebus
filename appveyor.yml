@@ -1,10 +1,5 @@
 before_build:
   - nuget restore
 
-
-services:
-  - mssql2016
-  - msmq
-
 test_script:
   - nunit3-console Rebus.Tests\bin\Debug\Rebus.Tests.dll --result=myresults.xml;format=AppVeyor

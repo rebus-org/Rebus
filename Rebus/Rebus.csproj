@@ -43,7 +43,6 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Transactions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
@@ -88,8 +87,6 @@
     <Compile Include="DataBus\InMem\InMemDataBusStorage.cs" />
     <Compile Include="DataBus\InMem\InMemDataStore.cs" />
     <Compile Include="DataBus\MetadataKeys.cs" />
-    <Compile Include="DataBus\SqlServer\SqlServerDataBusConfigurationExtensions.cs" />
-    <Compile Include="DataBus\SqlServer\SqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
     <Compile Include="Encryption\EncryptedData.cs" />
     <Compile Include="Encryption\EncryptionConfigurationExtensions.cs" />
@@ -115,8 +112,6 @@
     <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriberStore.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorageExtensions.cs" />
-    <Compile Include="Persistence\SqlServer\DbConnectionFactoryProvider.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
     <Compile Include="Pipeline\Receive\HandlerInvoker.cs" />
@@ -143,9 +138,6 @@
     <Compile Include="Exceptions\Ignorant.cs" />
     <Compile Include="Handlers\Reordering\HandlerReorderingConfigurationExtensions.cs" />
     <Compile Include="Handlers\Reordering\HandlerReorderingStep.cs" />
-    <Compile Include="Persistence\SqlServer\DbConnectionWrapper.cs" />
-    <Compile Include="Persistence\SqlServer\IDbConnection.cs" />
-    <Compile Include="Persistence\SqlServer\IDbConnectionProvider.cs" />
     <Compile Include="Pipeline\IIncomingStep.cs" />
     <Compile Include="Pipeline\IMessageContext.cs" />
     <Compile Include="Pipeline\IncomingStepContext.cs" />
@@ -227,7 +219,6 @@
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
     <Compile Include="Config\OneWayClientBusDecorator.cs" />
-    <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Serialization\HeaderSerializer.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\IBackoffStrategy.cs" />
@@ -263,12 +254,6 @@
     <Compile Include="Persistence\InMem\InMemorySagaStorage.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorage.cs" />
     <Compile Include="Persistence\InMem\InMemoryTimeoutManager.cs" />
-    <Compile Include="Persistence\SqlServer\DbConnectionProvider.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerPersistenceConfigurationExtensions.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerSagaStorage.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerTimeoutManager.cs" />
     <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
     <Compile Include="Pipeline\Receive\HandleDeferredMessagesStep.cs" />
     <Compile Include="Sagas\LoadSagaDataStep.cs" />
@@ -315,8 +300,6 @@
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Transport\DefaultTransactionContext.cs" />
     <Compile Include="Transport\ITransactionContext.cs" />
-    <Compile Include="Transport\SqlServer\SqlServerTransport.cs" />
-    <Compile Include="Transport\SqlServer\SqlServerTransportConfigurationExtensions.cs" />
     <Compile Include="Workers\IWorkerFactory.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorkerFactory.cs" />
     <Compile Include="Workers\ThreadPoolBased\DefaultSyncBackoffStrategy.cs" />
@@ -325,7 +308,7 @@
     <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Transport\Msmq\" />
+    <Folder Include="Persistence\SqlServer\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

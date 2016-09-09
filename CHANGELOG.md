@@ -1076,6 +1076,10 @@
 
 * Move MSMQ things to separate repository and NuGet package `Rebus.Msmq`
 
+# 2.0.0-b02
+
+* Move SQL Server things to separate repository and NuGet package `Rebus.SqlServer`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
