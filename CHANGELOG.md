@@ -691,208 +691,208 @@
 * Added Serilog log event enricher + configuration extension for including Rebus' correlation ID in log events
 * Added custom NLog layout renderer that outputs the correlation ID of the message currently being handled in the `${rebus-correlation-id}` variable
 
-# 0.99.2
+## 0.99.2
 
 * Fixed NLog nuget dependency
 
-# 0.99.3
+## 0.99.3
 
 * Access to more useful information on `Failed<TMessage>`
 
-# 0.99.4
+## 0.99.4
 
 * Added no-inlining jit directive to the Windsor package's `AutoRegisterHandlersFromThisAssembly` method because it looks like handlers are sometimes not picked up as they should
 
-# 0.99.5
+## 0.99.5
 
 * Replaced Windsor's assembly-scanning with manual scan
 
-# 0.99.6
+## 0.99.6
 
 * Set correlation ID, content type, and label properties on brokered messages with Azure Service Bus transport
 
-# 0.99.7
+## 0.99.7
 
 * Limit length of header values used when using Azure Service Bus transport
 
-# 0.99.8
+## 0.99.8
 
 * Fixed it so that delivery will not be retried indefinitely on commit exceptions
 
-# 0.99.9
+## 0.99.9
 
 * Changed RabbitMQ routing to use two exchanges: one for direct addressing, and one for pub/sub messaging. This way, "clean" RabbitMQ topics can be subscribed to and then used when publishing, allowing for subscribing to topics using wildcards.
 
-# 0.99.10
+## 0.99.10
 
 * Fixed nuspec on StructureMap package, made SimpleInjector package dependency version criteria more tolerant, and updated the Unity dependency to v 4
 
-# 0.99.11
+## 0.99.11
 
 * Added ability to immediately forward messages on certain exception types (optionally when those exceptions satisfy some predicate)
 
-# 0.99.12
+## 0.99.12
 
 * Added LightInject container adapter - thanks [puzsol]
 
-# 0.99.13
+## 0.99.13
 
 * Added DryIoc container adapter - thanks [dadhi]
 
-# 0.99.14
+## 0.99.14
 
 * General handling of receive errors by logging as warning
 
-# 0.99.15
+## 0.99.15
 
 * Changed back to logging full exception details in the final ERROR log event
 
-# 0.99.16
+## 0.99.16
 
 * Added `EnlistRebus` option to `Rebus.TransactionScopes`, allowing for easily enlisting an ambient Rebus transaction in an ambient .NET transaction
 
-# 0.99.17
+## 0.99.17
 
 * Added `IBus` API overloads for `Subscribe` and `Unsubscribe` that accept a `Type` as a parameter - thanks [gertjvr]
 * Fixed `ExpiredMessagesCleanup` warning because of locked rows when handling message for a long time with the SQL Server transport
 * Introduced `rbs2-defer-recipient` header to designate the queue to deliver the message to when it returns - allows for doing request/reply with a defer in the middle without losing the return address (which must be transferred manually, though, unless you `bus.Advanced.TransportMessage.Defer`)
 * Crude attempt at allowing for sagas to resolve their conflicts by overriding `ResolveConflict`
 
-# 0.99.18
+## 0.99.18
 
 * Fixed bug that would fail saga data auditing when the message could not be correlated with a saga data instance
 
-# 0.99.19
+## 0.99.19
 
 * Fixed Rebus' SimpleInjector container adapter registrations to be able to resolve `IMessageContext` as part of the container's verification process
 
-# 0.99.20
+## 0.99.20
 
 * Fixed bug in Amazon SQS transport that would silently ignore errors when sending messages - thanks [gertjvr]
 
-# 0.99.21
+## 0.99.21
 
 * Small changes to Rebus' `TransactionScope` enlistment support
 
-# 0.99.22
+## 0.99.22
 
 * Added RavenDB saga persister - thanks [bjomi]
 
-# 0.99.23
+## 0.99.23
 
 * Fixed it so that SQL Server transport does not start the background "expired messages cleanup" task when it is a one-way client
 
-# 0.99.24
+## 0.99.24
 
 * Fixed bug in in-mem saga storage that would accidentally enforce uniqueness of correlation properties across saga data types
 
-# 0.99.25
+## 0.99.25
 
 * Fixed options configuration API to be more consistent and thus less prone to confusion - thanks [xenoputtss]
 * Added experimental unit of work API
 
-# 0.99.26
+## 0.99.26
 
 * Fixed bug in RavenDB saga persister - thanks [bjomi] and [jsvahn]
 * Fixed bug in Injectionist that could lead to resolve instances sometimes now being properly initialized/disposed
 
-# 0.99.27
+## 0.99.27
 
 * Added Wire serializer
 
-# 0.99.28
+## 0.99.28
 
 * Automatically set correlation property on newly initiated saga data when possible (we try to do it when there's one single correlation property for the message, and ignore failure to do so)
 
-# 0.99.29
+## 0.99.29
 
 * Fixed Rebus.MongoDb package (nuspec was lying about its MongoDB driver dependency)
 
-# 0.99.30
+## 0.99.30
 
 * Removed hardcoded region settings in purge operation with SQS transport - thanks [gertjvr]
 * Better error message when attempting to complete a message whose lock has been lost with ASB
 
-# 0.99.31
+## 0.99.31
 
 * Added unit of work guards and fixed bug that would result in exceptions when providing no rollback/cleanup action when using the async version
 
-# 0.99.32
+## 0.99.32
 
 * Fixed logging of the configured region with Amazon SQS transport - thanks [gertjvr]
 * Added experiment in-process hosting of OWIN endpoints via the Rebus.Owin package
 
-# 0.99.33
+## 0.99.33
 
 * Fixed bug where an exception thrown while correlating an incoming message with a saga would not be included as inner exception - thanks [mortenherman]
 
-# 0.99.34
+## 0.99.34
 
 * Made small improvements to Rebus.Async (added timeout option + added ability to remove abandoned replied when their age exceeds a configurable threshold)
 
-# 0.99.35
+## 0.99.35
 
 * Fixed bug that caused the Azure Service Bus transport to not be properly initialized when using the "Basic" tier - thanks [torangel]
 
-# 0.99.36
+## 0.99.36
 
 * Added Protobuf serializer
 * Much improved error message when sending to non-existent queue with Azure Service Bus
 * Changed `Failed<TMessage>` to be `IFailed<TMessage>` (and thus an interface) in order to make it covariant
 * Added Wire serializer configuration extensions
 
-# 0.99.37
+## 0.99.37
 
 * Fixed subtle unintented behavior so that messages inherited from an initiating type can initiate sagas too
 * Enabled true polymorphic correlation
 
-# 0.99.38
+## 0.99.38
 
 * Fixed saga correlation bus introduced in 0.99.37
 
-# 0.99.39
+## 0.99.39
 
 * Brough back `FakeBus` - an implementation of `IBus` that records everything that happens to it as events which you may query during the assert-phase of your tests
 * Added `SagaFixture` to ease saga testing
 
-# 0.99.40
+## 0.99.40
 
 * Added correlation sequence number as an auto-flowing header too - can be used to deduce causation
 * Fixed bug that could accidentally overwrite the ID of a saga because of the nice auto-setter behavior
 
-# 0.99.41
+## 0.99.41
 
 * Fixed RavenDB subscription and timeout storage
 
-# 0.99.42
+## 0.99.42
 
 * Fixed bug in Rebus' protobuf serializer that caused it to be unable to serialize Rebus' control bus messages
 
-# 0.99.43
+## 0.99.43
 
 * Updated StructureMap dependency to 4.1.2.386 - thanks [dougkwilson]
 * Made isolation level and timeout configurable when using the `TransactionScope` support extension
 
-# 0.99.44
+## 0.99.44
 
 * Added option for Azure Service Bus transport to skip queue creation to make it possible to use a read-only SAS key instead of a connection string with manage rights - thanks [torangel]
 * Made due timeouts poll interval configurable
 * Made RavenDB subscription storage much more tolerant towards concurrency exceptions when topic documents are experiencing contention
 
-# 0.99.45
+## 0.99.45
 
 * Added ability to set up fake saga data in `SagaFixture`
 * Added method to clear recorded events of `FakeBus`
 
-# 0.99.46
+## 0.99.46
 
 * Better error behavior when deferring a message from a one-way client without setting the defer-recipient
 
-# 0.99.47
+## 0.99.47
 
 * Moved defer-recipient header check to the pipeline, giving other pipeline steps a chance to set it
 
-# 0.99.48
+## 0.99.48
 
 * Don't rethrow `ResolutionException` inside another `ResolutionException` in case of configuration errors - the stack trace reveals the call stack so nicely, there's no need to have 10 layers of exceptions too
 * Marked topic-based routing configuration API as obsolete (type-based routing is perfectly capable of using raw topics if you like)
@@ -900,11 +900,11 @@
 * Fixed bug in retry strategy step that could accidentally keep tracked message IDs for too long
 * Prohibit sending `IFailed<TMessage>` anywhere (because it is most likely an error)
 
-# 0.99.50
+## 0.99.50
 
 * Fixed concurrency issues in RavenDB saga storage - remember to use optimistic concurrency regardless of the configuration of the document store
 
-# 0.99.51
+## 0.99.51
 
 * Updated RabbitMQ dependency to 3.6.1
 * Updated Newtonsoft JSON.NET dependency to 8.0.3 across the board
@@ -912,22 +912,22 @@
 * Renamed `Rebus.AzureStorageQueues` NuGet package to `Rebus.AzureStorage` because it has integration things for Azure storage
 * Made RabbitMQ transport automatically declare & bind destination queues when they're used the first time (to avoid sending a message into nowhere)
 
-# 0.99.52
+## 0.99.52
 
 * Moved `.UseExternalTimeoutManager(...)` configuration method to the `.Timeouts(t => ...)` configurer because it more natural
 * Added ability for JSON file-based subscription storage to be centralized
 * Updated Azure Service Bus dependency to 3.2.0
 
-# 0.99.53
+## 0.99.53
 
 * Extended polymorphic saga correlation to make proper use of implemented interfaces too
 
-# 0.99.55
+## 0.99.55
 
 * Real pause (5 s) when the next transport message cannot be received
 * Added ability to configure worker shutdown timeout to allow for longer-running tasks to finish - thanks [Rzpeg]
 
-# 0.99.56
+## 0.99.56
 
 * Changed timeout settings on Azure Service Bus transport to respect the setting from the connection string - thanks [Rzpeg]
 * Changed RabbitMQ transport to use `QueueingBasicConsumer` instead of polling - thanks [Hangsolow]
@@ -935,11 +935,11 @@
 * Added data bus feature with data storages for SQL Server, the file system, and in-mem (for testing)
 * Fixed issue with high disk activity when using MSMQ
 
-# 0.99.57
+## 0.99.57
 
 * Added ability to specify custom client properties with RabbitMQ
 
-# 0.99.58
+## 0.99.58
 
 * Updated LightInject to 4.0.9
 * Updated StructureMap to 4.2.0.402
@@ -952,39 +952,39 @@
 * Added ability for in-mem subscription storage to share a subscriber store and become "centralized" (can be used in conjunction with in-mem transport to emulate in memory everything that can be achieved with a real multicast-enabled transport like RabbitMQ, Azure Service Bus, etc.)
 
 
-# 0.99.59
+## 0.99.59
 
 * Fixed MSMQ mangled message receive so that the message is not "lost"
 * Added cancellation support to the `Receive` operation of the transport - thanks [Rzpeg]
 
-# 0.99.60
+## 0.99.60
 
 * Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` was extremely slow! (existing tables with `NVARCHAR(MAX)` data should still work fine - a simple schema check is made at startup)
 * Added Azure blobs-based data bus storage
 
-# 0.99.61
+## 0.99.61
 
 * Added ability configure prefetch count with RabbitMQ
 * Added a few additional defensive RabbitMQ reconnection measures, like e.g. throw out prefetched messages if the connection is lost
 
-# 0.99.62
+## 0.99.62
 
 * Added simple metadata API to data bus
 
-# 0.99.63
+## 0.99.63
 
 * Maintain time of last read access in all data bus storages
 * Made `DataBusAttachment` serializable with all currently supported serializers (JSON.NET, Jil, Wire, and Protobuf)
 
-# 0.99.64
+## 0.99.64
 
 * Fixed potential locked-file issue when multiple readers are reading the same data with the data bus
 
-# 0.99.65
+## 0.99.65
 
 * Added MSMQ transport configuration builder to allow for customizing the `MessageQueue`, e.g. by setting/changing permissions
 
-# 0.99.66
+## 0.99.66
 
 * Added file system-based saga storage and timeout storage - thanks [jeffreyabecker]
 * Added Azure tables-based subscription storage - thanks [jeffreyabecker]
@@ -996,41 +996,41 @@
 * Fixed exception on message deferral for very short intervals - thanks [jeffreyabecker]
 * Added configuration API for using user-provided DB connection with SQL Server - thanks [zabulus]
 
-# 0.99.67
+## 0.99.67
 
 * Added MsgPack serializer
 * Updated Newtonsoft JSON.NET to 9.0.1 throughout
 * Added ability to skip encryption of a particular message by adding the `rbs2-disable-encryption` header (can be found as a constant in `EncryptionHeaders.DisableEncryptionHeader`)
 * Provide real `Exception`s in `IFailed<TMessage>`
 
-# 0.99.68
+## 0.99.68
 
 * Provide optional Jil configuration `Options` parameter, allowing for customizing serialization settings - thanks [Rzpeg]
 * Make RabbitMQ transport accept multiple connection strings separated by , or ; which will then be cycled on connection failures
 * Fix very subtle bug in saga persisters that would result in sometimes loading saga data of the wrong type when having multiple saga handlers with different saga data types in the same endpoint, handling the same message, correlating by ID - affected persisters: Azure Storage, SQL Server, PostgreSQL, RavenDB, File System
 * Fix subtle bug in how the ambient transaction context is picked up that would sometimes (when another bus is used from withing a message handler, and only with some transports) result in ending up doing `Send` on the other bus' transport
 
-# 0.99.70
+## 0.99.70
 
 * Update AWS SDK version to latest (AWSSDK.Core 3.1.9.1, AWSSDK.SQS 3.1.0.12) - thanks [gertjvr]
 * Make RabbitMQ transport tolerate incoming message without ID (try to assign from RabbitMQ ID and ultimately calculate Knuth hash from message body)
 
-# 0.99.71
+## 0.99.71
 
 * Fix bug in RavenDB saga persister that would not properly guard saga data against race conditions in the face of concurrent updates
 * Add thread pool-based worker factory that can be enabled by going `UseThreadPoolMessageDispatch` on the options configurer
 
-# 0.99.72
+## 0.99.72
 
 * Respect worker shutdown timeout also when stopping the worker
 * Back off slightly when there is no work to do
 
-# 0.99.73
+## 0.99.73
 
 * Add GZIPping capability to data bus storage - can be enabled by attaching `.UseCompression()` in the data bus configuration builder
 * Factor forwarding of failed messages to error queues out into `PoisonQueueErrorHandler` which implements `IErrorHandler`. Make room for customizing what to do about failed messages.
 
-# 0.99.74
+## 0.99.74
 
 * Mark assemblies as CLS compliant becase VB.NET and F# programmers are most welcome too - thanks [NKnusperer]
 * Update Serilog dependency to 2.1.0 - thanks [NKnusperer]
@@ -1043,40 +1043,40 @@
 * Update Autofac dependency to 4.0.1
 * Fix bug in Amazon SQS transport that would cause it to be unable to receive messages if the last created queue was not the transport's own input queue
 
-# 2.0.0-a2
+## 2.0.0-a2
 
 * Improve SQL transport expired messages cleanup to hit an index - thanks [xenoputtss]
 
-# 2.0.0-a7
+## 2.0.0-a7
 
 * Update to .NET 4.5.2 because it is the lowest framework version currently supported by Microsoft
 
-# 2.0.0-a8
+## 2.0.0-a8
 
 * Update NUnit dependency to 3.4.1
 
-# 2.0.0-a9
+## 2.0.0-a9
 
 * Fix file-based lock which was kept for longer than necessary (i.e. until GC would collect the `FileStream` that had not been properly disposed)
 
-# 2.0.0-a10
+## 2.0.0-a10
 
 * Experimentally multi-targeting .NET 4.5, 4.5.2, 4.6, and 4.6.1 (but it dit NOT work for 4.6 and 4.6.1)
 
-# 2.0.0-a11
+## 2.0.0-a11
 
 * Back to targeting .NET 4.5. only
 
-# 2.0.0-a13
+## 2.0.0-a13
 
 * Added ability to set up the advanced bus APIs for testing
 * Proper assembly versions on DLLs
 
-# 2.0.0-b01
+## 2.0.0-b01
 
 * Move MSMQ things to separate repository and NuGet package `Rebus.Msmq`
 
-# 2.0.0-b02
+## 2.0.0-b02
 
 * Move SQL Server things to separate repository and NuGet package `Rebus.SqlServer`
 * Remove legacy worker factory

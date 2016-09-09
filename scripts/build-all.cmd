@@ -43,6 +43,12 @@ if %ERRORLEVEL% neq 0 (
   exit /b 1
 )
 
+call %buildpackage% Rebus.NewtonsoftJson %1
+if %ERRORLEVEL% neq 0 (
+  echo Could not build Rebus.NewtonsoftJson.
+  exit /b 1
+)
+
 call %buildpackage% Rebus.Tests.Contracts %1
 if %ERRORLEVEL% neq 0 (
   echo Could not build Rebus contracts.
