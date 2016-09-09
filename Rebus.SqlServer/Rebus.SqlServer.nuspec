@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.SqlServer</id>
+    <version>$version$</version>
+    <title>Rebus.SqlServer</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>SQL transport and persistence for rebus</description>
+    <copyright>Copyright 2012-2016</copyright>
+    <tags>rebus queue messaging service bus sql-server sqlserver mssql sql</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="$version$" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.SqlServer.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.SqlServer.xml" target="lib\NET45" />
+  </files>
+</package>
