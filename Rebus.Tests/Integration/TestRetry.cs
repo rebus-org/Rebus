@@ -61,7 +61,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            var failedMessage = await _network.WaitForNextMessageFrom("error");
+            var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName);
 
             Assert.That(attemptedDeliveries, Is.EqualTo(numberOfRetries));
             Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("5 unhandled exceptions"));
@@ -85,7 +85,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            await _network.WaitForNextMessageFrom("error");
+            await _network.WaitForNextMessageFrom(ErrorQueueName);
 
             var expectedNumberOfAttemptedDeliveries = numberOfRetries;
 
