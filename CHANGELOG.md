@@ -1072,6 +1072,10 @@
 * Added ability to set up the advanced bus APIs for testing
 * Proper assembly versions on DLLs
 
+# 2.0.0-b01
+
+* Move MSMQ things to separate repository and NuGet package `Rebus.Msmq`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
