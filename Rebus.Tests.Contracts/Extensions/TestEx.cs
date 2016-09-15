@@ -17,6 +17,28 @@ namespace Rebus.Tests.Contracts.Extensions
 {
     public static class TestEx
     {
+        public static TItem GetMedianBy<TItem, TValue>(this IEnumerable<TItem> items, Func<TItem, TValue> valueGetter)
+        {
+            var list = items.OrderBy(valueGetter).ToList();
+
+            if (list.Count == 0)
+            {
+                throw new ArgumentException($"Cannot get median value from empty sequence of {typeof(TItem)}");
+            }
+
+            var medianIndex = list.Count / 2;
+
+            return list[medianIndex];
+        }
+
+        public static DateTime RoundTo(this DateTime dateTime, TimeSpan resolution)
+        {
+            var resolutionTicks = resolution.Ticks;
+            var ticks = dateTime.Ticks;
+            var resultingTicks = resolutionTicks * (ticks / resolutionTicks);
+            return new DateTime(resultingTicks);
+        }
+
         public static async Task<TransportMessage> WaitForNextMessage(this ITransport transport, int timeoutSeconds = 5)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -75,7 +97,7 @@ namespace Rebus.Tests.Contracts.Extensions
         {
             if (singleLine)
             {
-                line = line.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+                line = line.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
             }
 
             if (line.Length + 3 <= maxNumberOfChars) return line;

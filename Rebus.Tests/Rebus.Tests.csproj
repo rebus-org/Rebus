@@ -226,7 +226,9 @@
     <Compile Include="Transport\SqlServer\SqlTransportTests.cs" />
     <Compile Include="Transport\SqlServer\TestDbConnectionProvider.cs" />
     <Compile Include="Transport\SqlServer\TestSqlServerTransport.cs" />
+    <Compile Include="Backoff\BackoffBehaviorIntegrationTest.cs" />
     <Compile Include="Workers\TestClassisDedicatedRebusWorkers.cs" />
+    <Compile Include="Workers\TestDefaultSyncBackoffStrategy.cs" />
     <Compile Include="Workers\TestSetNumberOfWorkers.cs" />
     <Compile Include="Workers\TestUnluckyContinuations.cs" />
     <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
