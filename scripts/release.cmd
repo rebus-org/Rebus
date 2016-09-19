@@ -1,3 +1,3 @@
 @echo off
 
-call release-all.cmd %2
+call %~dp0\release-all.cmd %2
