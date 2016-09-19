@@ -93,8 +93,11 @@ namespace Rebus.Workers.ThreadPoolBased
                     if (transportMessage == null)
                     {
                         context.Dispose();
-                        parallelOperation.Dispose();
-                        _backoffStrategy.Wait();
+                        
+                        // no need for another thread to rush in and discover that there is no message
+                        //parallelOperation.Dispose();
+
+                        _backoffStrategy.WaitNoMessage();
                         return;
                     }
 

@@ -58,6 +58,7 @@
     <Compile Include="Activation\ContainerTests.cs" />
     <Compile Include="Activation\IContainerAdapterFactory.cs" />
     <Compile Include="Activation\RealContainerTests.cs" />
+    <Compile Include="Extensions\Range.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="DataBus\GeneralDataBusStorageTests.cs" />
     <Compile Include="DataBus\IDataBusStorageFactory.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Transports\IBusFactory.cs" />
     <Compile Include="Transports\TestManyMessages.cs" />
     <Compile Include="Utilities\DeleteHelper.cs" />
+    <Compile Include="Utilities\In.cs" />
     <Compile Include="Utilities\ListLoggerFactory.cs" />
     <Compile Include="Utilities\LogLine.cs" />
     <None Include="Properties\AssemblyInfo.cs" />

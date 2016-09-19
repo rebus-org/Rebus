@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Rebus.Activation;
 using Rebus.Config;
@@ -155,16 +156,16 @@ namespace Rebus.Testing
         /// <summary>
         /// Delivers the given message to the saga handler
         /// </summary>
-        public void Deliver(object message, Dictionary<string, string> optionalHeaders = null)
+        public void Deliver(object message, Dictionary<string, string> optionalHeaders = null, int deliveryTimeoutSeconds = 5)
         {
             var resetEvent = new ManualResetEvent(false);
             _lockStepper.AddResetEvent(resetEvent);
 
             _activator.Bus.SendLocal(message, optionalHeaders).Wait();
 
-            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(5)))
+            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(deliveryTimeoutSeconds)))
             {
-                throw new TimeoutException($"Message {message} did not seem to have been processed withing 5 s timeout");
+                throw new TimeoutException($"Message {message} did not seem to have been processed withing {deliveryTimeoutSeconds} s timeout");
             }
         }
 

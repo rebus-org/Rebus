@@ -100,6 +100,12 @@ namespace Rebus.Tests.Testing
             }
         }
 
+        [Test]
+        public void DoesNotTimeOutWhenDebuggerIsAttached()
+        {
+            
+        }
+
         class MySaga : Saga<MySagaState>, IAmInitiatedBy<TestMessage>
         {
             protected override void CorrelateMessages(ICorrelationConfig<MySagaState> config)

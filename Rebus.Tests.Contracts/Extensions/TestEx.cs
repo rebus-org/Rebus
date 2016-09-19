@@ -31,6 +31,14 @@ namespace Rebus.Tests.Contracts.Extensions
             return list[medianIndex];
         }
 
+        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+        {
+            TValue value;
+            return dictionary.TryGetValue(key, out value)
+                ? value
+                : default(TValue);
+        }
+
         public static DateTime RoundTo(this DateTime dateTime, TimeSpan resolution)
         {
             var resolutionTicks = resolution.Ticks;

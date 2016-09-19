@@ -72,6 +72,7 @@
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Auditing\TestMessageAuditing.cs" />
+    <Compile Include="Backoff\TestBackoffBehaviorWhenBusy.cs" />
     <Compile Include="Backoff\TestCustomizedBackoff.cs" />
     <Compile Include="Bugs\CustomHeadersAreCloned.cs" />
     <Compile Include="Bugs\DoesNotDispatchWrongSagaDataType.cs" />
