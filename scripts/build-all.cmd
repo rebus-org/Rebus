@@ -16,11 +16,6 @@ if not exist "%buildpackage%" (
   exit /b 1
 )
 
-if not exist "%push%" (
-  echo Could not find %push%
-  exit /b 1
-)
-
 
 
 
