@@ -61,7 +61,6 @@
     <Compile Include="Auditing\Sagas\SagaAuditingMetadataKeys.cs" />
     <Compile Include="Auditing\Sagas\SaveSagaDataSnapshotStep.cs" />
     <Compile Include="Backoff\BackoffConfigurationExtensions.cs" />
-    <Compile Include="Backoff\SimpleCustomizedBackoffStrategy.cs" />
     <Compile Include="Bus\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />
@@ -230,14 +229,10 @@
     <Compile Include="Transport\Msmq\MsmqTransportConfigurationBuilder.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
-    <Compile Include="Workers\IBackoffStrategy.cs" />
-    <Compile Include="Workers\ISyncBackoffStrategy.cs" />
+    <Compile Include="Workers\ThreadPoolBased\ISyncBackoffStrategy.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
-    <Compile Include="Backoff\SimpleConstantPollingBackoffStrategy.cs" />
-    <Compile Include="Workers\ThreadBased\ThreadWorker.cs" />
-    <Compile Include="Workers\ThreadBased\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />
     <Compile Include="Config\Options.cs" />
     <Compile Include="Config\OptionsConfigurer.cs" />
@@ -321,10 +316,8 @@
     <Compile Include="Transport\SqlServer\SqlServerTransport.cs" />
     <Compile Include="Transport\SqlServer\SqlServerTransportConfigurationExtensions.cs" />
     <Compile Include="Workers\IWorkerFactory.cs" />
-    <Compile Include="Workers\ThreadBased\ThreadWorkerFactory.cs" />
     <Compile Include="Workers\ThreadPoolBased\DefaultSyncBackoffStrategy.cs" />
     <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorker.cs" />
-    <Compile Include="Workers\ThreadPoolBased\DedicatedRebusWorkersConfigurationExtensions.cs" />
     <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkerFactory.cs" />
   </ItemGroup>
   <ItemGroup />

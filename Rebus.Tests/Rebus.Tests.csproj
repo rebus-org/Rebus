@@ -233,7 +233,6 @@
     <Compile Include="Workers\TestSetNumberOfWorkers.cs" />
     <Compile Include="Workers\TestUnluckyContinuations.cs" />
     <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
-    <Compile Include="Workers\ThreadWorkerUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">

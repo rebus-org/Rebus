@@ -14,6 +14,8 @@ using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Rebus.Workers;
+using Rebus.Workers.ThreadPoolBased;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Backoff

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,9 +11,7 @@ using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Rebus.Workers.ThreadPoolBased;
 
 #pragma warning disable 1998
 
@@ -43,10 +40,6 @@ namespace Rebus.Tests.Workers
                 .Transport(t => t.UseInMemoryTransport(_network, "threadpool-workers-test"))
                 .Options(o =>
                 {
-#pragma warning disable 618
-                    o.UseClassicRebusWorkersMessageDispatch();
-#pragma warning restore 618
-
                     o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(1);
                 })

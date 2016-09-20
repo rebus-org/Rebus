@@ -1,4 +1,4 @@
-namespace Rebus.Workers
+namespace Rebus.Workers.ThreadPoolBased
 {
     /// <summary>
     /// Implements a strategy with which workers will back off in idle periods. Please note that the <see cref="ISyncBackoffStrategy"/>
