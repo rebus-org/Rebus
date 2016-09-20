@@ -12,14 +12,14 @@ using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Timeouts;
-using Rebus.Transport.Msmq;
+using Rebus.Transport.InMem;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Timeouts
 {
-    [TestFixture, Category(Categories.Msmq)]
+    [TestFixture]
     public class TestExternalTimeoutManager : FixtureBase
     {
         readonly string _queueName = TestConfig.GetName("client");
@@ -27,15 +27,18 @@ namespace Rebus.Tests.Timeouts
 
         ManualResetEvent _gotTheMessage;
         IBus _bus;
+        InMemNetwork _network;
 
         protected override void SetUp()
         {
             var logger = new ListLoggerFactory(detailed: true);
 
+            _network = new InMemNetwork();
+
             // start the external timeout manager
             Configure.With(Using(new BuiltinHandlerActivator()))
                 .Logging(l => l.Use(logger))
-                .Transport(t => t.UseMsmq(_queueNameTimeoutManager))
+                .Transport(t => t.UseInMemoryTransport(_network, _queueNameTimeoutManager))
                 .Start();
 
             _gotTheMessage = new ManualResetEvent(false);
@@ -47,7 +50,7 @@ namespace Rebus.Tests.Timeouts
 
             Configure.With(client)
                 .Logging(l => l.Use(logger))
-                .Transport(t => t.UseMsmq(_queueName))
+                .Transport(t => t.UseInMemoryTransport(_network, _queueName))
                 .Timeouts(t => t.UseExternalTimeoutManager(_queueNameTimeoutManager))
                 .Start();
 
@@ -82,12 +85,6 @@ namespace Rebus.Tests.Timeouts
             _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(8.5), "Message was not received within 8,5 seconds (which it should have been since it was only deferred 5 seconds)");
 
             Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(5)), "It must take more than 5 second to get the message back");
-        }
-
-        protected override void TearDown()
-        {
-            MsmqUtil.Delete(_queueName);
-            MsmqUtil.Delete(_queueNameTimeoutManager);
         }
     }
 }

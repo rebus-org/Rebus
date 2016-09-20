@@ -1,11 +1,8 @@
-set version=%1
+@echo off
 
+set version=%1
 set clean=%~dp0\clean.cmd
 set buildpackage=%~dp0\build-package.cmd
-set push=%~dp0\push.cmd
-
-
-
 
 REM == CHECK STUFF ==
 
@@ -26,6 +23,7 @@ if not exist "%push%" (
 
 
 
+
 REM == CLEAN OUTPUT FOLDER ==
 
 call %clean%
@@ -42,6 +40,12 @@ REM == BUILD PACKAGES ==
 call %buildpackage% Rebus %1
 if %ERRORLEVEL% neq 0 (
   echo Could not build Rebus.
+  exit /b 1
+)
+
+call %buildpackage% Rebus.NewtonsoftJson %1
+if %ERRORLEVEL% neq 0 (
+  echo Could not build Rebus.NewtonsoftJson.
   exit /b 1
 )
 

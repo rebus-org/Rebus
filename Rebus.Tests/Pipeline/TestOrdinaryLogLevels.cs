@@ -6,7 +6,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Transport.SqlServer;
+using Rebus.Transport.InMem;
 
 #pragma warning disable 1998
 
@@ -25,7 +25,7 @@ namespace Rebus.Tests.Pipeline
 
             Configure.With(_activator)
                 .Logging(l => l.Use(_logs))
-                .Transport(t => t.UseSqlServer(SqlTestHelper.ConnectionString, "messages", TestConfig.GetName("log-levels")))
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "log-levels"))
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);

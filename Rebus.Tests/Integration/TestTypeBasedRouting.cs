@@ -4,11 +4,10 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Persistence.SqlServer;
+using Rebus.Persistence.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -23,12 +22,11 @@ namespace Rebus.Tests.Integration
 
         protected override void SetUp()
         {
-            SqlTestHelper.DropTable("subscriptions");
-
             var network = new InMemNetwork();
+            var subscriberStore = new InMemorySubscriberStore();
             _publisher = GetEndpoint(network, "publisher", c =>
             {
-                c.Subscriptions(s => s.StoreInSqlServer(SqlTestHelper.ConnectionString, "subscriptions"));
+                c.Subscriptions(s => s.StoreInMemory(subscriberStore));
                 c.Routing(r => r.TypeBased());
             });
 

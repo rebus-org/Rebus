@@ -1074,11 +1074,12 @@
 
 ## 2.0.0-b01
 
-* Test release
+* Move MSMQ things to separate repository and NuGet package `Rebus.Msmq`
 
 ## 2.0.0-b02
 
-* Test release
+* Move SQL Server things to separate repository and NuGet package `Rebus.SqlServer`
+* Remove legacy worker factory
 
 ## 2.0.0-b03
 
@@ -1088,6 +1089,10 @@
 ## 2.0.0
 
 * This is Rebus 2 :)
+
+## 2.0.1
+
+* THIS is Rebus 2 :o)
 
 ---
 
