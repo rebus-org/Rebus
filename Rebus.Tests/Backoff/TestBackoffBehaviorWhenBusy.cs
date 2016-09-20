@@ -82,7 +82,7 @@ namespace Rebus.Tests.Backoff
 
             _activator.Bus.Advanced.Workers.SetNumberOfWorkers(1);
 
-            counter.WaitForResetEvent(60);
+            counter.WaitForResetEvent(120);
 
             Printt("Done... waiting a little extra");
             await Task.Delay(TimeSpan.FromSeconds(5));
