@@ -6,11 +6,9 @@ set buildall=%~dp0\build-all.cmd
 set push=%~dp0\push.cmd
 
 
-REM == BUILD ALL PACKAGES ==
-
 REM == BUILD EVERYTHING ==
 
-call %build% %1
+call %buildall% %1
 if %ERRORLEVEL% neq 0 (
   echo Could not build all packages.
   exit /b 1
