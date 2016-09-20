@@ -1085,6 +1085,10 @@
 * Add separate wait methods to `ISyncBackoffStrategy` in order to differentiate between waiting because no more parallel operations are allowed, and waiting because no message was received
 * Add `deliveryTimeoutSeconds` paramater to `Deliver` method of `SagaFixture` in order to allow for not timing out when e.g. step-debugging saga message processing
 
+## 2.0.0
+
+* This is Rebus 2 :)
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
