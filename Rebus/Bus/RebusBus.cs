@@ -18,9 +18,39 @@ using Rebus.Subscriptions;
 using Rebus.Time;
 using Rebus.Transport;
 using Rebus.Workers;
+using System.Collections.Concurrent;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Extension methods to simplify task sharing
+    /// </summary>
+    internal static class TaskContextExtensions
+    {
+        /// <summary>
+        /// Fluent way to enqueue a message to a shared context
+        /// </summary>
+        public static Task EnqueueTo(this Task task, ConcurrentQueue<Task> taskQueueContext)
+        {
+            taskQueueContext.Enqueue(task);
+            return task;
+        }
+
+        /// <summary>
+        /// Ensure all tasks are awaited within the queue
+        /// </summary>
+        public static async Task AwaitAllTasks(this ConcurrentQueue<Task> taskQueueContext)
+        {
+            Task task;
+            while (taskQueueContext.TryDequeue(out task))
+            {
+                if (task.IsCompleted)
+                    continue;
+                await task;
+            }
+        }
+    }
+
     /// <summary>
     /// This is the main bus thing which you'll most likely hold on to
     /// </summary>
@@ -42,6 +72,7 @@ namespace Rebus.Bus
         readonly ISubscriptionStorage _subscriptionStorage;
         readonly Options _options;
         readonly ILog _log;
+        readonly ConcurrentQueue<Task> _rebusTasksToWaitFor;
 
         /// <summary>
         /// Constructs the bus.
@@ -58,6 +89,12 @@ namespace Rebus.Bus
             _busLifetimeEvents = busLifetimeEvents;
             _dataBus = dataBus;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _rebusTasksToWaitFor = new ConcurrentQueue<Task>();
+        }
+
+        internal ConcurrentQueue<Task> GetTasksTriggeredByUser()
+        {
+            return _rebusTasksToWaitFor;
         }
 
         /// <summary>
@@ -86,7 +123,7 @@ namespace Rebus.Bus
 
             var logicalMessage = CreateMessage(commandMessage, Operation.SendLocal, optionalHeaders);
 
-            await InnerSend(new[] { destinationAddress }, logicalMessage);
+            await InnerSend(new[] { destinationAddress }, logicalMessage).EnqueueTo(_rebusTasksToWaitFor);
         }
 
         /// <summary>
@@ -97,7 +134,7 @@ namespace Rebus.Bus
             var logicalMessage = CreateMessage(commandMessage, Operation.Send, optionalHeaders);
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
-            await InnerSend(new[] { destinationAddress }, logicalMessage);
+            await InnerSend(new[] { destinationAddress }, logicalMessage).EnqueueTo(_rebusTasksToWaitFor);
         }
 
         /// <summary>
@@ -113,7 +150,7 @@ namespace Rebus.Bus
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 
-            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage).EnqueueTo(_rebusTasksToWaitFor);
         }
 
         /// <summary>
@@ -136,7 +173,7 @@ namespace Rebus.Bus
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
 
-            await InnerSend(new[] { returnAddress }, logicalMessage);
+            await InnerSend(new[] { returnAddress }, logicalMessage).EnqueueTo(_rebusTasksToWaitFor);
         }
 
         /// <summary>
@@ -174,7 +211,7 @@ namespace Rebus.Bus
         {
             var topic = eventType.GetSimpleAssemblyQualifiedName();
 
-            return InnerSubscribe(topic);
+            return InnerSubscribe(topic).EnqueueTo(_rebusTasksToWaitFor);
         }
 
         /// <summary>
@@ -192,7 +229,7 @@ namespace Rebus.Bus
         {
             var topic = eventType.GetSimpleAssemblyQualifiedName();
 
-            return InnerUnsubscribe(topic);
+            return InnerUnsubscribe(topic).EnqueueTo(_rebusTasksToWaitFor);
         }
 
         /// <summary>
@@ -215,9 +252,8 @@ namespace Rebus.Bus
             var messageType = eventMessage.GetType();
             var topic = messageType.GetSimpleAssemblyQualifiedName();
 
-            return InnerPublish(topic, eventMessage, optionalHeaders);
+            return InnerPublish(topic, eventMessage, optionalHeaders).EnqueueTo(_rebusTasksToWaitFor);
         }
-
 
         /// <summary>
         /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message
@@ -370,6 +406,11 @@ namespace Rebus.Bus
 
         async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
         {
+            await WrappedSend(destinationAddresses, logicalMessage);
+        }
+
+        async Task WrappedSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
+        {
             var currentTransactionContext = AmbientTransactionContext.Current;
 
             if (currentTransactionContext != null)
@@ -406,7 +447,7 @@ namespace Rebus.Bus
             await _transport.Send(destinationAddress, transportMessage, transactionContext);
         }
 
-        bool _disposing;
+        internal bool _disposing;
 
         /// <summary>
         /// Stops all workers, allowing them to finish handling the current message (for up to 1 minute) before exiting

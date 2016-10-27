@@ -126,16 +126,35 @@ namespace Rebus.Activation
         {
             readonly Func<IBus, TMessage, Task> _handlerFunction;
             readonly Func<IBus> _getBus;
+            IBus _shortLivedBus = null;
 
             public Handler(Func<IBus, TMessage, Task> handlerFunction, Func<IBus> getBus)
             {
                 _handlerFunction = handlerFunction;
-                _getBus = getBus; // store this function here because of Hen&Egg-Problem between handler activator and bus
+                // store this function here because of Hen&Egg-Problem between handler activator and bus
+                _getBus = () =>
+                {
+                    _shortLivedBus = getBus();
+                    return _shortLivedBus;
+                };
             }
 
             public async Task Handle(TMessage message)
             {
                 await _handlerFunction(_getBus(), message);
+                await AllUserTriggeredTasks();
+            }
+
+            private async Task AllUserTriggeredTasks()
+            {
+                if (_shortLivedBus != null)
+                {
+                    var rebusImplementation = _shortLivedBus as RebusBus;
+                    if (rebusImplementation != null && rebusImplementation._disposing == false)
+                    {
+                        await rebusImplementation.GetTasksTriggeredByUser().AwaitAllTasks();
+                    }
+                }
             }
         }
 
