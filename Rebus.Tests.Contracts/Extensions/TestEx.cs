@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -138,10 +139,11 @@ namespace Rebus.Tests.Contracts.Extensions
             return timer;
         }
 
-        public static async Task WaitUntil<T>(this ConcurrentQueue<T> queue, Func<ConcurrentQueue<T>, bool> criteria, int? timeoutSeconds = 5)
+        public static async Task WaitUntil<T>(this ConcurrentQueue<T> queue, Expression<Func<ConcurrentQueue<T>, bool>> criteriaExpression, int? timeoutSeconds = 5)
         {
             var start = DateTime.UtcNow;
             var timeout = TimeSpan.FromSeconds(timeoutSeconds.GetValueOrDefault(5));
+            var criteria = criteriaExpression.Compile();
 
             while (true)
             {
@@ -151,7 +153,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
                 if ((DateTime.UtcNow - start) < timeout) continue;
 
-                throw new TimeoutException($"Criteria {criteria} not satisfied within {timeoutSeconds} s timeout");
+                throw new TimeoutException($"Criteria {criteriaExpression} not satisfied within {timeoutSeconds} s timeout");
             }
         }
 

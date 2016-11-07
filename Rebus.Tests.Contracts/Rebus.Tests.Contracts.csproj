@@ -58,6 +58,7 @@
     <Compile Include="Activation\ContainerTests.cs" />
     <Compile Include="Activation\IContainerAdapterFactory.cs" />
     <Compile Include="Activation\RealContainerTests.cs" />
+    <Compile Include="Dummy.cs" />
     <Compile Include="Extensions\Range.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="DataBus\GeneralDataBusStorageTests.cs" />

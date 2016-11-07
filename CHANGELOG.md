@@ -1094,6 +1094,10 @@
 
 * THIS is Rebus 2 :o)
 
+## 2.0.2
+
+* Allow for customizing how the ambient transaction context is accessed (e.g. by backing it with `HttpContext.Current.Items` if that works better in your case)
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
