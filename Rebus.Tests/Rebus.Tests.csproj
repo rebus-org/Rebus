@@ -90,6 +90,7 @@
     <Compile Include="Integration\TestUnserializableException.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
+    <Compile Include="Routing\TestTransportMessageForwarding.cs" />
     <Compile Include="Testing\TestDataBusTesting.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />

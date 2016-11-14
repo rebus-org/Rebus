@@ -1098,6 +1098,10 @@
 
 * Allow for customizing how the ambient transaction context is accessed (e.g. by backing it with `HttpContext.Current.Items` if that works better in your case)
 
+## 2.1.0
+
+* Add ability to forward to multiple recipients with a transport message forwarder function
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
