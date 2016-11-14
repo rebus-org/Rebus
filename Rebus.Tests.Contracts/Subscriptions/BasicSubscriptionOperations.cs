@@ -5,6 +5,9 @@ using Rebus.Subscriptions;
 
 namespace Rebus.Tests.Contracts.Subscriptions
 {
+    /// <summary>
+    /// Test fixture base class for verifying compliance with the <see cref="ISubscriptionStorage"/> contract
+    /// </summary>
     public abstract class BasicSubscriptionOperations<TSubscriptionStorageFactory> : FixtureBase where TSubscriptionStorageFactory : ISubscriptionStorageFactory, new()
     {
         ISubscriptionStorage _storage;

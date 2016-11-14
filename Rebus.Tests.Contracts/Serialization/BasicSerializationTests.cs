@@ -12,6 +12,9 @@ using Rebus.Tests.Contracts.Serialization.Default;
 
 namespace Rebus.Tests.Contracts.Serialization
 {
+    /// <summary>
+    /// Test fixture base class for verifying compliance with the <see cref="ISerializer"/> contract
+    /// </summary>
     public class BasicSerializationTests<TSerializerFactory> : FixtureBase where TSerializerFactory : ISerializerFactory, new()
     {
         TSerializerFactory _factory;

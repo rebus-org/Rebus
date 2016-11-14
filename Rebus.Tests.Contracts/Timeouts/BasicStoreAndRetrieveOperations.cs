@@ -10,6 +10,9 @@ using Rebus.Timeouts;
 
 namespace Rebus.Tests.Contracts.Timeouts
 {
+    /// <summary>
+    /// Test fixture base class for verifying compliance with the <see cref="ITimeoutManager"/> contract
+    /// </summary>
     public abstract class BasicStoreAndRetrieveOperations<TTimeoutManagerFactory> : FixtureBase where TTimeoutManagerFactory : ITimeoutManagerFactory, new()
     {
         TTimeoutManagerFactory _factory;

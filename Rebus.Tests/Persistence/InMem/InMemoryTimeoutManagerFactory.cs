@@ -10,7 +10,7 @@ using Rebus.Timeouts;
 namespace Rebus.Tests.Persistence.InMem
 {
     [TestFixture]
-    public class BasicStoreAndRetrieveOperations : BasicStoreAndRetrieveOperations<InMemoryTimeoutManagerFactory> { }
+    public class InMemoryBasicStoreAndRetrieveOperations : BasicStoreAndRetrieveOperations<InMemoryTimeoutManagerFactory> { }
 
     public class InMemoryTimeoutManagerFactory : ITimeoutManagerFactory
     {

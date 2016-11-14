@@ -16,6 +16,9 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
+    /// <summary>
+    /// Test fixture base class for verifying compliance with the <see cref="ISagaStorage"/> contract
+    /// </summary>
     public abstract class SagaIntegrationTests<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         TFactory _factory;

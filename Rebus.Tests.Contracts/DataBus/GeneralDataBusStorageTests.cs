@@ -13,6 +13,9 @@ using Rebus.Time;
 
 namespace Rebus.Tests.Contracts.DataBus
 {
+    /// <summary>
+    /// Test fixture base class for verifying compliance with the <see cref="IDataBusStorage"/> contract
+    /// </summary>
     public abstract class GeneralDataBusStorageTests<TDataStorageFactory> : FixtureBase where TDataStorageFactory : IDataBusStorageFactory, new()
     {
         IDataBusStorage _storage;

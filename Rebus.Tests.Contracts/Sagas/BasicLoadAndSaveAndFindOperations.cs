@@ -10,6 +10,9 @@ using Rebus.Tests.Contracts.Extensions;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
+    /// <summary>
+    /// Test fixture base class for verifying compliance with the <see cref="ISagaStorage"/> contract
+    /// </summary>
     public abstract class BasicLoadAndSaveAndFindOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         readonly IEnumerable<ISagaCorrelationProperty> _noCorrelationProperties = Enumerable.Empty<ISagaCorrelationProperty>();
