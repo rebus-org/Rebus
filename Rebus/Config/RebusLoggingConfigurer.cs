@@ -64,5 +64,21 @@ namespace Rebus.Config
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _injectionist.Register(c => rebusLoggerFactory);
         }
+
+        /// <summary>
+        /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service
+        /// </summary>
+        public void Register<TService>(Func<IResolutionContext, TService> factoryMethod, string description = null)
+        {
+            _injectionist.Register(factoryMethod, description: description);
+        }
+
+        /// <summary>
+        /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service
+        /// </summary>
+        public void Decorate<TService>(Func<IResolutionContext, TService> factoryMethod, string description = null)
+        {
+            _injectionist.Decorate(factoryMethod, description: description);
+        }
     }
 }

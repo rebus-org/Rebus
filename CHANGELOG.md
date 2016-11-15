@@ -1102,6 +1102,10 @@
 
 * Add ability to forward to multiple recipients with a transport message forwarder function
 
+## 2.1.1
+
+* Add missing Injectionist access methods on `RebusLoggingConfigurer`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
