@@ -10,18 +10,20 @@ namespace Rebus.Sagas
     /// </summary>
     public class SagaHelper
     {
-        readonly ConcurrentDictionary<Type, Dictionary<Type, CorrelationProperty[]>> _cachedCorrelationProperties
-                = new ConcurrentDictionary<Type, Dictionary<Type, CorrelationProperty[]>>();
+        readonly ConcurrentDictionary<string, Dictionary<Type, CorrelationProperty[]>> _cachedCorrelationProperties
+                = new ConcurrentDictionary<string, Dictionary<Type, CorrelationProperty[]>>();
 
         /// <summary>
         /// Gets (most likely from a cache) the set of correlation properties relevant for the given saga handler.
         /// </summary>
         public SagaDataCorrelationProperties GetCorrelationProperties(object message, Saga saga)
         {
+            var sagaType = saga.GetType();
             var sagaDataType = saga.GetSagaDataType();
+            var key = $"{sagaType.FullName}/{sagaDataType.FullName}";
 
             var correlationPropertiesForThisSagaDataType = _cachedCorrelationProperties
-                .GetOrAdd(sagaDataType, type => GetCorrelationProperties(saga));
+                .GetOrAdd(key, _ => GetCorrelationProperties(saga));
 
             return new SagaDataCorrelationProperties(correlationPropertiesForThisSagaDataType, sagaDataType);
         }

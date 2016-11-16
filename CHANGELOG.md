@@ -1106,6 +1106,11 @@
 
 * Add missing Injectionist access methods on `RebusLoggingConfigurer`
 
+## 2.1.2
+
+* Fix bug that would only accept one set of correlation properties for each saga data type. Now it works when multiple saga handlers use the same saga data type.
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
