@@ -1110,6 +1110,9 @@
 
 * Fix bug that would only accept one set of correlation properties for each saga data type. Now it works when multiple saga handlers use the same saga data type.
 
+## 2.1.3
+
+* Add additional allowed saga correlation property types: `bool`, `byte`, `short`, and `long`
 
 ---
 

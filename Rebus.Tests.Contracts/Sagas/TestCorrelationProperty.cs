@@ -8,8 +8,13 @@ namespace Rebus.Tests.Contracts.Sagas
     {
         static readonly Type[] AllowedCorrelationPropertyTypes = {
             typeof (string),
+            typeof (Guid),
+
+            typeof (bool),
+            typeof (byte),
+            typeof (short),
             typeof (int),
-            typeof (Guid)
+            typeof (long),
         };
 
         public TestCorrelationProperty(string propertyName, Type sagaDataType)
@@ -26,8 +31,7 @@ namespace Rebus.Tests.Contracts.Sagas
 
             if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
 
-            throw new ArgumentException(
-                $"Cannot correlate with the '{PropertyName}' property on the '{SagaDataType.Name}' saga data type - only allowed types are: {String.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))}");
+            throw new ArgumentException($"Cannot correlate with the '{PropertyName}' property on the '{SagaDataType.Name}' saga data type - only allowed types are: {string.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))}");
         }
 
         public string PropertyName { get; }

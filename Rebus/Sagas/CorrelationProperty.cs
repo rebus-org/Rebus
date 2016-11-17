@@ -14,7 +14,11 @@ namespace Rebus.Sagas
         static readonly Type[] AllowedCorrelationPropertyTypes =
         {
             typeof (Guid),
+            typeof (bool),
+            typeof (byte),
+            typeof (short),
             typeof (int),
+            typeof (long),
             typeof (string),
         };
 

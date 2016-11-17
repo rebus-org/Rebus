@@ -290,7 +290,7 @@ namespace Rebus.Tests.Contracts.Sagas
         }
 
         [Test]
-        public async Task NizzleName()
+        public async Task CorrelateByDifferentPropertyTypes()
         {
             var id = Guid.NewGuid();
 
@@ -300,6 +300,10 @@ namespace Rebus.Tests.Contracts.Sagas
             var dateTimeOffsetCorrelationValue = new DateTimeOffset(1979, 3, 19, 20, 0, 0, TimeSpan.FromHours(2));
             var decimalCorrelationValue = 23M;
             var intCorrelationValue = 8;
+            var boolCorrelationValue = true;
+            var byteCorrelationValue = (byte)64;
+            var shortCorrelationValue = (short)78;
+            var longCorrelationValue = 2323232L;
 
             var data = new SagaDataWithVariousCorrelationProperties
             {
@@ -309,13 +313,23 @@ namespace Rebus.Tests.Contracts.Sagas
                 CorrelateByDateTimeOffset = dateTimeOffsetCorrelationValue,
                 CorrelateByDecimal = decimalCorrelationValue,
                 CorrelateByGuid = guidCorrelationValue,
-                CorrelateByInt = intCorrelationValue
+                CorrelateByInt = intCorrelationValue,
+                CorrelateByBool = boolCorrelationValue,
+                CorrelateByByte = byteCorrelationValue,
+                CorrelateByShort = shortCorrelationValue,
+                CorrelateByLong = longCorrelationValue,
             };
 
             var correlationProperties = new[]
             {
                 GetCorrelationProperty(d => d.CorrelateByString),
+
+                GetCorrelationProperty(d => d.CorrelateByBool), 
+                GetCorrelationProperty(d => d.CorrelateByShort), 
                 GetCorrelationProperty(d => d.CorrelateByInt), 
+                GetCorrelationProperty(d => d.CorrelateByLong), 
+                GetCorrelationProperty(d => d.CorrelateByByte), 
+                
                 //GetCorrelationProperty(d => d.CorrelateByDecimal), 
                 //GetCorrelationProperty(d => d.CorrelateByDateTime), 
                 //GetCorrelationProperty(d => d.CorrelateByDateTimeOffset), 
@@ -328,9 +342,18 @@ namespace Rebus.Tests.Contracts.Sagas
             var dataByInt = await Find(intCorrelationValue, d => d.CorrelateByInt);
             var dataByGuid = await Find(guidCorrelationValue, d => d.CorrelateByGuid);
 
+            var dataByBool = await Find(boolCorrelationValue, d => d.CorrelateByBool);
+            var dataByByte = await Find(byteCorrelationValue, d => d.CorrelateByByte);
+            var dataByShort = await Find(shortCorrelationValue, d => d.CorrelateByShort);
+            var dataByLong = await Find(longCorrelationValue, d => d.CorrelateByLong);
+
             Assert.That(dataByString.Id, Is.EqualTo(id));
             Assert.That(dataByInt.Id, Is.EqualTo(id));
             Assert.That(dataByGuid.Id, Is.EqualTo(id));
+            Assert.That(dataByBool.Id, Is.EqualTo(id));
+            Assert.That(dataByShort.Id, Is.EqualTo(id));
+            Assert.That(dataByLong.Id, Is.EqualTo(id));
+            Assert.That(dataByByte.Id, Is.EqualTo(id));
         }
 
         async Task<ISagaData> Find(object value, Expression<Func<SagaDataWithVariousCorrelationProperties, object>> expression)
@@ -350,10 +373,16 @@ namespace Rebus.Tests.Contracts.Sagas
 
             public string CorrelateByString { get; set; }
             public Guid CorrelateByGuid { get; set; }
+
+            public bool CorrelateByBool { get; set; }
+            public short CorrelateByShort { get; set; }
             public int CorrelateByInt { get; set; }
+            public long CorrelateByLong { get; set; }
+
             public decimal CorrelateByDecimal { get; set; }
             public DateTime CorrelateByDateTime { get; set; }
             public DateTimeOffset CorrelateByDateTimeOffset { get; set; }
+            public byte CorrelateByByte { get; set; }
         }
 
         class TestSagaData : ISagaData
