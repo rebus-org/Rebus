@@ -177,8 +177,14 @@ namespace Rebus.Activation
             if (Bus == null) return;
 
             var disposable = Bus;
-            Bus = null;
-            disposable.Dispose();
+            try
+            {
+                disposable.Dispose();
+            }
+            finally
+            {
+                Bus = null;
+            }
         }
     }
 }

@@ -1114,6 +1114,10 @@
 
 * Add additional allowed saga correlation property types: `bool`, `byte`, `short`, and `long`
 
+## 2.1.4
+
+* Fix `BuiltinHandlerActivator` disposal race condition bug (could accidentally call a handler method with a `null` bus during shutdown)
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

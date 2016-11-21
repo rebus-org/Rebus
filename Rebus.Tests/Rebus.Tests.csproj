@@ -68,6 +68,7 @@
     <Compile Include="Auditing\TestMessageAuditing.cs" />
     <Compile Include="Backoff\TestBackoffBehaviorWhenBusy.cs" />
     <Compile Include="Backoff\TestCustomizedBackoff.cs" />
+    <Compile Include="Bugs\BuiltinHandlerActivatorDisposalRaceCondition.cs" />
     <Compile Include="Bugs\CustomHeadersAreCloned.cs" />
     <Compile Include="Bugs\DoesNotDispatchWrongSagaDataType.cs" />
     <Compile Include="Bugs\DoesNotEnlistInOtherBusTransactionContext.cs" />
