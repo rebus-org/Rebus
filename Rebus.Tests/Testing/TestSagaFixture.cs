@@ -5,6 +5,8 @@ using NUnit.Framework;
 using Rebus.Sagas;
 using Rebus.Testing;
 using Rebus.Tests.Contracts;
+using Rebus.Tests.Sagas;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Testing
@@ -121,6 +123,25 @@ namespace Rebus.Tests.Testing
 
                 // Assert
                 Assert.That(fixture.Data.Count(), Is.EqualTo(1));
+            }
+        }
+
+        ///<summary>
+        /// Verify that Id is set upon null Id.
+        ///</summary>
+        [Test]
+        public void IdIsSetUponNullId()
+        {
+            using (var fixture = SagaFixture.For<MySaga>())
+            {
+                // Arrange
+
+                // Act
+                fixture.Add(new MySagaState());
+
+                // Asert
+                Assert.That(fixture.Data.Count(), Is.EqualTo(1));
+                Assert.That(fixture.Data.Single().Id, Is.Not.Null);
             }
         }
 
