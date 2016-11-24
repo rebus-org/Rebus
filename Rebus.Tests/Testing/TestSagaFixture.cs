@@ -106,6 +106,24 @@ namespace Rebus.Tests.Testing
             
         }
 
+        ///<summary>
+        /// SagaData with non-empty Id is added to SagaFixture.Data.
+        ///</summary>
+        [Test]
+        public void SagaDataWithNonEmptyIdIsAddedToSagaFixtureData()
+        {
+            using (var fixture = SagaFixture.For<MySaga>())
+            {
+                // Arrange
+
+                // Act
+                fixture.Add(new MySagaState { Id = Guid.NewGuid() });
+
+                // Assert
+                Assert.That(fixture.Data.Count(), Is.EqualTo(1));
+            }
+        }
+
         class MySaga : Saga<MySagaState>, IAmInitiatedBy<TestMessage>
         {
             protected override void CorrelateMessages(ICorrelationConfig<MySagaState> config)
