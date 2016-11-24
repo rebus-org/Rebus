@@ -175,10 +175,7 @@ namespace Rebus.Testing
         /// </summary>
         public void Add(ISagaData sagaDataInstance)
         {
-            if (sagaDataInstance.Id == Guid.Empty)
-            {
-                _inMemorySagaStorage.AddInstance(sagaDataInstance);
-            }
+            _inMemorySagaStorage.AddInstance(sagaDataInstance);
         }
 
         /// <summary>
