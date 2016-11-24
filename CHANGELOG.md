@@ -1117,6 +1117,7 @@
 ## 2.1.4
 
 * Fix `BuiltinHandlerActivator` disposal race condition bug (could accidentally call a handler method with a `null` bus during shutdown)
+* Fix bug that would cause a saga data instance explicitly added to the `SagaFixture` to be completely ignored - thanks [madstt]
 
 ---
 
@@ -1140,6 +1141,7 @@
 [jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
+[madstt]: https://github.com/madstt
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337
 [mclausen]: https://github.com/mclausen
