@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using Rebus.Activation;
 using Rebus.Config;
@@ -32,12 +31,11 @@ namespace Rebus.Testing
             {
                 try
                 {
-                    return Activator.CreateInstance<TSagaHandler>();
+                    return new TSagaHandler();
                 }
                 catch (Exception exception)
                 {
-                    throw new ArgumentException(
-                        $"Could not create new saga handler instance of type {typeof(TSagaHandler)}", exception);
+                    throw new ArgumentException($"Could not create new saga handler instance of type {typeof(TSagaHandler)}", exception);
                 }
             };
 
@@ -158,10 +156,12 @@ namespace Rebus.Testing
         /// </summary>
         public void Deliver(object message, Dictionary<string, string> optionalHeaders = null, int deliveryTimeoutSeconds = 5)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             var resetEvent = new ManualResetEvent(false);
             _lockStepper.AddResetEvent(resetEvent);
 
-            _activator.Bus.SendLocal(message, optionalHeaders).Wait();
+            _activator.Bus.SendLocal(message, optionalHeaders);
 
             if (!resetEvent.WaitOne(TimeSpan.FromSeconds(deliveryTimeoutSeconds)))
             {
