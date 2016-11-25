@@ -145,7 +145,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         {
             var timeoutManagerAddress = _options.ExternalTimeoutManagerAddressOrNull;
 
-            _log.Info("Forwarding deferred message {0} to external timeout manager '{1}'",
+            _log.Debug("Forwarding deferred message {0} to external timeout manager '{1}'",
                 transportMessage.GetMessageLabel(), timeoutManagerAddress);
 
             await _transport.Send(timeoutManagerAddress, transportMessage, transactionContext);
@@ -155,7 +155,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         {
             var approximateDueTime = GetTimeToBeDelivered(deferredUntil);
 
-            _log.Info("Deferring message {0} until {1}", headers[Headers.MessageId], approximateDueTime);
+            _log.Debug("Deferring message {0} until {1}", headers[Headers.MessageId], approximateDueTime);
 
             headers.Remove(Headers.DeferredUntil);
 

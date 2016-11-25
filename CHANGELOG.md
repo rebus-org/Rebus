@@ -1119,6 +1119,10 @@
 * Fix `BuiltinHandlerActivator` disposal race condition bug (could accidentally call a handler method with a `null` bus during shutdown)
 * Fix bug that would cause a saga data instance explicitly added to the `SagaFixture` to be completely ignored - thanks [madstt]
 
+## 2.1.5
+
+* Add a couple of strategic logging statements around message dispatch
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

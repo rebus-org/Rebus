@@ -152,6 +152,7 @@ namespace Rebus.Pipeline.Receive
 
         const string SagaDataPropertyName = nameof(Saga<ConcreteSagaData>.Data); //< for refactoring tools to better see it
 
+        // ReSharper disable once ClassNeverInstantiated.Local
         class ConcreteSagaData : SagaData { } //< in order to be able to declare the const above
 
         /// <summary>

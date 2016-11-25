@@ -28,7 +28,7 @@ namespace Rebus.Handlers.Reordering
         {
             var handlerInvokers = context.Load<HandlerInvokers>();
             var orderedHandlerInvokers = handlerInvokers.OrderBy(i => _configuration.GetIndex(i.Handler));
-            var newHandlerInvokers = new HandlerInvokers(orderedHandlerInvokers);
+            var newHandlerInvokers = new HandlerInvokers(handlerInvokers.Message, orderedHandlerInvokers);
             
             context.Save(newHandlerInvokers);
             

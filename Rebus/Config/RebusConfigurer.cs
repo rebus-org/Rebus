@@ -235,7 +235,7 @@ namespace Rebus.Config
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
                     .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
-                    .OnReceive(new DispatchIncomingMessageStep())
+                    .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
                     .OnSend(new AssignGuidMessageIdStep())
                     .OnSend(new AssignReturnAddressStep(transport))
