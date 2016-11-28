@@ -62,7 +62,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
             var waitDurationTicks = DateTime.UtcNow.Ticks - waitedSinceTicks;
             var totalSecondsIdle = (int) TimeSpan.FromTicks(waitDurationTicks).TotalSeconds;
-            var waitTimeIndex = Math.Min(totalSecondsIdle, _backoffTimes.Length - 1);
+            var waitTimeIndex = Math.Max(0, Math.Min(totalSecondsIdle, _backoffTimes.Length - 1));
 
             var backoffTime = _backoffTimes[waitTimeIndex];
 

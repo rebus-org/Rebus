@@ -1123,6 +1123,11 @@
 
 * Add a couple of strategic logging statements around message dispatch
 
+## 2.1.6
+
+* Fix bug that can result in accidentally logging `IndexOutOfRangeExceptions`s when entering idle state, just when the server clock is adjusted back in time
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
