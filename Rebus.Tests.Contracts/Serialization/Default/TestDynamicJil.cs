@@ -2,27 +2,27 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Serialization.Default
 {
-    [TestFixture]
     public class TestDynamicCapabilityOfDefaultSerializer : FixtureBase
     {
         const string InputQueueName = "json";
         BuiltinHandlerActivator _builtinHandlerActivator;
         InMemNetwork _network;
 
-        protected override void SetUp()
+        public TestDynamicCapabilityOfDefaultSerializer()
         {
             _builtinHandlerActivator = new BuiltinHandlerActivator();
-            
+
             Using(_builtinHandlerActivator);
 
             _network = new InMemNetwork();
@@ -32,7 +32,7 @@ namespace Rebus.Tests.Contracts.Serialization.Default
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void DispatchesDynamicMessageWhenDotNetTypeCannotBeFound()
         {
             var gotTheMessage = new ManualResetEvent(false);
@@ -63,7 +63,7 @@ namespace Rebus.Tests.Contracts.Serialization.Default
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(2));
 
-            Assert.That(messageText, Is.EqualTo("OMG dynamic JSON BABY!!"));
+            Assert.Equal("OMG dynamic JSON BABY!!", messageText);
         }
     }
 }

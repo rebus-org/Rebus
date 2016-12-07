@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using FluentAssertions.Execution;
 using Rebus.Messages;
 using Rebus.Transport;
 
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Contracts.Extensions
                 if (receivedTransportMessage != null) return receivedTransportMessage;
             }
 
-            throw new AssertionException($"Did not receive transport message from {transport} within {timeout} timeout");
+            throw new AssertionFailedException($"Did not receive transport message from {transport} within {timeout} timeout");
         }
     }
 }

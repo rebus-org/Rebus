@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Handlers;
@@ -11,16 +10,17 @@ using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestSagasAndPolymorphicCorrelation : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
+        readonly BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public TestSagasAndPolymorphicCorrelation()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -38,7 +38,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task WorksWithFailedAndInterfacesToo()
         {
             var counter = new SharedCounter(3);
@@ -74,7 +74,7 @@ namespace Rebus.Tests.Integration
 
             public async Task Handle(SomeMessageThatFails message)
             {
-                throw new ApplicationException("bummer dude");
+                throw new Exception("bummer dude");
             }
 
             public async Task Handle(IFailed<SomeMessageThatFails> message)
@@ -124,7 +124,7 @@ namespace Rebus.Tests.Integration
             public string CorrelationId { get; }
         }
 
-        [Test]
+        [Fact]
         public void CanCorrelateWithIncomingMessageWhichIsInherited()
         {
             var encounteredSagaIds = new ConcurrentQueue<Guid>();
@@ -138,7 +138,7 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.That(encounteredSagaIds.Distinct().Count(), Is.EqualTo(1));
+            Assert.Equal(1, encounteredSagaIds.Distinct().Count());
         }
 
         class PolySaga : Saga<PolySagaState>, IAmInitiatedBy<AbstractPolyMessage>

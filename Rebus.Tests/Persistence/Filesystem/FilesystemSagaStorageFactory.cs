@@ -10,7 +10,7 @@ namespace Rebus.Tests.Persistence.Filesystem
 {
     public class FilesystemSagaStorageFactory : ISagaStorageFactory
     {
-        readonly string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Sagas{DateTime.Now:yyyyMMddHHmmssffff}");
+        readonly string _basePath = Path.Combine(AppContext.BaseDirectory, $"Sagas{DateTime.Now:yyyyMMddHHmmssffff}");
 
         public ISagaStorage GetSagaStorage()
         {

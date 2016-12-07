@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Linq;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Pipeline
 {
-    [TestFixture]
     public class TestOrdinaryLogLevels : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
-        ListLoggerFactory _logs;
+        readonly BuiltinHandlerActivator _activator;
+        readonly ListLoggerFactory _logs;
 
-        protected override void SetUp()
+        public TestOrdinaryLogLevels()
         {
             _activator = Using(new BuiltinHandlerActivator());
             _logs = new ListLoggerFactory(outputToConsole: true, detailed: true);
@@ -34,7 +33,7 @@ namespace Rebus.Tests.Pipeline
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void DoesNotLogWarningsUnderNormalUse()
         {
             var counter = new SharedCounter(3);
@@ -50,9 +49,8 @@ namespace Rebus.Tests.Pipeline
 
             var logLinesWarnLevelOrAbove = _logs.Where(l => l.Level >= LogLevel.Warn).ToList();
 
-            Assert.That(logLinesWarnLevelOrAbove.Any(), Is.False, $@"Got the following log lines >= WARN:
-
-{string.Join(Environment.NewLine, logLinesWarnLevelOrAbove)}");
+            Assert.False(logLinesWarnLevelOrAbove.Any(), $@"Got the following log lines >= WARN:
+                {string.Join(Environment.NewLine, logLinesWarnLevelOrAbove)}");
         }
     }
 }

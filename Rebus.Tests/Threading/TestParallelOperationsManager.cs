@@ -1,12 +1,11 @@
-﻿using NUnit.Framework;
-using Rebus.Threading;
+﻿using Rebus.Threading;
+using Xunit;
 
 namespace Rebus.Tests.Threading
 {
-    [TestFixture]
     public class TestParallelOperationsManager
     {
-        [Test]
+        [Fact]
         public void DoesNotAllowMoreThanMaxParallelismToContinue()
         {
             var manager = new ParallelOperationsManager(3);
@@ -16,13 +15,13 @@ namespace Rebus.Tests.Threading
             var operation3 = manager.TryBegin();
             var operation4 = manager.TryBegin();
 
-            Assert.That(operation1.CanContinue(), Is.True);
-            Assert.That(operation2.CanContinue(), Is.True);
-            Assert.That(operation3.CanContinue(), Is.True);
-            Assert.That(operation4.CanContinue(), Is.False);
+            Assert.True(operation1.CanContinue());
+            Assert.True(operation2.CanContinue());
+            Assert.True(operation3.CanContinue());
+            Assert.False(operation4.CanContinue());
         }
 
-        [Test]
+        [Fact]
         public void ReleasesOperationAsExpected()
         {
             var manager = new ParallelOperationsManager(3);
@@ -36,14 +35,14 @@ namespace Rebus.Tests.Threading
             var operation4 = manager.TryBegin();
             var operation5 = manager.TryBegin();
 
-            Assert.That(operation1.CanContinue(), Is.True);
-            Assert.That(operation2.CanContinue(), Is.True);
-            Assert.That(operation3.CanContinue(), Is.True);
-            Assert.That(operation4.CanContinue(), Is.True);
-            Assert.That(operation5.CanContinue(), Is.False);
+            Assert.True(operation1.CanContinue());
+            Assert.True(operation2.CanContinue());
+            Assert.True(operation3.CanContinue());
+            Assert.True(operation4.CanContinue());
+            Assert.False(operation5.CanContinue());
         }
 
-        [Test]
+        [Fact]
         public void ReleasingOperationThatCouldNotContinueDoesNotAffectAnything()
         {
             var manager = new ParallelOperationsManager(2);
@@ -63,9 +62,9 @@ namespace Rebus.Tests.Threading
             var op6 = manager.TryBegin();
             var op7 = manager.TryBegin();
 
-            Assert.That(op5.CanContinue(), Is.True);
-            Assert.That(op6.CanContinue(), Is.True);
-            Assert.That(op7.CanContinue(), Is.False);
+            Assert.True(op5.CanContinue());
+            Assert.True(op6.CanContinue());
+            Assert.False(op7.CanContinue());
         }
     }
 }

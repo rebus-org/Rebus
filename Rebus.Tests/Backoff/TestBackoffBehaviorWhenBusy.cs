@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Backoff;
 using Rebus.Config;
@@ -13,20 +12,19 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
+using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Backoff
 {
-    [TestFixture]
     public class TestBackoffBehaviorWhenBusy : FixtureBase
     {
         BuiltinHandlerActivator _activator;
         BackoffSnitch _snitch;
 
-        protected override void SetUp()
+        public TestBackoffBehaviorWhenBusy()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -60,7 +58,8 @@ namespace Rebus.Tests.Backoff
                 .Start();
         }
 
-        [TestCase(100000)]
+        [Theory]
+        [InlineData(100000)]
         public async Task DoesNotBackOffAtAllWhenBusy(int messageCount)
         {
             var counter = new SharedCounter(messageCount);

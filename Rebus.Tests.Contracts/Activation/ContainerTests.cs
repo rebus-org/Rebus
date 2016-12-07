@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
@@ -13,6 +13,8 @@ using Rebus.Handlers;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
@@ -21,7 +23,7 @@ namespace Rebus.Tests.Contracts.Activation
     {
         TFactory _factory;
 
-        protected override void SetUp()
+        protected ContainerTests() : base()
         {
             _factory = new TFactory();
 
@@ -56,7 +58,7 @@ namespace Rebus.Tests.Contracts.Activation
             public string Text { get; }
         }
 
-        [Test]
+        [Fact]
         public void IntegrationTest()
         {
             _factory.RegisterHandlerType<StaticHandler>();
@@ -73,10 +75,10 @@ namespace Rebus.Tests.Contracts.Activation
 
             Thread.Sleep(2000);
 
-            Assert.That(StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text, Is.EqualTo("hej med dig"));
+            Assert.Equal("hej med dig", StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text);
         }
 
-        [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
+        [Fact, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
         public void DoesNotDoubleResolveBecauseOfLazyEnumerableEvaluation()
         {
             _factory.RegisterHandlerType<SomeHandler>();
@@ -90,10 +92,10 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             var createdInstances = SomeHandler.CreatedInstances.ToList();
-            Assert.That(createdInstances, Is.EqualTo(new[] { 0 }));
+            Assert.Equal(new[] { 0 }, createdInstances);
 
             var disposedInstances = SomeHandler.DisposedInstances.ToList();
-            Assert.That(disposedInstances, Is.EqualTo(new[] { 0 }));
+            Assert.Equal(new[] { 0 }, disposedInstances);
         }
 
         class SomeHandler : IHandleMessages<string>, IDisposable
@@ -129,7 +131,7 @@ namespace Rebus.Tests.Contracts.Activation
             }
         }
 
-        [Test]
+        [Fact]
         public void CanGetDecoratedBus()
         {
             var busReturnedFromConfiguration = Configure.With(_factory.GetActivator())
@@ -139,9 +141,8 @@ namespace Rebus.Tests.Contracts.Activation
 
             var busReturnedFromContainer = _factory.GetBus();
 
-            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>());
-            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>());
-
+            Assert.IsType<TestBusDecorator>(busReturnedFromConfiguration);
+            Assert.IsType<TestBusDecorator>(busReturnedFromContainer);
         }
 
         class TestBusDecorator : IBus
@@ -209,7 +210,7 @@ namespace Rebus.Tests.Contracts.Activation
             }
         }
 
-        [Test]
+        [Fact]
         public void CanSetBusAndDisposeItAfterwards()
         {
             var factoryForThisTest = new TFactory();
@@ -229,7 +230,7 @@ namespace Rebus.Tests.Contracts.Activation
                 factoryForThisTest.CleanUp();
             }
 
-            Assert.That(fakeBus.Disposed, Is.True, "The disposable bus instance was NOT disposed when the container was disposed");
+            Assert.True(fakeBus.Disposed,"The disposable bus instance was NOT disposed when the container was disposed");
         }
 
         class FakeBus : IBus
@@ -309,7 +310,7 @@ namespace Rebus.Tests.Contracts.Activation
             }
         }
 
-        [Test]
+        [Fact]
         public async Task ResolvesHandlersPolymorphically()
         {
             _factory.RegisterHandlerType<BaseMessageHandler>();
@@ -320,8 +321,8 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), transactionContext)).ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(1));
-                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
+                Assert.Equal(1, handlers.Count);
+                Assert.IsType<BaseMessageHandler>(handlers[0]);
             }
         }
 
@@ -329,7 +330,7 @@ namespace Rebus.Tests.Contracts.Activation
         class DerivedMessage : BaseMessage { }
         class BaseMessageHandler : IHandleMessages<BaseMessage> { public async Task Handle(BaseMessage message) { } }
 
-        [Test]
+        [Fact]
         public async Task ResolvingWithoutRegistrationYieldsEmptySequenec()
         {
             var handlerActivator = _factory.GetActivator();
@@ -338,11 +339,11 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", transactionContext)).ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(0));
+                Assert.Equal(0, handlers.Count);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task CanRegisterHandler()
         {
             _factory.RegisterHandlerType<SomeStringHandler>();
@@ -352,12 +353,12 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", transactionContext)).ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(1));
-                Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>());
+                Assert.Equal(1, handlers.Count);
+                Assert.IsType<SomeStringHandler>(handlers[0]);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task ResolvedHandlerIsDisposed()
         {
             _factory.RegisterHandlerType<DisposableHandler>();
@@ -372,8 +373,8 @@ namespace Rebus.Tests.Contracts.Activation
 
             await DisposableHandler.Events.WaitUntil(c => c.Count == 2);
 
-            Assert.That(DisposableHandler.WasCalledAllright, Is.True, "The handler was apparently not called");
-            Assert.That(DisposableHandler.WasDisposedAllright, Is.True, "The handler was apparently not disposed");
+            Assert.True(DisposableHandler.WasCalledAllright, "The handler was apparently not called");
+            Assert.True(DisposableHandler.WasDisposedAllright, "The handler was apparently not disposed");
         }
 
         class SomeStringHandler : IHandleMessages<string>

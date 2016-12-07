@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
+using Xunit;
 
 namespace Rebus.Tests.Contracts.Transports
 {
@@ -17,7 +17,7 @@ namespace Rebus.Tests.Contracts.Transports
         TTransportFactory _factory;
         CancellationToken _cancellationToken;
 
-        protected override void SetUp()
+        protected BasicSendReceive()
         {
             _cancellationToken = new CancellationTokenSource().Token;
             _factory = new TTransportFactory();
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Contracts.Transports
             _factory.CleanUp();
         }
 
-        [Test]
+        [Fact]
         public async Task HasOneWayClient()
         {
             var receiverQueue = TestConfig.GetName("receiver");
@@ -47,15 +47,15 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var transportMessage = await receiver.Receive(context, _cancellationToken);
 
-                Assert.That(transportMessage, Is.Not.Null);
+                Assert.NotNull(transportMessage);
 
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.That(stringBody, Is.EqualTo("greetings!"));
+                Assert.Equal("greetings!", stringBody);
             });
         }
 
-        [Test]
+        [Fact]
         public async Task EmptyQueueReturnsNull()
         {
             var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
@@ -64,11 +64,11 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
 
-                Assert.That(transportMessage, Is.Null);
+                Assert.Null(transportMessage);
             });
         }
 
-        [Test]
+        [Fact]
         public async Task CanSendAndReceive()
         {
             var input1QueueName = TestConfig.GetName("input1");
@@ -87,11 +87,11 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.That(stringBody, Is.EqualTo("hej"));
+                Assert.Equal("hej", stringBody);
             });
         }
 
-        [Test]
+        [Fact]
         public async Task MessageIsNotSentWhenTransactionIsNotCompleted()
         {
             var input1QueueName = TestConfig.GetName("input1");
@@ -110,11 +110,11 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var transportMessage = await input2.Receive(context, _cancellationToken);
 
-                Assert.That(transportMessage, Is.Null);
+                Assert.Null(transportMessage);
             });
         }
 
-        [Test]
+        [Fact]
         public async Task MessageIsReturnedToQueueWhenReceivingTransactionIsNotCommitted()
         {
             var input1QueueName = TestConfig.GetName("input1");
@@ -133,7 +133,7 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.That(stringBody, Is.EqualTo("hej"));
+                Assert.Equal("hej", stringBody);
             }, completeTransaction: false);
 
             await WithContext(async context =>
@@ -141,19 +141,20 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.That(stringBody, Is.EqualTo("hej"));
+                Assert.Equal("hej", stringBody);
             });
 
             await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context, _cancellationToken);
 
-                Assert.That(transportMessage, Is.Null);
+                Assert.Null(transportMessage);
             });
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
         public async Task MultipleSentMessagesCanBeRolledBack(bool commitAndExpectTheMessagesToBeSent)
         {
             var inputQueueName = TestConfig.GetName("input");
@@ -170,12 +171,12 @@ namespace Rebus.Tests.Contracts.Transports
 
             if (commitAndExpectTheMessagesToBeSent)
             {
-                Assert.That(allMessages.Count, Is.EqualTo(2));
-                Assert.That(allMessages.OrderBy(s => s), Is.EqualTo(new[] { "hej1", "hej2" }));
+                Assert.Equal(2, allMessages.Count);
+                Assert.Equal(new[] { "hej1", "hej2" }, allMessages.OrderBy(s => s));
             }
             else
             {
-                Assert.That(allMessages.Count, Is.EqualTo(0));
+                Assert.Equal(0, allMessages.Count);
             }
         }
 

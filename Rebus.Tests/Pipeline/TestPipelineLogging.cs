@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Linq;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Pipeline
 {
-    [TestFixture]
     public class TestPipelineLogging : FixtureBase
     {
-        ListLoggerFactory _listLoggerFactory;
+        readonly ListLoggerFactory _listLoggerFactory;
 
-        protected override void SetUp()
+        public TestPipelineLogging()
         {
             _listLoggerFactory = new ListLoggerFactory();
         }
 
-        [Test]
+        [Fact]
         public void CanLogPipelineGood()
         {
             var bus = Configure.With(new BuiltinHandlerActivator())

@@ -3,30 +3,29 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Encryption
 {
-    [TestFixture]
     public class TestEncryption : FixtureBase
     {
         const string EncryptionKey = "UaVcj0zCA35mgrg9/pN62Rp+r629BMi9S9v0Tz4S7EM=";
-        BuiltinHandlerActivator _builtinHandlerActivator;
-        IBus _bus;
+        readonly BuiltinHandlerActivator _builtinHandlerActivator;
+        readonly IBus _bus;
         TransportTap _tap;
 
-        protected override void SetUp()
+        public TestEncryption()
         {
             _builtinHandlerActivator = new BuiltinHandlerActivator();
 
@@ -51,7 +50,7 @@ namespace Rebus.Tests.Encryption
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task SentMessageIsBasicallyUnreadable()
         {
             const string plainTextMessage = "hej med dig min ven!!!";
@@ -73,8 +72,8 @@ namespace Rebus.Tests.Encryption
             var sentMessageBodyAsString = Encoding.UTF8.GetString(sentMessage.Body);
             var receivedMessageBodyAsString = Encoding.UTF8.GetString(receivedMessage.Body);
 
-            Assert.That(sentMessageBodyAsString, Does.Not.Contain(plainTextMessage));
-            Assert.That(receivedMessageBodyAsString, Does.Not.Contain(plainTextMessage));
+            Assert.DoesNotContain(plainTextMessage, sentMessageBodyAsString);
+            Assert.DoesNotContain(plainTextMessage, receivedMessageBodyAsString);
         }
     }
 }

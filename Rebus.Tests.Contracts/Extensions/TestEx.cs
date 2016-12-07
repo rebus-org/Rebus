@@ -6,13 +6,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions.Execution;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Contracts.Extensions
 {
@@ -118,7 +117,7 @@ namespace Rebus.Tests.Contracts.Extensions
         {
             if (!resetEvent.WaitOne(timeout))
             {
-                throw new AssertionException(
+                throw new AssertionFailedException(
                     $"Reset event was not set within {timeout} timeout - {errorMessage ?? errorMessageFactory?.Invoke() ?? "..."}");
             }
         }
@@ -133,9 +132,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
         public static IDisposable Interval(this TimeSpan delay, Action action)
         {
-            var timer = new Timer(delay.TotalMilliseconds);
-            timer.Elapsed += (sender, args) => action();
-            timer.Start();
+            var timer = new Timer((object o) => { action(); }, null, TimeSpan.Zero, delay);
             return timer;
         }
 
@@ -196,7 +193,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
             if (!queue.TryDequeue(out next))
             {
-                throw new ApplicationException("Could not dequeue next item!");
+                throw new Exception("Could not dequeue next item!");
             }
 
             return next;

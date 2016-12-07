@@ -1,15 +1,14 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 
 namespace Rebus.Tests.Assumptions
 {
-    [TestFixture]
     public class TestString
     {
-        [Test]
+        [Fact]
         public void SplittingCanYieldEmptyTokens()
         {
             var tokens = "=".Split('=');
-            Assert.That(tokens.Length, Is.EqualTo(2));
+            Assert.Equal(2, tokens.Length);
         }
     }
 }

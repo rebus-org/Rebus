@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Rebus.Logging
@@ -21,12 +22,7 @@ namespace Rebus.Logging
         /// some clunky <see cref="StackFrame"/> inspection.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public ILog GetCurrentClassLogger()
-        {
-            var stackFrame = new StackFrame(1);
-
-            return GetLogger(stackFrame.GetMethod().DeclaringType);
-        }
+        public abstract ILog GetCurrentClassLogger();
 
         /// <summary>
         /// Gets a logger for the type <typeparamref name="T"/>

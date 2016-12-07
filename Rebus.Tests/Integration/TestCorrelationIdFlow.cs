@@ -1,17 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestCorrelationIdFlow : FixtureBase
     {
         readonly InMemNetwork _network = new InMemNetwork();
@@ -20,7 +20,7 @@ namespace Rebus.Tests.Integration
         BuiltinHandlerActivator _activator2;
         BuiltinHandlerActivator _activator3;
 
-        protected override void SetUp()
+        public TestCorrelationIdFlow()
         {
             _activator1 = new BuiltinHandlerActivator();
             _activator2 = new BuiltinHandlerActivator();
@@ -35,7 +35,7 @@ namespace Rebus.Tests.Integration
             CreateBus("bus3", _activator3);
         }
 
-        [Test]
+        [Fact]
         public void CorrelationSequenceIsIncremented()
         {
             var correlationSequenceNumbers = new List<int>();
@@ -61,10 +61,10 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.That(correlationSequenceNumbers, Is.EqualTo(new[] { 0, 1, 2 }));
+            Assert.Equal(new[] { 0, 1, 2 }, correlationSequenceNumbers);
         }
 
-        [Test]
+        [Fact]
         public void CorrelationIdFlows()
         {
             var correlationIds = new List<string>();
@@ -90,10 +90,10 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.That(correlationIds.GroupBy(c => c).Count(), Is.EqualTo(1));
+            Assert.Equal(1, correlationIds.GroupBy(c => c).Count());
         }
 
-        [Test]
+        [Fact]
         public void CorrelationIdIsFirstMessageId()
         {
             var messageIds = new List<string>();
@@ -118,10 +118,10 @@ namespace Rebus.Tests.Integration
             counter.WaitForResetEvent();
 
             var firstMessageId = messageIds.First();
-            Assert.That(correlationIds.All(c => c == firstMessageId), Is.True);
+            Assert.True(correlationIds.All(c => c == firstMessageId));
         }
 
-        [Test]
+        [Fact]
         public void MessageIdsAreDifferent()
         {
             var messageIds = new List<string>();
@@ -142,7 +142,7 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.That(messageIds.GroupBy(i => i).Count(), Is.EqualTo(2));
+            Assert.Equal(2, messageIds.GroupBy(i => i).Count());
         }
 
         void CreateBus(string queueName, BuiltinHandlerActivator activator)

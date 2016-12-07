@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Rebus.Extensions
 {
@@ -18,10 +19,11 @@ namespace Rebus.Extensions
                 yield return implementedInterface;
             }
 
-            while (type.BaseType != null)
+            while (type.GetTypeInfo().BaseType != null)
             {
-                yield return type.BaseType;
-                type = type.BaseType;
+                var baseType = type.GetTypeInfo().BaseType;
+                yield return baseType;
+                type = baseType;
             }
         }
 
@@ -31,7 +33,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static string GetSimpleAssemblyQualifiedName(this Type type)
         {
-            return $"{type.FullName}, {type.Assembly.GetName().Name}";
+            return $"{type.FullName}, {type.GetTypeInfo().Assembly.GetName().Name}";
         }
     }
 }

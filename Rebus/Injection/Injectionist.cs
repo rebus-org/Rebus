@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 
 namespace Rebus.Injection
 {
@@ -259,6 +258,28 @@ namespace Rebus.Injection
     }
 
     /// <summary>
+    /// Exceptions that is thrown when something goes wrong while working with the injectionist
+    /// </summary>
+    public class ResolutionException : Exception
+    {
+        /// <summary>
+        /// Constructs the exception
+        /// </summary>
+        public ResolutionException(string message, params object[] objs)
+            : base(string.Format(message, objs))
+        {
+        }
+
+        /// <summary>
+        /// Constructs the exception
+        /// </summary>
+        public ResolutionException(Exception innerException, string message, params object[] objs)
+            : base(string.Format(message, objs), innerException)
+        {
+        }
+    }
+
+    /// <summary>
     /// Represents the context of resolving one root service and can be used throughout the tree to fetch something to be injected
     /// </summary>
     public interface IResolutionContext
@@ -277,37 +298,6 @@ namespace Rebus.Injection
         /// Gets whether there exists a primary registration for the <typeparamref name="TService"/> type
         /// </summary>
         bool Has<TService>(bool primary = true);
-    }
-
-    /// <summary>
-    /// Exceptions that is thrown when something goes wrong while working with the injectionist
-    /// </summary>
-    [Serializable]
-    public class ResolutionException : Exception
-    {
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ResolutionException(string message, params object[] objs)
-            : base(string.Format(message, objs))
-        {
-        }
-
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ResolutionException(Exception innerException, string message, params object[] objs)
-            : base(string.Format(message, objs), innerException)
-        {
-        }
-
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ResolutionException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
     }
 
     /// <summary>

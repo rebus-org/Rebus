@@ -17,7 +17,7 @@ namespace Rebus.Encryption
         /// </summary>
         public static void EnableEncryption(this OptionsConfigurer configurer, string key)
         {
-            EnableCustomEncryption(configurer).Register(c => new RijndaelEncryptor(key));
+            EnableCustomEncryption(configurer).Register(c => new AesEncryptor(key));
         }
 
         /// <summary>

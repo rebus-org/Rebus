@@ -13,7 +13,7 @@ namespace Rebus.Tests.Transport.FileSystem
 
         public FileSystemTransportFactory()
         {
-            _baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "messages");
+            _baseDirectory = Path.Combine(AppContext.BaseDirectory, "messages");
 
             CleanUp();
         }

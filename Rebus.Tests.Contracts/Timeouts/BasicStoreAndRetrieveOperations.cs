@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Time;
 using Rebus.Timeouts;
+using Xunit;
 
 namespace Rebus.Tests.Contracts.Timeouts
 {
@@ -18,7 +18,7 @@ namespace Rebus.Tests.Contracts.Timeouts
         TTimeoutManagerFactory _factory;
         ITimeoutManager _timeoutManager;
 
-        protected override void SetUp()
+        protected BasicStoreAndRetrieveOperations()
         {
             _factory = new TTimeoutManagerFactory();
             _timeoutManager = _factory.Create();
@@ -29,16 +29,16 @@ namespace Rebus.Tests.Contracts.Timeouts
             _factory.Cleanup();
         }
 
-        [Test]
+        [Fact]
         public async Task DoesNotLoadAnythingInitially()
         {
             using (var result = await _timeoutManager.GetDueMessages())
             {
-                Assert.That(result.Count(), Is.EqualTo(0));
+                Assert.Equal(0, result.Count());
             }
         }
 
-        [Test]
+        [Fact]
         public async Task IsCapableOfReturningTheMessageBodyAsWell()
         {
             var someTimeInThePast = RebusTime.Now.AddMinutes(-1);
@@ -51,15 +51,15 @@ namespace Rebus.Tests.Contracts.Timeouts
             {
                 var dueTimeouts = result.ToList();
 
-                Assert.That(dueTimeouts.Count, Is.EqualTo(1));
-                
+                Assert.Equal(1, dueTimeouts.Count);
+
                 var bodyBytes = dueTimeouts[0].Body;
-                
-                Assert.That(Encoding.UTF8.GetString(bodyBytes), Is.EqualTo(stringBody));
+
+                Assert.Equal(stringBody, Encoding.UTF8.GetString(bodyBytes));
             }
         }
 
-        [Test]
+        [Fact]
         public async Task ImmediatelyGetsTimeoutWhenItIsDueInThePast()
         {
             var someTimeInThePast = RebusTime.Now.AddMinutes(-1);
@@ -70,12 +70,12 @@ namespace Rebus.Tests.Contracts.Timeouts
             {
                 var dueTimeouts = result.ToList();
 
-                Assert.That(dueTimeouts.Count, Is.EqualTo(1));
-                Assert.That(dueTimeouts[0].Headers[Headers.MessageId], Is.EqualTo("i know u"));
+                Assert.Equal(1, dueTimeouts.Count);
+                Assert.Equal("i know u", dueTimeouts[0].Headers[Headers.MessageId]);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task TimeoutsAreNotRemovedIfTheyAreNotMarkedAsComplete()
         {
             var theFuture = RebusTime.Now.AddMinutes(1);
@@ -87,14 +87,14 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
+                Assert.Equal(1, dueTimeoutsInTheFuture.Count);
             }
 
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
-            
+                Assert.Equal(1, dueTimeoutsInTheFuture.Count);
+
                 // mark as complete
                 await dueTimeoutsInTheFuture[0].MarkAsCompleted();
             }
@@ -102,11 +102,11 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(0), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
+                Assert.Equal(0, dueTimeoutsInTheFuture.Count);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task TimeoutsAreNotReturnedUntilTheyAreActuallyDue()
         {
             var theFuture = DateTimeOffset.Now.AddMinutes(1);
@@ -119,7 +119,7 @@ namespace Rebus.Tests.Contracts.Timeouts
             {
                 var dueTimeoutsNow = result.ToList();
 
-                Assert.That(dueTimeoutsNow.Count, Is.EqualTo(0));
+                Assert.Equal(0, dueTimeoutsNow.Count);
             }
 
             RebusTimeMachine.FakeIt(theFuture);
@@ -127,8 +127,8 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1));
-                Assert.That(dueTimeoutsInTheFuture[0].Headers[Headers.MessageId], Is.EqualTo("i know u"));
+                Assert.Equal(1, dueTimeoutsInTheFuture.Count);
+                Assert.Equal("i know u", dueTimeoutsInTheFuture[0].Headers[Headers.MessageId]);
 
                 await dueTimeoutsInTheFuture[0].MarkAsCompleted();
             }
@@ -138,8 +138,8 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsFurtherIntoInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsFurtherIntoInTheFuture.Count, Is.EqualTo(1));
-                Assert.That(dueTimeoutsFurtherIntoInTheFuture[0].Headers[Headers.MessageId], Is.EqualTo("i know u too"));
+                Assert.Equal(1, dueTimeoutsFurtherIntoInTheFuture.Count);
+                Assert.Equal("i know u too", dueTimeoutsFurtherIntoInTheFuture[0].Headers[Headers.MessageId]);
 
                 await dueTimeoutsFurtherIntoInTheFuture[0].MarkAsCompleted();
             }

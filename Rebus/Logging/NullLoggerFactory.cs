@@ -17,6 +17,11 @@ namespace Rebus.Logging
             return Logger;
         }
 
+        public override ILog GetCurrentClassLogger()
+        {
+            return GetLogger(typeof(NullLoggerFactory));
+        }
+
         class NullLogger : ILog
         {
             public void Debug(string message, params object[] objs)

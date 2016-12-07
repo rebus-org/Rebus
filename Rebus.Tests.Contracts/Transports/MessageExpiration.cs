@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
+using Xunit;
 
 namespace Rebus.Tests.Contracts.Transports
 {
@@ -14,7 +14,7 @@ namespace Rebus.Tests.Contracts.Transports
         TTransportFactory _factory;
         CancellationToken _cancellationToken;
 
-        protected override void SetUp()
+        protected MessageExpiration()
         {
             _factory = new TTransportFactory();
             _cancellationToken = new CancellationTokenSource().Token;
@@ -25,7 +25,7 @@ namespace Rebus.Tests.Contracts.Transports
             _factory.CleanUp();
         }
 
-        [Test]
+        [Fact]
         public async Task ReceivesNonExpiredMessage()
         {
             var queueName = TestConfig.GetName("expiration");
@@ -50,16 +50,16 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
                 await transactionContext.Complete();
 
-                Assert.That(transportMessage, Is.Not.Null);
+                Assert.NotNull(transportMessage);
 
                 var headers = transportMessage.Headers;
 
-                Assert.That(headers.ContainsKey("recognizzle"));
-                Assert.That(headers["recognizzle"], Is.EqualTo(id));
+                Assert.Contains("recognizzle", headers.Keys);
+                Assert.Equal(id, headers["recognizzle"]);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task DoesNotReceiveExpiredMessage()
         {
             var queueName = TestConfig.GetName("expiration");
@@ -89,11 +89,11 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
                 await transactionContext.Complete();
 
-                Assert.That(transportMessage, Is.Null);
+                Assert.Null(transportMessage);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task ReceivesAlmostExpiredMessage()
         {
             var queueName = TestConfig.GetName("expiration");
@@ -120,7 +120,7 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
                 await transactionContext.Complete();
 
-                Assert.That(transportMessage, Is.Not.Null);
+                Assert.NotNull(transportMessage);
             }
         }
 

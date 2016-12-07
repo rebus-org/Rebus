@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Pipeline;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Pipeline
 {
-    [TestFixture]
     public class TestPipelineStepInjector
     {
-        [Test]
+        [Fact]
         public void CanInjectStepBeforeAnotherStep()
         {
             var pipeline = new DefaultPipeline()
@@ -23,16 +23,17 @@ namespace Rebus.Tests.Pipeline
 
             var receivePipeline = injector.ReceivePipeline().ToArray();
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(Step1),
-                typeof(InjectedStep),
-                typeof(Step2),
-                typeof(Step3),
-            }));
+            Assert.Equal(new[]
+                {
+                    typeof(Step1),
+                    typeof(InjectedStep),
+                    typeof(Step2),
+                    typeof(Step3),
+                },
+                receivePipeline.Select(s => s.GetType()));
         }
 
-        [Test]
+        [Fact]
         public void CanInjectStepAfterAnotherStep()
         {
             var pipeline = new DefaultPipeline()
@@ -45,16 +46,17 @@ namespace Rebus.Tests.Pipeline
 
             var receivePipeline = injector.ReceivePipeline().ToArray();
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(Step1),
-                typeof(Step2),
-                typeof(InjectedStep),
-                typeof(Step3),
-            }));
+            Assert.Equal(new[]
+                {
+                    typeof(Step1),
+                    typeof(Step2),
+                    typeof(InjectedStep),
+                    typeof(Step3),
+                },
+                receivePipeline.Select(s => s.GetType()));
         }
 
-        [Test]
+        [Fact]
         public void CanInjectMultipleSteps()
         {
             var pipeline = new DefaultPipeline()
@@ -68,17 +70,18 @@ namespace Rebus.Tests.Pipeline
 
             var receivePipeline = injector.ReceivePipeline().ToArray();
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(Step1),
-                typeof(InjectedStep),
-                typeof(Step2),
-                typeof(InjectedStep),
-                typeof(Step3),
-            }));
+            Assert.Equal(new[]
+                {
+                    typeof(Step1),
+                    typeof(InjectedStep),
+                    typeof(Step2),
+                    typeof(InjectedStep),
+                    typeof(Step3),
+                },
+                receivePipeline.Select(s => s.GetType()));
         }
 
-        [Test]
+        [Fact]
         public void InjectsStepAtTheEndIfAnchorCannotBeFound()
         {
             var pipeline = new DefaultPipeline()
@@ -90,12 +93,13 @@ namespace Rebus.Tests.Pipeline
 
             var receivePipeline = injector.ReceivePipeline().ToArray();
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(Step1),
-                typeof(Step2),
-                typeof(InjectedStep),
-            }));
+            Assert.Equal(new[]
+                {
+                    typeof(Step1),
+                    typeof(Step2),
+                    typeof(InjectedStep),
+                },
+                receivePipeline.Select(s => s.GetType()));
         }
 
         class Step1 : IIncomingStep

@@ -11,7 +11,6 @@ namespace Rebus.DataBus
     /// Model that represents a data bus attachment. Only the <see cref="Id"/> is significant, as all the
     /// other pieces of information are not required in order to retrieve the attachment from the database.
     /// </summary>
-    [Serializable]
     public class DataBusAttachment
     {
         /// <summary>

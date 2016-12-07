@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Rebus.Exceptions
 {
     /// <summary>
     /// Generic application exception to use when something bad happens that is pretty unexpected and should be taken seriously
     /// </summary>
-    [Serializable]
     public class RebusApplicationException : Exception
     {
         /// <summary>
@@ -22,14 +20,6 @@ namespace Rebus.Exceptions
         /// </summary>
         public RebusApplicationException(Exception innerException, string message)
             :base(message, innerException)
-        {
-        }
-
-        /// <summary>
-        /// Happy cross-domain serialization!
-        /// </summary>
-        public RebusApplicationException(SerializationInfo info, StreamingContext context)
-            :base(info, context)
         {
         }
     }

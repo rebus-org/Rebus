@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -13,20 +12,20 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestRetry : FixtureBase
     {
-        static readonly string InputQueueName = TestConfig.GetName($"test.rebus2.retries.input@{Environment.MachineName}");
-        static readonly string ErrorQueueName = TestConfig.GetName("rebus2.error");
+        private static readonly string InputQueueName = TestConfig.GetName($"test.rebus2.retries.input@{Environment.MachineName}");
+        public static readonly string ErrorQueueName = TestConfig.GetName("rebus2.error");
 
-        BuiltinHandlerActivator _handlerActivator;
-        IBus _bus;
-        InMemNetwork _network;
+        private BuiltinHandlerActivator _handlerActivator;
+        private IBus _bus;
+        private InMemNetwork _network;
 
         void InitializeBus(int numberOfRetries)
         {
@@ -44,10 +43,10 @@ namespace Rebus.Tests.Integration
             Using(_bus);
         }
 
-        [Test]
+        [Fact]
         public async Task ItWorks()
         {
-            const int numberOfRetries = 5;
+            const int numberOfRetries = 2;
 
             InitializeBus(numberOfRetries);
 
@@ -56,21 +55,22 @@ namespace Rebus.Tests.Integration
             _handlerActivator.Handle<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
-                throw new ApplicationException("omgwtf!");
+                throw new Exception("omgwtf!");
             });
 
             await _bus.Send("hej");
 
             var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName);
 
-            Assert.That(attemptedDeliveries, Is.EqualTo(numberOfRetries));
-            Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("5 unhandled exceptions"));
-            Assert.That(failedMessage.Headers.GetValue(Headers.SourceQueue), Is.EqualTo(InputQueueName));
+            Assert.Equal(numberOfRetries, attemptedDeliveries);
+            Assert.Contains("5 unhandled exceptions", failedMessage.Headers.GetValue(Headers.ErrorDetails));
+            Assert.Equal(InputQueueName, failedMessage.Headers.GetValue(Headers.SourceQueue));
         }
 
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(5)]
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(5)]
         public async Task CanConfigureNumberOfRetries(int numberOfRetries)
         {
             InitializeBus(numberOfRetries);
@@ -80,7 +80,7 @@ namespace Rebus.Tests.Integration
             _handlerActivator.Handle<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
-                throw new ApplicationException("omgwtf!");
+                throw new Exception("omgwtf!");
             });
 
             await _bus.Send("hej");
@@ -89,7 +89,7 @@ namespace Rebus.Tests.Integration
 
             var expectedNumberOfAttemptedDeliveries = numberOfRetries;
 
-            Assert.That(attemptedDeliveries, Is.EqualTo(expectedNumberOfAttemptedDeliveries));
+            Assert.Equal(expectedNumberOfAttemptedDeliveries, attemptedDeliveries);
         }
     }
 }

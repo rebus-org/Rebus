@@ -166,11 +166,11 @@ namespace Rebus.Workers.ThreadPoolBased
                     _log.Error(exception, "An error occurred when attempting to complete the transaction context");
                 }
             }
-            catch (ThreadAbortException exception)
+            catch (OperationCanceledException exception)
             {
                 context.Abort();
 
-                _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
+                _log.Error(exception, $"Worker was cancelled while handling message {transportMessage.GetMessageLabel()}");
             }
             catch (Exception exception)
             {
@@ -192,13 +192,6 @@ namespace Rebus.Workers.ThreadPoolBased
         public void Dispose()
         {
             Stop();
-
-            if (!_workerThread.Join(_options.WorkerShutdownTimeout))
-            {
-                _log.Warn($"The '{Name}' worker did not shut down within {_options.WorkerShutdownTimeout.TotalSeconds} seconds!");
-
-                _workerThread.Abort();
-            }
         }
     }
 }

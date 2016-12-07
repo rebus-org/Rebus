@@ -1,24 +1,22 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
-    [Description("Tests scenario where the same saga data type is used in two saga handlers that use different correlation properties. This should be possible")]
+    //Tests scenario where the same saga data type is used in two saga handlers that use different correlation properties. This should be possible
     public class SagaBaseClassCorrelationCheck : FixtureBase
     {
-        [Test]
+        [Fact]
         public async Task CanHitBothSagas()
         {
             var activator = Using(new BuiltinHandlerActivator());
@@ -38,7 +36,7 @@ namespace Rebus.Tests.Bugs
 
             await events.WaitUntil(q => q.Count == 2);
 
-            Assert.That(events.OrderBy(e => e), Is.EqualTo(new[] {"Handling Message1", "Handling Message2" }));
+            Assert.Equal(new[] {"Handling Message1", "Handling Message2" }, events.OrderBy(e => e));
         }
 
         class Message1

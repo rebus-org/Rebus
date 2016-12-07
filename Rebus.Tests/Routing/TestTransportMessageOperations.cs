@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Routing
 {
-    [TestFixture]
     public class TestTransportMessageOperations : FixtureBase
     {
         const string ForwardedMessagesQueue = "forwarded messages";
-        InMemNetwork _network;
-        BuiltinHandlerActivator _forwarderActivator;
-        BuiltinHandlerActivator _receiverActivator;
+        readonly InMemNetwork _network;
+        readonly BuiltinHandlerActivator _forwarderActivator;
+        readonly BuiltinHandlerActivator _receiverActivator;
 
-        protected override void SetUp()
+        public TestTransportMessageOperations()
         {
             _network = new InMemNetwork();
 
@@ -35,7 +35,7 @@ namespace Rebus.Tests.Routing
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void CanForwardMessageToErrorQueue()
         {
             var sharedCounter = new SharedCounter(1) { Delay = TimeSpan.FromSeconds(0.1) };
@@ -72,7 +72,7 @@ namespace Rebus.Tests.Routing
             sharedCounter.WaitForResetEvent();
         }
 
-        [Test]
+        [Fact]
         public void CanDeferTransportMessage()
         {
             var counter = new SharedCounter(1);

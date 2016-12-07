@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Transport.InMem
 {
-    [TestFixture]
     public class TestInMemNetwork : FixtureBase
     {
-        InMemNetwork _network;
+        readonly InMemNetwork _network;
 
-        protected override void SetUp()
+        public TestInMemNetwork()
         {
             _network = new InMemNetwork(true);
         }
 
-        [Test]
+        [Fact]
         public void CanSendAndReceive()
         {
             var messageId = Guid.NewGuid().ToString();
@@ -27,11 +26,11 @@ namespace Rebus.Tests.Transport.InMem
             _network.Deliver("bimse", transportMessageToSend.ToInMemTransportMessage());
 
             var receivedTransportMessage = _network.GetNextOrNull("bimse");
-            Assert.That(receivedTransportMessage, Is.Not.Null);
-            Assert.That(receivedTransportMessage.Headers.GetValue(Headers.MessageId), Is.EqualTo(messageId));
+            Assert.NotNull(receivedTransportMessage);
+            Assert.Equal(messageId, receivedTransportMessage.Headers.GetValue(Headers.MessageId));
         }
 
-        [Test]
+        [Fact]
         public void CanSendAndReceive_IsCaseInsensitive()
         {
             var messageId = Guid.NewGuid().ToString();
@@ -40,14 +39,14 @@ namespace Rebus.Tests.Transport.InMem
             _network.Deliver("bImSe", transportMessageToSend.ToInMemTransportMessage());
 
             var receivedTransportMessage = _network.GetNextOrNull("BiMsE");
-            Assert.That(receivedTransportMessage, Is.Not.Null);
-            Assert.That(receivedTransportMessage.Headers.GetValue(Headers.MessageId), Is.EqualTo(messageId));
+            Assert.NotNull(receivedTransportMessage);
+            Assert.Equal(messageId, receivedTransportMessage.Headers.GetValue(Headers.MessageId));
         }
 
-        [Test]
+        [Fact]
         public void EmptyQueueYieldsNull()
         {
-            Assert.That(_network.GetNextOrNull("bimse"), Is.Null);
+            Assert.Null(_network.GetNextOrNull("bimse"));
         }
 
         static TransportMessage GetTransportMessage(string messageId)

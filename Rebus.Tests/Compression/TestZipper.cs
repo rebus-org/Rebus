@@ -3,27 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
-using NUnit.Framework;
 using Rebus.Compression;
 using Rebus.Tests.Contracts;
+using Xunit;
 
 namespace Rebus.Tests.Compression
 {
-    [TestFixture]
     public class TestZipper : FixtureBase
     {
-        Zipper _zipper;
+        readonly Zipper _zipper;
         const string Text = @"Hej med dig min ven, det her er en lang tekst med en del gentagelser.
 Hej med dig min ven, det her er en lang tekst med en del gentagelser.
 Hej med dig min ven, det her er en lang tekst med en del gentagelser.
 Hej med dig min ven, det her er en lang tekst med en del gentagelser.";
 
-        protected override void SetUp()
+        public TestZipper()
         {
             _zipper = new Zipper();
         }
 
-        [Test]
+        [Fact]
         public void CanRoundtripBigBigString()
         {
             var bigString = string.Join("/", Enumerable.Range(0, 1000000));
@@ -35,20 +34,20 @@ Hej med dig min ven, det her er en lang tekst med en del gentagelser.";
             var roundtrippedBytes = _zipper.Unzip(compressedBytes);
             var roundtrippedString = Encoding.UTF8.GetString(roundtrippedBytes);
 
-            Assert.That(roundtrippedString, Is.EqualTo(bigString));
+            Assert.Equal(bigString, roundtrippedString);
         }
 
-        [Test]
+        [Fact]
         public void CanRoundtripSomeBytes()
         {
             var uncompressedBytes = Encoding.UTF8.GetBytes(Text);
             var compressedBytes = _zipper.Zip(uncompressedBytes);
 
-            Assert.That(Encoding.UTF8.GetString(_zipper.Unzip(compressedBytes)), Is.EqualTo(Text));
-            Assert.That(compressedBytes.Length, Is.LessThan(uncompressedBytes.Length));
+            Assert.Equal(Text, Encoding.UTF8.GetString(_zipper.Unzip(compressedBytes)));
+            Assert.True(compressedBytes.Length < uncompressedBytes.Length);
         }
 
-        [Test]
+        [Fact]
         public void WorksWithThisBadBoy()
         {
             var someId = Guid.NewGuid();
@@ -85,7 +84,7 @@ Hej med dig min ven, det her er en lang tekst med en del gentagelser.";
 
             var roundtrippedRealisticObject = (ExecutePartialQueryRequest)JsonConvert.DeserializeObject(objectString, serializerSettings);
 
-            Assert.That(roundtrippedRealisticObject.SagaId, Is.EqualTo(someId));
+            Assert.Equal(someId, roundtrippedRealisticObject.SagaId);
         }
 
         // real model

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Handlers;
@@ -165,11 +166,11 @@ namespace Rebus.Pipeline.Receive
                 throw new InvalidOperationException($"Attempted to set {sagaData} as saga data on handler {_handler}, but the handler is not a saga!");
             }
 
-            var dataProperty = _handler.GetType().GetProperty(SagaDataPropertyName);
+            var dataProperty = _handler.GetType().GetTypeInfo().GetProperty(SagaDataPropertyName);
 
             if (dataProperty == null)
             {
-                throw new ApplicationException($"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
+                throw new Exception($"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
             }
 
             dataProperty.SetValue(_handler, sagaData);

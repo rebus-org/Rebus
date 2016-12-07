@@ -1,19 +1,18 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
+using Xunit;
 
 namespace Rebus.Tests.Activation
 {
-    [TestFixture]
     public class TestBuiltinHandlerActivator : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public TestBuiltinHandlerActivator()
         {
             _activator = new BuiltinHandlerActivator();
         }
@@ -24,17 +23,17 @@ namespace Rebus.Tests.Activation
             _activator.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanGetHandlerWithoutArguments()
         {
             _activator.Register(() => new SomeHandler());
 
             var handlers = _activator.GetHandlers("hej med dig", new DefaultTransactionContext()).Result;
 
-            Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
+            Assert.IsType<SomeHandler>(handlers.Single());
         }
 
-        [Test]
+        [Fact]
         public void CanGetHandlerWithMessageContextArgument()
         {
             _activator.Register(context => new SomeHandler());
@@ -45,11 +44,11 @@ namespace Rebus.Tests.Activation
 
                 var handlers = _activator.GetHandlers("hej med dig", transactionContext).Result;
 
-                Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
+                Assert.IsType<SomeHandler>(handlers.Single());
             }
         }
 
-        [Test]
+        [Fact]
         public void CanGetHandlerWithBusAndMessageContextArgument()
         {
             _activator.Register((bus, context) => new SomeHandler());
@@ -60,7 +59,7 @@ namespace Rebus.Tests.Activation
 
                 var handlers = _activator.GetHandlers("hej med dig", transactionContext).Result;
 
-                Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
+                Assert.IsType<SomeHandler>(handlers.Single());
             }
         }
 

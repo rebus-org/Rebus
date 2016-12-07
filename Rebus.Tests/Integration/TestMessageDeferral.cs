@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestMessageDeferral : FixtureBase
     {
-        IBus _bus;
-        BuiltinHandlerActivator _handlerActivator;
+        private readonly IBus _bus;
+        private readonly BuiltinHandlerActivator _handlerActivator;
 
-        protected override void SetUp()
+        public TestMessageDeferral()
         {
             _handlerActivator = new BuiltinHandlerActivator();
 
@@ -30,7 +29,7 @@ namespace Rebus.Tests.Integration
             Using(_bus);
         }
 
-        [Test]
+        [Fact]
         public async Task CanDeferMessage()
         {
             var messageReceived = new ManualResetEvent(false);
@@ -51,7 +50,7 @@ namespace Rebus.Tests.Integration
 
             var timeToBeDelivered = deliveryTime - sendTime;
 
-            Assert.That(timeToBeDelivered, Is.GreaterThanOrEqualTo(delay));
+            Assert.True(timeToBeDelivered >= delay);
         }
     }
 }

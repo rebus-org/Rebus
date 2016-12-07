@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Pipeline;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Pipeline
 {
-    [TestFixture]
     public class TestPipelineStepConcatenator
     {
-        [Test]
+        [Fact]
         public void CanInjectStepInTheFront()
         {
             var pipeline = new DefaultPipeline()
@@ -22,15 +22,16 @@ namespace Rebus.Tests.Pipeline
 
             var receivePipeline = injector.ReceivePipeline().ToArray();
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(InjectedStep),
-                typeof(Step1),
-                typeof(Step2),
-            }));
+            Assert.Equal(new[]
+                {
+                    typeof(InjectedStep),
+                    typeof(Step1),
+                    typeof(Step2),
+                },
+                receivePipeline.Select(s => s.GetType()));
         }
 
-        [Test]
+        [Fact]
         public void CanInjectStepInTheBack()
         {
             var pipeline = new DefaultPipeline()
@@ -42,12 +43,13 @@ namespace Rebus.Tests.Pipeline
 
             var receivePipeline = injector.ReceivePipeline().ToArray();
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(Step1),
-                typeof(Step2),
-                typeof(InjectedStep),
-            }));
+            Assert.Equal(new[]
+                {
+                    typeof(Step1),
+                    typeof(Step2),
+                    typeof(InjectedStep),
+                },
+                receivePipeline.Select(s => s.GetType()));
         }
 
         class Step1 : IIncomingStep

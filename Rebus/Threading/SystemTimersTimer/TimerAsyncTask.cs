@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using Rebus.Logging;
 
 namespace Rebus.Threading.SystemTimersTimer
@@ -60,13 +60,10 @@ namespace Rebus.Threading.SystemTimersTimer
         public void Start()
         {
             LogStartStop("Starting periodic task '{0}' with interval {1}", _description, Interval);
-
-            _timer = new Timer(Interval.TotalMilliseconds);
-            _timer.Elapsed += (o, ea) => Tick();
-            _timer.Start();
+            _timer = new Timer(Tick, null, TimeSpan.Zero, Interval);
         }
 
-        async void Tick()
+        async void Tick(object state)
         {
             if (_executingTick) return;
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Backoff;
 using Rebus.Config;
@@ -10,19 +9,19 @@ using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Backoff
 {
-    [TestFixture]
     public class TestCustomizedBackoff : FixtureBase
     {
-        [Test]
+        [Fact]
         public void RunIdleForSomeTIme()
         {
             var receiveCalls = RunTest(false);
             var receiveCallsWithCustomizedBackoff = RunTest(true);
 
-            Assert.That(receiveCallsWithCustomizedBackoff, Is.LessThan(receiveCalls),
+            Assert.True(receiveCallsWithCustomizedBackoff < receiveCalls,
                 "Expected less calls to Receive(...) on the transport because of the customized backoff");
         }
 

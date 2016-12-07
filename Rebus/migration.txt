@@ -1,0 +1,7 @@
+Migration issues during buid:
+- usage of Serializable attributes
+- inheriting form ApplicationException
+- Sytem.Times namespace is not available
+- SerializationInfo is not available
+- System.Runtime.Remoting.Messaging not available of which the CallContext is being used
+- ConfigurationErrorsException not available due to the System.Configuration namespace being unavailable

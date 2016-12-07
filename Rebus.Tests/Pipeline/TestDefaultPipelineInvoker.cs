@@ -4,17 +4,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport;
+using Xunit;
 
 namespace Rebus.Tests.Pipeline
 {
-    [TestFixture]
     public class TestDefaultPipelineInvoker : FixtureBase
     {
         /// <summary>
@@ -30,7 +28,7 @@ namespace Rebus.Tests.Pipeline
         /// 2016/07/18:
         ///     Execution took 23,5 s
         /// </summary>
-        [Test, Ignore("takes a long time")]
+        [Fact(Skip="takes a long time")]
         public void CheckTiming()
         {
             var invoker = new DefaultPipelineInvoker();
@@ -98,7 +96,7 @@ namespace Rebus.Tests.Pipeline
             }
         }
 
-        [Test]
+        [Fact]
         public async Task InvokesInOrder()
         {
             var invoker = new DefaultPipelineInvoker();

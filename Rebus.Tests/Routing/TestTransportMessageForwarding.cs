@@ -1,20 +1,20 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Routing
 {
-    [TestFixture]
     public class TestTransportMessageForwarding : FixtureBase
     {
-        [Test]
+        [Fact]
         public async Task CanForwardToMultipleRecipients()
         {
             var network = new InMemNetwork();
@@ -43,7 +43,7 @@ namespace Rebus.Tests.Routing
                 return message;
             }));
 
-            Assert.That(transportMessages.Length, Is.EqualTo(2));
+            Assert.Equal(2, transportMessages.Length);
         }
     }
 }

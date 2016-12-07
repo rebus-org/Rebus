@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -13,11 +12,12 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestSecondLevelRetries : FixtureBase
     {
         const string InputQueueName = "2nd level goodness";
@@ -25,7 +25,7 @@ namespace Rebus.Tests.Integration
         IBus _bus;
         InMemNetwork _network;
 
-        protected override void SetUp()
+        public TestSecondLevelRetries()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -37,7 +37,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task ItWorksWithCovarianceToo()
         {
             var counter = new SharedCounter(1);
@@ -46,7 +46,7 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<BaseMessage>(async baseMessage =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new Exception("1st level!!");
             });
 
             _activator.Handle<IFailed<BaseMessage>>(async failed =>
@@ -69,7 +69,7 @@ namespace Rebus.Tests.Integration
 
         class ConcreteMessage : BaseMessage { }
 
-        [Test]
+        [Fact]
         public async Task ItWorks()
         {
             var counter = new SharedCounter(1);
@@ -78,7 +78,7 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new Exception("1st level!!");
             });
 
             _activator.Handle<IFailed<string>>(async failed =>
@@ -97,7 +97,7 @@ namespace Rebus.Tests.Integration
             counter.WaitForResetEvent();
         }
 
-        [Test]
+        [Fact]
         public async Task IncludesFullErrorDetailsWhenSecondLevelRetriesFailToo()
         {
             var counter = new SharedCounter(1);
@@ -106,12 +106,12 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new Exception("1st level!!");
             });
 
             _activator.Handle<IFailed<string>>(async failed =>
             {
-                throw new ApplicationException("2nd level!!");
+                throw new Exception("2nd level!!");
             });
 
             await _bus.SendLocal("hej med dig!");
@@ -121,11 +121,11 @@ namespace Rebus.Tests.Integration
 
             Console.WriteLine(errorDetails);
 
-            Assert.That(errorDetails, Does.Contain("1st level!!"));
-            Assert.That(errorDetails, Does.Contain("2nd level!!"));
+            Assert.Contains("1st level!!", errorDetails);
+            Assert.Contains("2nd level!!", errorDetails);
         }
 
-        [Test]
+        [Fact]
         public async Task StillWorksWhenIncomingMessageCannotBeDeserialized()
         {
             const string brokenJsonString = @"{'broken': 'json', // DIE!!1}";
@@ -142,12 +142,12 @@ namespace Rebus.Tests.Integration
 
             var failedMessage = await _network.WaitForNextMessageFrom("error");
 
-            Assert.That(failedMessage, Is.Not.Null);
+            Assert.NotNull(failedMessage);
             var bodyString = Encoding.UTF8.GetString(failedMessage.Body);
-            Assert.That(bodyString, Is.EqualTo(brokenJsonString));
+            Assert.Equal(brokenJsonString, bodyString);
         }
 
-        [Test]
+        [Fact]
         public async Task FailedMessageAllowsForAccessingHeaders()
         {
             var counter = new SharedCounter(1);
@@ -156,7 +156,7 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new Exception("1st level!!");
             });
 
             var headersOfFailedMessage = new Dictionary<string, string>();
@@ -207,7 +207,7 @@ namespace Rebus.Tests.Integration
             Console.WriteLine(string.Join(Environment.NewLine, headersOfFailedMessage.Select(kvp =>
                $"    {kvp.Key}: {kvp.Value}")));
 
-            Assert.That(headersOfFailedMessage["custom-header"], Is.EqualTo("with-a-custom-value"));
+            Assert.Equal("with-a-custom-value", headersOfFailedMessage["custom-header"]);
         }
     }
 }

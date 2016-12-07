@@ -10,7 +10,7 @@ namespace Rebus.Tests.Persistence.Filesystem
 {
     public class FilesystemTimeoutManagerFactory : ITimeoutManagerFactory
     {
-        readonly string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
+        readonly string _basePath = Path.Combine(AppContext.BaseDirectory, $"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
 
         public ITimeoutManager Create()
         {

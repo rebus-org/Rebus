@@ -3,21 +3,21 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
-    [Description("When passing custom headers, there was an error whereby the passed-in headers dictionary would be passed by reference through the pipeline, causing e.g. rbs2-msg-id to be added to it.")]
+    // When passing custom headers, there was an error whereby the passed-in headers dictionary would be passed by reference through the pipeline, causing e.g. rbs2-msg-id to be added to it.
     public class CustomHeadersAreCloned : FixtureBase
     {
-        [Test]
+        [Fact]
         public async Task ItHasBeenFixed()
         {
             var activator = new BuiltinHandlerActivator();
@@ -48,7 +48,7 @@ namespace Rebus.Tests.Bugs
 
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            Assert.That(receivedMessageIds.Distinct().Count(), Is.EqualTo(3), "Expected three unique message IDs - got: {0}", string.Join(", ", receivedMessageIds));
+            Assert.Equal(3, receivedMessageIds.Distinct().Count());
         }
     }
 }

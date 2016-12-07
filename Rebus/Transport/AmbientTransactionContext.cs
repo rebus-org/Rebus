@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.Remoting.Messaging;
+using System.Threading;
 
 namespace Rebus.Transport
 {
@@ -11,15 +11,19 @@ namespace Rebus.Transport
     {
         const string TransactionContextKey = "rebus2-current-transaction-context";
 
+        static AsyncLocal<ITransactionContext> _asyncLocalTxContext = new AsyncLocal<ITransactionContext>();
+
         /// <summary>
         /// Gets the default set function (which is using <see cref="CallContext.LogicalSetData"/> to do its thing)
         /// </summary>
-        public static readonly Action<ITransactionContext> DefaultSetter = context => CallContext.LogicalSetData(TransactionContextKey, context);
+        public static readonly Action<ITransactionContext> DefaultSetter = context => _asyncLocalTxContext.Value = context;
+        // old: public static readonly Action<ITransactionContext> DefaultSetter1 = context => CallContext.LogicalSetData(TransactionContextKey, context);
 
         /// <summary>
         /// Gets the default set function (which is using <see cref="CallContext.LogicalGetData"/> to do its thing)
         /// </summary>
-        public static readonly Func<ITransactionContext> DefaultGetter = () => CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
+        public static readonly Func<ITransactionContext> DefaultGetter = () => _asyncLocalTxContext.Value;
+        // old: public static readonly Func<ITransactionContext> DefaultGetter1 = () => CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
 
         static Action<ITransactionContext> _setCurrent = DefaultSetter;
         static Func<ITransactionContext> _getCurrent = DefaultGetter;

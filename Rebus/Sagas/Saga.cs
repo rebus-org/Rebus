@@ -35,7 +35,7 @@ namespace Rebus.Sagas
                         return false;
                     }
 
-                    return !(typeDeclaringTheConflictResolutionMethod.IsGenericType
+                    return !(typeDeclaringTheConflictResolutionMethod.GetTypeInfo().IsGenericType
                              && typeDeclaringTheConflictResolutionMethod.GetGenericTypeDefinition() == typeof (Saga<>));
                 });
         }

@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Configuration;
 using System.Linq;
 using Rebus.Activation;
 using Rebus.Backoff;
 using Rebus.Bus;
 using Rebus.DataBus;
+using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;

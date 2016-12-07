@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -10,20 +9,21 @@ using Rebus.Pipeline;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Transactions
 {
-    [TestFixture, Description("Verifies that Rebus can sensibly handle common stuff in a unit of work")]
+    // Verifies that Rebus can sensibly handle common stuff in a unit of work
     public class TestUnitOfWork : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
-        ListLoggerFactory _listLoggerFactory;
-        IBus _bus;
+        readonly BuiltinHandlerActivator _activator;
+        readonly ListLoggerFactory _listLoggerFactory;
+        readonly IBus _bus;
 
-        protected override void SetUp()
+        public TestUnitOfWork()
         {
             _activator = Using(new BuiltinHandlerActivator());
             _listLoggerFactory = new ListLoggerFactory();
@@ -34,7 +34,7 @@ namespace Rebus.Tests.Transactions
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task HandlesExceptionOnCommitAsOrdinaryException()
         {
             _activator.Handle<string>(async str =>
@@ -58,8 +58,8 @@ namespace Rebus.Tests.Transactions
             var warnings = lines.Count(l => l.Level == LogLevel.Warn);
             var errors = lines.Count(l => l.Level == LogLevel.Error);
 
-            Assert.That(warnings, Is.EqualTo(5));
-            Assert.That(errors, Is.EqualTo(1));
+            Assert.Equal(5, warnings);
+            Assert.Equal(1, errors);
         }
 
         class ConcurrencyException : Exception { }

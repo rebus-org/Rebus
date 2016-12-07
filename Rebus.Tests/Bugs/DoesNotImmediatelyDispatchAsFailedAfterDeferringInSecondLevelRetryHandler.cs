@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -10,37 +9,36 @@ using Rebus.Handlers;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
-    [Description(@"
+    /*
+    I reckon this requires an explanation :)
 
-I reckon this requires an explanation :)
+    Consider this scenario: You fail while processing a message, which
+    then ends up being dispatched as an IFailed<YourMessage>.
 
-Consider this scenario: You fail while processing a message, which 
-then ends up being dispatched as an IFailed<YourMessage>.
+    You handle IFailed<YourMessage> by deferring it to the future.
 
-You handle IFailed<YourMessage> by deferring it to the future.
+    When the message returns, somehow the message is still tracked by the
+    error tracker - therefore, it will immediately be dispatched as an
+    IFailed<YourMessage> again, which is probably not what you had hoped
+    for.
 
-When the message returns, somehow the message is still tracked by the 
-error tracker - therefore, it will immediately be dispatched as an 
-IFailed<YourMessage> again, which is probably not what you had hoped 
-for.
+    It could happen to you too!
 
-It could happen to you too!
+    (or if I fix this, it can't)
 
-(or if I fix this, it can't)
-
-")]
-    [TestFixture]
+    */
     public class DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
+        readonly BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -54,7 +52,7 @@ It could happen to you too!
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void DoesNotReceiveSameFailedMessageOverAndOver()
         {
             var events = new ConcurrentQueue<string>();

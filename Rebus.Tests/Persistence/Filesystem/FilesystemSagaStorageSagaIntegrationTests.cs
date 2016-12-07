@@ -1,8 +1,8 @@
-﻿using NUnit.Framework;
-using Rebus.Tests.Contracts.Sagas;
+﻿using Rebus.Tests.Contracts.Sagas;
+using Xunit;
 
 namespace Rebus.Tests.Persistence.Filesystem
 {
-    [TestFixture, Category(Categories.Filesystem)]
+    [Trait("Category", Categories.Filesystem)]
     public class FilesystemSagaStorageSagaIntegrationTests : SagaIntegrationTests<FilesystemSagaStorageFactory> { }
 }

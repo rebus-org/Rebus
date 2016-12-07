@@ -1,19 +1,19 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestTypeHeader : FixtureBase
     {
-        [Test]
+        [Fact]
         public void SentMessageCarriesTheTypeHeader()
         {
             var activator = Using(new BuiltinHandlerActivator());
@@ -39,8 +39,8 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.That(receivedHeaders.ContainsKey(Headers.Type), Is.True);
-            Assert.That(receivedHeaders[Headers.Type], Is.EqualTo("Rebus.Tests.Integration.SomeMessage, Rebus.Tests"));
+            Assert.True(receivedHeaders.ContainsKey(Headers.Type));
+            Assert.Equal("Rebus.Tests.Integration.SomeMessage, Rebus.Tests", receivedHeaders[Headers.Type]);
         }
     }
 

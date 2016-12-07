@@ -17,6 +17,11 @@ namespace Rebus.Testing.Internals
             return new TestLogger(type, _logEvents);
         }
 
+        public override ILog GetCurrentClassLogger()
+        {
+            return GetLogger(typeof(TestLoggerFactory));
+        }
+
         class TestLogger : ILog
         {
             readonly Type _type;

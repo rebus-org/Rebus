@@ -1,5 +1,6 @@
 using System;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Rebus.Tests.Extensions
 {
@@ -16,7 +17,7 @@ namespace Rebus.Tests.Extensions
 
             foreach(var dot in dots)
             {
-                var propertyInfo = obj.GetType().GetProperty(dot);
+                var propertyInfo = obj.GetType().GetTypeInfo().GetProperty(dot);
                 if (propertyInfo == null) return null;
                 obj = propertyInfo.GetValue(obj, new object[0]);
                 if (obj == null) break;

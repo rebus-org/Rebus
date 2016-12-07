@@ -2,31 +2,30 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Timeouts;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
     public class OneWayClientMustSetRecipientWhenDeferring : FixtureBase
     {
         const string TimeoutsQueueName = "timeouts";
         const string DestinationQueueName = "destination";
 
-        InMemNetwork _network;
-        IBus _oneWayClient;
-        BuiltinHandlerActivator _destination;
+        readonly InMemNetwork _network;
+        readonly IBus _oneWayClient;
+        readonly BuiltinHandlerActivator _destination;
 
-        protected override void SetUp()
+        public OneWayClientMustSetRecipientWhenDeferring()
         {
             _network = new InMemNetwork();
 
@@ -45,7 +44,7 @@ namespace Rebus.Tests.Bugs
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task OneWayClientGetsExceptionWhenDeferringWithoutSettingTheRecipientHeader()
         {
             var aggregateException = Assert.Throws<AggregateException>(() =>
@@ -57,10 +56,10 @@ namespace Rebus.Tests.Bugs
 
             Console.WriteLine(baseException);
 
-            Assert.That(baseException, Is.TypeOf<InvalidOperationException>());
+            Assert.IsType<InvalidOperationException>(baseException);
         }
 
-        [Test]
+        [Fact]
         public async Task ItWorksWhenTheHeaderHasBeenSet()
         {
             var gotTheMessage = new ManualResetEvent(false);

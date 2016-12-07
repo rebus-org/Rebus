@@ -1,28 +1,28 @@
 ﻿using System;
-using System.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestConfigurationApi : FixtureBase
     {
-        [Test]
+        [Fact]
         public void ThrowsIfNoTransportIsSpecified()
         {
             Assert.Throws<ConfigurationErrorsException>(() => Configure.With(new BuiltinHandlerActivator()).Start());
         }
 
-        [Test]
+        [Fact]
         public async Task DisposesInjectedStuffWhenTheActivatorIsDisposed()
         {
             var fakeTransport = new FakeTransport();
@@ -38,8 +38,8 @@ namespace Rebus.Tests.Integration
                 await Task.Delay(1000);
             }
 
-            Assert.That(fakeTransport.WasDisposed, Is.True, "The fake transport was not disposed!");
-            Assert.That(fakeSubscriptionStorage.WasDisposed, Is.True, "The fake subscription storage was not disposed!");
+            Assert.True(fakeTransport.WasDisposed,"The fake transport was not disposed!");
+            Assert.True(fakeSubscriptionStorage.WasDisposed, "The fake subscription storage was not disposed!");
         }
 
         class FakeSubscriptionStorage : ISubscriptionStorage, IDisposable

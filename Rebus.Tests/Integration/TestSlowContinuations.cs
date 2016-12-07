@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -11,17 +11,16 @@ using Rebus.Logging;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestSlowContinuations : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
+        readonly BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public TestSlowContinuations()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -38,7 +37,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void TakeTime()
         {
             var finishedHandlingMessage = new ManualResetEvent(false);

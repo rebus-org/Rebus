@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
@@ -12,18 +11,19 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestRetryExceptionCustomization : FixtureBase
     {
         const int SecretErrorCode = 340;
-        BuiltinHandlerActivator _activator;
-        ListLoggerFactory _listLoggerFactory;
+        readonly BuiltinHandlerActivator _activator;
+        readonly ListLoggerFactory _listLoggerFactory;
 
-        protected override void SetUp()
+        public TestRetryExceptionCustomization()
         {
             _activator = Using(new BuiltinHandlerActivator());
             _listLoggerFactory = new ListLoggerFactory();
@@ -33,7 +33,7 @@ namespace Rebus.Tests.Integration
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "customize exceptions"))
                 .Routing(r =>
                 {
-                    r.ForwardOnException<ApplicationException>("error", LogLevel.Error);
+                    r.ForwardOnException<Exception>("error", LogLevel.Error);
 
                     r.ForwardOnException<CustomException>("error", LogLevel.Error, e =>
                         {
@@ -45,12 +45,12 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task OnlyLogsOneSingleLineWhenForwarding()
         {
             _activator.Handle<ShouldFail>(async msg =>
             {
-                throw new ApplicationException("oh no!!!!");
+                throw new Exception("oh no!!!!");
             });
 
             await _activator.Bus.SendLocal(new ShouldFail());
@@ -61,12 +61,11 @@ namespace Rebus.Tests.Integration
 
             Console.WriteLine(string.Join(Environment.NewLine, significantStuff.Select(l => l.Text.Limit(140, singleLine: true))));
 
-            Assert.That(significantStuff.Count, Is.EqualTo(1), @"Only expected one single ERROR level log line with all the action - got this: 
-
-{0}", string.Join(Environment.NewLine, _listLoggerFactory.Select(l => l.Text.Limit(150, singleLine: true))));
+            // if it fails: Only expected one single ERROR level log line with all the action
+            Assert.Equal(1, significantStuff.Count);
         }
 
-        [Test]
+        [Fact]
         public async Task MakesOnlyOneSingleDeliveryAttempt()
         {
             var deliveryAttempts = 0;
@@ -75,17 +74,18 @@ namespace Rebus.Tests.Integration
             {
                 Interlocked.Increment(ref deliveryAttempts);
 
-                throw new ApplicationException("oh noooo!!!!");
+                throw new Exception("oh noooo!!!!");
             });
 
             await _activator.Bus.SendLocal(new ShouldFail());
 
             await Task.Delay(2000);
 
-            Assert.That(deliveryAttempts, Is.EqualTo(1), "Only expected one single delivery attempt because we have disabled retries for ApplicationException");
+            // if it fails: Only expected one single delivery attempt because we have disabled retries for Exception
+            Assert.Equal(1, deliveryAttempts);
         }
 
-        [Test]
+        [Fact]
         public async Task MakesOnlyOneSingleDeliveryAttemptWhenForwardingOnExceptionThatSatisfiesPredicate()
         {
             var deliveryAttempts = 0;
@@ -101,10 +101,11 @@ namespace Rebus.Tests.Integration
 
             await Task.Delay(2000);
 
-            Assert.That(deliveryAttempts, Is.EqualTo(1), "Only expected one single delivery attempt because we threw a CustomException with ErrorCode = SecretErrorCode");
+            // if it fails: Only expected one single delivery attempt because we threw a CustomException with ErrorCode = SecretErrorCode
+            Assert.Equal(1, deliveryAttempts);
         }
 
-        [Test]
+        [Fact]
         public async Task PerformsTheUsualRetriesOnExceptionsThatDoNotSatisfyThePredicate()
         {
             var deliveryAttempts = 0;
@@ -120,9 +121,8 @@ namespace Rebus.Tests.Integration
 
             await Task.Delay(2000);
 
-            Assert.That(deliveryAttempts, Is.EqualTo(5), @"Expected the usual retries because we threw a CustomException that did not satisfy the predicate - here's what happened:
-
-{0}", string.Join(Environment.NewLine, _listLoggerFactory.Select(l => l.Text.Limit(150, singleLine: true))));
+            // if it fails: Expected the usual retries because we threw a CustomException that did not satisfy the predicate
+            Assert.Equal(5, deliveryAttempts);
         }
 
         class ShouldFail

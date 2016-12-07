@@ -2,22 +2,22 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Sagas
 {
-    [TestFixture]
     public class TestMarkAsComplete : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public TestMarkAsComplete()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -31,7 +31,7 @@ namespace Rebus.Tests.Sagas
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task CanMarkSagaAsComplete()
         {
             var registeredCounts = new ConcurrentQueue<int>();
@@ -49,7 +49,7 @@ namespace Rebus.Tests.Sagas
 
             await Task.Delay(400);
 
-            Assert.That(registeredCounts.ToArray(), Is.EqualTo(new[] { 1, 2, 3, 4, 1 }));
+            Assert.Equal(new[] { 1, 2, 3, 4, 1 }, registeredCounts.ToArray());
         }
 
         class SomeSaga : Saga<SomeSagaData>, IAmInitiatedBy<string>

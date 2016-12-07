@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestShutdownWithPendingTasks : FixtureBase
     {
-        [Test]
+        [Fact]
         public async Task DoIt()
         {
             var builtinHandlerActivator = new BuiltinHandlerActivator();
@@ -43,7 +41,7 @@ namespace Rebus.Tests.Integration
                 // make bus shut down here
             }
 
-            Assert.That(allDone, Is.True, "The message was apparently not handled all the way to the end!!!");
+            Assert.True(allDone, "The message was apparently not handled all the way to the end!!!");
         }
     }
 }

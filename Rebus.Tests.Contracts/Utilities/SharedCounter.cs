@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using NUnit.Framework;
+using FluentAssertions.Execution;
 using Rebus.Tests.Contracts.Extensions;
-using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Contracts.Utilities
 {
@@ -12,7 +11,7 @@ namespace Rebus.Tests.Contracts.Utilities
     /// </summary>
     public class SharedCounter : IDisposable
     {
-        readonly Timer _statusTimer = new Timer(1000);
+        Timer _statusTimer;
         readonly ManualResetEvent _resetEvent = new ManualResetEvent(false);
         readonly string _name;
         readonly int _initialValue;
@@ -31,10 +30,8 @@ namespace Rebus.Tests.Contracts.Utilities
 
             _stopwatch = Stopwatch.StartNew();
 
-            _statusTimer.Elapsed += (o, ea) => Console.WriteLine("Counter '{0}' - value: {1} (initial: {2}, waited: {3:0.#} s)", 
-                _name, _counter, _initialValue, _stopwatch.Elapsed.TotalSeconds);
-
-            _statusTimer.Start();
+            _statusTimer = new Timer((object o) => {Console.WriteLine("Counter '{0}' - value: {1} (initial: {2}, waited: {3:0.#} s)",
+                _name, _counter, _initialValue, _stopwatch.Elapsed.TotalSeconds);}, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
         }
 
         public TimeSpan Delay { get; set; }
@@ -73,7 +70,8 @@ namespace Rebus.Tests.Contracts.Utilities
 
         void Complete()
         {
-            _statusTimer.Stop();
+            _statusTimer?.Dispose();
+            _statusTimer = null;
 
             Console.WriteLine("Counter '{0}' completed in {1:0.#} s", _name, _stopwatch.Elapsed.TotalSeconds);
 
@@ -84,7 +82,7 @@ namespace Rebus.Tests.Contracts.Utilities
 
         public void Dispose()
         {
-            _statusTimer.Dispose();
+            _statusTimer?.Dispose();
         }
 
         public void WaitForResetEvent(int timeoutSeconds = 5)
@@ -95,7 +93,7 @@ namespace Rebus.Tests.Contracts.Utilities
 
             if (_failure)
             {
-                throw new AssertionException(_failureText);
+                throw new AssertionFailedException(_failureText);
             }
         }
     }

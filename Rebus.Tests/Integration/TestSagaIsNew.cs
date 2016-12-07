@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -10,19 +9,19 @@ using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestSagaIsNew : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
-        IBus _bus;
+        readonly BuiltinHandlerActivator _activator;
+        readonly IBus _bus;
 
-        protected override void SetUp()
+        public TestSagaIsNew()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -36,7 +35,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task CanCorrectlyDetermineWhetherSagaInstanceIsNew()
         {
             var eventsPerCorrelationId = new ConcurrentDictionary<string, ConcurrentQueue<bool>>();
@@ -72,12 +71,12 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.That(eventsPerCorrelationId.Count, Is.EqualTo(4));
+            Assert.Equal(4, eventsPerCorrelationId.Count);
 
-            Assert.That(eventsPerCorrelationId["1"], Is.EqualTo(new[] { true, false, false }));
-            Assert.That(eventsPerCorrelationId["2"], Is.EqualTo(new[] { true, false }));
-            Assert.That(eventsPerCorrelationId["3"], Is.EqualTo(new[] { true, }));
-            Assert.That(eventsPerCorrelationId["4"], Is.EqualTo(new[] { true, false, false, false, false, false, }));
+            Assert.Equal(new[] { true, false, false },eventsPerCorrelationId["1"]);
+            Assert.Equal(new[] { true, false },eventsPerCorrelationId["2"]);
+            Assert.Equal(new[] { true, },eventsPerCorrelationId["3"]);
+            Assert.Equal(new[] { true, false, false, false, false, false, },eventsPerCorrelationId["4"]);
         }
 
         class MySaga : Saga<MySagaData>, IAmInitiatedBy<string>

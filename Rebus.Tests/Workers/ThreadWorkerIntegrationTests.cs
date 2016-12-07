@@ -3,24 +3,23 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Workers
 {
-    [TestFixture]
     public class ThreadWorkerIntegrationTests : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.GetName("test.async.input");
-        IBus _bus;
-        BuiltinHandlerActivator _handlerActivator;
+        readonly IBus _bus;
+        readonly BuiltinHandlerActivator _handlerActivator;
 
-        protected override void SetUp()
+        public ThreadWorkerIntegrationTests()
         {
             _handlerActivator = new BuiltinHandlerActivator();
 
@@ -35,7 +34,7 @@ namespace Rebus.Tests.Workers
             Using(_bus);
         }
 
-        [Test]
+        [Fact]
         public async Task Dispose_WaitsDefinedTimeout_WhenPendingTasksTakeLonger()
         {
             // arrange
@@ -67,7 +66,7 @@ namespace Rebus.Tests.Workers
                 .Should().BeCloseTo(TimeSpan.FromSeconds(5), 1000);
         }
 
-        [Test]
+        [Fact]
         public async Task Dispose_DoesNotWaitDefinedTimeout_WhenNoPendingTasks()
         {
             // arrange
@@ -97,7 +96,7 @@ namespace Rebus.Tests.Workers
                 .Should().BeLessThan(TimeSpan.FromSeconds(1));
         }
 
-        [Test]
+        [Fact]
         public async Task Dispose_WaitsForTaskToComplete_WhenItTakesLessThanDefinedTimeout()
         {
             // arrange

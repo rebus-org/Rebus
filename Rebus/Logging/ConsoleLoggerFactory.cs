@@ -128,6 +128,11 @@ namespace Rebus.Logging
             return logger;
         }
 
+        public override ILog GetCurrentClassLogger()
+        {
+            return GetLogger(typeof(ConsoleLoggerFactory));
+        }
+
         class ConsoleLogger : ILog
         {
             readonly LoggingColors _loggingColors;

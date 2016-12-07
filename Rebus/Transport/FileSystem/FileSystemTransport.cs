@@ -231,7 +231,7 @@ namespace Rebus.Transport.FileSystem
 
             if (caughtException != null && !Directory.Exists(directory))
             {
-                throw new ApplicationException(
+                throw new Exception(
                     $"Could not initialize directory '{directory}' for queue named '{queueName}'", caughtException);
             }
 

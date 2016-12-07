@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
@@ -11,18 +10,19 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestMessageDeferralAndRequestReply : FixtureBase
     {
-        BuiltinHandlerActivator _service;
-        BuiltinHandlerActivator _client;
-        Stopwatch _stopwatch;
+        readonly BuiltinHandlerActivator _service;
+        readonly BuiltinHandlerActivator _client;
+        readonly Stopwatch _stopwatch;
 
-        protected override void SetUp()
+        public TestMessageDeferralAndRequestReply()
         {
             var inMemNetwork = new InMemNetwork();
 
@@ -45,8 +45,8 @@ namespace Rebus.Tests.Integration
             return service;
         }
 
-        [Test]
-        [Description("Defers the message with bus.Defer, which sends the message as a new message (and therefore needs to transfer the ReturnAddress in order to be able to bus.Reply later)")]
+        // Defers the message with bus.Defer, which sends the message as a new message (and therefore needs to transfer the ReturnAddress in order to be able to bus.Reply later)
+        [Fact]
         public async Task DeferringRequestDoesNotBreakAbilityToReply_DeferWithMessageApi()
         {
             _service.Handle<string>(async (bus, context, str) =>
@@ -74,8 +74,8 @@ namespace Rebus.Tests.Integration
             await RunDeferTest();
         }
 
-        [Test]
-        [Description("Defers the message with bus.Advanced.TransportMessage.Defer, which defers the original transport message (and thus only needs to include a known header to spot when to bus.Reply)")]
+        // Defers the message with bus.Advanced.TransportMessage.Defer, which defers the original transport message (and thus only needs to include a known header to spot when to bus.Reply)
+        [Fact]
         public async Task DeferringRequestDoesNotBreakAbilityToReply_DeferWithTransportMessageApi()
         {
             _service.Handle<string>(async (bus, context, str) =>

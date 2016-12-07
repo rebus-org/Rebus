@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Extensions;
@@ -14,31 +13,32 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Routing
 {
-    [TestFixture]
     public class TestHeaderBasedRouting : FixtureBase
     {
         const string SpecialHeaderKey = "forward";
 
-        ConcurrentQueue<DoneWork> _doneWork;
-        InMemNetwork _network;
+        readonly ConcurrentQueue<DoneWork> _doneWork;
+        readonly InMemNetwork _network;
 
         readonly Dictionary<string, string> _forwardHeaders = new Dictionary<string, string>
         {
             {SpecialHeaderKey, ""}
         };
 
-        protected override void SetUp()
+        public TestHeaderBasedRouting()
         {
             _doneWork = new ConcurrentQueue<DoneWork>();
             _network = new InMemNetwork();
         }
 
-        [TestCase(100)]
+        [Theory]
+        [InlineData(100)]
         public async Task CanDistributeWork(int numberOfMessages)
         {
             var transportConfigurer = GetTransportConfigurer();
@@ -100,7 +100,7 @@ namespace Rebus.Tests.Routing
 
 ", string.Join(Environment.NewLine, workByWorker.Select(g => $"    {g.Key}: {g.Count()}")));
 
-            Assert.That(workByWorker.Count, Is.EqualTo(workers.Length), "Expected that all workers got to do some work!");
+            Assert.Equal(workers.Length, workByWorker.Count);
         }
 
         Action<StandardConfigurer<ITransport>, string> GetTransportConfigurer()

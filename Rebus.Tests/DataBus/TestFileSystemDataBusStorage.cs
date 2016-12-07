@@ -5,23 +5,22 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.DataBus.FileSystem;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Xunit;
 
 namespace Rebus.Tests.DataBus
 {
-    [TestFixture]
     public class TestFileSystemDataBusStorage : FixtureBase
     {
         FileSystemDataBusStorage _storage;
 
-        protected override void SetUp()
+        public TestFileSystemDataBusStorage()
         {
-            var directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "databustest");
+            var directoryPath = Path.Combine(AppContext.BaseDirectory, "databustest");
 
             DeleteHelper.DeleteDirectory(directoryPath);
 
@@ -29,7 +28,7 @@ namespace Rebus.Tests.DataBus
             _storage.Initialize();
         }
 
-        [Test]
+        [Fact]
         public async Task FixFileLockingIssuesWhenUpdatingLastReadTime()
         {
             const string knownId = "known-id";
@@ -76,9 +75,8 @@ namespace Rebus.Tests.DataBus
 
             if (caughtExceptions.Count > 0)
             {
-         Assert.Fail($@"Caught {caughtExceptions.Count} exceptions - here's the first 5:
-
-{string.Join(Environment.NewLine + Environment.NewLine, caughtExceptions.Take(5))}");       
+                Assert.True(false, $@"Caught {caughtExceptions.Count} exceptions - here's the first 5:
+                    {string.Join(Environment.NewLine + Environment.NewLine, caughtExceptions.Take(5))}");
             }
         }
     }

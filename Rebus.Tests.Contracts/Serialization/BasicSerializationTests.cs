@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.DataBus;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Serialization;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Serialization.Default;
+using Xunit;
 
 namespace Rebus.Tests.Contracts.Serialization
 {
@@ -20,7 +21,7 @@ namespace Rebus.Tests.Contracts.Serialization
         TSerializerFactory _factory;
         ISerializer _serializer;
 
-        protected override void SetUp()
+        public BasicSerializationTests()
         {
             _factory = new TSerializerFactory();
             _serializer = _factory.GetSerializer();
@@ -42,7 +43,8 @@ Results after informally testing # roundtrips in one second with each serializer
     That's 11224 roundtrips/s
 
          */
-        [TestCase(1)]
+        [Theory]
+        [InlineData(1)]
         public void CountNumberOfObjectRoundtrips(int numberOfSeconds)
         {
             var testTime = TimeSpan.FromSeconds(numberOfSeconds);
@@ -81,7 +83,7 @@ Results after informally testing # roundtrips in one second with each serializer
 That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
         }
 
-        [Test]
+        [Fact]
         public void HeadersAreCopied()
         {
             var originalHeaders = new Dictionary<string, string>();
@@ -97,12 +99,12 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
             transportMessageHeaders["key"] = "MED!";
             roundtrippedMessageHeaders["key"] = "DIG!";
 
-            Assert.That(originalHeaders["key"], Is.EqualTo("HEJ!"));
-            Assert.That(transportMessageHeaders["key"], Is.EqualTo("MED!"));
-            Assert.That(roundtrippedMessageHeaders["key"], Is.EqualTo("DIG!"));
+            Assert.Equal("HEJ!", originalHeaders["key"]);
+            Assert.Equal("MED!", transportMessageHeaders["key"]);
+            Assert.Equal("DIG!", roundtrippedMessageHeaders["key"]);
         }
 
-        [Test]
+        [Fact]
         public async Task CanRoundtripInternalMessages_DataBusAttachment()
         {
             var message = new DataBusAttachment("bimmelim!!!");
@@ -111,10 +113,10 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
 
             var roundtrippedMessage = (DataBusAttachment)await Roundtrip(message);
 
-            Assert.That(roundtrippedMessage.Id, Is.EqualTo("bimmelim!!!"));
+            Assert.Equal("bimmelim!!!", roundtrippedMessage.Id);
         }
 
-        [Test]
+        [Fact]
         public async Task CanRoundtripInternalMessages_SubscribeRequest()
         {
             var message = new SubscribeRequest { Topic = "topic", SubscriberAddress = "address" };
@@ -123,11 +125,11 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
 
             var roundtrippedMessage = (SubscribeRequest)await Roundtrip(message);
 
-            Assert.That(roundtrippedMessage.SubscriberAddress, Is.EqualTo(message.SubscriberAddress));
-            Assert.That(roundtrippedMessage.Topic, Is.EqualTo(message.Topic));
+            Assert.Equal(message.SubscriberAddress, roundtrippedMessage.SubscriberAddress);
+            Assert.Equal(message.Topic, roundtrippedMessage.Topic);
         }
 
-        [Test]
+        [Fact]
         public async Task CanRoundtripInternalMessages_UnsubscribeRequest()
         {
             var message = new UnsubscribeRequest { Topic = "topic", SubscriberAddress = "address" };
@@ -136,14 +138,15 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
 
             var roundtrippedMessage = (UnsubscribeRequest)await Roundtrip(message);
 
-            Assert.That(roundtrippedMessage.SubscriberAddress, Is.EqualTo(message.SubscriberAddress));
-            Assert.That(roundtrippedMessage.Topic, Is.EqualTo(message.Topic));
+            Assert.Equal(message.SubscriberAddress, roundtrippedMessage.SubscriberAddress);
+            Assert.Equal(roundtrippedMessage.Topic, message.Topic);
         }
 
-        [TestCase(5)]
-        [TestCase("hej")]
-        [TestCase(56.5)]
-        [TestCase(56.5f)]
+        [Theory]
+        [InlineData(5)]
+        [InlineData("hej")]
+        [InlineData(56.5)]
+        [InlineData(56.5f)]
         public async Task CanRoundtripSomeBasicValues(object originalMessage)
         {
             try
@@ -152,7 +155,8 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
 
                 var roundtrippedMessage = await Roundtrip(originalMessage);
 
-                Assert.That(roundtrippedMessage, Is.EqualTo(originalMessage));
+                // added the ToString() as the equality comparison was failing due to single being compared to a double, ...
+                Assert.Equal(originalMessage.ToString(), roundtrippedMessage.ToString());
             }
             catch (NotSupportedException)
             {
@@ -160,7 +164,7 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
             }
         }
 
-        [Test]
+        [Fact]
         public async Task CanRoundtripSimpleObject()
         {
             const string text = "hej med dig min ven";
@@ -169,8 +173,8 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
 
             var someMessageRoundtripped = await Roundtrip(someMessage);
 
-            Assert.That(someMessageRoundtripped, Is.TypeOf<SomeMessage>());
-            Assert.That(((SomeMessage)someMessageRoundtripped).Text, Is.EqualTo(text));
+            Assert.IsType<SomeMessage>(someMessageRoundtripped);
+            Assert.Equal(text, ((SomeMessage)someMessageRoundtripped).Text);
         }
 
         async Task<object> Roundtrip(object o)

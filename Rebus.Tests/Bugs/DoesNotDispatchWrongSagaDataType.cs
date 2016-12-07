@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
@@ -9,17 +8,18 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
-    [Description("Two sagas, each with its own saga data type. One message to hit them both. And it turned out that it didn't explode - it actually seemed to work fine. I wonder........")]
+    // Two sagas, each with its own saga data type. One message to hit them both. And it turned out that it didn't explode - it actually seemed to work fine. I wonder........"
     public class DoesNotDispatchWrongSagaDataType : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public DoesNotDispatchWrongSagaDataType()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -34,7 +34,7 @@ namespace Rebus.Tests.Bugs
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void DoesNotBreak()
         {
             var counter = new SharedCounter(6);

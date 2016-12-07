@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
-using NUnit.Framework;
 using Rebus.Tests.Contracts;
 using Rebus.Workers.ThreadPoolBased;
+using Xunit;
 
 namespace Rebus.Tests.Workers
 {
-    [TestFixture]
     public class TestDefaultSyncBackoffStrategy : FixtureBase
     {
-        [Test]
+        [Fact]
         public void BacksOffAsItShould()
         {
             var backoffStrategy = new DefaultSyncBackoffStrategy(new[]

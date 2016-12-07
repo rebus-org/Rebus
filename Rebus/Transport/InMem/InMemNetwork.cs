@@ -16,7 +16,7 @@ namespace Rebus.Transport.InMem
         readonly string _networkId = $"In-mem network {Interlocked.Increment(ref _networkIdCounter)}";
 
         readonly ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>> _queues =
-            new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.InvariantCultureIgnoreCase);
+            new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.OrdinalIgnoreCase);
 
         readonly bool _outputEventsToConsole;
 

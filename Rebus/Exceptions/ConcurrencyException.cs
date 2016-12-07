@@ -6,8 +6,7 @@ namespace Rebus.Exceptions
     /// <summary>
     /// Special exception that signals that some kind of optimistic lock has been violated, and work must most likely be aborted &amp; retried
     /// </summary>
-    [Serializable]
-    public class ConcurrencyException : ApplicationException
+    public class ConcurrencyException : Exception
     {
         /// <summary>
         /// Constructs the exception
@@ -22,14 +21,6 @@ namespace Rebus.Exceptions
         /// </summary>
         public ConcurrencyException(Exception innerException, string message, params object[] objs)
             : base(string.Format(message, objs), innerException)
-        {
-        }
-
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ConcurrencyException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }

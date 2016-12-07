@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Tests.Contracts.Extensions;
-using Timer = System.Timers.Timer;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Transports
@@ -15,7 +15,7 @@ namespace Rebus.Tests.Contracts.Transports
     {
         TBusFactory _busFactory;
 
-        protected override void SetUp()
+        protected TestManyMessages()
         {
             _busFactory = new TBusFactory();
         }
@@ -25,7 +25,8 @@ namespace Rebus.Tests.Contracts.Transports
             _busFactory.Cleanup();
         }
 
-        [TestCase(10)]
+        [Theory]
+        [InlineData(10)]
         public async Task SendAndReceiveManyMessages(int messageCount)
         {
             var allMessagesReceived = new ManualResetEvent(false);
@@ -54,10 +55,8 @@ namespace Rebus.Tests.Contracts.Transports
                 .Select(id => new MessageWithId(id))
                 .ToList();
 
-            using (var printTimer = new Timer(5000))
+            using (var printTimer = new Timer((object o) => { Console.WriteLine($"Sent: {sentMessages}, Received: {receivedMessages}"); }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(5000)))
             {
-                printTimer.Elapsed += delegate { Console.WriteLine("Sent: {0}, Received: {1}", sentMessages, receivedMessages); };
-                printTimer.Start();
                 stopWatch.Start();
                 Console.WriteLine("Sending {0} messages", messageCount);
                 await Task.WhenAll(messagesToSend.Select(async msg =>
@@ -76,8 +75,8 @@ namespace Rebus.Tests.Contracts.Transports
 
             var errorText = GenerateErrorText(idCounts);
 
-            Assert.That(idCounts.Count, Is.EqualTo(messageCount), errorText);
-            Assert.That(idCounts.All(c => c.Value == 1), errorText);
+            Assert.Equal(idCounts.Count, messageCount);
+            Assert.All(idCounts, pair => Assert.Equal(1, pair.Value));
         }
 
         static string GenerateErrorText(ConcurrentDictionary<int, int> idCounts)

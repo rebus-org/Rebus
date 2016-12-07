@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Profiling;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
+using Xunit;
 
 namespace Rebus.Tests.Profiling
 {
-    [TestFixture]
     public class TestProfiler : FixtureBase
     {
-        [Test]
+        [Fact]
         public void CanMeasureTimeSpentInSteps()
         {
             var stats = new PipelineStepProfilerStats();

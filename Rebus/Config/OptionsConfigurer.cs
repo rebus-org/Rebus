@@ -152,7 +152,7 @@ Receive pipeline:
         static string GetDocsOrNull(IStep step)
         {
             var docsAttribute = step.GetType()
-                .GetCustomAttributes()
+                .GetTypeInfo().GetCustomAttributes()
                 .OfType<StepDocumentationAttribute>()
                 .FirstOrDefault();
 

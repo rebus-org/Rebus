@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 
 namespace Rebus.Sagas
 {
@@ -51,7 +52,7 @@ namespace Rebus.Sagas
                 throw new ArgumentException($"Reflected saga data correlation property name from {SagaDataType} is empty! This is most likely because the expression passed to the correlation configuration could not be properly reflected - it's the part indicated by !!! here: config.Correlate<TMessage>(m => m.SomeField, d => !!!) - please be sure that you are pointing to a simple property of the saga data");
             }
 
-            var sagaDataProperty = SagaDataType.GetProperty(PropertyName);
+            var sagaDataProperty = SagaDataType.GetTypeInfo().GetProperty(PropertyName);
 
             if (sagaDataProperty == null)
             {

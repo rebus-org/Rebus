@@ -2,28 +2,27 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Encryption
 {
-    [TestFixture]
     public class TestCustomEncryption : FixtureBase
     {
         TransportTap _transportTap;
-        BuiltinHandlerActivator _activator;
+        readonly BuiltinHandlerActivator _activator;
 
-        protected override void SetUp()
+        public TestCustomEncryption()
         {
             _activator = new BuiltinHandlerActivator();
 
@@ -46,7 +45,7 @@ namespace Rebus.Tests.Encryption
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public void CheckEncryptedMessages()
         {
             var transportMessages = new ConcurrentQueue<TransportMessage>();
@@ -69,11 +68,11 @@ namespace Rebus.Tests.Encryption
 
             var messages = transportMessages.ToList();
 
-            Assert.That(messages.Count, Is.EqualTo(2));
+            Assert.Equal(2, messages.Count);
 
             var headers = messages.First().Headers;
 
-            Assert.That(headers[EncryptionHeaders.ContentEncryption], Is.EqualTo("silly"));
+            Assert.Equal("silly", headers[EncryptionHeaders.ContentEncryption]);
         }
 
         class SillyEncryptor : IEncryptor

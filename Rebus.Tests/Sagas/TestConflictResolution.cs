@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -15,18 +14,19 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Sagas
 {
-    [TestFixture]
     public class TestConflictResolution : FixtureBase
     {
         BuiltinHandlerActivator _builtinHandlerActivator;
         ListLoggerFactory _loggerFactory;
         IBus _bus;
 
-        protected override void SetUp()
+        public TestConflictResolution()
         {
             _builtinHandlerActivator = Using(new BuiltinHandlerActivator());
 
@@ -43,7 +43,7 @@ namespace Rebus.Tests.Sagas
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task ItWorks()
         {
             const int messageCount = 3;
@@ -70,7 +70,7 @@ namespace Rebus.Tests.Sagas
 
             var warnings = _loggerFactory.Count(l => l.Level == LogLevel.Warn);
 
-            Assert.That(warnings, Is.EqualTo(0), "Expected no warnings because all conflicts should have been resolved");
+            Assert.Equal(0, warnings);
         }
 
         public class MySagaData : ISagaData

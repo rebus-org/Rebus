@@ -30,6 +30,11 @@ namespace Rebus.Tests.Contracts.Utilities
             return new ListLogger(_loggedLines, type, _outputToConsole, _detailed);
         }
 
+        public override ILog GetCurrentClassLogger()
+        {
+            return GetLogger(typeof(ListLoggerFactory));
+        }
+
         public IEnumerator<LogLine> GetEnumerator()
         {
             return _loggedLines.GetEnumerator();

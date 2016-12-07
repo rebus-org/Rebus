@@ -2,26 +2,25 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestAutoHeaders : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
-        IBus _bus;
+        readonly BuiltinHandlerActivator _activator;
+        readonly IBus _bus;
 
-        protected override void SetUp()
+        public TestAutoHeaders()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -30,7 +29,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
+        [Fact]
         public async Task AutomaticallyAssignsHeadersFromAttribute()
         {
             var headers = await GetHeaders(new SomeMessage());
@@ -38,7 +37,7 @@ namespace Rebus.Tests.Integration
             AssertHeader(headers, "greeting", "hej");
         }
 
-        [Test]
+        [Fact]
         public async Task DoesNotOverwriteExistingHeaders()
         {
             var headers = await GetHeaders(new SomeMessage(), new Dictionary<string, string>
@@ -55,7 +54,7 @@ namespace Rebus.Tests.Integration
 
         }
 
-        [Test]
+        [Fact]
         public async Task WorksWithCustomizedPrefabHeader()
         {
             var headers = await GetHeaders(new MessageWithPrefabHeader());
@@ -94,9 +93,9 @@ namespace Rebus.Tests.Integration
 
         static void AssertHeader(IReadOnlyDictionary<string, string> headers, string expectedKey, string expectedValue)
         {
-            Assert.That(headers, Is.Not.Null, "Did not get the headers at all!!");
-            Assert.That(headers.ContainsKey(expectedKey), Is.True, "Headers did not have the '{0}' key", expectedKey);
-            Assert.That(headers[expectedKey], Is.EqualTo(expectedValue));
+            Assert.NotNull(headers);
+            Assert.True(headers.ContainsKey(expectedKey), $"Headers did not have the '{expectedKey}' key");
+            Assert.Equal(expectedValue, headers[expectedKey]);
         }
     }
 }

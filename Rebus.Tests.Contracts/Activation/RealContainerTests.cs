@@ -1,9 +1,10 @@
 ﻿using System.Threading.Tasks;
-using NUnit.Framework;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport.InMem;
+using Xunit;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
@@ -12,12 +13,12 @@ namespace Rebus.Tests.Contracts.Activation
     {
         TFactory _factory;
 
-        protected override void SetUp()
+        public RealContainerTests()
         {
             _factory = new TFactory();
         }
 
-        [Test]
+        [Fact]
         public async Task CanInjectMessageContext()
         {
             HandlerThatGetsMessageContextInjected.MessageContextWasInjected = false;
@@ -35,7 +36,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             await Task.Delay(500);
 
-            Assert.That(HandlerThatGetsMessageContextInjected.MessageContextWasInjected, Is.True,
+            Assert.True(HandlerThatGetsMessageContextInjected.MessageContextWasInjected,
                 "HandlerThatGetsMessageContextInjected did not get invoked properly with an injected IMessageContext");
         }
 

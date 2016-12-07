@@ -1,9 +1,9 @@
-﻿using NUnit.Framework;
-using Rebus.Tests.Contracts.Timeouts;
+﻿using Rebus.Tests.Contracts.Timeouts;
+using Xunit;
 
 namespace Rebus.Tests.Persistence.Filesystem
 {
-    [TestFixture, Category(Categories.Filesystem)]
+    [Trait("Category", Categories.Filesystem)]
     public class FilesystemBasicStoreAndRetrieveOperations : BasicStoreAndRetrieveOperations<FilesystemTimeoutManagerFactory>
     {
     }

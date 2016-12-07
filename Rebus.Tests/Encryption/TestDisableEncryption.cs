@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Encryption
 {
-    [TestFixture]
     public class TestDisableEncryption : FixtureBase
     {
-        BuiltinHandlerActivator _activator;
-        InMemNetwork _network;
-        IBus _bus;
+        readonly BuiltinHandlerActivator _activator;
+        readonly InMemNetwork _network;
+        readonly IBus _bus;
 
-        protected override void SetUp()
+        public TestDisableEncryption()
         {
             _activator = Using(new BuiltinHandlerActivator());
             _network = new InMemNetwork();
@@ -34,7 +33,7 @@ namespace Rebus.Tests.Encryption
             _bus = _activator.Bus;
         }
 
-        [Test]
+        [Fact]
         public void DoesNotEncryptWhenAddingSpecialHeader()
         {
             _network.CreateQueue("destination");
@@ -48,16 +47,16 @@ namespace Rebus.Tests.Encryption
 
             var transportMessage = _network.GetNextOrNull("destination")?.ToTransportMessage();
 
-            Assert.That(transportMessage, Is.Not.Null);
+            Assert.NotNull(transportMessage);
 
             var bodyString = Encoding.UTF8.GetString(transportMessage.Body);
 
             Console.WriteLine($"Body: {bodyString}");
 
-            Assert.That(bodyString, Contains.Substring("We should be able to read this"));
+            Assert.Contains("We should be able to read this", bodyString);
         }
 
-        [Test]
+        [Fact]
         public void StillEncryptsWhenNotAddingSpecialHeader()
         {
             _network.CreateQueue("destination");
@@ -67,13 +66,13 @@ namespace Rebus.Tests.Encryption
 
             var transportMessage = _network.GetNextOrNull("destination")?.ToTransportMessage();
 
-            Assert.That(transportMessage, Is.Not.Null);
+            Assert.NotNull(transportMessage);
 
             var bodyString = Encoding.UTF8.GetString(transportMessage.Body);
 
             Console.WriteLine($"Body: {bodyString}");
 
-            Assert.That(bodyString.Contains("We should NOT be able to read this"), Is.False);
+            Assert.False(bodyString.Contains("We should NOT be able to read this"));
         }
 
         class MessageWithText

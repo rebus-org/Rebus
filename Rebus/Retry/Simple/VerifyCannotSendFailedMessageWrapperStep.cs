@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -19,7 +20,7 @@ namespace Rebus.Retry.Simple
             {
                 var interfaces = body.GetType().GetInterfaces();
 
-                if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IFailed<>)))
+                if (interfaces.Any(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IFailed<>)))
                 {
                     throw new InvalidOperationException($"Tried to send {body} - it is not allowed to send an IFailed<TMessage> anywhere because a) it most likely is an error, because you accidentally called Send/Defer with 'failed' and not with 'failed.Message' as the argument, and b) it could confuse things a lot - we like to avoid confusing things");
                 }

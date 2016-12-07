@@ -1,14 +1,13 @@
 ﻿using System;
-using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+using Xunit;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
     public class TestImprovedInjectionistExceptions : FixtureBase
     {
         /*
@@ -28,7 +27,7 @@ One ResolutionException is enough!
       ----> System.InvalidOperationException : oh no!! THIS is the actual exception - everything else is noise
 
         */
-        [Test]
+        [Fact]
         public void UsedToLookPrettyBad()
         {
             var activator = Using(new BuiltinHandlerActivator());
@@ -58,8 +57,8 @@ One ResolutionException is enough!
             {
                 Console.WriteLine(exception);
 
-                Assert.That(exception.InnerException, Is.TypeOf<InvalidOperationException>());
-                Assert.That(exception.InnerException.Message, Is.EqualTo("oh no!! THIS is the actual exception - everything else is noise"));
+                Assert.IsType<InvalidOperationException>(exception.InnerException);
+                Assert.Equal("oh no!! THIS is the actual exception - everything else is noise", exception.InnerException.Message);
             }
         }
     }
