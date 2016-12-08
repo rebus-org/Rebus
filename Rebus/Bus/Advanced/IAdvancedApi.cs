@@ -33,7 +33,7 @@ namespace Rebus.Bus.Advanced
         IDataBus DataBus { get; }
 
         /// <summary>
-        /// Exposes a synchronous version of <see cref="IBus"/> that essentially mimics all APIs only providing them in an synchronous version
+        /// Exposes a synchronous version of <see cref="IBus"/> that essentially mimics all APIs only providing them in a synchronous version
         /// </summary>
         ISyncBus SyncBus { get; }
     }
