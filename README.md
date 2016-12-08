@@ -4,7 +4,7 @@
 
 [![install from nuget](https://img.shields.io/nuget/v/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
 
-This repository contains Rebus "core". You may also be interested in one of [the many integration libraries](https://github.com/rebus-org?utf8=%E2%9C%93&query=rebus.).
+This repository contains Rebus "core". You may also be interested in one of [the many integration libraries](https://github.com/rebus-org?utf8=%E2%9C%93&q=rebus.).
 
 
 What?
