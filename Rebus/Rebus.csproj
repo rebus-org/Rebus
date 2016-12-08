@@ -46,6 +46,8 @@
   <ItemGroup>
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
+    <Compile Include="Bus\Advanced\AsyncHelpers.cs" />
+    <Compile Include="Bus\Advanced\ISyncBus.cs" />
     <Compile Include="Legacy\LegacyFlag.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="Auditing\Messages\AuditHeaders.cs" />
@@ -214,10 +216,12 @@
     <Compile Include="Timeouts\TimeoutsConfigurationExtensions.cs" />
     <Compile Include="Time\RebusTimeMachine.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
+    <Compile Include="Transport\DefaultSyncTransactionContext.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
     <Compile Include="Config\OneWayClientBusDecorator.cs" />
     <Compile Include="Serialization\HeaderSerializer.cs" />
+    <Compile Include="Transport\TransactionContext.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\ThreadPoolBased\ISyncBackoffStrategy.cs" />
     <Compile Include="Workers\IWorker.cs" />

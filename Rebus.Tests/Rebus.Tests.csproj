@@ -61,6 +61,7 @@
     <Compile Include="Activation\BuiltinHandlerActivatorContainerTests.cs" />
     <Compile Include="Activation\TestBuiltinHandlerActivator.cs" />
     <Compile Include="Assumptions\CanDoReflection.cs" />
+    <Compile Include="Assumptions\TestAsyncWrapper.cs" />
     <Compile Include="Assumptions\TestConcurrentDictionary.cs" />
     <Compile Include="Assumptions\TestReflectInheritance.cs" />
     <Compile Include="Assumptions\TestString.cs" />
@@ -93,6 +94,9 @@
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Routing\TestTransportMessageForwarding.cs" />
+    <Compile Include="Synchronous\TestSyncBus.cs" />
+    <Compile Include="Synchronous\TestSyncBusApiParity.cs" />
+    <Compile Include="Synchronous\TestSyncBusNoBlocking.cs" />
     <Compile Include="Testing\TestDataBusTesting.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />

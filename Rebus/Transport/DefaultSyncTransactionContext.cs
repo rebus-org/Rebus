@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Rebus.Bus.Advanced;
 
 namespace Rebus.Transport
 {
     /// <summary>
     /// Default implementation of <see cref="ITransactionContext"/>
     /// </summary>
-    public class DefaultTransactionContext : ITransactionContext
+    public class DefaultSyncTransactionContext : ITransactionContext
     {
         readonly TransactionContext _transactionContext = new TransactionContext();
 
@@ -58,6 +59,9 @@ namespace Rebus.Transport
         /// <summary>
         /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion
         /// </summary>
-        public Task Complete() => _transactionContext.Complete();
+        public void Complete()
+        {
+            AsyncHelpers.RunSync(_transactionContext.Complete);
+        }
     }
 }

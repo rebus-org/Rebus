@@ -33,10 +33,10 @@ namespace Rebus.Bus
 
             public ITransportMessageApi TransportMessage => new TransportMessageApi(_rebusBus);
 
-            public IDataBus DataBus => _rebusBus.DataBus;
-        }
+            public IDataBus DataBus => _rebusBus._dataBus;
 
-        internal IDataBus DataBus => _dataBus;
+            public ISyncBus SyncBus => new SyncApi(_rebusBus);
+        }
 
         class TransportMessageApi : ITransportMessageApi
         {
@@ -92,6 +92,61 @@ namespace Rebus.Bus
                 var clone = new TransportMessage(headers, body);
 
                 return clone;
+            }
+        }
+
+        class SyncApi : ISyncBus
+        {
+            readonly RebusBus _rebusBus;
+
+            public SyncApi(RebusBus rebusBus)
+            {
+                _rebusBus = rebusBus;
+            }
+
+            public void SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.SendLocal(commandMessage, optionalHeaders));
+            }
+
+            public void Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Send(commandMessage, optionalHeaders));
+            }
+
+            public void Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Reply(replyMessage, optionalHeaders));
+            }
+
+            public void Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Defer(delay, message, optionalHeaders));
+            }
+
+            public void Subscribe<TEvent>()
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Subscribe<TEvent>());
+            }
+
+            public void Subscribe(Type eventType)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Subscribe(eventType));
+            }
+
+            public void Unsubscribe<TEvent>()
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Unsubscribe<TEvent>());
+            }
+
+            public void Unsubscribe(Type eventType)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Unsubscribe(eventType));
+            }
+
+            public void Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.Publish(eventMessage, optionalHeaders));
             }
         }
 
