@@ -21,7 +21,7 @@ _ReSharper.*
 _NCrunch_*
 *.user
 *.backup
-*.lock.json
+**/*.lock.json
 
 # MS Guideline
 **/packages/*
