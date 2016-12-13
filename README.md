@@ -17,7 +17,7 @@ These are the goals - Rebus should have:
 * a simple and intuitive configuration story
 * a few well-selected options
 * no doodleware
-* dependency only on .NET ˜˜4.5˜˜ **Core**
+* dependency only on .NET ~~4.5~~ **Core**
 * integration with external dependencies via small and dedicated projects
 * the best error messages
 * a frictionless getting-up-and-running-experience
