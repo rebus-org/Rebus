@@ -2,8 +2,7 @@
   "version": "1.0.0-*",
   "testRunner": "xunit",
   "buildOptions": {
-    "debugType": "portable",
-    "emitEntryPoint": true
+    "debugType": "portable"
   },
   "dependencies": {
     "Rebus": "1.0.0-*",
@@ -16,7 +15,7 @@
       "dependencies": {
         "Microsoft.NETCore.App": {
           "type": "platform",
-          "version": "1.0.0"
+          "version": "1.1.0"
         }
       }
     }

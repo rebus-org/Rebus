@@ -46,7 +46,7 @@ namespace Rebus.Tests.Integration
         [Fact]
         public async Task ItWorks()
         {
-            const int numberOfRetries = 2;
+            const int numberOfRetries = 5;
 
             InitializeBus(numberOfRetries);
 
@@ -63,7 +63,7 @@ namespace Rebus.Tests.Integration
             var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName);
 
             Assert.Equal(numberOfRetries, attemptedDeliveries);
-            Assert.Contains("5 unhandled exceptions", failedMessage.Headers.GetValue(Headers.ErrorDetails));
+            Assert.Contains($"{numberOfRetries} unhandled exceptions", failedMessage.Headers.GetValue(Headers.ErrorDetails));
             Assert.Equal(InputQueueName, failedMessage.Headers.GetValue(Headers.SourceQueue));
         }
 

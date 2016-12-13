@@ -38,8 +38,7 @@ namespace Rebus.Tests.Routing
 
             var transportMessages = await Task.WhenAll(recipients.Select(async queue =>
             {
-                var message = await network.WaitForNextMessageFrom(queue);
-
+                var message = await network.WaitForNextMessageFrom(queue); 
                 return message;
             }));
 
