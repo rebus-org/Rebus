@@ -1,18 +1,24 @@
 {
+  "name": "Corebus.Tests.Contracts",
   "version": "1.0.0-*",
+  "description": "Base library for the rebus tests.",
+  "authors": [
+    "mookid8000",
+    "mvandevy"
+  ],
   "testRunner": "xunit",
   "buildOptions": {
     "debugType": "portable"
   },
   "dependencies": {
       "FluentAssertions": "4.18.0",
-      "Rebus": "1.0.0-*",
+      "Corebus": "1.0.0",
       "xunit": "2.2.0-beta2-build3300",
       "dotnet-test-xunit": "2.2.0-preview2-build1029",
       "Moq": "4.6.38-alpha"
   },
   "frameworks": {
-    "netcoreapp1.0": {
+    "netcoreapp1.1": {
       "dependencies": {
         "Microsoft.NETCore.App": {
           "type": "platform",
@@ -20,5 +26,18 @@
         }
       }
     }
+  },
+  "packOptions": {
+    "summary": "Rebus project converted to be .net core compatible. This is the base library of the tests.",
+    "releaseNotes": "Initial version.",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/mvandevy/Rebus"
+    },
+    "tags": [
+      ""
+    ],
+    "licenseUrl":"https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md",
+    "projectUrl": "http://mookid.dk/oncode/rebus"
   }
 }

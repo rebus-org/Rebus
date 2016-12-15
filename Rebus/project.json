@@ -1,21 +1,40 @@
 {
+  "name": "Corebus",
   "version": "1.0.0-*",
+  "description": "Rebus made .net core compatible. Therefore dubbed as Corebus",
+  "authors": [
+    "mookid8000",
+    "mvandevy"
+  ],
   "buildOptions": {
     "debugType": "portable"
   },
   "dependencies": {
     "Newtonsoft.Json" : "9.0.1",
-    "Microsoft.Extensions.Logging": "1.0.0",
     "System.Diagnostics.TraceSource": "4.3.0"
   },
   "frameworks": {
-    "netcoreapp1.0": {
+    "netcoreapp1.1": {
       "dependencies": {
         "Microsoft.NETCore.App": {
           "type": "platform",
           "version": "1.1.0"
         }
-      }
+      },
+      "imports": "dnxcore50"
     }
+  },
+  "packOptions": {
+    "summary": "Rebus project converted to be .net core compatible.",
+    "releaseNotes": "Initial version.",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/mvandevy/Rebus"
+    },
+    "tags": [
+      ""
+    ],
+    "licenseUrl":"https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md",
+    "projectUrl": "http://mookid.dk/oncode/rebus"
   }
 }
