@@ -188,7 +188,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 using (var transactionContext = new DefaultTransactionContext())
                 {
-                    var msg = await input.Receive(transactionContext, _cancellationToken);
+                    var msg = await input.Receive(AmbientTransactionContext.Current, _cancellationToken);
 
                     if (msg != null)
                     {
@@ -209,7 +209,7 @@ namespace Rebus.Tests.Contracts.Transports
         {
             using (var context = new DefaultTransactionContext())
             {
-                await contextAction(context);
+                await contextAction(AmbientTransactionContext.Current);
 
                 if (completeTransaction)
                 {

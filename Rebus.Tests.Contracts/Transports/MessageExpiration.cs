@@ -39,7 +39,7 @@ namespace Rebus.Tests.Contracts.Transports
                     {Headers.MessageId, Guid.NewGuid().ToString() },
                     {"recognizzle", id}
                 };
-                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
                 await transactionContext.Complete();
             }
 
@@ -47,7 +47,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
+                var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
 
                 Assert.That(transportMessage, Is.Not.Null);
@@ -74,7 +74,7 @@ namespace Rebus.Tests.Contracts.Transports
                     {"recognizzle", id},
                     {Headers.TimeToBeReceived, "00:00:04"} //< expires after 4 seconds!
                 };
-                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
                 await transactionContext.Complete();
             }
 
@@ -86,7 +86,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
+                var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
 
                 Assert.That(transportMessage, Is.Null);
@@ -109,7 +109,7 @@ namespace Rebus.Tests.Contracts.Transports
                     {Headers.TimeToBeReceived, "00:00:20"},
                     {Headers.SentTime,DateTimeOffset.UtcNow.ToString("O")}//< expires after 10 seconds!
                 };
-                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
                 await transactionContext.Complete();
             }
 
@@ -117,7 +117,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
+                var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
 
                 Assert.That(transportMessage, Is.Not.Null);

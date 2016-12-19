@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -20,7 +21,8 @@ namespace Rebus.Tests.Activation
 
         protected override void TearDown()
         {
-            AmbientTransactionContext.Current = null;
+            AmbientTransactionContext.SetCurrent(null);
+
             _activator.Dispose();
         }
 
@@ -29,9 +31,12 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(() => new SomeHandler());
 
-            var handlers = _activator.GetHandlers("hej med dig", new DefaultTransactionContext()).Result;
+            using (var transactionContext = new DefaultTransactionContext())
+            {
+                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
-            Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
+                Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
+            }
         }
 
         [Test]
@@ -41,9 +46,7 @@ namespace Rebus.Tests.Activation
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                AmbientTransactionContext.Current = transactionContext;
-
-                var handlers = _activator.GetHandlers("hej med dig", transactionContext).Result;
+                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
                 Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }
@@ -56,9 +59,7 @@ namespace Rebus.Tests.Activation
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                AmbientTransactionContext.Current = transactionContext;
-
-                var handlers = _activator.GetHandlers("hej med dig", transactionContext).Result;
+                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
                 Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }

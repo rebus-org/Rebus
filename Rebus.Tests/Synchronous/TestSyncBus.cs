@@ -60,21 +60,12 @@ namespace Rebus.Tests.Synchronous
 
             using (var context = new DefaultSyncTransactionContext())
             {
-                try
-                {
-                    AmbientTransactionContext.Current = context;
+                bus.SendLocal("hej med dig min ven");
+                bus.SendLocal("her er endnu en besked");
 
-                    bus.SendLocal("hej med dig min ven");
-                    bus.SendLocal("her er endnu en besked");
-
-                    if (commitTransaction)
-                    {
-                        context.Complete();
-                    }
-                }
-                finally
+                if (commitTransaction)
                 {
-                    AmbientTransactionContext.Current = null;
+                    context.Complete();
                 }
             }
 
