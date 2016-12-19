@@ -48,7 +48,6 @@
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Bus\Advanced\AsyncHelpers.cs" />
     <Compile Include="Bus\Advanced\ISyncBus.cs" />
-    <Compile Include="Legacy\LegacyFlag.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="Auditing\Messages\AuditHeaders.cs" />
     <Compile Include="Auditing\Messages\AuditingHelper.cs" />
@@ -117,13 +116,6 @@
     <Compile Include="Pipeline\Receive\HandlerInvoker.cs" />
     <Compile Include="Pipeline\Send\AssignTypeHeaderStep.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
-    <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
-    <Compile Include="Legacy\LegacySubscriptionMessagesBinder.cs" />
-    <Compile Include="Legacy\MapLegacyHeadersOutgoingStep.cs" />
-    <Compile Include="Legacy\PackLegacyMessageOutgoingStep.cs" />
-    <Compile Include="Legacy\LegacyCompatibilityConfigurationExtensions.cs" />
-    <Compile Include="Legacy\MapLegacyHeadersIncomingStep.cs" />
-    <Compile Include="Legacy\UnpackLegacyMessageIncomingStep.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorage.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorageConfigurationExtensions.cs" />
     <Compile Include="Pipeline\PipelineAbsolutePosition.cs" />
