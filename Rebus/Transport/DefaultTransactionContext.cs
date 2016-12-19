@@ -22,7 +22,10 @@ namespace Rebus.Transport
         /// <summary>
         /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion
         /// </summary>
-        public Task Complete() => _transactionContext.Complete();
+        public Task Complete()
+        {
+            return _transactionContext.Complete();
+        }
 
         /// <summary>
         /// Disposes the transaction context and removes it from <see cref="AmbientTransactionContext.Current"/> again
