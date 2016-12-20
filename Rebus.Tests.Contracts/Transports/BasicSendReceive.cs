@@ -10,7 +10,7 @@ using Rebus.Transport;
 
 namespace Rebus.Tests.Contracts.Transports
 {
-    public class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
+    public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
