@@ -18,7 +18,7 @@ namespace Rebus.Retry.Simple
 
             if (body != null)
             {
-                var interfaces = body.GetType().GetInterfaces();
+                var interfaces = body.GetType().GetTypeInfo().GetInterfaces();
 
                 if (interfaces.Any(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IFailed<>)))
                 {

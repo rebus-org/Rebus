@@ -14,7 +14,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static IEnumerable<Type> GetBaseTypes(this Type type)
         {
-            foreach (var implementedInterface in type.GetInterfaces())
+            foreach (var implementedInterface in type.GetTypeInfo().GetInterfaces())
             {
                 yield return implementedInterface;
             }

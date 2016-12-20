@@ -225,7 +225,7 @@ namespace Rebus.Testing
         {
             const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance;
 
-            var constructor = eventType.GetConstructors(flags).FirstOrDefault();
+            var constructor = eventType.GetTypeInfo().GetConstructors(flags).FirstOrDefault();
             if (constructor != null)
             {
                 return constructor;
@@ -264,7 +264,7 @@ namespace Rebus.Testing
             {
                 var compatibleHandlerType = typeof (Action<>).MakeGenericType(fakeBusEvent.GetType());
 
-                if (!compatibleHandlerType.IsInstanceOfType(callback)) continue;
+                if (!compatibleHandlerType.GetTypeInfo().IsInstanceOfType(callback)) continue;
 
                 try
                 {

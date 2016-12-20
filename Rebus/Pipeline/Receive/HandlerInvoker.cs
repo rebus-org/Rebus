@@ -26,7 +26,7 @@ namespace Rebus.Pipeline.Receive
             return CanBeInitiatedByCache
                 .GetOrAdd($"{Handler.GetType().FullName}::{messageType.FullName}", _ =>
                 {
-                    var implementedInterfaces = Saga.GetType().GetInterfaces();
+                    var implementedInterfaces = Saga.GetType().GetTypeInfo().GetInterfaces();
 
                     var handlerTypesToLookFor = new[] { messageType }.Concat(messageType.GetBaseTypes())
                         .Select(baseType => typeof(IAmInitiatedBy<>).MakeGenericType(baseType));
