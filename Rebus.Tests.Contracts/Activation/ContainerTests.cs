@@ -82,7 +82,7 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var context = new DefaultTransactionContext())
+            using (var context = new DefaultTransactionContextScope())
             {
                 var handlers = handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current).Result.ToList();
 
@@ -283,7 +283,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current)).ToList();
 
@@ -301,7 +301,7 @@ namespace Rebus.Tests.Contracts.Activation
         {
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
 
@@ -315,7 +315,7 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeStringHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
 

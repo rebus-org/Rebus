@@ -1,12 +1,15 @@
 ﻿using System;
-using Rebus.Bus.Advanced;
+using System.Threading.Tasks;
 
 namespace Rebus.Transport
 {
     /// <summary>
-    /// Default implementation of <see cref="ITransactionContext"/>
+    /// Default (async, as in: the <see cref="Complete"/> method returns a <see cref="Task"/> to be awaited) transaction scope 
+    /// that sets up an ambient <see cref="ITransactionContext"/> and removes
+    /// it when the scope is disposed. Call <code>await scope.Complete();</code> in order to end the scope
+    /// by committing any actions enlisted to be executed.
     /// </summary>
-    public class DefaultSyncTransactionContext : IDisposable
+    public class DefaultTransactionContextScope : IDisposable
     {
         readonly TransactionContext _transactionContext = new TransactionContext();
 
@@ -14,7 +17,7 @@ namespace Rebus.Transport
         /// Creates a new transaction context and mounts it on <see cref="AmbientTransactionContext.Current"/>, making it available for Rebus
         /// to pick up
         /// </summary>
-        public DefaultSyncTransactionContext()
+        public DefaultTransactionContextScope()
         {
             AmbientTransactionContext.SetCurrent(_transactionContext);
         }
@@ -22,7 +25,10 @@ namespace Rebus.Transport
         /// <summary>
         /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion
         /// </summary>
-        public void Complete() => AsyncHelpers.RunSync(_transactionContext.Complete);
+        public Task Complete()
+        {
+            return _transactionContext.Complete();
+        }
 
         /// <summary>
         /// Disposes the transaction context and removes it from <see cref="AmbientTransactionContext.Current"/> again

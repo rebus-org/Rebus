@@ -88,7 +88,7 @@ async implementation underneath the covers without deadlocking, even in a single
             {
                 aspNet.Post(s =>
                 {
-                    using (var context = new DefaultSyncTransactionContext())
+                    using (var context = new DefaultSyncTransactionContextScope())
                     {
                         var transactionContext = AmbientTransactionContext.Current;
 

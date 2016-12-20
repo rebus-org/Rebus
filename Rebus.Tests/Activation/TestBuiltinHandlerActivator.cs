@@ -31,7 +31,7 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(() => new SomeHandler());
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
@@ -44,7 +44,7 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(context => new SomeHandler());
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
@@ -57,7 +57,7 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register((bus, context) => new SomeHandler());
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 

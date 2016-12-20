@@ -32,7 +32,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -45,7 +45,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await Task.Delay(5000);
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
@@ -66,7 +66,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -84,7 +84,7 @@ namespace Rebus.Tests.Contracts.Transports
             await Task.Delay(millisecondsDelay);
             Console.WriteLine($"Delay of {millisecondsDelay} ms actually lasted {stopwatch.ElapsedMilliseconds:0} ms");
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
@@ -100,7 +100,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -115,7 +115,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await Task.Delay(3000);
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();

@@ -58,7 +58,7 @@ namespace Rebus.Tests.Synchronous
 
             _activator.Handle<string>(async msg => receivedMessages.Enqueue(msg));
 
-            using (var context = new DefaultSyncTransactionContext())
+            using (var context = new DefaultSyncTransactionContextScope())
             {
                 bus.SendLocal("hej med dig min ven");
                 bus.SendLocal("her er endnu en besked");

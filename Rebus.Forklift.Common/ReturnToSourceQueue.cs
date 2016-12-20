@@ -112,7 +112,7 @@ namespace Rebus.Forklift.Common
 
             while (true)
             {
-                using (var transactionContext = new DefaultTransactionContext())
+                using (var transactionContext = new DefaultTransactionContextScope())
                 {
                     var transportMessage = _transport.Receive(AmbientTransactionContext.Current, new CancellationTokenSource().Token).Result;
 
