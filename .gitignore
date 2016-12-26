@@ -30,3 +30,6 @@ AssemblyInfo_Patch.cs
 
 # JetBrains Rider
 .idea/
+
+# VSCode
+.vscode
