@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.DataBus;
 using Rebus.DataBus.InMem;
@@ -13,14 +14,14 @@ using Rebus.Testing;
 using Rebus.Testing.Events;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Xunit;
 
 namespace Rebus.Tests.Testing
 {
-    // How to simulate reading a data bus attachment when unit testing (as in: really isolated) handlers
+    [TestFixture]
+    [Description("How to simulate reading a data bus attachment when unit testing (as in: really isolated) handlers")]
     public class TestDataBusTesting : FixtureBase
     {
-        [Fact]
+        [Test]
         public async Task CreateTest()
         {
             var dataStore = new InMemDataStore();
@@ -33,14 +34,14 @@ namespace Rebus.Tests.Testing
                 .OfType<MessageSent<DataBusAttachment>>()
                 .ToList();
 
-            Assert.Equal(1, sentDataBusAttachments.Count);
+            Assert.That(sentDataBusAttachments.Count, Is.EqualTo(1));
 
             var attachmentId = sentDataBusAttachments.First().CommandMessage.Id;
 
             var data = dataStore.Load(attachmentId);
             var textData = Encoding.UTF8.GetString(data);
 
-            Assert.Equal("hej med dig min ven!", textData);
+            Assert.That(textData, Is.EqualTo("hej med dig min ven!"));
         }
 
         class DataBusAttachmentCreatingHandler : IHandleMessages<string>
@@ -62,7 +63,7 @@ namespace Rebus.Tests.Testing
             }
         }
 
-        [Fact]
+        [Test]
         public async Task ReadTest()
         {
             const string textData = "this is the payload!!";
@@ -84,11 +85,11 @@ namespace Rebus.Tests.Testing
 
             gotMessage.WaitOrDie(TimeSpan.FromSeconds(1));
 
-            Assert.Equal(1, receivedTextData.Count);
-            Assert.Equal(textData, receivedTextData.First());
+            Assert.That(receivedTextData.Count, Is.EqualTo(1));
+            Assert.That(receivedTextData.First(), Is.EqualTo(textData));
 
-            Assert.Equal(1, receivedMetadata.Count);
-            Assert.Equal("whee!!", receivedMetadata.First()["custom-meta"]);
+            Assert.That(receivedMetadata.Count, Is.EqualTo(1));
+            Assert.That(receivedMetadata.First()["custom-meta"], Is.EqualTo("whee!!"));
         }
 
         class DataBusAttachmentReadingHandler : IHandleMessages<string>

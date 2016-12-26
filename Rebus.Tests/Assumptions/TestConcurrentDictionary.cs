@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Xunit;
+using NUnit.Framework;
 
 namespace Rebus.Tests.Assumptions
 {
+    [TestFixture]
     public class TestConcurrentDictionary
     {
-        [Fact]
+        [Test]
         public void NizzleName()
         {
             var dictionary = new ConcurrentDictionary<string, string>();

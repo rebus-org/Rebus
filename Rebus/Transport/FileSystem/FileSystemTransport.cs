@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Time;
 
@@ -231,8 +232,8 @@ namespace Rebus.Transport.FileSystem
 
             if (caughtException != null && !Directory.Exists(directory))
             {
-                throw new Exception(
-                    $"Could not initialize directory '{directory}' for queue named '{queueName}'", caughtException);
+                throw new RebusApplicationException(caughtException,
+                    $"Could not initialize directory '{directory}' for queue named '{queueName}'");
             }
 
             // if an exception occurred but the directory exists now, it must have been a race... we're good

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Logging;
 
 namespace Rebus.Threading.SystemTimersTimer
 {
     /// <summary>
-    /// Implementation of <see cref="IAsyncTaskFactory"/> that uses a <see cref="Timer"/> to schedule callbacks
+    /// Implementation of <see cref="IAsyncTaskFactory"/> that uses a <see cref="System.Threading.Timer"/> to schedule callbacks
     /// </summary>
     public class TimerAsyncTaskFactory : IAsyncTaskFactory
     {

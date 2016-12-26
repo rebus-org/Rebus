@@ -2,22 +2,22 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
-    //Verifies that the last message handled by the endpoint does not get its handler called with a NULL bus because of a race condition in BuiltinHandlerActivator
+    [TestFixture]
+    [Description("Verifies that the last message handled by the endpoint does not get its handler called with a NULL bus because of a race condition in BuiltinHandlerActivator")]
     public class BuiltinHandlerActivatorDisposalRaceCondition : FixtureBase
     {
-        [Fact]
+        [Test]
         public void DoesNotDispatchMessageWithNullBus()
         {
             var busInstances = new ConcurrentQueue<IBus>();
@@ -48,8 +48,8 @@ namespace Rebus.Tests.Bugs
 
             var numberOfNulls = busInstances.Count(i => i == null);
 
-            // if it fails: "Did not expect any messages to be dispatched with a NULL bus instance"
-            Assert.Equal(0, numberOfNulls);
+            Assert.That(numberOfNulls, Is.EqualTo(0),
+                "Did not expect any messages to be dispatched with a NULL bus instance");
         }
     }
 }

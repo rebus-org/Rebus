@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -9,14 +10,15 @@ using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
+    [TestFixture]
     public class DoesNotEnlistInOtherBusTransactionContext : FixtureBase
     {
         ListLoggerFactory _listLoggerFactory;
@@ -25,7 +27,7 @@ namespace Rebus.Tests.Bugs
         InMemNetwork _secondNetwork;
         BuiltinHandlerActivator _activator2;
 
-        [Fact]
+        [Test]
         public void CheckThatItDoesNotEnlistInOtherBusTransactionCotnext()
         {
             _listLoggerFactory = new ListLoggerFactory(true);

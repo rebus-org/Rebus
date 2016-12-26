@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -17,20 +18,19 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestIdempotentSagas : FixtureBase
     {
         const int MakeEveryFifthMessageFail = 5;
-        readonly BuiltinHandlerActivator _activator;
-        readonly IBus _bus;
-        readonly ConcurrentDictionary<Guid, ISagaData> _persistentSagaData;
+        BuiltinHandlerActivator _activator;
+        IBus _bus;
+        ConcurrentDictionary<Guid, ISagaData> _persistentSagaData;
 
-        public TestIdempotentSagas()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -64,13 +64,12 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Theory]
-        [InlineData(10)]
+        [TestCase(10)]
         public async Task ItWorks(int total)
         {
             if (total < MakeEveryFifthMessageFail)
             {
-                Assert.True(false,"Fail factor must be less than or equal to total!");
+                Assert.Fail("Fail factor must be less than or equal to total!");
             }
 
             var allMessagesReceived = new ManualResetEvent(false);
@@ -102,23 +101,23 @@ namespace Rebus.Tests.Integration
                 .OfType<MyIdempotentSagaData>()
                 .ToList();
 
-            Assert.Equal(1, allIdempotentSagaData.Count);
+            Assert.That(allIdempotentSagaData.Count, Is.EqualTo(1));
 
             var instance = allIdempotentSagaData.First();
 
-            Assert.Equal(total, instance.CountPerId.Count);
+            Assert.That(instance.CountPerId.Count, Is.EqualTo(total));
 
-            Assert.True(instance.CountPerId.All(c => c.Value == 1),
-                $"Not all counts were exactly one: {string.Join(", ", instance.CountPerId.Where(c => c.Value > 1).Select(c => $"{c.Key}: {c.Value}"))} " +
-                $"- this is a sign that the saga was not truly idempotent, as the redelivery should have been caught!");
+            Assert.That(instance.CountPerId.All(c => c.Value == 1), Is.True,
+                "Not all counts were exactly one: {0} - this is a sign that the saga was not truly idempotent, as the redelivery should have been caught!",
+                string.Join(", ", instance.CountPerId.Where(c => c.Value > 1).Select(c => $"{c.Key}: {c.Value}")));
 
             var outgoingMessagesById = receivedMessages.GroupBy(m => m.Id).ToList();
 
-            Assert.Equal(total / 2, outgoingMessagesById.Count);
+            Assert.That(outgoingMessagesById.Count, Is.EqualTo(total / 2));
 
-            // if it fails: "Didn't get the expected outgoing messages - expected an outgoing message for each ID whose mod 2 is zero");
-            Assert.Equal(Enumerable.Range(0, total).Where(id => id % 2 == 0).ToArray(),
-                outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray());
+            Assert.That(outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray(),
+                Is.EqualTo(Enumerable.Range(0, total).Where(id => id % 2 == 0).ToArray()),
+                "Didn't get the expected outgoing messages - expected an outgoing message for each ID whose mod 2 is zero");
         }
 
         class SagaStorageTap : ISagaStorage

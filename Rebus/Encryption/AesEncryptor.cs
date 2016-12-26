@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 namespace Rebus.Encryption
 {
     /// <summary>
-    /// Helps with encrypting/decripting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
+    /// Helps with encrypting/decripting byte arrays, using the <see cref="Aes"/> algorithm
     /// </summary>
     class AesEncryptor : IEncryptor
     {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Compression;
@@ -12,23 +13,22 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestEncryptionAndCompressionTogether : FixtureBase
     {
         const string EncryptionKey = "UaVcj0zCA35mgrg9/pN62Rp+r629BMi9S9v0Tz4S7EM=";
 
         IBus _bus;
-        readonly BuiltinHandlerActivator _handlerActivator;
+        BuiltinHandlerActivator _handlerActivator;
 
-        readonly List<TransportMessage> _sentMessages;
-        readonly List<TransportMessage> _receivedMessages;
+        List<TransportMessage> _sentMessages;
+        List<TransportMessage> _receivedMessages;
 
-        public TestEncryptionAndCompressionTogether()
+        protected override void SetUp()
         {
             _sentMessages = new List<TransportMessage>();
             _receivedMessages = new List<TransportMessage>();
@@ -53,7 +53,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public void ItWorks()
         {
             var gotTheMessage = new ManualResetEvent(false);
@@ -79,8 +79,8 @@ Huge payload:       {0}
 Sent message:       {1}
 Received message:   {2}", hugePayloadLength, sentMessageBodyLength, receivedMessageBodyLength);
 
-            Assert.True(sentMessageBodyLength < hugePayloadLength);
-            Assert.True(receivedMessageBodyLength < hugePayloadLength);
+            Assert.That(sentMessageBodyLength, Is.LessThan(hugePayloadLength));
+            Assert.That(receivedMessageBodyLength, Is.LessThan(hugePayloadLength));
         }
 
         class HugeMessage

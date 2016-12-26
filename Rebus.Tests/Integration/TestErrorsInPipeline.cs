@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
@@ -11,20 +12,20 @@ using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestErrorsInPipeline : FixtureBase
     {
         BuiltinHandlerActivator _adapter;
         InMemNetwork _network;
         ListLoggerFactory _listLoggerFactory;
 
-        public TestErrorsInPipeline()
+        protected override void SetUp()
         {
             _listLoggerFactory = new ListLoggerFactory();
             _adapter = new BuiltinHandlerActivator();
@@ -39,7 +40,7 @@ namespace Rebus.Tests.Integration
             Using(bus);
         }
 
-        [Fact]
+        [Test]
         public async Task IncomingMessageHasNoHeaders()
         {
             var gotMessage = false;
@@ -55,20 +56,21 @@ namespace Rebus.Tests.Integration
 
             PrintLogs();
 
-            Assert.False(gotMessage, "Did not expect to receive the message");
+            Assert.That(gotMessage, Is.False, "Did not expect to receive the message");
 
             var loggedErrors = _listLoggerFactory
                 .Where(l => l.Level == LogLevel.Error)
                 .ToList();
 
-            Assert.Equal(1, loggedErrors.Count);
+            Assert.That(loggedErrors.Count, Is.EqualTo(1));
 
             var errorLogLine = loggedErrors.Single(e => e.Level == LogLevel.Error);
 
-            Assert.Contains($"Received message with empty or absent '{Headers.MessageId}' header", errorLogLine.Text);
+            Assert.That(errorLogLine.Text, Contains.Substring(
+                $"Received message with empty or absent '{Headers.MessageId}' header"));
         }
 
-        [Fact]
+        [Test]
         public async Task IncomingMessageCannotBeDeserialized()
         {
             var gotMessage = false;
@@ -88,17 +90,18 @@ namespace Rebus.Tests.Integration
 
             PrintLogs();
 
-            Assert.False(gotMessage, "Did not expect to receive the message");
+            Assert.That(gotMessage, Is.False, "Did not expect to receive the message");
 
             var loggedErrors = _listLoggerFactory
                 .Where(l => l.Level == LogLevel.Error)
                 .ToList();
 
-            Assert.Equal(1, loggedErrors.Count);
+            Assert.That(loggedErrors.Count, Is.EqualTo(1));
 
             var errorLogLine = loggedErrors.Single(e => e.Level == LogLevel.Error);
 
-            Assert.Contains($"Moving message with ID {messageId} to error queue 'error'",errorLogLine.Text);
+            Assert.That(errorLogLine.Text, Contains.Substring(
+                $"Moving message with ID {messageId} to error queue 'error'"));
         }
 
         void PrintLogs()

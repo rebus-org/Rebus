@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Auditing.Sagas;
 using Rebus.Bus;
@@ -12,20 +13,18 @@ using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Sagas
 {
-    public class SagaSnapshotStorageTest<TFactory> : FixtureBase where TFactory : ISagaSnapshotStorageFactory, new()
+    public abstract class SagaSnapshotStorageTest<TFactory> : FixtureBase where TFactory : ISagaSnapshotStorageFactory, new()
     {
         BuiltinHandlerActivator _activator;
         IBus _bus;
         TFactory _factory;
         ListLoggerFactory _logger;
 
-        public SagaSnapshotStorageTest()
+        protected override void SetUp()
         {
             _factory = new TFactory();
 
@@ -42,7 +41,7 @@ namespace Rebus.Tests.Contracts.Sagas
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task DoesNotFailWhenSagaDataCouldNotBeFound()
         {
             var sharedCounter = Using(new SharedCounter(1));
@@ -57,7 +56,7 @@ namespace Rebus.Tests.Contracts.Sagas
 
             var warningsOrAbove = lines.Where(l => l.Level >= LogLevel.Warn).ToList();
 
-            Assert.False(warningsOrAbove.Any(),
+            Assert.That(warningsOrAbove.Any(), Is.False,
                 $@"Didn't expect warnings or errors, but got this:
 
 {string.Join(Environment.NewLine, warningsOrAbove)}
@@ -67,7 +66,7 @@ as part of this:
 {string.Join(Environment.NewLine, lines)}");
         }
 
-        [Fact]
+        [Test]
         public void CreatesSnapshotOfSagaData()
         {
             var sharedCounter = new SharedCounter(3, "Message counter")
@@ -89,16 +88,16 @@ as part of this:
 
             var allSnapshots = _factory.GetAllSnapshots().ToList();
 
-            Assert.Equal(3, allSnapshots.Count);
+            Assert.That(allSnapshots.Count, Is.EqualTo(3));
 
-            // "All snapshots should have the same saga ID!"
-            Assert.All(allSnapshots, s => Assert.Equal(allSnapshots.First().SagaData.Id, s.SagaData.Id));
+            Assert.That(allSnapshots.All(s => s.SagaData.Id == allSnapshots.First().SagaData.Id),
+                "Not all snapshots had the same saga ID!");
 
-            // "Expect the three initial revisions"
-            Assert.Equal(new[] { 0, 1, 2 }, allSnapshots.OrderBy(s => s.SagaData.Revision).Select(s => s.SagaData.Revision));
+            Assert.That(allSnapshots.OrderBy(s => s.SagaData.Revision).Select(s => s.SagaData.Revision), Is.EqualTo(new[] { 0, 1, 2 }),
+                "Expected the three initial revisions");
         }
 
-        [Fact]
+        [Test]
         public void CreatesSnapshotOfSagaDataAlsoWhenImmediatelyMarkingAsComplete()
         {
             var sharedCounter = new SharedCounter(3, "Message counter")
@@ -122,13 +121,11 @@ as part of this:
 
             var allSnapshots = _factory.GetAllSnapshots().ToList();
 
-            Assert.Equal(3, allSnapshots.Count);
+            Assert.That(allSnapshots.Count, Is.EqualTo(3));
 
-            // "All revisions should be initial!
-            Assert.All(allSnapshots, snapshot => Assert.Equal(0, snapshot.SagaData.Revision));
+            Assert.That(allSnapshots.All(s => s.SagaData.Revision == 0), "Not all revisions were initial!: {0}", allSnapshots.Select(s => s.SagaData.Revision));
 
-            //"Expect three different saga IDs!"
-            Assert.Equal(3, allSnapshots.Select(s => s.SagaData.Id).Distinct().Count());
+            Assert.That(allSnapshots.Select(s => s.SagaData.Id).Distinct().Count(), Is.EqualTo(3), "Expected three different saga IDs!");
         }
 
         class MessageThatCanNeverBeCorrelated { }

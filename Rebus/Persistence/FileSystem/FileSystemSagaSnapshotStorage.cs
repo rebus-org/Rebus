@@ -52,7 +52,7 @@ namespace Rebus.Persistence.FileSystem
             catch (Exception exception)
             {
                 var message =
-                    $"Could not write dummy file to saga snapshot directory '{_snapshotDirectory}' - is it writable for the current user account?";
+                     $"Could not write dummy file to saga snapshot directory '{_snapshotDirectory}' - is it writable for the current user account?";
 
                 throw new IOException(message, exception);
             }

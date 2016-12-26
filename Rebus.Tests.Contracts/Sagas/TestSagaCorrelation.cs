@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -9,8 +10,6 @@ using Rebus.Handlers;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Sagas
@@ -19,7 +18,7 @@ namespace Rebus.Tests.Contracts.Sagas
     {
         TFactory _factory;
 
-        public TestSagaCorrelation()
+        protected override void SetUp()
         {
             _factory = new TFactory();
         }
@@ -29,7 +28,7 @@ namespace Rebus.Tests.Contracts.Sagas
             _factory.CleanUp();
         }
 
-        [Fact]
+        [Test]
         public async Task YeahItWorks()
         {
             var events = new ConcurrentQueue<Tuple<Guid, string>>();
@@ -63,14 +62,20 @@ namespace Rebus.Tests.Contracts.Sagas
             Console.WriteLine("GOT EVENTS--------------------------------------------------------");
             Console.WriteLine(string.Join(Environment.NewLine, events));
 
-            Assert.Equal(4, events.Count);
+            Assert.That(events.Count, Is.EqualTo(4));
 
-            Assert.Equal(new[]{"initiated!", "int!", "string!", "guid!"}, events.Select(e => e.Item2).ToArray());
+            Assert.That(events.Select(e => e.Item2).ToArray(), Is.EqualTo(new[]
+            {
+                "initiated!",
+                "int!",
+                "string!",
+                "guid!"
+            }));
 
             var sagaId = events.First().Item1;
 
-            Assert.True(events.Select(e => e.Item1).All(a => a == sagaId),
-                $"Not the same saga ID thoughout: {string.Join(", ", events.Select(e => e.Item1))}");
+            Assert.That(events.Select(e => e.Item1).All(a => a == sagaId), Is.True,
+                "Not the same saga ID thoughout: {0}", string.Join(", ", events.Select(e => e.Item1)));
         }
 
         public class MySaga : Saga<MySagaData>,

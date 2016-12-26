@@ -2,22 +2,21 @@
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    // Verifies that Rebus does not fail in horrible ways when encountering unserializable exceptions
+    [TestFixture, Description("Verifies that Rebus does not fail in horrible ways when encountering unserializable exceptions")]
     public class TestUnserializableException : FixtureBase
     {
-        [Fact]
+        [Test]
         public async Task CanMoveMessageToErrorQueueEvenThoughExceptionIsNotSerializable()
         {
             using (var activator = new BuiltinHandlerActivator())
@@ -40,7 +39,7 @@ namespace Rebus.Tests.Integration
 
                 var failedMessage = await network.WaitForNextMessageFrom("error");
 
-                Assert.Equal(JsonConvert.SerializeObject(knownString), Encoding.UTF8.GetString(failedMessage.Body));
+                Assert.That(Encoding.UTF8.GetString(failedMessage.Body), Is.EqualTo(JsonConvert.SerializeObject(knownString)));
             }
         }
 

@@ -31,5 +31,10 @@ namespace Rebus.Bus.Advanced
         /// Gets the API for the data bus
         /// </summary>
         IDataBus DataBus { get; }
+
+        /// <summary>
+        /// Exposes a synchronous version of <see cref="IBus"/> that essentially mimics all APIs only providing them in a synchronous version
+        /// </summary>
+        ISyncBus SyncBus { get; }
     }
 }

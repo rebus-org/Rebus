@@ -86,14 +86,14 @@ namespace Rebus.Workers.ThreadPoolBased
             try
             {
                 using (parallelOperation)
-                using (var context = new DefaultTransactionContext())
+                using (var context = new TransactionContext())
                 {
                     var transportMessage = await ReceiveTransportMessage(token, context);
 
                     if (transportMessage == null)
                     {
                         context.Dispose();
-                        
+
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
@@ -120,7 +120,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
-        async Task<TransportMessage> ReceiveTransportMessage(CancellationToken token, DefaultTransactionContext context)
+        async Task<TransportMessage> ReceiveTransportMessage(CancellationToken token, ITransactionContext context)
         {
             try
             {
@@ -146,12 +146,13 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
-        async Task ProcessMessage(DefaultTransactionContext context, TransportMessage transportMessage)
+        async Task ProcessMessage(TransactionContext context, TransportMessage transportMessage)
         {
             try
             {
                 context.Items["OwningBus"] = _owningBus;
-                AmbientTransactionContext.Current = context;
+
+                AmbientTransactionContext.SetCurrent(context);
 
                 var incomingSteps = _pipeline.ReceivePipeline();
                 var stepContext = new IncomingStepContext(transportMessage, context);
@@ -170,7 +171,7 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 context.Abort();
 
-                _log.Error(exception, $"Worker was cancelled while handling message {transportMessage.GetMessageLabel()}");
+                _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
             }
             catch (Exception exception)
             {
@@ -180,7 +181,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
             finally
             {
-                AmbientTransactionContext.Current = null;
+                AmbientTransactionContext.SetCurrent(null);
             }
         }
 
@@ -192,6 +193,15 @@ namespace Rebus.Workers.ThreadPoolBased
         public void Dispose()
         {
             Stop();
+#if net46
+            if (!_workerThread.Join(_options.WorkerShutdownTimeout))
+            {
+                _log.Warn($"The '{Name}' worker did not shut down within {_options.WorkerShutdownTimeout.TotalSeconds} seconds!");
+
+                _workerThread.Abort();
+            }
+#endif
+
         }
     }
 }

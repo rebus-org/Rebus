@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
+    [TestFixture]
     public class AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
-        public AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -25,7 +25,7 @@ namespace Rebus.Tests.Bugs
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public void ItHasBeenFixed()
         {
             var counter = new SharedCounter(1);
@@ -38,7 +38,7 @@ namespace Rebus.Tests.Bugs
 
             counter.WaitForResetEvent();
 
-            Assert.Equal(fields.SagaIdPropertyFromMessage, fields.InitialSagaId);
+            Assert.That(fields.InitialSagaId, Is.EqualTo(fields.SagaIdPropertyFromMessage));
         }
 
         class Fields

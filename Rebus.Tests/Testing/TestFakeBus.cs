@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Testing;
 using Rebus.Testing.Events;
 using Rebus.Tests.Contracts;
-using Xunit;
 
 namespace Rebus.Tests.Testing
 {
+    [TestFixture]
     public class TestFakeBus : FixtureBase
     {
-        [Fact]
+        [Test]
         public void CanClearEventsFromFakeBus()
         {
             var bus = new FakeBus();
@@ -20,10 +21,10 @@ namespace Rebus.Tests.Testing
 
             bus.Clear();
 
-            Assert.Equal(0, bus.Events.Count());
+            Assert.That(bus.Events.Count(), Is.EqualTo(0));
         }
 
-        [Fact]
+        [Test]
         public async Task CheckThatEventsAreProperlyRecorded()
         {
             var bus = new FakeBus();
@@ -33,8 +34,8 @@ namespace Rebus.Tests.Testing
 
             var messageSentEvents = bus.Events.OfType<MessageSent>().ToList();
 
-            Assert.Equal(1, messageSentEvents.Count);
-            Assert.Equal(commandMessage, messageSentEvents[0].CommandMessage);
+            Assert.That(messageSentEvents.Count, Is.EqualTo(1));
+            Assert.That(messageSentEvents[0].CommandMessage, Is.EqualTo(commandMessage));
         }
 
         class MyMessage
@@ -47,7 +48,7 @@ namespace Rebus.Tests.Testing
             public string Text { get; }
         }
 
-        [Fact]
+        [Test]
         public void CodeSampleForComment()
         {
             var fakeBus = new FakeBus();
@@ -58,10 +59,10 @@ namespace Rebus.Tests.Testing
                 .OfType<MessageSent<MyMessage>>()
                 .Count(m => m.CommandMessage.Text == "woohoo!");
 
-            Assert.Equal(1, sentMessagesWithMyGreeting);
+            Assert.That(sentMessagesWithMyGreeting, Is.EqualTo(1));
         }
 
-        [Fact]
+        [Test]
         public void CanDoItAll()
         {
             var fakeBus = new FakeBus();
@@ -74,7 +75,7 @@ namespace Rebus.Tests.Testing
             fakeBus.Unsubscribe<MyMessage>().Wait();
         }
 
-        [Fact]
+        [Test]
         public void CanInvokeCallback()
         {
             var fakeBus = new FakeBus();
@@ -84,7 +85,7 @@ namespace Rebus.Tests.Testing
 
             fakeBus.Send("whatever").Wait();
 
-            Assert.Equal(new[] {"message sent: whatever"}, callbacks);
+            Assert.That(callbacks, Is.EqualTo(new[] {"message sent: whatever"}));
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
@@ -13,8 +13,6 @@ using Rebus.Handlers;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
@@ -23,7 +21,7 @@ namespace Rebus.Tests.Contracts.Activation
     {
         TFactory _factory;
 
-        protected ContainerTests() : base()
+        protected override void SetUp()
         {
             _factory = new TFactory();
 
@@ -58,7 +56,7 @@ namespace Rebus.Tests.Contracts.Activation
             public string Text { get; }
         }
 
-        [Fact]
+        [Test]
         public void IntegrationTest()
         {
             _factory.RegisterHandlerType<StaticHandler>();
@@ -75,27 +73,27 @@ namespace Rebus.Tests.Contracts.Activation
 
             Thread.Sleep(2000);
 
-            Assert.Equal("hej med dig", StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text);
+            Assert.That(StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text, Is.EqualTo("hej med dig"));
         }
 
-        [Fact, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
+        [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
         public void DoesNotDoubleResolveBecauseOfLazyEnumerableEvaluation()
         {
             _factory.RegisterHandlerType<SomeHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var context = new DefaultTransactionContext())
+            using (var context = new DefaultTransactionContextScope())
             {
-                var handlers = handlerActivator.GetHandlers("hej", context).Result.ToList();
+                var handlers = handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current).Result.ToList();
 
                 //context.Complete().Wait();
             }
 
             var createdInstances = SomeHandler.CreatedInstances.ToList();
-            Assert.Equal(new[] { 0 }, createdInstances);
+            Assert.That(createdInstances, Is.EqualTo(new[] { 0 }));
 
             var disposedInstances = SomeHandler.DisposedInstances.ToList();
-            Assert.Equal(new[] { 0 }, disposedInstances);
+            Assert.That(disposedInstances, Is.EqualTo(new[] { 0 }));
         }
 
         class SomeHandler : IHandleMessages<string>, IDisposable
@@ -131,7 +129,7 @@ namespace Rebus.Tests.Contracts.Activation
             }
         }
 
-        [Fact]
+        [Test]
         public void CanGetDecoratedBus()
         {
             var busReturnedFromConfiguration = Configure.With(_factory.GetActivator())
@@ -141,8 +139,9 @@ namespace Rebus.Tests.Contracts.Activation
 
             var busReturnedFromContainer = _factory.GetBus();
 
-            Assert.IsType<TestBusDecorator>(busReturnedFromConfiguration);
-            Assert.IsType<TestBusDecorator>(busReturnedFromContainer);
+            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>());
+            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>());
+
         }
 
         class TestBusDecorator : IBus
@@ -154,63 +153,30 @@ namespace Rebus.Tests.Contracts.Activation
                 _bus = bus;
             }
 
-            public void Dispose()
-            {
-                _bus.Dispose();
-            }
+            public void Dispose() => _bus.Dispose();
 
-            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
-            {
-                return _bus.SendLocal(commandMessage, optionalHeaders);
-            }
+            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
 
-            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
-            {
-                return _bus.SendLocal(commandMessage, optionalHeaders);
-            }
+            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
 
-            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
-            {
-                return _bus.Reply(replyMessage, optionalHeaders);
-            }
+            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null) => _bus.Reply(replyMessage, optionalHeaders);
 
-            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
-            {
-                return _bus.Defer(delay, message, optionalHeaders);
-            }
+            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null) => _bus.Defer(delay, message, optionalHeaders);
 
-            public IAdvancedApi Advanced
-            {
-                get { return _bus.Advanced; }
-            }
+            public IAdvancedApi Advanced => _bus.Advanced;
 
-            public Task Subscribe<TEvent>()
-            {
-                return _bus.Subscribe<TEvent>();
-            }
+            public Task Subscribe<TEvent>() => _bus.Subscribe<TEvent>();
 
-            public Task Subscribe(Type eventType)
-            {
-                return _bus.Subscribe(eventType);
-            }
+            public Task Subscribe(Type eventType) => _bus.Subscribe(eventType);
 
-            public Task Unsubscribe<TEvent>()
-            {
-                return _bus.Unsubscribe<TEvent>();
-            }
+            public Task Unsubscribe<TEvent>() => _bus.Unsubscribe<TEvent>();
 
-            public Task Unsubscribe(Type eventType)
-            {
-                return _bus.Unsubscribe(eventType);
-            }
+            public Task Unsubscribe(Type eventType) => _bus.Unsubscribe(eventType);
 
-            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
-            {
-                return _bus.Publish(eventMessage, optionalHeaders);
-            }
+            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null) => _bus.Publish(eventMessage, optionalHeaders);
         }
 
-        [Fact]
+        [Test]
         public void CanSetBusAndDisposeItAfterwards()
         {
             var factoryForThisTest = new TFactory();
@@ -230,7 +196,7 @@ namespace Rebus.Tests.Contracts.Activation
                 factoryForThisTest.CleanUp();
             }
 
-            Assert.True(fakeBus.Disposed,"The disposable bus instance was NOT disposed when the container was disposed");
+            Assert.That(fakeBus.Disposed, Is.True, "The disposable bus instance was NOT disposed when the container was disposed");
         }
 
         class FakeBus : IBus
@@ -310,19 +276,19 @@ namespace Rebus.Tests.Contracts.Activation
             }
         }
 
-        [Fact]
+        [Test]
         public async Task ResolvesHandlersPolymorphically()
         {
             _factory.RegisterHandlerType<BaseMessageHandler>();
 
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), transactionContext)).ToList();
+                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current)).ToList();
 
-                Assert.Equal(1, handlers.Count);
-                Assert.IsType<BaseMessageHandler>(handlers[0]);
+                Assert.That(handlers.Count, Is.EqualTo(1));
+                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
             }
         }
 
@@ -330,35 +296,35 @@ namespace Rebus.Tests.Contracts.Activation
         class DerivedMessage : BaseMessage { }
         class BaseMessageHandler : IHandleMessages<BaseMessage> { public async Task Handle(BaseMessage message) { } }
 
-        [Fact]
+        [Test]
         public async Task ResolvingWithoutRegistrationYieldsEmptySequenec()
         {
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                var handlers = (await handlerActivator.GetHandlers("hej", transactionContext)).ToList();
+                var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
 
-                Assert.Equal(0, handlers.Count);
+                Assert.That(handlers.Count, Is.EqualTo(0));
             }
         }
 
-        [Fact]
+        [Test]
         public async Task CanRegisterHandler()
         {
             _factory.RegisterHandlerType<SomeStringHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                var handlers = (await handlerActivator.GetHandlers("hej", transactionContext)).ToList();
+                var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
 
-                Assert.Equal(1, handlers.Count);
-                Assert.IsType<SomeStringHandler>(handlers[0]);
+                Assert.That(handlers.Count, Is.EqualTo(1));
+                Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>());
             }
         }
 
-        [Fact]
+        [Test]
         public async Task ResolvedHandlerIsDisposed()
         {
             _factory.RegisterHandlerType<DisposableHandler>();
@@ -373,8 +339,8 @@ namespace Rebus.Tests.Contracts.Activation
 
             await DisposableHandler.Events.WaitUntil(c => c.Count == 2);
 
-            Assert.True(DisposableHandler.WasCalledAllright, "The handler was apparently not called");
-            Assert.True(DisposableHandler.WasDisposedAllright, "The handler was apparently not disposed");
+            Assert.That(DisposableHandler.WasCalledAllright, Is.True, "The handler was apparently not called");
+            Assert.That(DisposableHandler.WasDisposedAllright, Is.True, "The handler was apparently not disposed");
         }
 
         class SomeStringHandler : IHandleMessages<string>

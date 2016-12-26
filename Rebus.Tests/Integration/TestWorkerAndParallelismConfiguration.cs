@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 using Rebus.Workers;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestWorkerAndParallelismConfiguration : FixtureBase
     {
-        [Fact]
+        [Test]
         public void NumberOfWorkersIsLimitedByMaxParallelism()
         {
             var counter = new WorkerCounter();
@@ -37,7 +38,7 @@ namespace Rebus.Tests.Integration
                 Thread.Sleep(TimeSpan.FromSeconds(1));
             }
 
-            Assert.Equal(1,counter.NumberOfWorkersCreated);
+            Assert.That(counter.NumberOfWorkersCreated, Is.EqualTo(1));
         }
 
         class WorkerCounter : IWorkerFactory

@@ -1,4 +1,5 @@
 ﻿using System;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Compression;
 using Rebus.Config;
@@ -6,17 +7,17 @@ using Rebus.Encryption;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestEncryptionAndCompressionConfigurationOrder : FixtureBase
     {
         const string InputQueueName = "config-order";
         const string EncryptionKey = "gMPg8ySmshUk3gA+OnUNSUIrd253zQyUDJHW4359L3E=";
         readonly InMemNetwork _network = new InMemNetwork();
 
-        [Fact]
+        [Test]
         public void CompressionFirst()
         {
             SetUpBus(o =>
@@ -30,7 +31,7 @@ namespace Rebus.Tests.Integration
             Console.WriteLine($"Size: {transportMessage.Body.Length} bytes");
         }
 
-        [Fact]
+        [Test]
         public void EncryptionFirst()
         {
             SetUpBus(o =>

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using Xunit;
+using NUnit.Framework;
 
 namespace Rebus.Tests.Assumptions
 {
+    [TestFixture]
     public class TestReflectInheritance
     {
-        [Fact]
+        [Test]
         public void Yes()
         {
             Print(typeof(BaseClass));

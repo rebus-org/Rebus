@@ -2,25 +2,27 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestAsyncHandler : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.GetName("test.async.input");
-        readonly IBus _bus;
-        readonly BuiltinHandlerActivator _handlerActivator;
+        IBus _bus;
+        BuiltinHandlerActivator _handlerActivator;
 
-        public TestAsyncHandler()
+        protected override void SetUp()
         {
             _handlerActivator = new BuiltinHandlerActivator();
 
@@ -33,7 +35,7 @@ namespace Rebus.Tests.Integration
             Using(_bus);
         }
 
-        [Fact]
+        [Test]
         public async Task YeahItWorks()
         {
             var events = new List<string>();
@@ -54,11 +56,11 @@ namespace Rebus.Tests.Integration
 
             finishedHandled.WaitOrDie(TimeSpan.FromSeconds(10));
 
-            Assert.Equal(4, events.Count);
-            Assert.StartsWith("event=1", events[0]);
-            Assert.StartsWith("event=2", events[1]);
-            Assert.StartsWith("event=3", events[2]);
-            Assert.StartsWith("event=4", events[3]);
+            Assert.That(events.Count, Is.EqualTo(4));
+            Assert.That(events[0], Does.StartWith("event=1"));
+            Assert.That(events[1], Does.StartWith("event=2"));
+            Assert.That(events[2], Does.StartWith("event=3"));
+            Assert.That(events[3], Does.StartWith("event=4"));
         }
 
         static async Task AppendEvent(ICollection<string> events, string eventNumber)

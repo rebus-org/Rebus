@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -8,16 +9,16 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestRequestReply : FixtureBase
     {
-        readonly IBus _bus;
-        readonly BuiltinHandlerActivator _handlerActivator;
+        IBus _bus;
+        BuiltinHandlerActivator _handlerActivator;
 
-        public TestRequestReply()
+        protected override void SetUp()
         {
             _handlerActivator = Using(new BuiltinHandlerActivator());
 
@@ -34,7 +35,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task CanSendAndReceive()
         {
             var gotMessage = new ManualResetEvent(false);

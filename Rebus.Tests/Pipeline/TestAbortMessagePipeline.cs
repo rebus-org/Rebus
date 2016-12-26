@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Handlers;
@@ -9,12 +10,11 @@ using Rebus.Pipeline;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Pipeline
 {
+    [TestFixture]
     public class TestAbortMessagePipeline : FixtureBase
     {
         BuiltinHandlerActivator _activator;
@@ -22,7 +22,7 @@ namespace Rebus.Tests.Pipeline
 
         bool _shouldAbortPipelineInTransportMessageRoutingFilter;
 
-        public TestAbortMessagePipeline()
+        protected override void SetUp()
         {
             _shouldAbortPipelineInTransportMessageRoutingFilter = false;
 
@@ -47,7 +47,7 @@ namespace Rebus.Tests.Pipeline
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task CanAbortMessageProcessingBeforeTheHandlers()
         {
             _shouldAbortPipelineInTransportMessageRoutingFilter = true;
@@ -59,10 +59,10 @@ namespace Rebus.Tests.Pipeline
 
             await Task.Delay(1000);
 
-            Assert.Equal(new string[0], _events.ToArray());
+            Assert.That(_events.ToArray(), Is.EqualTo(new string[0]), "got {0}", string.Join(", ", _events));
         }
 
-        [Fact]
+        [Test]
         public async Task CanAbortMessageProcessing()
         {
             _activator.Register(context => new FirstHandler(_events, context, true));
@@ -72,10 +72,10 @@ namespace Rebus.Tests.Pipeline
 
             await Task.Delay(1000);
 
-            Assert.Equal(new[] {"FirstHandler"}, _events.ToArray());
+            Assert.That(_events.ToArray(), Is.EqualTo(new[] {"FirstHandler"}), "got {0}", string.Join(", ", _events));
         }
 
-        [Fact]
+        [Test]
         public async Task CanAlsoNotAbortMessageProcessing()
         {
             _activator.Register(context => new FirstHandler(_events, context, false));
@@ -85,7 +85,7 @@ namespace Rebus.Tests.Pipeline
 
             await Task.Delay(1000);
 
-            Assert.Equal(new[] { "FirstHandler", "SecondHandler" },_events.ToArray());
+            Assert.That(_events.ToArray(), Is.EqualTo(new[] { "FirstHandler", "SecondHandler" }), "got {0}", string.Join(", ", _events));
         }
 
         class FirstHandler : IHandleMessages<string>

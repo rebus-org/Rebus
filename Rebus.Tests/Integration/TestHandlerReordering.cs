@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Handlers;
@@ -10,15 +11,14 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestHandlerReordering : FixtureBase
     {
-        [Fact]
+        [Test]
         public async Task CanReorderHandlers()
         {
             var events = new ConcurrentQueue<string>();
@@ -45,7 +45,7 @@ namespace Rebus.Tests.Integration
 
             await events.WaitUntil(e => e.Count == 3);
 
-            Assert.Equal(new[] { "FirstHandler", "SecondHandler", "ThirdHandler" }, events.ToArray());
+            Assert.That(events.ToArray(), Is.EqualTo(new[] { "FirstHandler", "SecondHandler", "ThirdHandler" }));
         }
 
         class FirstHandler : IHandleMessages<string>

@@ -222,7 +222,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                     if (freshSagaData == null)
                     {
-                        throw new Exception($"Could not find saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
+                        throw new RebusApplicationException($"Could not find saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
                     }
 
                     await saga.InvokeConflictResolution(freshSagaData);

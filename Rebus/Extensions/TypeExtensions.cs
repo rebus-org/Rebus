@@ -21,9 +21,8 @@ namespace Rebus.Extensions
 
             while (type.GetTypeInfo().BaseType != null)
             {
-                var baseType = type.GetTypeInfo().BaseType;
-                yield return baseType;
-                type = baseType;
+                yield return type.GetTypeInfo().BaseType;
+                type = type.GetTypeInfo().BaseType;
             }
         }
 

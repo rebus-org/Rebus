@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Rebus.Logging
@@ -17,9 +15,7 @@ namespace Rebus.Logging
         protected abstract ILog GetLogger(Type type);
 
         /// <summary>
-        /// Gets a logger that is initialized to somehow carry information on the class that is using it.
-        /// Be warned that this method will most likely be pretty slow, because it will probably rely on
-        /// some clunky <see cref="StackFrame"/> inspection.
+        /// Gets a logger that is initialized to carry information on the class that is using it.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public abstract ILog GetCurrentClassLogger();

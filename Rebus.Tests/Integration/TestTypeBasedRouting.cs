@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
@@ -8,19 +9,18 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestTypeBasedRouting : FixtureBase
     {
-        readonly ManualResetEvent _client1GotTheEvent;
-        readonly BuiltinHandlerActivator _client1;
-        readonly BuiltinHandlerActivator _publisher;
+        ManualResetEvent _client1GotTheEvent;
+        BuiltinHandlerActivator _client1;
+        BuiltinHandlerActivator _publisher;
 
-        public TestTypeBasedRouting()
+        protected override void SetUp()
         {
             var network = new InMemNetwork();
             var subscriberStore = new InMemorySubscriberStore();
@@ -38,7 +38,7 @@ namespace Rebus.Tests.Integration
             _client1.Handle<SomeKindOfEvent>(async e => _client1GotTheEvent.Set());
         }
 
-        [Fact]
+        [Test]
         public async Task TypeBasedRoutingAndExtensionMethodsAndEverythingWorksAsItShould()
         {
             await _client1.Bus.Subscribe<SomeKindOfEvent>();
@@ -50,7 +50,7 @@ namespace Rebus.Tests.Integration
             _client1GotTheEvent.WaitOrDie(TimeSpan.FromSeconds(2));
         }
 
-        [Fact]
+        [Test]
         public async Task TypeBasedRoutingAndExtensionMethodsAndEverythingWorksAsItShouldAlsoWhenTypeIsNotInferred()
         {
             await _client1.Bus.Subscribe<SomeKindOfEvent>();

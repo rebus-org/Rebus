@@ -1,18 +1,19 @@
-﻿using Rebus.Activation;
+﻿using NUnit.Framework;
+using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Workers
 {
+    [TestFixture]
     public class TestSetNumberOfWorkers : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
-        readonly IBus _bus;
+        BuiltinHandlerActivator _activator;
+        IBus _bus;
 
-        public TestSetNumberOfWorkers()
+        protected override void SetUp()
         {
             _activator = new BuiltinHandlerActivator();
 
@@ -30,20 +31,20 @@ namespace Rebus.Tests.Workers
             _bus = _activator.Bus;
         }
 
-        [Fact]
+        [Test]
         public void CanChangeNumberOfWorkersWhileRunning()
         {
             var workers = _bus.Advanced.Workers;
 
-            Assert.Equal(1, workers.Count);
+            Assert.That(workers.Count, Is.EqualTo(1));
 
             workers.SetNumberOfWorkers(5);
 
-            Assert.Equal(5, workers.Count);
+            Assert.That(workers.Count, Is.EqualTo(5));
 
             workers.SetNumberOfWorkers(1);
 
-            Assert.Equal(1, workers.Count);
+            Assert.That(workers.Count, Is.EqualTo(1));
         }
     }
 }

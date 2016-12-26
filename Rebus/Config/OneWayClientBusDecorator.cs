@@ -91,6 +91,8 @@ namespace Rebus.Config
             public ITransportMessageApi TransportMessage => _innerAdvancedApi.TransportMessage;
 
             public IDataBus DataBus => _innerAdvancedApi.DataBus;
+
+            public ISyncBus SyncBus => _innerAdvancedApi.SyncBus;
         }
 
         class OneWayClientWorkersApi : IWorkersApi

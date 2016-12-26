@@ -1,30 +1,30 @@
 ﻿using System;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    /*
+    [TestFixture]
+    [Description(@"
 
-    To avoid accidentally sending the received IFailed<YourMessage>
-    somewhere when you are using 2nd level retries, we want to throw
-    a nice explanation if that happens.
+To avoid accidentally sending the received IFailed<YourMessage>
+somewhere when you are using 2nd level retries, we want to throw
+a nice explanation if that happens.
 
-    */
-
+")]
     public class TestCannotSendFailedMessageWrapper : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
+        BuiltinHandlerActivator _activator;
 
-        public TestCannotSendFailedMessageWrapper()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -38,7 +38,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public void CannotSendFailedMessageWrapper()
         {
             var couldNotSendMessage = new ManualResetEvent(false);

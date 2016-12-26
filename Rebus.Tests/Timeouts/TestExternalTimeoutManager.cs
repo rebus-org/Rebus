@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -13,22 +14,22 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Timeouts;
 using Rebus.Transport.InMem;
-using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Timeouts
 {
+    [TestFixture]
     public class TestExternalTimeoutManager : FixtureBase
     {
         readonly string _queueName = TestConfig.GetName("client");
         readonly string _queueNameTimeoutManager = TestConfig.GetName("manager");
 
-        readonly ManualResetEvent _gotTheMessage;
-        readonly IBus _bus;
-        readonly InMemNetwork _network;
+        ManualResetEvent _gotTheMessage;
+        IBus _bus;
+        InMemNetwork _network;
 
-        public TestExternalTimeoutManager()
+        protected override void SetUp()
         {
             var logger = new ListLoggerFactory(detailed: true);
 
@@ -56,7 +57,7 @@ namespace Rebus.Tests.Timeouts
             _bus = client.Bus;
         }
 
-        [Fact]
+        [Test]
         public async Task ItWorksEvenThoughDeferredMessageIsAccidentallyReceived()
         {
             var headers = new Dictionary<string, string>
@@ -71,10 +72,10 @@ namespace Rebus.Tests.Timeouts
 
             _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(8.5), "Message was not received within 8,5 seconds (which it should have been since it was only deferred 5 seconds)");
 
-            Assert.True(stopwatch.Elapsed > TimeSpan.FromSeconds(4.5), "It must take more than 5 second to get the message back (although we allow for a little bit of tolerance in this test....)");
+            Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(4.5)), "It must take more than 5 second to get the message back (although we allow for a little bit of tolerance in this test....)");
         }
 
-        [Fact]
+        [Test]
         public async Task ItWorks()
         {
             var stopwatch = Stopwatch.StartNew();
@@ -83,7 +84,7 @@ namespace Rebus.Tests.Timeouts
 
             _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(8.5), "Message was not received within 8,5 seconds (which it should have been since it was only deferred 5 seconds)");
 
-            Assert.True(stopwatch.Elapsed > TimeSpan.FromSeconds(5), "It must take more than 5 second to get the message back");
+            Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(5)), "It must take more than 5 second to get the message back");
         }
     }
 }

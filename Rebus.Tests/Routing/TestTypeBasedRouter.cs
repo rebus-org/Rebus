@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
-using Xunit;
 
 namespace Rebus.Tests.Routing
 {
+    [TestFixture]
     public class TestTypeBasedRouter : FixtureBase
     {
         TypeBasedRouter _router;
         ListLoggerFactory _loggerFactory;
 
-        public TestTypeBasedRouter()
+        protected override void SetUp()
         {
             _loggerFactory = new ListLoggerFactory(detailed: true, outputToConsole: true);
             _router = new TypeBasedRouter(_loggerFactory);
         }
 
-        [Fact]
+        [Test]
         public void ThrowsByDefaultWhenRoutingUnmappedTopic()
         {
             var aggregateException = Assert.Throws<AggregateException>(() =>
@@ -33,20 +34,20 @@ namespace Rebus.Tests.Routing
 
             Console.WriteLine(baseException);
 
-            Assert.IsType<ArgumentException>(baseException);
+            Assert.That(baseException, Is.TypeOf<ArgumentException>());
         }
 
-        [Fact]
+        [Test]
         public void CanGetRouteWhenTypeHasBeenMapped()
         {
             _router.Map<string>("some_endpoint");
 
             var address = GetDestinationForBody("STRING BODY");
 
-            Assert.Equal("some_endpoint", address);
+            Assert.That(address, Is.EqualTo("some_endpoint"));
         }
 
-        [Fact]
+        [Test]
         public void LogsWarningWhenRouteIsOverwritten()
         {
             _router.Map<string>("some_endpoint");
@@ -58,10 +59,10 @@ namespace Rebus.Tests.Routing
                 .Where(l => l.Level == LogLevel.Warn)
                 .ToList();
 
-            Assert.Equal(1, logLines.Count);
+            Assert.That(logLines.Count, Is.EqualTo(1));
         }
 
-        [Fact]
+        [Test]
         public void WorksWithMultipleRoutes ()
         {
             _router
@@ -69,12 +70,12 @@ namespace Rebus.Tests.Routing
                 .Map<DateTime>("DateTimeDestination")
                 .Map<int>("IntDestination");
 
-            Assert.Equal("StringDestination", GetDestinationForBody("STRING BODY"));
-            Assert.Equal("DateTimeDestination", GetDestinationForBody(DateTime.Now));
-            Assert.Equal("IntDestination", GetDestinationForBody(78));
+            Assert.That(GetDestinationForBody("STRING BODY"), Is.EqualTo("StringDestination"));
+            Assert.That(GetDestinationForBody(DateTime.Now), Is.EqualTo("DateTimeDestination"));
+            Assert.That(GetDestinationForBody(78), Is.EqualTo("IntDestination"));
         }
 
-        [Fact]
+        [Test]
         public void SupportsFallback()
         {
             _router
@@ -82,11 +83,11 @@ namespace Rebus.Tests.Routing
                 .Map<DateTime>("DateTimeEndpoint")
                 .MapFallback("fallback");
 
-            Assert.Equal("StringEndpoint",GetDestinationForBody("hej"));
-            Assert.Equal("fallback", GetDestinationForBody(87843784));
+            Assert.That(GetDestinationForBody("hej"), Is.EqualTo("StringEndpoint"));
+            Assert.That(GetDestinationForBody(87843784), Is.EqualTo("fallback"));
         }
 
-        [Fact]
+        [Test]
         public void LogsWarningWhenFallbackIsOverwritten()
         {
             _router.MapFallback("something");
@@ -98,7 +99,7 @@ namespace Rebus.Tests.Routing
                 .Where(l => l.Level == LogLevel.Warn)
                 .ToList();
 
-            Assert.Equal(1, logLines.Count);
+            Assert.That(logLines.Count, Is.EqualTo(1));
         }
 
         string GetDestinationForBody(object messageBody)

@@ -3,32 +3,30 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Timers.Factories;
-using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Timers
 {
-    public class TestAsyncTaskForTplTaskFactory : TestAsyncTask<TplTaskFactory> {}
-    public class TestAsyncTaskForTimerTaskFactory : TestAsyncTask<TimerTaskFactory> {}
-    public class TestAsyncTaskForThreadingTimerTaskFactory : TestAsyncTask<ThreadingTimerTaskFactory> {}
-
-    public abstract class TestAsyncTask<TFactory> : FixtureBase where TFactory : IAsyncTaskFactory, new()
+    [TestFixture(typeof(TplTaskFactory))]
+    [TestFixture(typeof(TimerTaskFactory))]
+    [TestFixture(typeof(ThreadingTimerTaskFactory))]
+    public class TestAsyncTask<TFactory> : FixtureBase where TFactory : IAsyncTaskFactory, new()
     {
-        readonly TFactory _factory;
+        TFactory _factory;
 
-        protected TestAsyncTask()
+        protected override void SetUp()
         {
             _factory = new TFactory();
         }
 
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(5)]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(5)]
         public async Task CanActuallyStopTaskWithLongInterval(int secondsToLetTheTaskRun)
         {
             var task = _factory.CreateTask(TimeSpan.FromMinutes(4.5), async () => { Console.WriteLine("INVOKED!!!"); });
@@ -47,7 +45,7 @@ namespace Rebus.Tests.Timers
             Console.WriteLine("Done!");
         }
 
-        [Fact]
+        [Test]
         public async Task DoesNotDieOnTransientErrors()
         {
             var throwException = true;
@@ -77,11 +75,11 @@ namespace Rebus.Tests.Timers
                 Console.WriteLine("and life goes on...");
                 await Task.Delay(TimeSpan.FromSeconds(1));
 
-                Assert.True(taskWasCompleted, "The task did NOT resume properly after experiencing exceptions!");
+                Assert.That(taskWasCompleted, Is.True, "The task did NOT resume properly after experiencing exceptions!");
             }
         }
 
-        [Fact]
+        [Test]
         public async Task WorksWithSomeKindOfAccuracy()
         {
             var stopwatch = Stopwatch.StartNew();
@@ -101,8 +99,8 @@ namespace Rebus.Tests.Timers
 
             Console.WriteLine(string.Join(Environment.NewLine, events.Select(t => $"{t.TotalMilliseconds:0.0} ms")));
 
-            Assert.True(events.Count >= 3, "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
-            Assert.True(events.Count <= 8);
+            Assert.That(events.Count, Is.GreaterThanOrEqualTo(3), "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
+            Assert.That(events.Count, Is.LessThanOrEqualTo(8));
         }
     }
 }

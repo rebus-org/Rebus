@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Sagas;
 using Rebus.Testing;
 using Rebus.Tests.Contracts;
-using Xunit;
+using Rebus.Tests.Sagas;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Testing
 {
+    [TestFixture]
     public class TestSagaFixture : FixtureBase
     {
-        [Fact]
+        [Test]
         public void CanSetUpFakeSagaData()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -20,13 +22,13 @@ namespace Rebus.Tests.Testing
                 fixture.Add(new MySagaState {Text = "I know you!"});
                 fixture.AddRange(new[] { new MySagaState { Text = "I know you too!" } });
 
-                Assert.Equal(2, fixture.Data.Count());
-                Assert.Equal(1, fixture.Data.OfType<MySagaState>().Count(d => d.Text == "I know you!"));
-                Assert.Equal(1, fixture.Data.OfType<MySagaState>().Count(d => d.Text == "I know you too!"));
+                Assert.That(fixture.Data.Count(), Is.EqualTo(2));
+                Assert.That(fixture.Data.OfType<MySagaState>().Count(d => d.Text == "I know you!"), Is.EqualTo(1));
+                Assert.That(fixture.Data.OfType<MySagaState>().Count(d => d.Text == "I know you too!"), Is.EqualTo(1));
             }
         }
 
-        [Fact]
+        [Test]
         public void CanRetrieveSagaData()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -35,12 +37,12 @@ namespace Rebus.Tests.Testing
 
                 var current = fixture.Data.OfType<MySagaState>().ToList();
 
-                Assert.Equal(1, current.Count);
-                Assert.Equal("hej", current[0].Text);
+                Assert.That(current.Count, Is.EqualTo(1));
+                Assert.That(current[0].Text, Is.EqualTo("hej"));
             }
         }
 
-        [Fact]
+        [Test]
         public void EmitsCouldNotCorrelateEvent()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -50,11 +52,11 @@ namespace Rebus.Tests.Testing
 
                 fixture.Deliver(new TestMessage("hej"));
 
-                Assert.True(gotEvent);
+                Assert.That(gotEvent, Is.True);
             }
         }
 
-        [Fact]
+        [Test]
         public void EmitsCreatedEvent()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -64,11 +66,11 @@ namespace Rebus.Tests.Testing
 
                 fixture.Deliver(new TestMessage("hej"));
 
-                Assert.True(gotEvent);
+                Assert.That(gotEvent, Is.True);
             }
         }
 
-        [Fact]
+        [Test]
         public void EmitsUpdatedEvent()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -80,11 +82,11 @@ namespace Rebus.Tests.Testing
 
                 fixture.Deliver(new TestMessage("hej"));
 
-                Assert.True(gotEvent);
+                Assert.That(gotEvent, Is.True);
             }
         }
 
-        [Fact]
+        [Test]
         public void EmitsDeletedEvent()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -96,11 +98,11 @@ namespace Rebus.Tests.Testing
 
                 fixture.Deliver(new TestMessage("hej") { Die = true });
 
-                Assert.True(gotEvent);
+                Assert.That(gotEvent, Is.True);
             }
         }
 
-        [Fact]
+        [Test]
         public void DoesNotTimeOutWhenDebuggerIsAttached()
         {
             
@@ -109,7 +111,7 @@ namespace Rebus.Tests.Testing
         ///<summary>
         /// SagaData with non-empty Id is added to SagaFixture.Data.
         ///</summary>
-        [Fact]
+        [Test]
         public void SagaDataWithNonEmptyIdIsAddedToSagaFixtureData()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -120,14 +122,14 @@ namespace Rebus.Tests.Testing
                 fixture.Add(new MySagaState { Id = Guid.NewGuid() });
 
                 // Assert
-                Assert.Equal(1, fixture.Data.Count());
+                Assert.That(fixture.Data.Count(), Is.EqualTo(1));
             }
         }
 
         ///<summary>
         /// Verify that Id is set upon null Id.
         ///</summary>
-        [Fact]
+        [Test]
         public void IdIsSetUponNullId()
         {
             using (var fixture = SagaFixture.For<MySaga>())
@@ -138,8 +140,8 @@ namespace Rebus.Tests.Testing
                 fixture.Add(new MySagaState());
 
                 // Asert
-                Assert.Equal(1, fixture.Data.Count());
-                Assert.NotNull(fixture.Data.Single().Id);
+                Assert.That(fixture.Data.Count(), Is.EqualTo(1));
+                Assert.That(fixture.Data.Single().Id, Is.Not.Null);
             }
         }
 

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Exceptions;
 using Rebus.Sagas;
-using Xunit;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
@@ -18,7 +18,7 @@ namespace Rebus.Tests.Contracts.Sagas
         ISagaStorage _sagaStorage;
         TFactory _factory;
 
-        public ConcurrencyHandling()
+        protected override void SetUp()
         {
             _factory = new TFactory();
             _sagaStorage = _factory.GetSagaStorage();
@@ -31,7 +31,7 @@ namespace Rebus.Tests.Contracts.Sagas
             _factory.CleanUp();
         }
 
-        [Fact]
+        [Test]
         public async Task ThrowsWhenRevisionDoesNotMatchExpected()
         {
             var id = Guid.NewGuid();
@@ -48,7 +48,7 @@ namespace Rebus.Tests.Contracts.Sagas
 
             var baseException = aggregateException.GetBaseException();
 
-            Assert.IsType<ConcurrencyException>(baseException);
+            Assert.That(baseException, Is.TypeOf<ConcurrencyException>());
         }
 
         class SomeSagaData : ISagaData

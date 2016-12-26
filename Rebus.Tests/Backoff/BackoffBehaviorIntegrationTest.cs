@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Backoff;
 using Rebus.Config;
@@ -12,13 +13,13 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Backoff
 {
+    [TestFixture]
     public class BackoffBehaviorIntegrationTest : FixtureBase
     {
-        [Fact]
+        [Test]
         public async Task CheckIdleBehavior()
         {
             var activator = Using(new BuiltinHandlerActivator());
@@ -84,10 +85,10 @@ namespace Rebus.Tests.Backoff
             Console.WriteLine($"Second period median: {secondPeriodMedian}");
             Console.WriteLine($" Third period median: {thirdPeriodMedian}");
 
-            Assert.True(firstPeriodMedian.Count > (4 * secondPeriodMedian.Count),
+            Assert.That(firstPeriodMedian.Count, Is.GreaterThan(4*secondPeriodMedian.Count), 
                 "Expected receive calls during the first period to be more than four times as frequent as during the second period");
 
-            Assert.True(secondPeriodMedian.Count > (4 * thirdPeriodMedian.Count),
+            Assert.That(secondPeriodMedian.Count, Is.GreaterThan(4*thirdPeriodMedian.Count),
                 "Expected receive calls during the second period to be more than four times as frequent as during the third period");
         }
 

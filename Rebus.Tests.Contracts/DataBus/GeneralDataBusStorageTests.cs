@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using NUnit.Framework;
 using Rebus.Compression;
 using Rebus.DataBus;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Time;
-using Xunit;
 
 namespace Rebus.Tests.Contracts.DataBus
 {
@@ -21,7 +21,7 @@ namespace Rebus.Tests.Contracts.DataBus
         IDataBusStorage _storage;
         TDataStorageFactory _factory;
 
-        protected GeneralDataBusStorageTests()
+        protected override void SetUp()
         {
             _factory = new TDataStorageFactory();
             _storage = _factory.Create();
@@ -32,7 +32,7 @@ namespace Rebus.Tests.Contracts.DataBus
             _factory.CleanUp();
         }
 
-        [Fact]
+        [Test]
         public async Task UpdatesTimeOfLastRead()
         {
             const string knownId = "known id";
@@ -44,10 +44,9 @@ namespace Rebus.Tests.Contracts.DataBus
 
             var hadLastReadTime = (await _storage.ReadMetadata(knownId)).ContainsKey(MetadataKeys.ReadTime);
 
-            Assert.False(hadLastReadTime, $"Did not expect the {MetadataKeys.ReadTime} key to be set");
+            Assert.That(hadLastReadTime, Is.False, "Did not expect the {0} key to be set", MetadataKeys.ReadTime);
 
             var justSomeTime = new DateTimeOffset(1.January(2016));
-
 
             RebusTimeMachine.FakeIt(justSomeTime);
 
@@ -55,11 +54,11 @@ namespace Rebus.Tests.Contracts.DataBus
 
             var metadata = await _storage.ReadMetadata(knownId);
 
-            Assert.True(metadata.ContainsKey(MetadataKeys.ReadTime));
-            Assert.Equal(justSomeTime.ToString("O"), metadata[MetadataKeys.ReadTime]);
+            Assert.That(metadata.ContainsKey(MetadataKeys.ReadTime), Is.True);
+            Assert.That(metadata[MetadataKeys.ReadTime], Is.EqualTo(justSomeTime.ToString("O")));
         }
 
-        [Fact]
+        [Test]
         public void ThrowsWhenLoadingNonExistentId()
         {
             var exception = Assert.Throws<AggregateException>(() =>
@@ -71,10 +70,10 @@ namespace Rebus.Tests.Contracts.DataBus
 
             Console.WriteLine(baseException);
 
-            Assert.IsType<ArgumentException>(baseException);
+            Assert.That(baseException, Is.TypeOf<ArgumentException>());
         }
 
-       [Fact]
+        [Test]
         public async Task CanSaveDataAlongWithCustomMetadata()
         {
             const string knownId = "known id";
@@ -92,11 +91,11 @@ namespace Rebus.Tests.Contracts.DataBus
 
             var readMetadata = await _storage.ReadMetadata(knownId);
 
-            Assert.Equal("value1", readMetadata["key1"]);
-            Assert.Equal("value2", readMetadata["key2"]);
+            Assert.That(readMetadata["key1"], Is.EqualTo("value1"));
+            Assert.That(readMetadata["key2"], Is.EqualTo("value2"));
         }
 
-       [Fact]
+        [Test]
         public async Task CanGetStandardMetada()
         {
             var fakeTime = new DateTimeOffset(17.June(2016));
@@ -116,16 +115,16 @@ namespace Rebus.Tests.Contracts.DataBus
             // special case: zipped data has different size (and is actually bigger in this case :))
             if (_storage is ZippingDataBusStorageDecorator)
             {
-                Assert.Equal("23", readMetadata[MetadataKeys.Length]);
+                Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("23"));
             }
             else
             {
-                Assert.Equal("3", readMetadata[MetadataKeys.Length]);
+                Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("3"));
             }
-            Assert.Equal(fakeTime.ToString("O"), readMetadata[MetadataKeys.SaveTime]);
+            Assert.That(readMetadata[MetadataKeys.SaveTime], Is.EqualTo(fakeTime.ToString("O")));
         }
 
-       [Fact]
+        [Test]
         public async Task CanSaveAndLoadData()
         {
             const string knownId = "known id";
@@ -145,11 +144,11 @@ namespace Rebus.Tests.Contracts.DataBus
 
                 var readData = Encoding.UTF8.GetString(destination.ToArray());
 
-                Assert.Equal(originalData, readData);
+                Assert.That(readData, Is.EqualTo(originalData));
             }
         }
 
-       [Fact]
+        [Test]
         public async Task CanSaveAndLoadBiggerPieceOfData()
         {
             const string knownId = "known id";
@@ -170,11 +169,11 @@ namespace Rebus.Tests.Contracts.DataBus
 
                 var readData = Encoding.UTF8.GetString(destination.ToArray());
 
-                Assert.Equal(originalData, readData);
+                Assert.That(readData, Is.EqualTo(originalData));
             }
         }
 
-       [Fact]
+        [Test]
         public async Task CanLoadSaveDataMultipleTimes()
         {
             const string knownId = "known id";
@@ -202,7 +201,7 @@ namespace Rebus.Tests.Contracts.DataBus
 
                 var readData = Encoding.UTF8.GetString(destination.ToArray());
 
-                Assert.Equal(originalData, readData);
+                Assert.That(readData, Is.EqualTo(originalData));
             }
         }
     }

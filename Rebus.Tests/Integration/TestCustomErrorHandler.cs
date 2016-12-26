@@ -3,26 +3,27 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Retry;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestCustomErrorHandler : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
-        readonly CustomErrorHandlerInTheTest _customErrorHandler;
+        BuiltinHandlerActivator _activator;
+        CustomErrorHandlerInTheTest _customErrorHandler;
 
-        public TestCustomErrorHandler()
+        protected override void SetUp()
         {
             _activator = new BuiltinHandlerActivator();
 
@@ -37,12 +38,12 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task ForwardsFailedMessageToCustomErrorHandler()
         {
             _activator.Handle<string>(async str =>
             {
-                Console.WriteLine("Throwing AccessViolationException");
+                Console.WriteLine("Throwing UnauthorizedAccessException");
 
                 throw new UnauthorizedAccessException("don't do that");
             });
@@ -53,7 +54,7 @@ namespace Rebus.Tests.Integration
 
             var transportMessage = _customErrorHandler.FailedMessages.First();
 
-            Assert.Equal(@"""hej 2""", Encoding.UTF8.GetString(transportMessage.Body));
+            Assert.That(Encoding.UTF8.GetString(transportMessage.Body), Is.EqualTo(@"""hej 2"""));
         }
 
         class CustomErrorHandlerInTheTest : IErrorHandler

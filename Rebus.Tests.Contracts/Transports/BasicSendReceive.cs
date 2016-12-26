@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
-using Xunit;
 
 namespace Rebus.Tests.Contracts.Transports
 {
-    public class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
+    public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
         TTransportFactory _factory;
         CancellationToken _cancellationToken;
 
-        protected BasicSendReceive()
+        protected override void SetUp()
         {
             _cancellationToken = new CancellationTokenSource().Token;
             _factory = new TTransportFactory();
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Contracts.Transports
             _factory.CleanUp();
         }
 
-        [Fact]
+        [Test]
         public async Task HasOneWayClient()
         {
             var receiverQueue = TestConfig.GetName("receiver");
@@ -47,15 +47,15 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var transportMessage = await receiver.Receive(context, _cancellationToken);
 
-                Assert.NotNull(transportMessage);
+                Assert.That(transportMessage, Is.Not.Null);
 
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.Equal("greetings!", stringBody);
+                Assert.That(stringBody, Is.EqualTo("greetings!"));
             });
         }
 
-        [Fact]
+        [Test]
         public async Task EmptyQueueReturnsNull()
         {
             var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
@@ -64,11 +64,11 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
 
-                Assert.Null(transportMessage);
+                Assert.That(transportMessage, Is.Null);
             });
         }
 
-        [Fact]
+        [Test]
         public async Task CanSendAndReceive()
         {
             var input1QueueName = TestConfig.GetName("input1");
@@ -87,11 +87,11 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.Equal("hej", stringBody);
+                Assert.That(stringBody, Is.EqualTo("hej"));
             });
         }
 
-        [Fact]
+        [Test]
         public async Task MessageIsNotSentWhenTransactionIsNotCompleted()
         {
             var input1QueueName = TestConfig.GetName("input1");
@@ -110,11 +110,11 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var transportMessage = await input2.Receive(context, _cancellationToken);
 
-                Assert.Null(transportMessage);
+                Assert.That(transportMessage, Is.Null);
             });
         }
 
-        [Fact]
+        [Test]
         public async Task MessageIsReturnedToQueueWhenReceivingTransactionIsNotCommitted()
         {
             var input1QueueName = TestConfig.GetName("input1");
@@ -133,7 +133,7 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.Equal("hej", stringBody);
+                Assert.That(stringBody, Is.EqualTo("hej"));
             }, completeTransaction: false);
 
             await WithContext(async context =>
@@ -141,20 +141,19 @@ namespace Rebus.Tests.Contracts.Transports
                 var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
-                Assert.Equal("hej", stringBody);
+                Assert.That(stringBody, Is.EqualTo("hej"));
             });
 
             await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context, _cancellationToken);
 
-                Assert.Null(transportMessage);
+                Assert.That(transportMessage, Is.Null);
             });
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [TestCase(true)]
+        [TestCase(false)]
         public async Task MultipleSentMessagesCanBeRolledBack(bool commitAndExpectTheMessagesToBeSent)
         {
             var inputQueueName = TestConfig.GetName("input");
@@ -171,12 +170,12 @@ namespace Rebus.Tests.Contracts.Transports
 
             if (commitAndExpectTheMessagesToBeSent)
             {
-                Assert.Equal(2, allMessages.Count);
-                Assert.Equal(new[] { "hej1", "hej2" }, allMessages.OrderBy(s => s));
+                Assert.That(allMessages.Count, Is.EqualTo(2));
+                Assert.That(allMessages.OrderBy(s => s), Is.EqualTo(new[] { "hej1", "hej2" }));
             }
             else
             {
-                Assert.Equal(0, allMessages.Count);
+                Assert.That(allMessages.Count, Is.EqualTo(0));
             }
         }
 
@@ -187,9 +186,9 @@ namespace Rebus.Tests.Contracts.Transports
 
             while (receivedNulls < 5)
             {
-                using (var transactionContext = new DefaultTransactionContext())
+                using (var transactionContext = new DefaultTransactionContextScope())
                 {
-                    var msg = await input.Receive(transactionContext, _cancellationToken);
+                    var msg = await input.Receive(AmbientTransactionContext.Current, _cancellationToken);
 
                     if (msg != null)
                     {
@@ -208,9 +207,9 @@ namespace Rebus.Tests.Contracts.Transports
 
         async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
         {
-            using (var context = new DefaultTransactionContext())
+            using (var context = new DefaultTransactionContextScope())
             {
-                await contextAction(context);
+                await contextAction(AmbientTransactionContext.Current);
 
                 if (completeTransaction)
                 {

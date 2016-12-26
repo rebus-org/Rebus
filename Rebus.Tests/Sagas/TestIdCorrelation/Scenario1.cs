@@ -1,22 +1,23 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Sagas.TestIdCorrelation
 {
+    [TestFixture]
     public class Scenario1 : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
-        readonly InMemorySagaStorage _sagas;
+        BuiltinHandlerActivator _activator;
+        InMemorySagaStorage _sagas;
 
-        public Scenario1()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -28,7 +29,7 @@ namespace Rebus.Tests.Sagas.TestIdCorrelation
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task CanInitiateSagaAndOverrideItsId()
         {
             var counter = new SharedCounter(5);
@@ -49,7 +50,7 @@ namespace Rebus.Tests.Sagas.TestIdCorrelation
 
             var sagaInstances = _sagas.Instances.ToList();
 
-            Assert.Equal(2, sagaInstances.Count);
+            Assert.That(sagaInstances.Count, Is.EqualTo(2));
         }
     }
 }

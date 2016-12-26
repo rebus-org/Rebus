@@ -6,9 +6,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions.Execution;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
@@ -53,9 +53,9 @@ namespace Rebus.Tests.Contracts.Extensions
 
             while (true)
             {
-                using (var context = new DefaultTransactionContext())
+                using (var context = new DefaultTransactionContextScope())
                 {
-                    var nextMessage = await transport.Receive(context, new CancellationToken());
+                    var nextMessage = await transport.Receive(AmbientTransactionContext.Current, new CancellationToken());
 
                     if (nextMessage != null)
                     {
@@ -117,7 +117,7 @@ namespace Rebus.Tests.Contracts.Extensions
         {
             if (!resetEvent.WaitOne(timeout))
             {
-                throw new AssertionFailedException(
+                throw new AssertionException(
                     $"Reset event was not set within {timeout} timeout - {errorMessage ?? errorMessageFactory?.Invoke() ?? "..."}");
             }
         }
@@ -132,7 +132,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
         public static IDisposable Interval(this TimeSpan delay, Action action)
         {
-            var timer = new Timer((object o) => { action(); }, null, TimeSpan.Zero, delay);
+            var timer = new Timer((object o) => { action(); }, null, delay, delay);
             return timer;
         }
 

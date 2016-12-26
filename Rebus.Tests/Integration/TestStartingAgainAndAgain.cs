@@ -1,16 +1,17 @@
 ﻿using System;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestStartingAgainAndAgain : FixtureBase
     {
-        [Fact]
+        [Test]
         public void JustDoIt()
         {
             var activator = Using(new BuiltinHandlerActivator());

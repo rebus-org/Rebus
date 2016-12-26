@@ -1,0 +1,62 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{63AB64A3-A453-4663-BDB6-530F2136609D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{1692C59F-82DB-43D3-9982-C883B99E38B2}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build.cmd = scripts\build.cmd
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".stuff", ".stuff", "{1ABDD7C1-1F8D-402D-8692-3E4B66962DE0}"
+	ProjectSection(SolutionItems) = preProject
+		CHANGELOG.md = CHANGELOG.md
+		CONTRIBUTING.md = CONTRIBUTING.md
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EAB8CED5-4383-48F3-AB54-E57278CDD93B}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rebus", "Rebus\Rebus.xproj", "{67AF545E-4B28-48DE-A329-D442F415F61C}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rebus.NewtonsoftJson", "Rebus.NewtonsoftJson\Rebus.NewtonsoftJson.xproj", "{FE069C43-AB3F-4614-9423-8FA2BA2850C3}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rebus.Tests.Contracts", "Rebus.Tests.Contracts\Rebus.Tests.Contracts.xproj", "{145962A6-6402-4290-8A45-75400AF568F2}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Rebus.Tests", "Rebus.Tests\Rebus.Tests.xproj", "{7D3836D3-2057-4F32-AC44-A45A4156CE49}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67AF545E-4B28-48DE-A329-D442F415F61C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67AF545E-4B28-48DE-A329-D442F415F61C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67AF545E-4B28-48DE-A329-D442F415F61C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67AF545E-4B28-48DE-A329-D442F415F61C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE069C43-AB3F-4614-9423-8FA2BA2850C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE069C43-AB3F-4614-9423-8FA2BA2850C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE069C43-AB3F-4614-9423-8FA2BA2850C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE069C43-AB3F-4614-9423-8FA2BA2850C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{145962A6-6402-4290-8A45-75400AF568F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{145962A6-6402-4290-8A45-75400AF568F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{145962A6-6402-4290-8A45-75400AF568F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{145962A6-6402-4290-8A45-75400AF568F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D3836D3-2057-4F32-AC44-A45A4156CE49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D3836D3-2057-4F32-AC44-A45A4156CE49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D3836D3-2057-4F32-AC44-A45A4156CE49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D3836D3-2057-4F32-AC44-A45A4156CE49}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{67AF545E-4B28-48DE-A329-D442F415F61C} = {63AB64A3-A453-4663-BDB6-530F2136609D}
+		{FE069C43-AB3F-4614-9423-8FA2BA2850C3} = {63AB64A3-A453-4663-BDB6-530F2136609D}
+		{145962A6-6402-4290-8A45-75400AF568F2} = {63AB64A3-A453-4663-BDB6-530F2136609D}
+		{7D3836D3-2057-4F32-AC44-A45A4156CE49} = {EAB8CED5-4383-48F3-AB54-E57278CDD93B}
+	EndGlobalSection
+EndGlobal

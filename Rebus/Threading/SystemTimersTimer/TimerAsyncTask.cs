@@ -6,7 +6,7 @@ using Rebus.Logging;
 namespace Rebus.Threading.SystemTimersTimer
 {
     /// <summary>
-    /// Implementation of <see cref="IAsyncTask"/> that uses a <see cref="Timer"/> to schedule callbacks
+    /// Implementation of <see cref="IAsyncTask"/> that uses a <see cref="System.Threading.Timer"/> to schedule callbacks
     /// </summary>
     public class TimerAsyncTask : IAsyncTask
     {
@@ -60,7 +60,7 @@ namespace Rebus.Threading.SystemTimersTimer
         public void Start()
         {
             LogStartStop("Starting periodic task '{0}' with interval {1}", _description, Interval);
-            _timer = new Timer(Tick, null, TimeSpan.Zero, Interval);
+            _timer = new Timer(Tick, null, Interval, Interval);
         }
 
         async void Tick(object state)

@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Tests.Contracts.Extensions;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Transports
@@ -15,7 +14,7 @@ namespace Rebus.Tests.Contracts.Transports
     {
         TBusFactory _busFactory;
 
-        protected TestManyMessages()
+        protected override void SetUp()
         {
             _busFactory = new TBusFactory();
         }
@@ -25,8 +24,7 @@ namespace Rebus.Tests.Contracts.Transports
             _busFactory.Cleanup();
         }
 
-        [Theory]
-        [InlineData(10)]
+        [TestCase(10)]
         public async Task SendAndReceiveManyMessages(int messageCount)
         {
             var allMessagesReceived = new ManualResetEvent(false);
@@ -55,7 +53,7 @@ namespace Rebus.Tests.Contracts.Transports
                 .Select(id => new MessageWithId(id))
                 .ToList();
 
-            using (var printTimer = new Timer((object o) => { Console.WriteLine($"Sent: {sentMessages}, Received: {receivedMessages}"); }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(5000)))
+            using (BuildPrintTimer(sentMessages, receivedMessages))
             {
                 stopWatch.Start();
                 Console.WriteLine("Sending {0} messages", messageCount);
@@ -75,8 +73,15 @@ namespace Rebus.Tests.Contracts.Transports
 
             var errorText = GenerateErrorText(idCounts);
 
-            Assert.Equal(idCounts.Count, messageCount);
-            Assert.All(idCounts, pair => Assert.Equal(1, pair.Value));
+            Assert.That(idCounts.Count, Is.EqualTo(messageCount), errorText);
+            Assert.That(idCounts.All(c => c.Value == 1), errorText);
+        }
+
+        private Timer BuildPrintTimer(int sentMessages, int receivedMessages)
+        {
+            return new Timer(
+                (object o) => { Console.WriteLine($"Sent: {sentMessages}, Received: {receivedMessages}"); }, null,
+                TimeSpan.FromMilliseconds(5000), TimeSpan.FromMilliseconds(5000));
         }
 
         static string GenerateErrorText(ConcurrentDictionary<int, int> idCounts)

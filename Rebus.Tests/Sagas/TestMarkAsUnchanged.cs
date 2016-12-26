@@ -3,22 +3,22 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Sagas
 {
+    [TestFixture]
     public class TestMarkAsUnchanged : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
+        BuiltinHandlerActivator _activator;
 
-        public TestMarkAsUnchanged()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -32,7 +32,7 @@ namespace Rebus.Tests.Sagas
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task CanMarkSagaAsUnchanged()
         {
             var registeredRevisions = new ConcurrentQueue<int>();
@@ -55,7 +55,7 @@ namespace Rebus.Tests.Sagas
 
             await Task.Delay(1000);
 
-            Assert.Equal(new[] { 0, 0, 1, 2, 3, 4, 4, 5 }, registeredRevisions.ToArray());
+            Assert.That(registeredRevisions.ToArray(), Is.EqualTo(new[] { 0, 0, 1, 2, 3, 4, 4, 5 }));
         }
 
         class SomeSaga : Saga<SomeSagaData>, IAmInitiatedBy<string>

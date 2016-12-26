@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Subscriptions;
-using Xunit;
 
 namespace Rebus.Tests.Contracts.Subscriptions
 {
@@ -13,7 +13,7 @@ namespace Rebus.Tests.Contracts.Subscriptions
         ISubscriptionStorage _storage;
         TSubscriptionStorageFactory _factory;
 
-        protected BasicSubscriptionOperations()
+        protected override void SetUp()
         {
             _factory = new TSubscriptionStorageFactory();
             _storage = _factory.Create();
@@ -24,15 +24,15 @@ namespace Rebus.Tests.Contracts.Subscriptions
             _factory.Cleanup();
         }
 
-        [Fact]
+        [Test]
         public async Task StartsOutEmpty()
         {
             var subscribers = (await _storage.GetSubscriberAddresses("someTopic")).ToList();
 
-            Assert.Equal(0, subscribers.Count);
+            Assert.That(subscribers.Count, Is.EqualTo(0));
         }
 
-        [Fact]
+        [Test]
         public async Task CanRegisterSameSubscriberMoreThanOnce()
         {
             await _storage.RegisterSubscriber("topic1", "subscriber1");
@@ -44,10 +44,10 @@ namespace Rebus.Tests.Contracts.Subscriptions
 
             var topic1Subscribers = (await _storage.GetSubscriberAddresses("topic1")).OrderBy(a => a).ToList();
 
-            Assert.Equal(new[] { "subscriber1" }, topic1Subscribers);
+            Assert.That(topic1Subscribers, Is.EqualTo(new[] { "subscriber1" }));
         }
 
-        [Fact]
+        [Test]
         public async Task CanRegisterSubscribers()
         {
             await _storage.RegisterSubscriber("topic1", "subscriber1");
@@ -57,11 +57,11 @@ namespace Rebus.Tests.Contracts.Subscriptions
             var topic1Subscribers = (await _storage.GetSubscriberAddresses("topic1")).OrderBy(a => a).ToList();
             var topic2Subscribers = (await _storage.GetSubscriberAddresses("topic2")).OrderBy(a => a).ToList();
 
-            Assert.Equal(new[] { "subscriber1", "subscriber2" }, topic1Subscribers);
-            Assert.Equal(new[] { "subscriber1"}, topic2Subscribers);
+            Assert.That(topic1Subscribers, Is.EqualTo(new[] { "subscriber1", "subscriber2" }));
+            Assert.That(topic2Subscribers, Is.EqualTo(new[] { "subscriber1" }));
         }
 
-        [Fact]
+        [Test]
         public async Task CanSubscribeAndUnsubscribe()
         {
             await _storage.RegisterSubscriber("topic1", "subscriber1");
@@ -76,8 +76,8 @@ namespace Rebus.Tests.Contracts.Subscriptions
 
             var subscriberCountAfterUnsubscribing = (await _storage.GetSubscriberAddresses("topic1")).OrderBy(a => a).ToList();
 
-            Assert.Equal(new[] { "subscriber1", "subscriber2" }, subscriberCountBeforeUnsubscribing);
-            Assert.Equal(new[] { "subscriber2" }, subscriberCountAfterUnsubscribing);
+            Assert.That(subscriberCountBeforeUnsubscribing, Is.EqualTo(new[] { "subscriber1", "subscriber2" }));
+            Assert.That(subscriberCountAfterUnsubscribing, Is.EqualTo(new[] { "subscriber2" }));
         }
     }
 }

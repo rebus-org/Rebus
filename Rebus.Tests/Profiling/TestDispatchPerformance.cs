@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
@@ -13,16 +14,15 @@ using Rebus.Serialization;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
 
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Profiling
 {
+    [TestFixture]
     public class TestDispatchPerformance : FixtureBase
     {
-        [Theory]
-        [InlineData(10000, 20)]
+        [TestCase(10000, 20)]
         public void TakeTime(int numberOfMessages, int numberOfSamples)
         {
             var profilerStats = new PipelineStepProfilerStats();

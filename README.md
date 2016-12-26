@@ -1,4 +1,4 @@
-# Rebus 2
+# Rebus
 
 ![](https://raw.githubusercontent.com/rebus-org/Rebus/master/artwork/little_rebusbus2_copy-200x200.png)
 
@@ -17,7 +17,7 @@ These are the goals - Rebus should have:
 * a simple and intuitive configuration story
 * a few well-selected options
 * no doodleware
-* dependency only on .NET ~~4.5~~ **Core**
+* dependency only on .NET 4.5
 * integration with external dependencies via small and dedicated projects
 * the best error messages
 * a frictionless getting-up-and-running-experience

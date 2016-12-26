@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.DataBus;
 
@@ -14,17 +15,19 @@ namespace Rebus.Testing
         readonly IRoutingApi _routing;
         readonly ITransportMessageApi _transportMessage;
         readonly IDataBus _dataBus;
+        readonly ISyncBus _syncBus;
 
         /// <summary>
         /// Creates the fake advanced API, using the given implementation(s). All arguments are optional
         /// </summary>
-        public FakeAdvancedApi(IWorkersApi workers = null, ITopicsApi topics = null, IRoutingApi routing = null, ITransportMessageApi transportMessage = null, IDataBus dataBus = null)
+        public FakeAdvancedApi(IWorkersApi workers = null, ITopicsApi topics = null, IRoutingApi routing = null, ITransportMessageApi transportMessage = null, IDataBus dataBus = null, ISyncBus syncBus = null)
         {
             _workers = workers;
             _topics = topics;
             _routing = routing;
             _transportMessage = transportMessage;
             _dataBus = dataBus;
+            _syncBus = syncBus;
         }
 
         /// <summary>
@@ -89,6 +92,19 @@ namespace Rebus.Testing
                 if (_dataBus != null) return _dataBus;
 
                 throw new InvalidOperationException("No IDataBusApi implementation was passed to the FakeAdvancedApi upon construction. Please pass an implementation if you would like to be able to run isolated tests against the data bus API");
+            }
+        }
+
+        /// <summary>
+        /// Exposes a synchronous version of <see cref="IBus"/> that essentially mimics all APIs only providing them in an synchronous version
+        /// </summary>
+        public ISyncBus SyncBus
+        {
+            get
+            {
+                if (_syncBus != null) return _syncBus;
+
+                throw new InvalidOperationException("No ISyncBus implementation was passed to the FakeAdvancedApi upon construction. Please pass an implementation if you would like to be able to run isolated tests against the data bus API");
             }
         }
     }

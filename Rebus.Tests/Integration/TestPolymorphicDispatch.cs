@@ -2,25 +2,25 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestPolymorphicDispatch : FixtureBase
     {
         static readonly TimeSpan BlockingWaitTimeout = TimeSpan.FromSeconds(5);
-        readonly BuiltinHandlerActivator _handlerActivator;
+        BuiltinHandlerActivator _handlerActivator;
         IBus _bus;
 
-        public TestPolymorphicDispatch()
+        protected override void SetUp()
         {
             _handlerActivator = new BuiltinHandlerActivator();
 
@@ -36,7 +36,7 @@ namespace Rebus.Tests.Integration
             Using(_bus);
         }
 
-        [Fact]
+        [Test]
         public async Task ItWorksInSimpleScenario()
         {
             var events = new ConcurrentQueue<string>();
@@ -55,11 +55,14 @@ namespace Rebus.Tests.Integration
             gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the first message");
             gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the second message");
 
-            Assert.Equal(new[] {"Got SpecializationA with a","Got SpecializationB with b",},
-                events.ToArray());
+            Assert.That(events.ToArray(), Is.EqualTo(new[]
+            {
+                "Got SpecializationA with a",
+                "Got SpecializationB with b",
+            }));
         }
 
-        [Fact]
+        [Test]
         public async Task CanHandleObject()
         {
             var events = new ConcurrentQueue<string>();
@@ -75,10 +78,13 @@ namespace Rebus.Tests.Integration
 
             gotMessage.WaitOrDie(BlockingWaitTimeout);
 
-            Assert.Equal(new[] { "Got String", }, events.ToArray());
+            Assert.That(events.ToArray(), Is.EqualTo(new[]
+            {
+                "Got String",
+            }));
         }
 
-        [Fact]
+        [Test]
         public async Task CanHandleInterface()
         {
             var events = new ConcurrentQueue<string>();
@@ -94,7 +100,10 @@ namespace Rebus.Tests.Integration
 
             gotMessage.WaitOrDie(BlockingWaitTimeout);
 
-            Assert.Equal(new[] { "Got ImplementorOfInterface",}, events.ToArray());
+            Assert.That(events.ToArray(), Is.EqualTo(new[]
+            {
+                "Got ImplementorOfInterface",
+            }));
         }
 
         abstract class BaseMessage

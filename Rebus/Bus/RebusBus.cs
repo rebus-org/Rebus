@@ -382,7 +382,7 @@ namespace Rebus.Bus
             }
             else
             {
-                using (var context = new DefaultTransactionContext())
+                using (var context = new TransactionContext())
                 {
                     await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
                     await context.Complete();
@@ -403,7 +403,7 @@ namespace Rebus.Bus
 
             if (transactionContext == null)
             {
-                using (var context = new DefaultTransactionContext())
+                using (var context = new TransactionContext())
                 {
                     await _transport.Send(destinationAddress, transportMessage, context);
                     await context.Complete();

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Backoff;
 using Rebus.Config;
@@ -10,19 +11,19 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestCustomizedBackoffTime : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
-        readonly RebusConfigurer _rebusConfigurer;
-        readonly ConcurrentQueue<double> _waitedSeconds;
+        BuiltinHandlerActivator _activator;
+        RebusConfigurer _rebusConfigurer;
+        ConcurrentQueue<double> _waitedSeconds;
 
         DateTime _busStartTime;
 
-        public TestCustomizedBackoffTime()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -54,7 +55,7 @@ namespace Rebus.Tests.Integration
                 });
         }
 
-        [Fact]
+        [Test]
         public async Task ItWorks()
         {
             _busStartTime = DateTime.UtcNow;

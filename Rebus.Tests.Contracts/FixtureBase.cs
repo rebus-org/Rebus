@@ -3,30 +3,39 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Time;
 
 namespace Rebus.Tests.Contracts
 {
-    public abstract class FixtureBase : IDisposable
+    public abstract class FixtureBase
     {
         readonly ConcurrentStack<IDisposable> _disposables = new ConcurrentStack<IDisposable>();
 
-        protected FixtureBase()
+        [SetUp]
+        public void _SetUp()
         {
             RebusTimeMachine.Reset();
 
             _disposables.Clear();
+
+            SetUp();
         }
 
-        protected virtual void TearDown()
-        {
-        }
-
-        public void Dispose()
+        [TearDown]
+        public void _TearDown()
         {
             CleanUpDisposables();
 
             TearDown();
+        }
+
+        protected virtual void SetUp()
+        {
+        }
+
+        protected virtual void TearDown()
+        {
         }
 
         protected TDisposable Using<TDisposable>(TDisposable disposable) where TDisposable : IDisposable

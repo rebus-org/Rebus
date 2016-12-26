@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -10,19 +11,18 @@ using Rebus.Messages;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestSaga : FixtureBase
     {
-        readonly BuiltinHandlerActivator _handlerActivator;
-        readonly IBus _bus;
-        readonly List<string> _recordedCalls;
+        BuiltinHandlerActivator _handlerActivator;
+        IBus _bus;
+        List<string> _recordedCalls;
 
-        public TestSaga()
+        protected override void SetUp()
         {
             _recordedCalls = new List<string>();
             _handlerActivator = new BuiltinHandlerActivator();
@@ -46,7 +46,7 @@ namespace Rebus.Tests.Integration
             CleanUpDisposables();
         }
 
-        [Fact]
+        [Test]
         public async Task CanHitSaga()
         {
             // initiate three saga instances
@@ -78,31 +78,28 @@ namespace Rebus.Tests.Integration
             Console.WriteLine(string.Join(Environment.NewLine, _recordedCalls));
             Console.WriteLine("----------------------------------------------------------------");
 
-            Assert.Equal(9, _recordedCalls.Count);
+            Assert.That(_recordedCalls.Count, Is.EqualTo(9));
+            
+            Assert.That(_recordedCalls.Where(c => c.StartsWith("saga1:")).ToArray(), Is.EqualTo(new[]
+            {
+                "saga1:InitiatingMessage",
+                "saga1:CorrelatedMessage",
+                "saga1:CorrelatedMessage",
+                "saga1:CorrelatedMessage",
+            }));
 
-            Assert.Equal(new[]
-                {
-                    "saga1:InitiatingMessage",
-                    "saga1:CorrelatedMessage",
-                    "saga1:CorrelatedMessage",
-                    "saga1:CorrelatedMessage",
-                },
-                _recordedCalls.Where(c => c.StartsWith("saga1:")).ToArray());
+            Assert.That(_recordedCalls.Where(c => c.StartsWith("saga2:")).ToArray(), Is.EqualTo(new[]
+            {
+                "saga2:InitiatingMessage",
+                "saga2:CorrelatedMessage",
+                "saga2:CorrelatedMessage",
+            }));
 
-            Assert.Equal(new[]
-                {
-                    "saga2:InitiatingMessage",
-                    "saga2:CorrelatedMessage",
-                    "saga2:CorrelatedMessage",
-                },
-                _recordedCalls.Where(c => c.StartsWith("saga2:")).ToArray());
-
-            Assert.Equal(new[]
-                {
-                    "saga3:InitiatingMessage",
-                    "saga3:CorrelatedMessage",
-                },
-                _recordedCalls.Where(c => c.StartsWith("saga3:")).ToArray());
+            Assert.That(_recordedCalls.Where(c => c.StartsWith("saga3:")).ToArray(), Is.EqualTo(new[]
+            {
+                "saga3:InitiatingMessage",
+                "saga3:CorrelatedMessage",
+            }));
         }
 
         static Dictionary<string, string> Id(string id)

@@ -9,21 +9,17 @@ namespace Rebus.Transport
     /// </summary>
     public static class AmbientTransactionContext
     {
-        const string TransactionContextKey = "rebus2-current-transaction-context";
-
-        static AsyncLocal<ITransactionContext> _asyncLocalTxContext = new AsyncLocal<ITransactionContext>();
+        static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new AsyncLocal<ITransactionContext>();
 
         /// <summary>
-        /// Gets the default set function (which is using <see cref="CallContext.LogicalSetData"/> to do its thing)
+        /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
         /// </summary>
-        public static readonly Action<ITransactionContext> DefaultSetter = context => _asyncLocalTxContext.Value = context;
-        // old: public static readonly Action<ITransactionContext> DefaultSetter1 = context => CallContext.LogicalSetData(TransactionContextKey, context);
+        public static readonly Action<ITransactionContext> DefaultSetter = context => AsyncLocalTxContext.Value = context;
 
         /// <summary>
-        /// Gets the default set function (which is using <see cref="CallContext.LogicalGetData"/> to do its thing)
+        /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
         /// </summary>
-        public static readonly Func<ITransactionContext> DefaultGetter = () => _asyncLocalTxContext.Value;
-        // old: public static readonly Func<ITransactionContext> DefaultGetter1 = () => CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
+        public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value;
 
         static Action<ITransactionContext> _setCurrent = DefaultSetter;
         static Func<ITransactionContext> _getCurrent = DefaultGetter;
@@ -32,10 +28,16 @@ namespace Rebus.Transport
         /// Gets/sets the current transaction context from the call context's logical data slot (which is automatically transferred to continuations when resuming
         /// awaited calls)
         /// </summary>
-        public static ITransactionContext Current
+        public static ITransactionContext Current => _getCurrent();
+
+        /// <summary>
+        /// Sets the current transaction context. Please note that in most cases, it is not necessary to set the context using this method
+        /// - when using <see cref="DefaultTransactionContextScope"/> and <see cref="DefaultSyncTransactionContextScope"/> the ambient transaction context
+        /// is automatically set/unset when the object is created/disposed.
+        /// </summary>
+        public static void SetCurrent(ITransactionContext transactionContext)
         {
-            get { return _getCurrent(); }
-            set { _setCurrent(value); }
+            _setCurrent(transactionContext);
         }
 
         /// <summary>

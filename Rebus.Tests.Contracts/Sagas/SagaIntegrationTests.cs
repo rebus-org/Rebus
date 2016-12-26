@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
@@ -11,8 +12,6 @@ using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Sagas
@@ -24,7 +23,7 @@ namespace Rebus.Tests.Contracts.Sagas
     {
         TFactory _factory;
 
-        public SagaIntegrationTests()
+        protected override void SetUp()
         {
             _factory = new TFactory();
         }
@@ -34,7 +33,7 @@ namespace Rebus.Tests.Contracts.Sagas
             _factory.CleanUp();
         }
 
-        [Fact]
+        [Test]
         public async Task DoesNotChokeWhenCorrelatingMultipleMessagesWithTheSameCorrelationProperty()
         {
             var done = new ManualResetEvent(false);
@@ -138,7 +137,7 @@ namespace Rebus.Tests.Contracts.Sagas
             public string CorrelationId { get; set; }
         }
 
-        [Fact]
+        [Test]
         public async Task CanFinishSaga()
         {
             var activator = new BuiltinHandlerActivator();
@@ -197,21 +196,20 @@ namespace Rebus.Tests.Contracts.Sagas
             var actual = events.ToArray();
 
             Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
-            Assert.Equal(expected, actual);
-            /* "Received events
+            Assert.That(actual, Is.EqualTo(expected), $@"Received events 
 
-            {string.Join(Environment.NewLine, actual)}
+{string.Join(Environment.NewLine, actual)}
 
-            did not match expected
+did not match expected
 
-            {string.Join(Environment.NewLine, expected)}
+{string.Join(Environment.NewLine, expected)}
 
-            Five events with ID = 70 are sent. The saga stamps 'events' down along with the number of
-            messages it has processed - e.g. 70:2 means 'Message with ID 70 handled as the 2nd message'.
+Five events with ID = 70 are sent. The saga stamps 'events' down along with the number of
+messages it has processed - e.g. 70:2 means 'Message with ID 70 handled as the 2nd message'.
 
-            The saga was supposed to receive the first three events and then mark itself as completed.
-            After that, the last two events should have been received.
-            ");*/
+The saga was supposed to receive the first three events and then mark itself as completed.
+After that, the last two events should have been received.
+");
         }
 
         class TestSaga : Saga<TestSagaData>, IAmInitiatedBy<SagaMessage>

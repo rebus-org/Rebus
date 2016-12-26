@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using NUnit.Framework;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Sagas;
-using Xunit;
 
 namespace Rebus.Tests.Bugs
 {
+    [TestFixture]
     public class InMemSagaPersisterCorrelationPropertyUniqueness : FixtureBase
     {
-        [Fact]
+        [Test]
         public void DoesNotEnforceUniquenessAcrossTypes ()
         {
             var sagaStorage = new InMemorySagaStorage();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -87,7 +88,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                         transportMessage.Headers[Headers.MessageId],
                         returnAddress);
 
-                    using (var context = new DefaultTransactionContext())
+                    using (var context = new TransactionContext())
                     {
                         await _transport.Send(returnAddress, transportMessage, context);
 
@@ -122,7 +123,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             {
                 if (!headers.ContainsKey(Headers.DeferredRecipient))
                 {
-                    throw new Exception(
+                    throw new RebusApplicationException(
                         $"Received message {headers[Headers.MessageId]} with the '{Headers.DeferredUntil}' header" +
                         $" set to '{headers[Headers.DeferredUntil]}', but the message had no" +
                         $" '{Headers.DeferredRecipient}' header!");

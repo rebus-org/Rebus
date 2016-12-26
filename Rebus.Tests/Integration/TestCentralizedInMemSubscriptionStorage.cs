@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestCentralizedInMemSubscriptionStorage : FixtureBase
     {
-        readonly InMemNetwork _network;
-        readonly InMemorySubscriberStore _subscriberStore;
-        readonly BuiltinHandlerActivator _activator;
+        InMemNetwork _network;
+        InMemorySubscriberStore _subscriberStore;
+        BuiltinHandlerActivator _activator;
 
-        public TestCentralizedInMemSubscriptionStorage()
+        protected override void SetUp()
         {
             _network = new InMemNetwork();
             _subscriberStore = new InMemorySubscriberStore();
@@ -34,7 +35,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task CanSubscribeEvenThoughWeHaveNotConfiguredAnyEndpointMappings()
         {
             var gotTheString = new ManualResetEvent(false);

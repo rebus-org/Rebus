@@ -1,13 +1,14 @@
 ﻿using System;
+using NUnit.Framework;
 using Rebus.Encryption;
 using Rebus.Tests.Contracts;
-using Xunit;
 
 namespace Rebus.Tests.Encryption
 {
+    [TestFixture]
     public class TestEncryptor : FixtureBase
     {
-        [Fact]
+        [Test]
         public void CanSuggestNewKeyIfInitializedWithErronousKey()
         {
             var argumentException = Assert.Throws<ArgumentException>(() =>

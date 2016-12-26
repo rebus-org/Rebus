@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Events
 {
+    [TestFixture]
     public class TestBusLifetimeEvents : FixtureBase
     {
-        [Fact]
+        [Test]
         public void RecordsTheEventsAsExpected()
         {
             const string body = "hej med dig!!";

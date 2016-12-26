@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
-using Xunit;
 
 namespace Rebus.Tests.Contracts.Transports
 {
@@ -14,7 +14,7 @@ namespace Rebus.Tests.Contracts.Transports
         TTransportFactory _factory;
         CancellationToken _cancellationToken;
 
-        protected MessageExpiration()
+        protected override void SetUp()
         {
             _factory = new TTransportFactory();
             _cancellationToken = new CancellationTokenSource().Token;
@@ -25,48 +25,48 @@ namespace Rebus.Tests.Contracts.Transports
             _factory.CleanUp();
         }
 
-        [Fact]
+        [Test]
         public async Task ReceivesNonExpiredMessage()
         {
             var queueName = TestConfig.GetName("expiration");
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var headers = new Dictionary<string, string>
                 {
                     {Headers.MessageId, Guid.NewGuid().ToString() },
                     {"recognizzle", id}
                 };
-                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
                 await transactionContext.Complete();
             }
 
             await Task.Delay(5000);
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
+                var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
 
-                Assert.NotNull(transportMessage);
+                Assert.That(transportMessage, Is.Not.Null);
 
                 var headers = transportMessage.Headers;
 
-                Assert.Contains("recognizzle", headers.Keys);
-                Assert.Equal(id, headers["recognizzle"]);
+                Assert.That(headers.ContainsKey("recognizzle"));
+                Assert.That(headers["recognizzle"], Is.EqualTo(id));
             }
         }
 
-        [Fact]
+        [Test]
         public async Task DoesNotReceiveExpiredMessage()
         {
             var queueName = TestConfig.GetName("expiration");
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -74,7 +74,7 @@ namespace Rebus.Tests.Contracts.Transports
                     {"recognizzle", id},
                     {Headers.TimeToBeReceived, "00:00:04"} //< expires after 4 seconds!
                 };
-                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
                 await transactionContext.Complete();
             }
 
@@ -84,23 +84,23 @@ namespace Rebus.Tests.Contracts.Transports
             await Task.Delay(millisecondsDelay);
             Console.WriteLine($"Delay of {millisecondsDelay} ms actually lasted {stopwatch.ElapsedMilliseconds:0} ms");
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
+                var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
 
-                Assert.Null(transportMessage);
+                Assert.That(transportMessage, Is.Null);
             }
         }
 
-        [Fact]
+        [Test]
         public async Task ReceivesAlmostExpiredMessage()
         {
             var queueName = TestConfig.GetName("expiration");
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -109,18 +109,18 @@ namespace Rebus.Tests.Contracts.Transports
                     {Headers.TimeToBeReceived, "00:00:20"},
                     {Headers.SentTime,DateTimeOffset.UtcNow.ToString("O")}//< expires after 10 seconds!
                 };
-                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
                 await transactionContext.Complete();
             }
 
             await Task.Delay(3000);
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
+                var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
                 await transactionContext.Complete();
 
-                Assert.NotNull(transportMessage);
+                Assert.That(transportMessage, Is.Not.Null);
             }
         }
 

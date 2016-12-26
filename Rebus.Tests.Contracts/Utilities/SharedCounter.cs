@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using FluentAssertions.Execution;
+using NUnit.Framework;
 using Rebus.Tests.Contracts.Extensions;
 
 namespace Rebus.Tests.Contracts.Utilities
@@ -30,8 +30,10 @@ namespace Rebus.Tests.Contracts.Utilities
 
             _stopwatch = Stopwatch.StartNew();
 
-            _statusTimer = new Timer((object o) => {Console.WriteLine("Counter '{0}' - value: {1} (initial: {2}, waited: {3:0.#} s)",
-                _name, _counter, _initialValue, _stopwatch.Elapsed.TotalSeconds);}, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+            _statusTimer = new Timer((object o) => {
+                    Console.WriteLine("Counter '{0}' - value: {1} (initial: {2}, waited: {3:0.#} s)",
+                    _name, _counter, _initialValue, _stopwatch.Elapsed.TotalSeconds);
+                }, null, TimeSpan.FromMilliseconds(1000), TimeSpan.FromMilliseconds(1000));
         }
 
         public TimeSpan Delay { get; set; }
@@ -93,7 +95,7 @@ namespace Rebus.Tests.Contracts.Utilities
 
             if (_failure)
             {
-                throw new AssertionFailedException(_failureText);
+                throw new AssertionException(_failureText);
             }
         }
     }

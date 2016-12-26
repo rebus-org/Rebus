@@ -2,25 +2,26 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Retry.Simple;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestSagasAndPolymorphicCorrelation : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
+        BuiltinHandlerActivator _activator;
 
-        public TestSagasAndPolymorphicCorrelation()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -38,7 +39,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task WorksWithFailedAndInterfacesToo()
         {
             var counter = new SharedCounter(3);
@@ -74,7 +75,7 @@ namespace Rebus.Tests.Integration
 
             public async Task Handle(SomeMessageThatFails message)
             {
-                throw new Exception("bummer dude");
+                throw new RebusApplicationException("bummer dude");
             }
 
             public async Task Handle(IFailed<SomeMessageThatFails> message)
@@ -124,7 +125,7 @@ namespace Rebus.Tests.Integration
             public string CorrelationId { get; }
         }
 
-        [Fact]
+        [Test]
         public void CanCorrelateWithIncomingMessageWhichIsInherited()
         {
             var encounteredSagaIds = new ConcurrentQueue<Guid>();
@@ -138,7 +139,7 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.Equal(1, encounteredSagaIds.Distinct().Count());
+            Assert.That(encounteredSagaIds.Distinct().Count(), Is.EqualTo(1));
         }
 
         class PolySaga : Saga<PolySagaState>, IAmInitiatedBy<AbstractPolyMessage>

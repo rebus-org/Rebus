@@ -24,7 +24,10 @@ namespace Rebus.Persistence.FileSystem
                 {
                     _fileStream = new FileStream(pathToLock, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                     // Oh and there's no async version!
-                    //_fileStream.Lock(0, 1);
+#if net46
+                    // No more 'Lock' available in .NET Standard Library, so in good faith ..., it will be back in .NET Standard 2.0 & .NET Core 1.2
+                    _fileStream.Lock(0, 1);
+#endif
                     success = true;
                 }
                 catch (IOException)
@@ -72,7 +75,10 @@ namespace Rebus.Persistence.FileSystem
 
             try
             {
-                //_fileStream.Unlock(0, 1);
+#if net46
+                // No more 'Lock' available in .NET Standard Library, so in good faith ..., it will be back in .NET Standard 2.0 & .NET Core 1.2
+                _fileStream.Unlock(0, 1);
+#endif
                 _fileStream.Dispose();
             }
             finally

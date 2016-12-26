@@ -2,25 +2,27 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.Integration
 {
+    [TestFixture]
     public class TestErrorOnReceive : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
-        readonly ListLoggerFactory _loggerFactory;
+        BuiltinHandlerActivator _activator;
+        ListLoggerFactory _loggerFactory;
         FailToggleTransport _failToggle;
 
-        public TestErrorOnReceive()
+        protected override void SetUp()
         {
             _loggerFactory = new ListLoggerFactory();
             _activator = new BuiltinHandlerActivator();
@@ -42,7 +44,7 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public void BacksOffWhenExperiencingErrorOnReceive()
         {
             Console.WriteLine("Inducing receive failure...");
@@ -61,7 +63,7 @@ namespace Rebus.Tests.Integration
 
             var warnings = _loggerFactory.Count(l => l.Level == LogLevel.Warn);
 
-            Assert.True(warnings < 20); //< used to get 60k here
+            Assert.That(warnings, Is.LessThan(20)); //< used to get 60k here
         }
 
         class FailToggleTransport : ITransport
@@ -91,7 +93,7 @@ namespace Rebus.Tests.Integration
             {
                 if (Fail)
                 {
-                    throw new Exception("THIS IS A FAKE ERROR CAUSED BY HAVING THE FAIL TOGGLE = TRUE");
+                    throw new RebusApplicationException("THIS IS A FAKE ERROR CAUSED BY HAVING THE FAIL TOGGLE = TRUE");
                 }
 
                 return _transport.Receive(context, cancellationToken);

@@ -1,65 +1,67 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
-using Xunit;
 
 namespace Rebus.Tests.Activation
 {
+    [TestFixture]
     public class TestBuiltinHandlerActivator : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
-        public TestBuiltinHandlerActivator()
+        protected override void SetUp()
         {
             _activator = new BuiltinHandlerActivator();
         }
 
         protected override void TearDown()
         {
-            AmbientTransactionContext.Current = null;
+            AmbientTransactionContext.SetCurrent(null);
+
             _activator.Dispose();
         }
 
-        [Fact]
+        [Test]
         public void CanGetHandlerWithoutArguments()
         {
             _activator.Register(() => new SomeHandler());
 
-            var handlers = _activator.GetHandlers("hej med dig", new DefaultTransactionContext()).Result;
+            using (var transactionContext = new DefaultTransactionContextScope())
+            {
+                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
-            Assert.IsType<SomeHandler>(handlers.Single());
+                Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
+            }
         }
 
-        [Fact]
+        [Test]
         public void CanGetHandlerWithMessageContextArgument()
         {
             _activator.Register(context => new SomeHandler());
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                AmbientTransactionContext.Current = transactionContext;
+                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
-                var handlers = _activator.GetHandlers("hej med dig", transactionContext).Result;
-
-                Assert.IsType<SomeHandler>(handlers.Single());
+                Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }
         }
 
-        [Fact]
+        [Test]
         public void CanGetHandlerWithBusAndMessageContextArgument()
         {
             _activator.Register((bus, context) => new SomeHandler());
 
-            using (var transactionContext = new DefaultTransactionContext())
+            using (var transactionContext = new DefaultTransactionContextScope())
             {
-                AmbientTransactionContext.Current = transactionContext;
+                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
 
-                var handlers = _activator.GetHandlers("hej med dig", transactionContext).Result;
-
-                Assert.IsType<SomeHandler>(handlers.Single());
+                Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }
         }
 

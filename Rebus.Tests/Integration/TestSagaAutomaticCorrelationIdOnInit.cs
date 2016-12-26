@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
-    // When a saga is initiated, there's no reason why we should not just go ahead and try to set the correlation ID on the saga data if possible
+    [TestFixture]
+    [Description("When a saga is initiated, there's no reason why we should not just go ahead and try to set the correlation ID on the saga data if possible")]
     public class TestSagaAutomaticCorrelationIdOnInit : FixtureBase
     {
-        [Fact]
+        [Test]
         public void ItWorks()
         {
             var activator = Using(new BuiltinHandlerActivator());
@@ -33,7 +33,7 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Assert.Equal(new[] { "The JobId property of my saga data was set as expected" }, events.ToArray());
+            Assert.That(events.ToArray(), Is.EqualTo(new[] { "The JobId property of my saga data was set as expected" }));
         }
 
         class SomeSaga : Saga<SomeSagaData>, IAmInitiatedBy<JobMessage>

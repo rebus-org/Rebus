@@ -1,46 +1,30 @@
 {
-  "name": "Corebus",
-  "version": "1.0.2-*",
-  "description": "Rebus made .net core compatible. Therefore dubbed as Corebus",
-  "authors": [
-    "mookid8000",
-    "mvandevy"
-  ],
-  "buildOptions": {
-    "debugType": "portable"
+  "name":  "Rebus", 
+  "version": "2.2.0",
+  "authors": [ "mookid8000" ],
+  "copyright": "Copyright 2012-2016",
+  "description": "lean modern .NET service bus",
+  "packOptions": {
+    "tags": [ "rebus", "queue", "messaging", "service", "bus" ],
+    "owners": [ "mookid8000" ],
+    "licenseUrl": "https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md",
+    "projectUrl": "http://mookid.dk/oncode/rebus",
+    "requireLicenseAcceptance": false,
+    "iconUrl": "https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png"
   },
   "dependencies": {
-    "Newtonsoft.Json" : "9.0.1",
-    "System.Diagnostics.TraceSource": "4.3.0"
+    "Newtonsoft.Json": "9.0.1"
   },
+
   "frameworks": {
-    "netcoreapp1.1": {
-      "dependencies": {
-        "Microsoft.NETCore.App": {
-          "type": "platform",
-          "version": "1.1.0"
-        }
-      },
-      "imports": "dnxcore50"
-    },
     "netstandard1.6": {
       "dependencies": {
         "NETStandard.Library": "1.6.1",
-        "System.Threading.Thread": "4.3.0"
+        "System.Threading.Thread": "4.3.0",
+        "System.Runtime.Extensions": "4.3.0",
+        "System.Diagnostics.TraceSource": "4.3.0"
       }
-    }
-  },
-  "packOptions": {
-    "summary": "Rebus project converted to be .net core compatible.",
-    "releaseNotes": "Initial version.",
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/mvandevy/Rebus"
     },
-    "tags": [
-      ""
-    ],
-    "licenseUrl":"https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md",
-    "projectUrl": "http://mookid.dk/oncode/rebus"
+    "net46": {}
   }
 }

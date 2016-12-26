@@ -1,32 +1,32 @@
 ﻿using System;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Compression
 {
+    [TestFixture]
     public class TestCompressionIntegration : FixtureBase
     {
-        readonly BuiltinHandlerActivator _activator;
+        BuiltinHandlerActivator _activator;
 
-        public TestCompressionIntegration()
+        protected override void SetUp()
         {
             _activator = new BuiltinHandlerActivator();
 
             Using(_activator);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [TestCase(true)]
+        [TestCase(false)]
         public void ItWorksWithString(bool withCompressionEnabled)
         {
             var gotIt = new ManualResetEvent(false);
@@ -51,9 +51,8 @@ namespace Rebus.Tests.Compression
             gotIt.WaitOrDie(TimeSpan.FromSeconds(10));
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [TestCase(true)]
+        [TestCase(false)]
         public void ItWorksWithComplexMessage(bool withCompressionEnabled)
         {
             var gotIt = new ManualResetEvent(false);

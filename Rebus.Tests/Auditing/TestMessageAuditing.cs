@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Auditing.Messages;
 using Rebus.Bus;
@@ -9,20 +10,20 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Auditing
 {
+    [TestFixture]
     public class TestMessageAuditing : FixtureBase
     {
-        readonly IBus _bus;
-        readonly BuiltinHandlerActivator _adapter;
-        readonly InMemNetwork _network;
+        IBus _bus;
+        BuiltinHandlerActivator _adapter;
+        InMemNetwork _network;
 
-        public TestMessageAuditing()
+        protected override void SetUp()
         {
             _adapter = new BuiltinHandlerActivator();
 
@@ -40,7 +41,7 @@ namespace Rebus.Tests.Auditing
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public async Task DoesNotCopyFailedMessage()
         {
             _adapter.Handle<string>(async _ =>
@@ -54,11 +55,10 @@ namespace Rebus.Tests.Auditing
 
             var message = _network.GetNextOrNull("audit");
 
-            // If the assert fails, then apparently, a message copy was received anyway!!
-            Assert.Null(message);
+            Assert.That(message, Is.Null, "Apparently, a message copy was received anyway!!");
         }
 
-        [Fact]
+        [Test]
         public async Task CopiesProperlyHandledMessageToAuditQueue()
         {
             var gotTheMessage = new ManualResetEvent(false);
@@ -76,13 +76,13 @@ namespace Rebus.Tests.Auditing
 
             PrintHeaders(message);
 
-            Assert.Contains(AuditHeaders.AuditTime, message.Headers.Keys);
-            Assert.Contains(AuditHeaders.HandleTime, message.Headers.Keys);
-            Assert.Contains(Headers.Intent, message.Headers.Keys);
-            Assert.Equal(Headers.IntentOptions.PointToPoint, message.Headers[Headers.Intent]);
+            Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
+            Assert.That(message.Headers.ContainsKey(AuditHeaders.HandleTime));
+            Assert.That(message.Headers.ContainsKey(Headers.Intent));
+            Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
         }
 
-        [Fact]
+        [Test]
         public async Task CopiesPublishedMessageToAuditQueue()
         {
             await _bus.Advanced.Topics.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
@@ -91,9 +91,9 @@ namespace Rebus.Tests.Auditing
 
             PrintHeaders(message);
 
-            Assert.Contains(AuditHeaders.AuditTime, message.Headers.Keys);
-            Assert.Contains(Headers.Intent, message.Headers.Keys);
-            Assert.Equal(Headers.IntentOptions.PublishSubscribe, message.Headers[Headers.Intent]);
+            Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
+            Assert.That(message.Headers.ContainsKey(Headers.Intent));
+            Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PublishSubscribe));
         }
 
         static void PrintHeaders(TransportMessage message)

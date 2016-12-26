@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions.Execution;
+using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
 
@@ -20,9 +20,9 @@ namespace Rebus.Tests.Contracts.Extensions
             {
                 TransportMessage receivedTransportMessage;
 
-                using (var transactionContext = new DefaultTransactionContext())
+                using (var transactionContext = new DefaultTransactionContextScope())
                 {
-                    receivedTransportMessage = await transport.Receive(transactionContext, source.Token);
+                    receivedTransportMessage = await transport.Receive(AmbientTransactionContext.Current, source.Token);
 
                     await transactionContext.Complete();
                 }
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Contracts.Extensions
                 if (receivedTransportMessage != null) return receivedTransportMessage;
             }
 
-            throw new AssertionFailedException($"Did not receive transport message from {transport} within {timeout} timeout");
+            throw new AssertionException($"Did not receive transport message from {transport} within {timeout} timeout");
         }
     }
 }

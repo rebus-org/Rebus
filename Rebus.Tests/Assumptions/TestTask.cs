@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Rebus.Tests.Assumptions
 {
+    [TestFixture]
     public class TestTask
     {
-        [Fact]
+        [Test]
         public async Task CanCancelTask()
         {
             var cancellationTokenSource = new CancellationTokenSource();

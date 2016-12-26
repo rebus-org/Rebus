@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {
+    [TestFixture]
     public class InheritedMessageCanInitiateSagaToo : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
-        public InheritedMessageCanInitiateSagaToo()
+        protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Bugs
                 .Start();
         }
 
-        [Fact]
+        [Test]
         public void CanCorrelateWithIncomingMessageWhichIsInherited()
         {
             var counter = new SharedCounter(1);

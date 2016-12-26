@@ -1,16 +1,17 @@
 ﻿using System;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.DataBus;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.DataBus
 {
+    [TestFixture]
     public class ConfigurationErrorTest : FixtureBase
     {
-        [Fact]
+        [Test]
         public void ThrowsAppropriateExceptionWhenMissingStorageConfiguration()
         {
             try
@@ -26,7 +27,7 @@ namespace Rebus.Tests.DataBus
 
                 Console.WriteLine(errorMessage);
 
-                Assert.Contains("did you call 'EnableDataBus' without choosing a way to store the data", errorMessage);
+                Assert.That(errorMessage, Contains.Substring("did you call 'EnableDataBus' without choosing a way to store the data"));
             }
         }
     }

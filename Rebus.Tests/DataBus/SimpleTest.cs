@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Compression;
@@ -13,18 +14,18 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-using Xunit;
 
 namespace Rebus.Tests.DataBus
 {
+    [TestFixture]
     public class SimpleTest : FixtureBase
     {
-        readonly InMemNetwork _inMemNetwork;
-        readonly IBus _senderBus;
-        readonly BuiltinHandlerActivator _receiverActivator;
-        readonly InMemDataStore _inMemDataStore;
+        InMemNetwork _inMemNetwork;
+        IBus _senderBus;
+        BuiltinHandlerActivator _receiverActivator;
+        InMemDataStore _inMemDataStore;
 
-        public SimpleTest()
+        protected override void SetUp()
         {
             _inMemNetwork = new InMemNetwork();
             _inMemDataStore = new InMemDataStore();
@@ -51,7 +52,7 @@ namespace Rebus.Tests.DataBus
             return activator;
         }
 
-        [Fact]
+        [Test]
         public async Task CanSendBigFile()
         {
             var sourceFilePath = GetTempFilePath();
@@ -82,7 +83,7 @@ namespace Rebus.Tests.DataBus
             {
                 var optionalMetadata = new Dictionary<string, string>
                 {
-                    {"username", "ExampleUserName" }
+                    {"username",  "ExampleUserName" }
                 };
                 var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source, optionalMetadata);
 
@@ -94,7 +95,7 @@ namespace Rebus.Tests.DataBus
 
             dataSuccessfullyCopied.WaitOrDie(TimeSpan.FromSeconds(5), "Data was not successfully copied within 5 second timeout");
 
-            Assert.Equal(originalFileContents, File.ReadAllText(destinationFilePath));
+            Assert.That(File.ReadAllText(destinationFilePath), Is.EqualTo(originalFileContents));
         }
 
         class MessageWithAttachment

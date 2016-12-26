@@ -8,8 +8,6 @@ namespace Rebus.Logging
     /// </summary>
     public class TraceLoggerFactory : AbstractRebusLoggerFactory
     {
-
-
         /// <summary>
         /// Gets a <see cref="TraceLogger"/>
         /// </summary>

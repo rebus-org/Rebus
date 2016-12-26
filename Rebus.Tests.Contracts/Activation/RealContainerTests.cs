@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
+using NUnit.Framework;
+using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport.InMem;
-using Xunit;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
@@ -13,12 +13,34 @@ namespace Rebus.Tests.Contracts.Activation
     {
         TFactory _factory;
 
-        public RealContainerTests()
+        protected override void SetUp()
         {
             _factory = new TFactory();
         }
 
-        [Fact]
+        [Test]
+        public async Task CanInjectSyncBus()
+        {
+            HandlerThatGetsSyncBusInjected.SyncBusWasInjected = false;
+            _factory.RegisterHandlerType<HandlerThatGetsSyncBusInjected>();
+
+            var activator = _factory.GetActivator();
+
+            var bus = Configure.With(activator)
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "hvassåbimse"))
+                .Start();
+
+            Using(bus);
+
+            await bus.SendLocal("hej");
+
+            await Task.Delay(500);
+
+            Assert.That(HandlerThatGetsSyncBusInjected.SyncBusWasInjected, Is.True,
+                "HandlerThatGetsSyncBusInjected did not get invoked properly with an injected ISyncBus");
+        }
+
+        [Test]
         public async Task CanInjectMessageContext()
         {
             HandlerThatGetsMessageContextInjected.MessageContextWasInjected = false;
@@ -36,7 +58,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             await Task.Delay(500);
 
-            Assert.True(HandlerThatGetsMessageContextInjected.MessageContextWasInjected,
+            Assert.That(HandlerThatGetsMessageContextInjected.MessageContextWasInjected, Is.True,
                 "HandlerThatGetsMessageContextInjected did not get invoked properly with an injected IMessageContext");
         }
 
@@ -56,6 +78,26 @@ namespace Rebus.Tests.Contracts.Activation
                 if (_messageContext != null)
                 {
                     MessageContextWasInjected = true;
+                }
+            }
+        }
+
+        class HandlerThatGetsSyncBusInjected : IHandleMessages<string>
+        {
+            public static bool SyncBusWasInjected;
+
+            readonly ISyncBus _syncBus;
+
+            public HandlerThatGetsSyncBusInjected(ISyncBus syncBus)
+            {
+                _syncBus = syncBus;
+            }
+
+            public async Task Handle(string message)
+            {
+                if (_syncBus != null)
+                {
+                    SyncBusWasInjected = true;
                 }
             }
         }
