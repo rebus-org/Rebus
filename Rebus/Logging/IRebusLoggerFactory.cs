@@ -1,5 +1,3 @@
-using System;
-
 namespace Rebus.Logging
 {
     /// <summary>
@@ -11,10 +9,5 @@ namespace Rebus.Logging
         /// Gets a logger for the type <typeparamref name="T"/>
         /// </summary>
         ILog GetLogger<T>();
-
-        /// <summary>
-        /// Gets a logger for the type <paramref name="type"/>
-        /// </summary>
-        ILog GetLogger(Type type);
     }
 }

@@ -8,7 +8,7 @@ namespace Rebus.Logging
     public abstract class AbstractRebusLoggerFactory : IRebusLoggerFactory
     {
         /// <inheritdoc />
-        public abstract ILog GetLogger(Type type);
+        protected abstract ILog GetLogger(Type type);
 
         /// <inheritdoc />
         public ILog GetLogger<T>()

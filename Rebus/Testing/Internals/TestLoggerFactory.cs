@@ -12,7 +12,7 @@ namespace Rebus.Testing.Internals
 
         public IEnumerable<LogEvent> LogEvents => _logEvents.ToList();
 
-        public override ILog GetLogger(Type type)
+        protected override ILog GetLogger(Type type)
         {
             return new TestLogger(type, _logEvents);
         }

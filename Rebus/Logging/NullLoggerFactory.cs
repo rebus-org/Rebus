@@ -12,7 +12,7 @@ namespace Rebus.Logging
         /// <summary>
         /// Returns a <see cref="NullLogger"/> which is the /dev/null of logging...
         /// </summary>
-        public override ILog GetLogger(Type type)
+        protected override ILog GetLogger(Type type)
         {
             return Logger;
         }
