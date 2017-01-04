@@ -116,7 +116,7 @@ namespace Rebus.Logging
         /// <summary>
         /// Gets a logger for logging stuff from within the specified type
         /// </summary>
-        protected override ILog GetLogger(Type type)
+        public override ILog GetLogger(Type type)
         {
             ILog logger;
             

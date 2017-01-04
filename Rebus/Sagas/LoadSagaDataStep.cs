@@ -45,7 +45,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             if (sagaStorage == null) throw new ArgumentNullException(nameof(sagaStorage));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _sagaStorage = sagaStorage;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<LoadSagaDataStep>();
         }
 
         /// <summary>

@@ -47,7 +47,7 @@ namespace Rebus.Workers.ThreadPoolBased
             _busGetter = busGetter;
             _backoffStrategy = backoffStrategy;
             _parallelOperationsManager = new ParallelOperationsManager(options.MaxParallelism);
-            _log = _rebusLoggerFactory.GetCurrentClassLogger();
+            _log = _rebusLoggerFactory.GetLogger<ThreadPoolWorkerFactory>();
 
             if (_options.MaxParallelism < 1)
             {

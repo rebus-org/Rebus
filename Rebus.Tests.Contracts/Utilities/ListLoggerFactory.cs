@@ -25,7 +25,7 @@ namespace Rebus.Tests.Contracts.Utilities
             Console.WriteLine("Cleared the logs");
         }
 
-        protected override ILog GetLogger(Type type)
+        public override ILog GetLogger(Type type)
         {
             return new ListLogger(_loggedLines, type, _outputToConsole, _detailed);
         }

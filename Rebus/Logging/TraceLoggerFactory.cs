@@ -11,7 +11,7 @@ namespace Rebus.Logging
         /// <summary>
         /// Gets a <see cref="TraceLogger"/>
         /// </summary>
-        protected override ILog GetLogger(Type type)
+        public override ILog GetLogger(Type type)
         {
             return new TraceLogger(type);
         }

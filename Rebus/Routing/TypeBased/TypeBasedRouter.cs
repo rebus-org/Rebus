@@ -22,7 +22,8 @@ namespace Rebus.Routing.TypeBased
         /// </summary>
         public TypeBasedRouter(IRebusLoggerFactory rebusLoggerFactory)
         {
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _log = rebusLoggerFactory.GetLogger<TypeBasedRouter>();
         }
 
         /// <summary>

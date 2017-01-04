@@ -38,7 +38,7 @@ namespace Rebus.Persistence.FileSystem
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             _basePath = basePath;
             _lockFile = Path.Combine(basePath, "lock.txt");
-            _log = loggerFactory.GetCurrentClassLogger();
+            _log = loggerFactory.GetLogger<FileSystemTimeoutManager>();
         }
 
         /// <summary>

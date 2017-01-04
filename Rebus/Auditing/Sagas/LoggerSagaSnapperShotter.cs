@@ -13,7 +13,7 @@ namespace Rebus.Auditing.Sagas
 
         public LoggerSagaSnapperShotter(IRebusLoggerFactory rebusLoggerFactory)
         {
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<LoggerSagaSnapperShotter>();
         }
 
         public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)

@@ -57,7 +57,7 @@ namespace Rebus.Routing.Exceptions
 
             public ForwardOnExceptionsStep(Type exceptionType, string destinationQueue, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, LogLevel logLevel, Func<Exception, bool> shouldForward)
             {
-                _logger = rebusLoggerFactory.GetCurrentClassLogger();
+                _logger = rebusLoggerFactory.GetLogger<ForwardOnExceptionsStep>();
                 _exceptionType = exceptionType;
                 _destinationQueue = destinationQueue;
                 _transport = transport;

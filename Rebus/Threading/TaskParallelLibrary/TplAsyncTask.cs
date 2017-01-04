@@ -36,7 +36,7 @@ namespace Rebus.Threading.TaskParallelLibrary
             _description = description;
             _action = action;
             _prettyInsignificant = prettyInsignificant;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<TplAsyncTask>();
             Interval = DefaultInterval;
         }
 

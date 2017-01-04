@@ -27,7 +27,7 @@ namespace Rebus.Workers.ThreadPoolBased
         internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, ISyncBackoffStrategy backoffStrategy)
         {
             Name = name;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<ThreadPoolWorker>();
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;

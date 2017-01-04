@@ -57,7 +57,7 @@ namespace Rebus.Bus
             _options = options;
             _busLifetimeEvents = busLifetimeEvents;
             _dataBus = dataBus;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<RebusBus>();
         }
 
         /// <summary>

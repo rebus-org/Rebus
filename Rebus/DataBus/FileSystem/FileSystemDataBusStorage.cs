@@ -30,7 +30,7 @@ namespace Rebus.DataBus.FileSystem
             if (directoryPath == null) throw new ArgumentNullException(nameof(directoryPath));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _directoryPath = directoryPath;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<FileSystemDataBusStorage>();
         }
 
         /// <summary>
