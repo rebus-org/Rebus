@@ -14,6 +14,8 @@ namespace Rebus.Tests.Synchronous
             var overflowException = Assert.Throws<OverflowException>(() => AsyncHelpers.RunSync(AnAsynchronousMethod));
 
             Console.WriteLine(overflowException);
+
+            Assert.That(overflowException.ToString(), Contains.Substring("overflowofawesomenecessissity"));
         }
 
         async Task AnAsynchronousMethod()
