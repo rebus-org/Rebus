@@ -13,5 +13,15 @@ namespace Rebus.DataBus
         /// Creates an attachment from the given source stream, optionally providing some extra metadata to be stored along with the attachment
         /// </summary>
         Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null);
+
+        /// <summary>
+        /// Opens the attachment for reading, using the currently configured data bus
+        /// </summary>
+        Task<Stream> OpenRead(string dataBusAttachmentId);
+
+        /// <summary>
+        /// Uses the currently configured data bus to retrieve the metadata for the attachment with the given ID
+        /// </summary>
+        Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId);
     }
 }

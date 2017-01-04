@@ -77,6 +77,7 @@
     <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
     <Compile Include="Bugs\OneWayClientMustSetRecipientWhenDeferring.cs" />
     <Compile Include="Bugs\SagaBaseClassCorrelationCheck.cs" />
+    <Compile Include="DataBus\OutOfHandlersRoundtripTest.cs" />
     <Compile Include="DataBus\Zip\ZippingDataBusStorageDecoratorDataBusStorageTest.cs" />
     <Compile Include="DataBus\Zip\ZippingDataBusStorageDecoratorFactory.cs" />
     <Compile Include="DataBus\ConfigurationErrorTest.cs" />
