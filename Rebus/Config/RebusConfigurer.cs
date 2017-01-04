@@ -2,7 +2,6 @@
 using System.Configuration;
 using System.Linq;
 using Rebus.Activation;
-using Rebus.Backoff;
 using Rebus.Bus;
 using Rebus.DataBus;
 using Rebus.Handlers;
@@ -42,6 +41,8 @@ namespace Rebus.Config
 
         internal RebusConfigurer(IHandlerActivator handlerActivator)
         {
+            if (handlerActivator == null) throw new ArgumentNullException(nameof(handlerActivator));
+
             _injectionist.Register(c => handlerActivator);
 
             if (handlerActivator is IContainerAdapter)
@@ -55,6 +56,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new RebusLoggingConfigurer(_injectionist));
             return this;
         }
@@ -64,6 +66,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Transport(Action<StandardConfigurer<ITransport>> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new StandardConfigurer<ITransport>(_injectionist, _options));
             return this;
         }
@@ -73,6 +76,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Routing(Action<StandardConfigurer<IRouter>> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new StandardConfigurer<IRouter>(_injectionist, _options));
             return this;
         }
@@ -82,6 +86,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new StandardConfigurer<ISagaStorage>(_injectionist, _options));
             return this;
         }
@@ -91,6 +96,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Subscriptions(Action<StandardConfigurer<ISubscriptionStorage>> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist, _options));
             return this;
         }
@@ -100,6 +106,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Serialization(Action<StandardConfigurer<ISerializer>> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new StandardConfigurer<ISerializer>(_injectionist, _options));
             return this;
         }
@@ -109,6 +116,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new StandardConfigurer<ITimeoutManager>(_injectionist, _options));
             return this;
         }
@@ -118,6 +126,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer(new OptionsConfigurer(_options, _injectionist));
             return this;
         }

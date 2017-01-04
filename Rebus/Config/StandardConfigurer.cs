@@ -18,6 +18,7 @@ namespace Rebus.Config
         /// </summary>
         public static StandardConfigurer<TService> GetConfigurerFrom(OptionsConfigurer configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             return configurer.GetConfigurer<TService>();
         }
 
@@ -26,6 +27,8 @@ namespace Rebus.Config
 
         internal StandardConfigurer(Injectionist injectionist, Options options)
         {
+            if (injectionist == null) throw new ArgumentNullException(nameof(injectionist));
+            if (options == null) throw new ArgumentNullException(nameof(options));
             _injectionist = injectionist;
             _options = options;
         }
@@ -37,6 +40,7 @@ namespace Rebus.Config
         /// </summary>
         public void Register(Func<IResolutionContext, TService> factoryMethod, string description = null)
         {
+            if (factoryMethod == null) throw new ArgumentNullException(nameof(factoryMethod));
             _injectionist.Register(factoryMethod, description: description);
         }
 
@@ -45,6 +49,7 @@ namespace Rebus.Config
         /// </summary>
         public void Decorate(Func<IResolutionContext, TService> factoryMethod, string description = null)
         {
+            if (factoryMethod == null) throw new ArgumentNullException(nameof(factoryMethod));
             _injectionist.Decorate(factoryMethod, description: description);
         }
 
