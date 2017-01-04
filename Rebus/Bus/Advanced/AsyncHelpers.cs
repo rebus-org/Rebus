@@ -8,6 +8,9 @@ namespace Rebus.Bus.Advanced
 {
     static class AsyncHelpers
     {
+        /// <summary>
+        /// Executes a task synchronously on the calling thread by installing a temporary synchronization context that queues continuations
+        ///  </summary>
         public static void RunSync(Func<Task> task)
         {
             var currentContext = SynchronizationContext.Current;
