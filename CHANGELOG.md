@@ -1134,7 +1134,7 @@
 * Move Rebus 1 (i.e. versions <= 0.84.0) legacy compatibility feature to separate package: [Rebus.LegacyCompatibility](https://github.com/rebus-org/Rebus.LegacyCompatibility) (no worries: Rebus 2 and 3 can talk just fine!)
 * Change transaction context API to be much more intuitive `DefaultTransactionContext` and `DefaultSyncTransactionContext` now automatically make the transaction context ambient
 * Removed `GetCurrentClassLogger` because the stack frame walking turned out to be unreliable in the face of what seems to be new, more aggressive method inlining
-* Add "out-of-handlers" data bus attachment access API to `IDataBus`, which allows for reading attachments from outside message handlers
+* Add "out-of-handlers" data bus attachment read methods to `IDataBus`, which allows for reading attachments from outside message handlers
 
 ---
 
