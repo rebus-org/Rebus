@@ -99,6 +99,7 @@
     <Compile Include="Synchronous\TestSyncBusApiParity.cs" />
     <Compile Include="Synchronous\TestSyncBusNoBlocking.cs" />
     <Compile Include="Testing\TestDataBusTesting.cs" />
+    <Compile Include="Testing\TestFakeSyncBus.cs" />
     <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />

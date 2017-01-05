@@ -1136,6 +1136,10 @@
 * Removed `GetCurrentClassLogger` because the stack frame walking turned out to be unreliable in the face of what seems to be new, more aggressive method inlining
 * Add "out-of-handlers" data bus attachment read methods to `IDataBus`, which allows for reading attachments from outside message handlers
 
+## 3.0.1
+
+* Provide `FakeSyncBus` implementation of `ISyncBus`, which can be used to record events for testing
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

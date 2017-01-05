@@ -186,6 +186,9 @@
     <Compile Include="Testing\Events\Subscribed.cs" />
     <Compile Include="Testing\Events\Unsubscribed.cs" />
     <Compile Include="Testing\FakeAdvancedApi.cs" />
+    <Compile Include="Testing\FakeBusEventFactory.cs" />
+    <Compile Include="Testing\FakeBusEventRecorder.cs" />
+    <Compile Include="Testing\FakeSyncBus.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\FakeDataBus.cs" />
     <Compile Include="Testing\Internals\LockStepper.cs" />
