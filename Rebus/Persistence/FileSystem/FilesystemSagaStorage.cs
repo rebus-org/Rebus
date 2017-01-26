@@ -27,7 +27,7 @@ namespace Rebus.Persistence.FileSystem
             if (basePath == null) throw new ArgumentNullException(nameof(basePath));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _basePath = basePath;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<FileSystemSagaStorage>();
             _lockFile = Path.Combine(basePath, "lock.txt");
         }
 

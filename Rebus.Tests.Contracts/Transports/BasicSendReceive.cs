@@ -10,7 +10,7 @@ using Rebus.Transport;
 
 namespace Rebus.Tests.Contracts.Transports
 {
-    public class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
+    public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
@@ -186,9 +186,9 @@ namespace Rebus.Tests.Contracts.Transports
 
             while (receivedNulls < 5)
             {
-                using (var transactionContext = new DefaultTransactionContext())
+                using (var transactionContext = new DefaultTransactionContextScope())
                 {
-                    var msg = await input.Receive(transactionContext, _cancellationToken);
+                    var msg = await input.Receive(AmbientTransactionContext.Current, _cancellationToken);
 
                     if (msg != null)
                     {
@@ -207,9 +207,9 @@ namespace Rebus.Tests.Contracts.Transports
 
         async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
         {
-            using (var context = new DefaultTransactionContext())
+            using (var context = new DefaultTransactionContextScope())
             {
-                await contextAction(context);
+                await contextAction(AmbientTransactionContext.Current);
 
                 if (completeTransaction)
                 {

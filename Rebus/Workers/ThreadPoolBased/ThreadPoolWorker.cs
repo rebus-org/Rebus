@@ -27,7 +27,7 @@ namespace Rebus.Workers.ThreadPoolBased
         internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, ISyncBackoffStrategy backoffStrategy)
         {
             Name = name;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<ThreadPoolWorker>();
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
@@ -86,14 +86,14 @@ namespace Rebus.Workers.ThreadPoolBased
             try
             {
                 using (parallelOperation)
-                using (var context = new DefaultTransactionContext())
+                using (var context = new TransactionContext())
                 {
                     var transportMessage = await ReceiveTransportMessage(token, context);
 
                     if (transportMessage == null)
                     {
                         context.Dispose();
-                        
+
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
@@ -120,7 +120,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
-        async Task<TransportMessage> ReceiveTransportMessage(CancellationToken token, DefaultTransactionContext context)
+        async Task<TransportMessage> ReceiveTransportMessage(CancellationToken token, ITransactionContext context)
         {
             try
             {
@@ -146,12 +146,13 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
-        async Task ProcessMessage(DefaultTransactionContext context, TransportMessage transportMessage)
+        async Task ProcessMessage(TransactionContext context, TransportMessage transportMessage)
         {
             try
             {
                 context.Items["OwningBus"] = _owningBus;
-                AmbientTransactionContext.Current = context;
+
+                AmbientTransactionContext.SetCurrent(context);
 
                 var incomingSteps = _pipeline.ReceivePipeline();
                 var stepContext = new IncomingStepContext(transportMessage, context);
@@ -180,7 +181,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
             finally
             {
-                AmbientTransactionContext.Current = null;
+                AmbientTransactionContext.SetCurrent(null);
             }
         }
 

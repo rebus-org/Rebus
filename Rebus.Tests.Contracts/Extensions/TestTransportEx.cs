@@ -20,9 +20,9 @@ namespace Rebus.Tests.Contracts.Extensions
             {
                 TransportMessage receivedTransportMessage;
 
-                using (var transactionContext = new DefaultTransactionContext())
+                using (var transactionContext = new DefaultTransactionContextScope())
                 {
-                    receivedTransportMessage = await transport.Receive(transactionContext, source.Token);
+                    receivedTransportMessage = await transport.Receive(AmbientTransactionContext.Current, source.Token);
 
                     await transactionContext.Complete();
                 }

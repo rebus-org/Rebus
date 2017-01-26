@@ -28,8 +28,10 @@ If that is the case, message dispatch is skipped, but any messages stored as out
         /// </summary>
         public IdempotentSagaIncomingStep(ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (transport == null) throw new ArgumentNullException(nameof(transport));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _transport = transport;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<IdempotentSagaIncomingStep>();
         }
 
         /// <summary>

@@ -27,14 +27,17 @@ namespace Rebus.Tests.Profiling
             var receivePipeline = profiler.ReceivePipeline();
             var invoker = new DefaultPipelineInvoker();
             var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
-            var transactionContext = new DefaultTransactionContext();
-            var stepContext = new IncomingStepContext(transportMessage, transactionContext);
 
-            invoker.Invoke(stepContext, receivePipeline).Wait();
+            using (new DefaultTransactionContextScope())
+            {
+                var stepContext = new IncomingStepContext(transportMessage, AmbientTransactionContext.Current);
 
-            var stepStats = stats.GetStats();
+                invoker.Invoke(stepContext, receivePipeline).Wait();
 
-            Console.WriteLine(string.Join(Environment.NewLine, stepStats));
+                var stepStats = stats.GetStats();
+
+                Console.WriteLine(string.Join(Environment.NewLine, stepStats));
+            }
         }
 
         class Step100 : IIncomingStep

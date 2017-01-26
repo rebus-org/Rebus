@@ -9,7 +9,22 @@ namespace Rebus.DataBus
     {
         public Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null)
         {
-            throw new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .Options(...) configurer, e.g. like so:
+            throw GetException();
+        }
+
+        public Task<Stream> OpenRead(string dataBusAttachmentId)
+        {
+            throw GetException();
+        }
+
+        public Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId)
+        {
+            throw GetException();
+        }
+
+        static InvalidOperationException GetException()
+        {
+            return new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .Options(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)

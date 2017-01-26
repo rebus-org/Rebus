@@ -46,7 +46,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             _timeoutManager = timeoutManager;
             _transport = transport;
             _options = options;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<HandleDeferredMessagesStep>();
 
             var dueTimeoutsPollIntervalSeconds = (int)options.DueTimeoutsPollInterval.TotalSeconds;
             var intervalToUse = dueTimeoutsPollIntervalSeconds >= 1 ? dueTimeoutsPollIntervalSeconds : 1;
@@ -87,7 +87,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                         transportMessage.Headers[Headers.MessageId],
                         returnAddress);
 
-                    using (var context = new DefaultTransactionContext())
+                    using (var context = new TransactionContext())
                     {
                         await _transport.Send(returnAddress, transportMessage, context);
 

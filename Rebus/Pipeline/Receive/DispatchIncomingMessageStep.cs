@@ -27,7 +27,8 @@ If no invokers were found, a RebusApplicationException is thrown.")]
         /// </summary>
         public DispatchIncomingMessageStep(IRebusLoggerFactory rebusLoggerFactory)
         {
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _log = rebusLoggerFactory.GetLogger<DispatchIncomingMessageStep>();
         }
 
         /// <summary>

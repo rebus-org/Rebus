@@ -29,7 +29,7 @@ namespace Rebus.Retry.PoisonQueues
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
             _transport = transport;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<PoisonQueueErrorHandler>();
         }
 
         /// <summary>

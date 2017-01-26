@@ -11,6 +11,7 @@ namespace Rebus.DataBus
 
         public DefaultDataBus(IDataBusStorage dataBusStorage)
         {
+            if (dataBusStorage == null) throw new ArgumentNullException(nameof(dataBusStorage));
             _dataBusStorage = dataBusStorage;
         }
 
@@ -22,7 +23,19 @@ namespace Rebus.DataBus
 
             await _dataBusStorage.Save(id, source, optionalMetadata);
 
-            return new DataBusAttachment(id);
+            var attachment = new DataBusAttachment(id);
+
+            return attachment;
+        }
+
+        public async Task<Stream> OpenRead(string dataBusAttachmentId)
+        {
+            return await _dataBusStorage.Read(dataBusAttachmentId);
+        }
+
+        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId)
+        {
+            return await _dataBusStorage.ReadMetadata(dataBusAttachmentId);
         }
     }
 }

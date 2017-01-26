@@ -17,7 +17,7 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
-    public class SagaSnapshotStorageTest<TFactory> : FixtureBase where TFactory : ISagaSnapshotStorageFactory, new()
+    public abstract class SagaSnapshotStorageTest<TFactory> : FixtureBase where TFactory : ISagaSnapshotStorageFactory, new()
     {
         BuiltinHandlerActivator _activator;
         IBus _bus;

@@ -62,7 +62,7 @@ namespace Rebus.Config
         public void Use(IRebusLoggerFactory rebusLoggerFactory)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            _injectionist.Register(c => rebusLoggerFactory);
+            _injectionist.Register(c => rebusLoggerFactory, $"This Rebus instance has been configured to use the {rebusLoggerFactory} logger factory");
         }
 
         /// <summary>

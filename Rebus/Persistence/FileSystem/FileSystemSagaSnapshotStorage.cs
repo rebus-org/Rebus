@@ -28,7 +28,7 @@ namespace Rebus.Persistence.FileSystem
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
             _snapshotDirectory = snapshotDirectory;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<FileSystemSagaSnapshotStorage>();
         }
 
         /// <summary>

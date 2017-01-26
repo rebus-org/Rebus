@@ -101,7 +101,7 @@ namespace Rebus.Config
 
             public OneWayClientWorkersApi(IRebusLoggerFactory rebusLoggerFactory)
             {
-                _log = rebusLoggerFactory.GetCurrentClassLogger();
+                _log = rebusLoggerFactory.GetLogger<OneWayClientWorkersApi>();
             }
 
             public int Count => 0;

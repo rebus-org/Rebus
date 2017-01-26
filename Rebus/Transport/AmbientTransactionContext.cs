@@ -28,10 +28,16 @@ namespace Rebus.Transport
         /// Gets/sets the current transaction context from the call context's logical data slot (which is automatically transferred to continuations when resuming
         /// awaited calls)
         /// </summary>
-        public static ITransactionContext Current
+        public static ITransactionContext Current => _getCurrent();
+
+        /// <summary>
+        /// Sets the current transaction context. Please note that in most cases, it is not necessary to set the context using this method
+        /// - when using <see cref="DefaultTransactionContextScope"/> and <see cref="DefaultSyncTransactionContextScope"/> the ambient transaction context
+        /// is automatically set/unset when the object is created/disposed.
+        /// </summary>
+        public static void SetCurrent(ITransactionContext transactionContext)
         {
-            get { return _getCurrent(); }
-            set { _setCurrent(value); }
+            _setCurrent(transactionContext);
         }
 
         /// <summary>

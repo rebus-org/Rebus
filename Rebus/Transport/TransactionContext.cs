@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rebus.Transport
 {
-    class TransactionContext
+    class TransactionContext : ITransactionContext
     {
         readonly ConcurrentQueue<Func<Task>> _onCommittedActions = new ConcurrentQueue<Func<Task>>();
         readonly ConcurrentQueue<Func<Task>> _onCompletedActions = new ConcurrentQueue<Func<Task>>();

@@ -24,9 +24,12 @@ namespace Rebus.Routing.TransportMessages
         /// </summary>
         public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (routingFunction == null) throw new ArgumentNullException(nameof(routingFunction));
+            if (transport == null) throw new ArgumentNullException(nameof(transport));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _routingFunction = routingFunction;
             _transport = transport;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<ForwardTransportMessageStep>();
         }
 
         /// <summary>

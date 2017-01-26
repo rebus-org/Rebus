@@ -48,7 +48,6 @@
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Bus\Advanced\AsyncHelpers.cs" />
     <Compile Include="Bus\Advanced\ISyncBus.cs" />
-    <Compile Include="Legacy\LegacyFlag.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="Auditing\Messages\AuditHeaders.cs" />
     <Compile Include="Auditing\Messages\AuditingHelper.cs" />
@@ -117,13 +116,6 @@
     <Compile Include="Pipeline\Receive\HandlerInvoker.cs" />
     <Compile Include="Pipeline\Send\AssignTypeHeaderStep.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
-    <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
-    <Compile Include="Legacy\LegacySubscriptionMessagesBinder.cs" />
-    <Compile Include="Legacy\MapLegacyHeadersOutgoingStep.cs" />
-    <Compile Include="Legacy\PackLegacyMessageOutgoingStep.cs" />
-    <Compile Include="Legacy\LegacyCompatibilityConfigurationExtensions.cs" />
-    <Compile Include="Legacy\MapLegacyHeadersIncomingStep.cs" />
-    <Compile Include="Legacy\UnpackLegacyMessageIncomingStep.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorage.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorageConfigurationExtensions.cs" />
     <Compile Include="Pipeline\PipelineAbsolutePosition.cs" />
@@ -194,6 +186,9 @@
     <Compile Include="Testing\Events\Subscribed.cs" />
     <Compile Include="Testing\Events\Unsubscribed.cs" />
     <Compile Include="Testing\FakeAdvancedApi.cs" />
+    <Compile Include="Testing\FakeBusEventFactory.cs" />
+    <Compile Include="Testing\FakeBusEventRecorder.cs" />
+    <Compile Include="Testing\FakeSyncBus.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\FakeDataBus.cs" />
     <Compile Include="Testing\Internals\LockStepper.cs" />
@@ -216,7 +211,7 @@
     <Compile Include="Timeouts\TimeoutsConfigurationExtensions.cs" />
     <Compile Include="Time\RebusTimeMachine.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
-    <Compile Include="Transport\DefaultSyncTransactionContext.cs" />
+    <Compile Include="Transport\DefaultSyncTransactionContextScope.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
     <Compile Include="Config\OneWayClientBusDecorator.cs" />
@@ -296,7 +291,7 @@
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\JsonSerializer.cs" />
     <Compile Include="Messages\Message.cs" />
-    <Compile Include="Transport\DefaultTransactionContext.cs" />
+    <Compile Include="Transport\DefaultTransactionContextScope.cs" />
     <Compile Include="Transport\ITransactionContext.cs" />
     <Compile Include="Workers\IWorkerFactory.cs" />
     <Compile Include="Workers\ThreadPoolBased\DefaultSyncBackoffStrategy.cs" />

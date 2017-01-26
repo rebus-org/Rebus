@@ -27,7 +27,7 @@ namespace Rebus.Pipeline.Send
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _transport = transport;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetLogger<SendOutgoingMessageStep>();
         }
 
         /// <summary>

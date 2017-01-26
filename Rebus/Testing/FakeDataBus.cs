@@ -64,6 +64,18 @@ namespace Rebus.Testing
             return new DataBusAttachment(id);
         }
 
+        /// <inheritdoc />
+        public async Task<Stream> OpenRead(string dataBusAttachmentId)
+        {
+            return await _dataBusStorage.Read(dataBusAttachmentId);
+        }
+
+        /// <inheritdoc />
+        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId)
+        {
+            return await _dataBusStorage.ReadMetadata(dataBusAttachmentId);
+        }
+
         class CleanUp : IDisposable
         {
             readonly Action _disposeAction;

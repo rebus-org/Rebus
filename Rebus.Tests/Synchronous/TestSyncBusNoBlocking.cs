@@ -88,14 +88,14 @@ async implementation underneath the covers without deadlocking, even in a single
             {
                 aspNet.Post(s =>
                 {
-                    using (var context = new DefaultSyncTransactionContext())
+                    using (var context = new DefaultSyncTransactionContextScope())
                     {
-                        AmbientTransactionContext.Current = context;
+                        var transactionContext = AmbientTransactionContext.Current;
 
                         try
                         {
                             // enlist some other async thing
-                            context.OnCommitted(async () =>
+                            transactionContext.OnCommitted(async () =>
                             {
                                 Console.WriteLine("waiting....");
                                 await Task.Delay(100);
@@ -112,7 +112,7 @@ async implementation underneath the covers without deadlocking, even in a single
                         }
                         finally
                         {
-                            AmbientTransactionContext.Current = null;
+                            AmbientTransactionContext.SetCurrent(null);
                         }
                     }
                 }, null);

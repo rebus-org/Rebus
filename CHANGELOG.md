@@ -1127,10 +1127,18 @@
 
 * Fix bug that can result in accidentally logging `IndexOutOfRangeExceptions`s when entering idle state, just when the server clock is adjusted back in time
 
-## 2.2.0-b01
+## 3.0.0
 
 * Add synchronous bus API which can be accessed via `bus.Advanced.SyncBus` that exposes synchronous `bus.Send`, etc. operations
 * Add synchronous transaction context `DefaultSyncTransactionContext` which is completed with a synchronous `.Complete()` method
+* Move Rebus 1 (i.e. versions <= 0.84.0) legacy compatibility feature to separate package: [Rebus.LegacyCompatibility](https://github.com/rebus-org/Rebus.LegacyCompatibility) (no worries: Rebus 2 and 3 can talk just fine!)
+* Change transaction context API to be much more intuitive `DefaultTransactionContext` and `DefaultSyncTransactionContext` now automatically make the transaction context ambient
+* Removed `GetCurrentClassLogger` because the stack frame walking turned out to be unreliable in the face of what seems to be new, more aggressive method inlining
+* Add "out-of-handlers" data bus attachment read methods to `IDataBus`, which allows for reading attachments from outside message handlers
+
+## 3.0.1
+
+* Provide `FakeSyncBus` implementation of `ISyncBus`, which can be used to record events for testing
 
 ---
 
