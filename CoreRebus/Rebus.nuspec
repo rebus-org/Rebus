@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus</id>
+    <version>$version$</version>
+    <title>Rebus</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>lean modern .NET service bus</description>
+    <copyright>Copyright 2012-2016</copyright>
+    <tags>rebus queue messaging service bus</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
+    <dependencies>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\merged\Rebus.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.xml" target="lib\NET45" />
+  </files>
+</package>
