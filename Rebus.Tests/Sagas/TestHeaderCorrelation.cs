@@ -6,7 +6,6 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
-using Rebus.Messages;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
@@ -39,7 +38,28 @@ namespace Rebus.Tests.Sagas
             var sagaDataCounters = new ConcurrentDictionary<Guid, int>();
             var sharedCounter = new SharedCounter(5);
 
-            _activator.Register(() => new MySaga(sharedCounter, sagaDataCounters));
+            _activator.Register(() => new MySaga(sharedCounter, sagaDataCounters, false));
+
+            var sameMessage = new MyMessage();
+            var headers1 = new Dictionary<string, string> { { "custom-correlation-id", "saga1" } };
+            var headers2 = new Dictionary<string, string> { { "custom-correlation-id", "saga2" } };
+
+            await _bus.SendLocal(sameMessage, headers1);
+            await _bus.SendLocal(sameMessage, headers2);
+            await _bus.SendLocal(sameMessage, headers2);
+            await _bus.SendLocal(sameMessage, headers1);
+            await _bus.SendLocal(sameMessage, headers1);
+
+            sharedCounter.WaitForResetEvent(timeoutSeconds:2);
+        }
+
+        [Test]
+        public async Task CanCorrelateWithHeadersOfIncomingMessagesByUsingContext()
+        {
+            var sagaDataCounters = new ConcurrentDictionary<Guid, int>();
+            var sharedCounter = new SharedCounter(5);
+
+            _activator.Register(() => new MySaga(sharedCounter, sagaDataCounters, true));
 
             var sameMessage = new MyMessage();
             var headers1 = new Dictionary<string, string> { { "custom-correlation-id", "saga1" } };
@@ -60,16 +80,25 @@ namespace Rebus.Tests.Sagas
         {
             readonly SharedCounter _sharedCounter;
             readonly ConcurrentDictionary<Guid, int> _sagaDataCounters;
+            readonly bool _useMessageContext;
 
-            public MySaga(SharedCounter sharedCounter, ConcurrentDictionary<Guid, int> sagaDataCounters)
+            public MySaga(SharedCounter sharedCounter, ConcurrentDictionary<Guid, int> sagaDataCounters, bool useMessageContext)
             {
                 _sharedCounter = sharedCounter;
                 _sagaDataCounters = sagaDataCounters;
+                _useMessageContext = useMessageContext;
             }
 
             protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
             {
-                config.CorrelateHeader<MyMessage>("custom-correlation-id", d => d.CorrelationId);
+                if (_useMessageContext)
+                {
+                    config.CorrelateContext<MyMessage>(context => context.Headers["custom-correlation-id"], d => d.CorrelationId);
+                }
+                else
+                {
+                    config.CorrelateHeader<MyMessage>("custom-correlation-id", d => d.CorrelationId);
+                }
             }
 
             public async Task Handle(MyMessage message)

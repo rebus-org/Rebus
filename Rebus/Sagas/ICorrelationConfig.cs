@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using Rebus.Pipeline;
 
 namespace Rebus.Sagas
 {
@@ -35,5 +36,14 @@ namespace Rebus.Sagas
         /// <param name="headerKey">Configures a header key which will be extracted from the incoming message</param>
         /// <param name="sagaDataValueExpression">Configures an expression, which will be used when querying the chosen <see cref="ISagaStorage"/> - since this is an expression, it must point to a simple property of the relevant <typeparamref name="TSagaData"/>.</param>
         void CorrelateHeader<TMessage>(string headerKey, Expression<Func<TSagaData, object>> sagaDataValueExpression);
+
+        /// <summary>
+        /// Correlates an incoming message of type <typeparamref name="TMessage"/> using the message context to get a value (e.g. by selecting certain headers, combining them, etc)
+        ///  The value will be used when looking up a saga data instance using the specified <paramref name="sagaDataValueExpression"/>.
+        /// <typeparam name="TMessage">Specifies the message type to configure a correlation for</typeparam>
+        /// <param name="contextValueExtractorFunction">Configures a function that can extract a value from the current <see cref="IMessageContext"/></param>
+        /// <param name="sagaDataValueExpression">Configures an expression, which will be used when querying the chosen <see cref="ISagaStorage"/> - since this is an expression, it must point to a simple property of the relevant <typeparamref name="TSagaData"/>.</param>
+        /// </summary>
+        void CorrelateContext<TMessage>(Func<IMessageContext, object> contextValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression);
     }
 }

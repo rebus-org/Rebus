@@ -172,7 +172,26 @@ namespace Rebus.Sagas
                     }
                     catch (Exception exception)
                     {
-                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}");
+                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}'s header key '{headerKey}'");
+                    }
+                };
+
+                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
+            }
+
+            public void CorrelateContext<TMessage>(Func<IMessageContext, object> contextValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression)
+            {
+                var propertyName = Reflect.Path(sagaDataValueExpression);
+
+                Func<IMessageContext, object, object> neutralMessageValueExtractor = (context, message) =>
+                {
+                    try
+                    {
+                        return contextValueExtractorFunction(context);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}'s message context");
                     }
                 };
 

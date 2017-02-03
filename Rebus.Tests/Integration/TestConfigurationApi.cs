@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
@@ -19,7 +19,7 @@ namespace Rebus.Tests.Integration
         [Test]
         public void ThrowsIfNoTransportIsSpecified()
         {
-            Assert.Throws<ConfigurationErrorsException>(() => Configure.With(new BuiltinHandlerActivator()).Start());
+            Assert.Throws<RebusConfigurationException>(() => Configure.With(new BuiltinHandlerActivator()).Start());
         }
 
         [Test]
