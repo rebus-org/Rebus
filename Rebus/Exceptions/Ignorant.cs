@@ -7,7 +7,7 @@ namespace Rebus.Exceptions
     /// <summary>
     /// Helps keeping track of errors that we want to ignore for a while before acknowledging them
     /// </summary>
-    public class Ignorant
+    class Ignorant
     {
         readonly Func<Exception, string> _exceptionToEqualityKeyMapper;
 
