@@ -49,16 +49,16 @@
     <Compile Include="Text.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rebus\Rebus.csproj">
-      <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
-      <Name>Rebus</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include="Rebus.Forklift.Common.nuspec">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rebus\Rebus.csproj">
+      <Project>{319215F6-B626-4271-8EDA-E31B876F65C0}</Project>
+      <Name>Rebus</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

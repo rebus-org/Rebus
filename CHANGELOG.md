@@ -1140,6 +1140,10 @@
 
 * Provide `FakeSyncBus` implementation of `ISyncBus`, which can be used to record events for testing
 
+## 4.0.0
+
+* Hide some internal types that were never meant to be part of the API
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

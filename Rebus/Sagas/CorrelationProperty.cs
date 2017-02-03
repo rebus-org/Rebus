@@ -6,7 +6,7 @@ namespace Rebus.Sagas
     /// <summary>
     /// Represents a mapping from a field of an incoming message of a specific type to a specific property on a specific type of saga data
     /// </summary>
-    public class CorrelationProperty : ISagaCorrelationProperty
+    class CorrelationProperty : ISagaCorrelationProperty
     {
         /// <summary>
         /// Defines the types that are allowed to use with saga data properties that are intended for correlation

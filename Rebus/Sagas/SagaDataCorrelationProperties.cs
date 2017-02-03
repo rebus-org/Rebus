@@ -9,7 +9,7 @@ namespace Rebus.Sagas
     /// <summary>
     /// Contains a set of correlation properties relevant for one particular saga data
     /// </summary>
-    public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
+    class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
     {
         readonly Dictionary<Type, CorrelationProperty[]> _correlationProperties;
         readonly Type _sagaDataType;
@@ -35,8 +35,6 @@ namespace Rebus.Sagas
 
             var messageType = body.GetType();
 
-            //var potentialCorrelationProperties = new List<CorrelationProperty>();
-
             var potentialCorrelationProperties = new [] {messageType}.Concat(messageType.GetBaseTypes())
                 .SelectMany(type =>
                 {
@@ -47,18 +45,6 @@ namespace Rebus.Sagas
                         : new CorrelationProperty[0];
                 })
                 .ToList();
-            //var messageTypeToCheck = messageType;
-            //while (messageTypeToCheck != null)
-            //{
-            //    CorrelationProperty[] potentialCorrelationproperties;
-
-            //    if (_correlationProperties.TryGetValue(messageTypeToCheck, out potentialCorrelationproperties))
-            //    {
-            //        potentialCorrelationProperties.AddRange(potentialCorrelationproperties);
-            //    }
-
-            //    messageTypeToCheck = messageTypeToCheck.BaseType;
-            //}
 
             if (!potentialCorrelationProperties.Any())
             {
