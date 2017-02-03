@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
+using Rebus.Pipeline;
 using Rebus.Reflection;
 #pragma warning disable 1998
 
@@ -36,7 +37,7 @@ namespace Rebus.Sagas
                     }
 
                     return !(typeDeclaringTheConflictResolutionMethod.IsGenericType
-                             && typeDeclaringTheConflictResolutionMethod.GetGenericTypeDefinition() == typeof (Saga<>));
+                             && typeDeclaringTheConflictResolutionMethod.GetGenericTypeDefinition() == typeof(Saga<>));
                 });
         }
 
@@ -48,7 +49,7 @@ namespace Rebus.Sagas
         internal abstract IEnumerable<CorrelationProperty> GenerateCorrelationProperties();
 
         internal abstract Type GetSagaDataType();
-        
+
         internal abstract ISagaData CreateNewSagaData();
 
         internal bool WasMarkedAsComplete { get; set; }
@@ -106,15 +107,15 @@ namespace Rebus.Sagas
         internal sealed override IEnumerable<CorrelationProperty> GenerateCorrelationProperties()
         {
             var configuration = new CorrelationConfiguration(GetType());
-            
+
             CorrelateMessages(configuration);
-            
+
             return configuration.GetCorrelationProperties();
         }
 
         internal sealed override async Task InvokeConflictResolution(ISagaData otherSagaData)
         {
-            await ResolveConflict((TSagaData) otherSagaData);
+            await ResolveConflict((TSagaData)otherSagaData);
         }
 
         /// <summary>
@@ -135,20 +136,43 @@ namespace Rebus.Sagas
             }
 
             readonly List<CorrelationProperty> _correlationProperties = new List<CorrelationProperty>();
-            
+
             public void Correlate<TMessage>(Func<TMessage, object> messageValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression)
             {
                 var propertyName = Reflect.Path(sagaDataValueExpression);
-                
-                Func<object, object> neutralMessageValueExtractor = message =>
+
+                Func<IMessageContext, object, object> neutralMessageValueExtractor = (context, message) =>
                 {
                     try
                     {
-                        return messageValueExtractorFunction((TMessage) message);
+                        return messageValueExtractorFunction((TMessage)message);
                     }
                     catch (Exception exception)
                     {
-                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof (TMessage)}");
+                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}");
+                    }
+                };
+
+                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
+            }
+
+            public void CorrelateHeader<TMessage>(string headerKey, Expression<Func<TSagaData, object>> sagaDataValueExpression)
+            {
+                var propertyName = Reflect.Path(sagaDataValueExpression);
+
+                Func<IMessageContext, object, object> neutralMessageValueExtractor = (context, message) =>
+                {
+                    try
+                    {
+                        string headerValue;
+
+                        return context.Headers.TryGetValue(headerKey, out headerValue)
+                            ? headerValue
+                            : null;
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}");
                     }
                 };
 
@@ -163,7 +187,7 @@ namespace Rebus.Sagas
 
         internal override Type GetSagaDataType()
         {
-            return typeof (TSagaData);
+            return typeof(TSagaData);
         }
 
         internal override ISagaData CreateNewSagaData()

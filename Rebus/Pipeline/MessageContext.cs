@@ -11,7 +11,7 @@ namespace Rebus.Pipeline
     /// </summary>
     public class MessageContext : IMessageContext
     {
-        MessageContext(ITransactionContext transactionContext)
+        internal MessageContext(ITransactionContext transactionContext)
         {
             if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
             TransactionContext = transactionContext;

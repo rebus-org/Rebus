@@ -92,6 +92,7 @@
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Routing\TestTransportMessageForwarding.cs" />
+    <Compile Include="Sagas\TestHeaderCorrelation.cs" />
     <Compile Include="Synchronous\TestAsyncHelpers.cs" />
     <Compile Include="Synchronous\TestSyncBus.cs" />
     <Compile Include="Synchronous\TestSyncBusApiParity.cs" />

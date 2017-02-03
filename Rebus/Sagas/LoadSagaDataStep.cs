@@ -8,6 +8,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.Transport;
 
 namespace Rebus.Sagas
 {
@@ -71,6 +72,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
             var message = context.Load<Message>();
             var label = message.GetMessageLabel();
+            var transactionContext = context.Load<ITransactionContext>();
 
             var body = message.Body;
 
@@ -81,7 +83,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             // and then we process them
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
-                await TryMountSagaDataOnInvoker(sagaInvoker, body, label, loadedSagaData, newlyCreatedSagaData);
+                await TryMountSagaDataOnInvoker(sagaInvoker, body, label, loadedSagaData, newlyCreatedSagaData, transactionContext);
             }
 
             // invoke the rest of the pipeline (most likely also dispatching the incoming message to the now-ready saga handlers)
@@ -108,7 +110,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             }
         }
 
-        async Task TryMountSagaDataOnInvoker(HandlerInvoker sagaInvoker, object body, string label, List<RelevantSagaInfo> loadedSagaData, List<RelevantSagaInfo> newlyCreatedSagaData)
+        async Task TryMountSagaDataOnInvoker(HandlerInvoker sagaInvoker, object body, string label, List<RelevantSagaInfo> loadedSagaData, List<RelevantSagaInfo> newlyCreatedSagaData, ITransactionContext transactionContext)
         {
             var foundExistingSagaData = false;
 
@@ -117,7 +119,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
             foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
             {
-                var valueFromMessage = correlationProperty.ValueFromMessage(body);
+                var valueFromMessage = correlationProperty.ValueFromMessage(new MessageContext(transactionContext), body);
                 var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
 
                 if (sagaData == null) continue;
@@ -142,7 +144,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                     // if there's exacly one correlation property that points to a property on the saga data, we can set it
                     if (correlationPropertiesRelevantForMessage.Length == 1)
                     {
-                        TrySetCorrelationPropertyValue(newSagaData, correlationPropertiesRelevantForMessage[0], body);
+                        TrySetCorrelationPropertyValue(newSagaData, correlationPropertiesRelevantForMessage[0], body, transactionContext);
                     }
 
                     sagaInvoker.SetSagaData(newSagaData);
@@ -159,7 +161,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             }
         }
 
-        static void TrySetCorrelationPropertyValue(ISagaData newSagaData, CorrelationProperty correlationProperty, object body)
+        static void TrySetCorrelationPropertyValue(ISagaData newSagaData, CorrelationProperty correlationProperty, object body, ITransactionContext transactionContext)
         {
             try
             {
@@ -169,7 +171,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                 if (correlationPropertyInfo == null) return;
 
-                var valueFromMessage = correlationProperty.ValueFromMessage(body);
+                var valueFromMessage = correlationProperty.ValueFromMessage(new MessageContext(transactionContext), body);
 
                 correlationPropertyInfo.SetValue(newSagaData, valueFromMessage);
             }
