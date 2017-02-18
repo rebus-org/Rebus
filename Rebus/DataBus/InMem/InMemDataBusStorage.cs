@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace Rebus.DataBus.InMem
 
         public InMemDataBusStorage(InMemDataStore dataStore)
         {
+            if (dataStore == null) throw new ArgumentNullException(nameof(dataStore));
             _dataStore = dataStore;
         }
 
