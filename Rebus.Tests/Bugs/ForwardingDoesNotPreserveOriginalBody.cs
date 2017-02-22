@@ -3,11 +3,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Encryption;
-using Rebus.Retry.Simple;
+using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Contracts.Sagas;
 using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
@@ -20,50 +22,18 @@ namespace Rebus.Tests.Bugs
         BuiltinHandlerActivator _client;
         BuiltinHandlerActivator _forwarder;
         BuiltinHandlerActivator _receiver;
-        BuiltinHandlerActivator _errorHandler;
 
         protected override void SetUp()
         {
             var network = new InMemNetwork(outputEventsToConsole: true);
 
             _client = CreateBus(network);
-            _errorHandler = CreateBus(network, "error");
             _forwarder = CreateBus(network, "forwarder");
             _receiver = CreateBus(network, "receiver");
         }
 
         [Test]
-        public async Task ReceivedMessageIsTheOriginal_PoisonMessage()
-        {
-            var gotTheExpectedStringMessage = new ManualResetEvent(false);
-
-            _forwarder.Handle<string>(async (bus, _) =>
-            {
-                // "forward" the transport message to the error handler
-                throw new AccessViolationException("WHOA?!?!");
-            });
-
-            _errorHandler.Handle<string>(async (bus, _) =>
-            {
-                // retry message
-                await bus.Advanced.TransportMessage.Forward("receiver");
-            });
-
-            _receiver.Handle<string>(async stringMessage =>
-            {
-                if (stringMessage == "hej du")
-                {
-                    gotTheExpectedStringMessage.Set();
-                }
-            });
-
-            await _client.Bus.Advanced.Routing.Send("forwarder", "hej du");
-
-            gotTheExpectedStringMessage.WaitOrDie(TimeSpan.FromSeconds(2));
-        }
-
-        [Test]
-        public async Task ReceivedMessageIsTheOriginal_ForwardingUsingTransportMessageApi()
+        public async Task ReceivedMessageIsTheOriginal()
         {
             var gotTheExpectedStringMessage = new ManualResetEvent(false);
 
@@ -93,7 +63,7 @@ namespace Rebus.Tests.Bugs
             Using(activator);
 
             Configure.With(activator)
-                .Logging(l => l.None())
+                .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t =>
                 {
                     if (queueName == null)
@@ -105,11 +75,7 @@ namespace Rebus.Tests.Bugs
                         t.UseInMemoryTransport(network, queueName);
                     }
                 })
-                .Options(o =>
-                {
-                    o.EnableEncryption("d2f6QgE0ITuV++fM+BjzVJ1O+LClb3QdUsraWl2qlB4=");
-                    o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
-                })
+                .Options(o => o.EnableEncryption("d2f6QgE0ITuV++fM+BjzVJ1O+LClb3QdUsraWl2qlB4="))
                 .Start();
 
             return activator;
