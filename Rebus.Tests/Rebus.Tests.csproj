@@ -72,6 +72,7 @@
     <Compile Include="Bugs\DoesNotEnlistInOtherBusTransactionContext.cs" />
     <Compile Include="Bugs\DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler.cs" />
     <Compile Include="Bugs\AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId.cs" />
+    <Compile Include="Bugs\ForwardingDoesNotPreserveOriginalBody.cs" />
     <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
     <Compile Include="Bugs\OneWayClientMustSetRecipientWhenDeferring.cs" />
     <Compile Include="Bugs\SagaBaseClassCorrelationCheck.cs" />

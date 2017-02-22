@@ -22,10 +22,10 @@ namespace Rebus.Encryption
         /// <param name="key"></param>
         public RijndaelEncryptor(string key)
         {
-            _key = Convert.FromBase64String(key);
-
             try
             {
+                _key = Convert.FromBase64String(key);
+
                 using (var rijndael = new RijndaelManaged())
                 {
                     rijndael.Key = _key;
