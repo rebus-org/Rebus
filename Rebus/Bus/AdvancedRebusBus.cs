@@ -8,6 +8,7 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Time;
 using Rebus.Transport;
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Bus
 {
@@ -74,15 +75,17 @@ namespace Rebus.Bus
                         "Attempted to perform operation on the current transport message, but there was no transaction context and therefore no 'current transport message' to do anything with! This call must be made from within a message handler... if you're actually doing that, you're probably experiencing this error because you're executing this operation on an independent thread somehow...");
                 }
 
-                var currentTransportMessage = transactionContext
+                var originalTransportMessage = transactionContext
                     .GetOrThrow<IncomingStepContext>(StepContext.StepContextKey)
-                    .Load<TransportMessage>();
+                    .Load<OriginalTransportMessage>();
 
-                if (currentTransportMessage == null)
+                if (originalTransportMessage == null)
                 {
                     throw new InvalidOperationException(
                         "Attempted to perform operation on the current transport message, but no transport message could be found in the context.... this is odd because the entire receive pipeline will only get called when there is a transport message, so maybe it has somehow been removed?");
                 }
+
+                var currentTransportMessage = originalTransportMessage.TransportMessage;
 
                 var headers = optionalAdditionalHeaders != null
                     ? currentTransportMessage.Headers.MergedWith(optionalAdditionalHeaders)

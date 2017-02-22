@@ -132,6 +132,7 @@
     <Compile Include="Messages\HeaderAttribute.cs" />
     <Compile Include="Messages\Headers.cs" />
     <Compile Include="Messages\Message.cs" />
+    <Compile Include="Messages\OriginalTransportMessage.cs" />
     <Compile Include="Messages\TransportMessage.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemExclusiveLock.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemSagaIndex.cs" />
