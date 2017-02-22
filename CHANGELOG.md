@@ -1143,7 +1143,8 @@
 ## 4.0.0
 
 * Hide some internal types that were never meant to be part of the API
-* Add correlation configuration API to make it easy to correlated head of incoming message with saga data
+* Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
+
 
 ---
 
