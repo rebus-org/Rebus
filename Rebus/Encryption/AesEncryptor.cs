@@ -1,4 +1,4 @@
-﻿#if NET45
+﻿#if NETSTANDARD1_6
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 namespace Rebus.Encryption
 {
     /// <summary>
-    /// Helps with encrypting/decripting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
+    /// Helps with encrypting/decripting byte arrays, using the <see cref="Aes"/> algorithm
     /// </summary>
-    class RijndaelEncryptor : IEncryptor
+    class AesEncryptor : IEncryptor
     {
         readonly byte[] _key;
 
@@ -21,13 +21,13 @@ namespace Rebus.Encryption
         /// Creates the encrptor with the specified key - the key must be a valid, base64-encoded key
         /// </summary>
         /// <param name="key"></param>
-        public RijndaelEncryptor(string key)
+        public AesEncryptor(string key)
         {
             _key = Convert.FromBase64String(key);
 
             try
             {
-                using (var rijndael = new RijndaelManaged())
+                using (var rijndael = Aes.Create())
                 {
                     rijndael.Key = _key;
                 }
@@ -45,7 +45,7 @@ I promise that the suggested key has been generated this instant - if you don't 
 
         static string GenerateNewKey()
         {
-            using (var rijndael = new RijndaelManaged())
+            using (var rijndael = Aes.Create())
             {
                 rijndael.GenerateKey();
                 
@@ -59,7 +59,7 @@ I promise that the suggested key has been generated this instant - if you don't 
         /// </summary>
         public EncryptedData Encrypt(byte[] bytes)
         {
-            using (var rijndael = new RijndaelManaged())
+            using (var rijndael = Aes.Create())
             {
                 rijndael.GenerateIV();
                 rijndael.Key = _key;
@@ -84,7 +84,7 @@ I promise that the suggested key has been generated this instant - if you don't 
             var iv = encryptedData.Iv;
             var bytes = encryptedData.Bytes;
 
-            using (var rijndael = new RijndaelManaged())
+            using (var rijndael = Aes.Create())
             {
                 rijndael.IV = iv;
                 rijndael.Key = _key;

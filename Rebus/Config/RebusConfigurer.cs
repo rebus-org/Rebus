@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Configuration;
 using System.Linq;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.DataBus;
+using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
@@ -340,7 +340,7 @@ namespace Rebus.Config
 
             if (!_injectionist.Has<ITransport>())
             {
-                throw new ConfigurationErrorsException(
+                throw new Rebus.Exceptions.ConfigurationErrorsException(
                     "No transport has been configured! You need to call .Transport(t => t.Use***) in order" +
                     " to select which kind of queueing system you want to use to transport messages. If" +
                     " you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");

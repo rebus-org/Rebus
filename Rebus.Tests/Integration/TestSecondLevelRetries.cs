@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
@@ -46,7 +47,7 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<BaseMessage>(async baseMessage =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new RebusApplicationException("1st level!!");
             });
 
             _activator.Handle<IFailed<BaseMessage>>(async failed =>
@@ -78,7 +79,7 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new RebusApplicationException("1st level!!");
             });
 
             _activator.Handle<IFailed<string>>(async failed =>
@@ -106,12 +107,12 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new RebusApplicationException("1st level!!");
             });
 
             _activator.Handle<IFailed<string>>(async failed =>
             {
-                throw new ApplicationException("2nd level!!");
+                throw new RebusApplicationException("2nd level!!");
             });
 
             await _bus.SendLocal("hej med dig!");
@@ -156,7 +157,7 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str =>
             {
-                throw new ApplicationException("1st level!!");
+                throw new RebusApplicationException("1st level!!");
             });
 
             var headersOfFailedMessage = new Dictionary<string, string>();

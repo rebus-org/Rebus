@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+#if NET45
 using System.Runtime.Serialization;
+#endif
 
 namespace Rebus.Injection
 {
@@ -282,7 +284,9 @@ namespace Rebus.Injection
     /// <summary>
     /// Exceptions that is thrown when something goes wrong while working with the injectionist
     /// </summary>
+#if NET45
     [Serializable]
+#endif
     public class ResolutionException : Exception
     {
         /// <summary>
@@ -301,6 +305,7 @@ namespace Rebus.Injection
         {
         }
 
+#if NET45
         /// <summary>
         /// Constructs the exception
         /// </summary>
@@ -308,6 +313,7 @@ namespace Rebus.Injection
             : base(info, context)
         {
         }
+#endif
     }
 
     /// <summary>

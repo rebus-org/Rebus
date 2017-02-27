@@ -21,7 +21,12 @@ namespace Rebus.Tests.DataBus
 
         protected override void SetUp()
         {
+#if NET45
             var directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "databustest");
+#elif NETSTANDARD1_6
+            var directoryPath = Path.Combine(AppContext.BaseDirectory, "databustest");
+#endif
+
 
             DeleteHelper.DeleteDirectory(directoryPath);
 

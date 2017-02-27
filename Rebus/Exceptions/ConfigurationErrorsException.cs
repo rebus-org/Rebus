@@ -6,19 +6,19 @@ using System.Runtime.Serialization;
 namespace Rebus.Exceptions
 {
     /// <summary>
-    /// Special exception that signals that some kind of optimistic lock has been violated, and work must most likely be aborted &amp; retried
+    /// Special exception that signals that some kind of configuration error has occured.
     /// </summary>
 #if NET45
     [Serializable]
-    public class ConcurrencyException : ApplicationException
+    public class ConfigurationErrorsException : ApplicationException
 # elif NETSTANDARD1_6
-    public class ConcurrencyException : Exception
+    public class ConfigurationErrorsException : Exception
 #endif
     {
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ConcurrencyException(string message, params object[] objs)
+        public ConfigurationErrorsException(string message, params object[] objs)
             : base(string.Format(message, objs))
         {
         }
@@ -26,7 +26,7 @@ namespace Rebus.Exceptions
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ConcurrencyException(Exception innerException, string message, params object[] objs)
+        public ConfigurationErrorsException(Exception innerException, string message, params object[] objs)
             : base(string.Format(message, objs), innerException)
         {
         }
@@ -35,7 +35,7 @@ namespace Rebus.Exceptions
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ConcurrencyException(SerializationInfo info, StreamingContext context)
+        public ConfigurationErrorsException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }

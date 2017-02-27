@@ -13,7 +13,11 @@ namespace Rebus.Tests.Transport.FileSystem
 
         public FileSystemTransportFactory()
         {
+#if NET45
             _baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "messages");
+#elif NETSTANDARD1_6
+            _baseDirectory = Path.Combine(AppContext.BaseDirectory, "messages");
+#endif
 
             CleanUp();
         }

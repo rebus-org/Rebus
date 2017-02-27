@@ -1,17 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{959C65AB-D21A-4582-BC4F-06D1425FF274}</ProjectGuid>
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+ <PropertyGroup>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus.Tests</RootNamespace>
     <AssemblyName>Rebus.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Authors>mookid8000</Authors>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>http://mookid.dk/oncode/rebus</PackageProjectUrl>
+    <Copyright>Copyright 2012-2016</Copyright>
+    <PackageTags>rebus queue messaging service bus</PackageTags>
+    <PackageIconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</PackageIconUrl>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,192 +31,31 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <DefineConstants>NET45</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <DefineConstants>NETSTANDARD1_6</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+  </ItemGroup>
   <ItemGroup>
-    <Reference Include="FluentAssertions, Version=4.13.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluentAssertions.4.13.0\lib\net45\FluentAssertions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FluentAssertions.Core, Version=4.13.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluentAssertions.4.13.0\lib\net45\FluentAssertions.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="nunit.framework, Version=3.5.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.3.5.0\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Rebus\Rebus.csproj" />
+    <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="FluentAssertions" Version="4.19.0" />
+    <PackageReference Include="NUnit" Version="3.6.0" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Messaging" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Activation\BuiltinContainerAdapterFactory.cs" />
-    <Compile Include="Activation\BuiltinHandlerActivatorContainerTests.cs" />
-    <Compile Include="Activation\TestBuiltinHandlerActivator.cs" />
-    <Compile Include="Assumptions\CanDoReflection.cs" />
-    <Compile Include="Assumptions\TestAsyncWrapper.cs" />
-    <Compile Include="Assumptions\TestConcurrentDictionary.cs" />
-    <Compile Include="Assumptions\TestReflectInheritance.cs" />
-    <Compile Include="Assumptions\TestString.cs" />
-    <Compile Include="Assumptions\TestTask.cs" />
-    <Compile Include="Auditing\TestMessageAuditing.cs" />
-    <Compile Include="Backoff\TestBackoffBehaviorWhenBusy.cs" />
-    <Compile Include="Backoff\TestCustomizedBackoff.cs" />
-    <Compile Include="Bugs\BuiltinHandlerActivatorDisposalRaceCondition.cs" />
-    <Compile Include="Bugs\CustomHeadersAreCloned.cs" />
-    <Compile Include="Bugs\DoesNotDispatchWrongSagaDataType.cs" />
-    <Compile Include="Bugs\DoesNotEnlistInOtherBusTransactionContext.cs" />
-    <Compile Include="Bugs\DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler.cs" />
-    <Compile Include="Bugs\AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId.cs" />
-    <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
-    <Compile Include="Bugs\OneWayClientMustSetRecipientWhenDeferring.cs" />
-    <Compile Include="Bugs\SagaBaseClassCorrelationCheck.cs" />
-    <Compile Include="DataBus\OutOfHandlersRoundtripTest.cs" />
-    <Compile Include="DataBus\Zip\ZippingDataBusStorageDecoratorDataBusStorageTest.cs" />
-    <Compile Include="DataBus\Zip\ZippingDataBusStorageDecoratorFactory.cs" />
-    <Compile Include="DataBus\ConfigurationErrorTest.cs" />
-    <Compile Include="DataBus\FileSystem\FileSystemDataBusStorageFactory.cs" />
-    <Compile Include="DataBus\FileSystem\FileSystemDataBusStorageTest.cs" />
-    <Compile Include="DataBus\InMem\InMemDataBusStorageFactory.cs" />
-    <Compile Include="DataBus\InMem\InMemDataStorageTest.cs" />
-    <Compile Include="DataBus\SimpleTest.cs" />
-    <Compile Include="DataBus\TestFileSystemDataBusStorage.cs" />
-    <Compile Include="Encryption\TestCustomEncryption.cs" />
-    <Compile Include="Encryption\TestDisableEncryption.cs" />
-    <Compile Include="Events\TestBusLifetimeEvents.cs" />
-    <Compile Include="Integration\TestUnserializableException.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
-    <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
-    <Compile Include="Routing\TestTransportMessageForwarding.cs" />
-    <Compile Include="Synchronous\TestAsyncHelpers.cs" />
-    <Compile Include="Synchronous\TestSyncBus.cs" />
-    <Compile Include="Synchronous\TestSyncBusApiParity.cs" />
-    <Compile Include="Synchronous\TestSyncBusNoBlocking.cs" />
-    <Compile Include="Testing\TestDataBusTesting.cs" />
-    <Compile Include="Testing\TestFakeSyncBus.cs" />
-    <Compile Include="Transport\InMem\InMemTestManyMessages.cs" />
-    <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
-    <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />
-    <Compile Include="Integration\TestCorrelationIdFlow.cs" />
-    <Compile Include="Integration\TestCustomErrorHandler.cs" />
-    <Compile Include="Integration\TestErrorOnReceive.cs" />
-    <Compile Include="Integration\TestImprovedInjectionistExceptions.cs" />
-    <Compile Include="Integration\TestSagasAndPolymorphicCorrelation.cs" />
-    <Compile Include="Categories.cs" />
-    <Compile Include="Compression\TestCompressionIntegration.cs" />
-    <Compile Include="Compression\TestZipper.cs" />
-    <Compile Include="Encryption\TestEncryption.cs" />
-    <Compile Include="Encryption\TestEncryptor.cs" />
-    <Compile Include="Integration\TestAutoHeaders.cs" />
-    <Compile Include="Integration\TestCustomizedBackoffTime.cs" />
-    <Compile Include="Integration\TestEncryptionAndCompressionConfigurationOrder.cs" />
-    <Compile Include="Integration\TestIdempotentSagas.cs" />
-    <Compile Include="Integration\TestMessageDeferralAndRequestReply.cs" />
-    <Compile Include="Integration\TestRetryExceptionCustomization.cs" />
-    <Compile Include="Integration\TestSagaAutomaticCorrelationIdOnInit.cs" />
-    <Compile Include="Integration\TestSagaIsNew.cs" />
-    <Compile Include="Bugs\InheritedMessageCanInitiateSagaToo.cs" />
-    <Compile Include="Integration\TestSecondLevelRetries.cs" />
-    <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
-    <Compile Include="Integration\TestSlowContinuations.cs" />
-    <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
-    <Compile Include="Integration\TestTypeBasedRouting.cs" />
-    <Compile Include="Integration\TestTypeHeader.cs" />
-    <Compile Include="Integration\TestWorkerAndParallelismConfiguration.cs" />
-    <Compile Include="Profiling\TestDispatchPerformance.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemSagaStorageBasicLoadAndSaveAndFindOperations.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemSagaStorageConcurrencyHandling.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemSagaStorageFactory.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemSagaStorageSagaIntegrationTests.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemTimeoutManagerFactory.cs" />
-    <Compile Include="Persistence\Filesystem\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
-    <Compile Include="Persistence\Filesystem\JsonFileSubscriptionStorageFactory.cs" />
-    <Compile Include="Pipeline\TestAbortMessagePipeline.cs" />
-    <Compile Include="Pipeline\TestOrdinaryLogLevels.cs" />
-    <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
-    <Compile Include="Profiling\TestProfiler.cs" />
-    <Compile Include="Routing\TestTransportMessageOperations.cs" />
-    <Compile Include="Routing\TestHeaderBasedRouting.cs" />
-    <Compile Include="Routing\TestTypeBasedRouter.cs" />
-    <Compile Include="Sagas\TestConflictResolution.cs" />
-    <Compile Include="Sagas\TestIdCorrelation\DefaultSagaData.cs" />
-    <Compile Include="Sagas\TestIdCorrelation\Scenario1.cs" />
-    <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
-    <Compile Include="Sagas\TestMarkAsComplete.cs" />
-    <Compile Include="Serialization\JsonSerializerTests.cs" />
-    <Compile Include="Testing\TestFakeBus.cs" />
-    <Compile Include="Testing\TestSagaFixture.cs" />
-    <Compile Include="Threading\TestParallelOperationsManager.cs" />
-    <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
-    <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
-    <Compile Include="Timers\CompareAsyncTasks.cs" />
-    <Compile Include="Timers\Factories\ThreadingTimerTaskFactory.cs" />
-    <Compile Include="Timers\IAsyncTaskFactory.cs" />
-    <Compile Include="Timers\Factories\TimerTaskFactory.cs" />
-    <Compile Include="Timers\Factories\TplTaskFactory.cs" />
-    <Compile Include="Transactions\TestUnitOfWork.cs" />
-    <Compile Include="Transport\FileSystem\FileSystemTransportFactory.cs" />
-    <Compile Include="Transport\FileSystem\FileSystemTransportBasicSendReceive.cs" />
-    <Compile Include="Transport\FileSystem\FileSystemTransportMessageExpiration.cs" />
-    <Compile Include="Transport\TransportTap.cs" />
-    <Compile Include="Exceptions\TestIgnorant.cs" />
-    <Compile Include="Extensions\Ponder.cs" />
-    <Compile Include="Integration\ManyMessages\InMemoryBusFactory.cs" />
-    <Compile Include="Integration\TestEncryptionAndCompressionTogether.cs" />
-    <Compile Include="Integration\TestErrorsInPipeline.cs" />
-    <Compile Include="Integration\TestHandlerReordering.cs" />
-    <Compile Include="Integration\TestMessageDeferral.cs" />
-    <Compile Include="Integration\TestPolymorphicDispatch.cs" />
-    <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
-    <Compile Include="Integration\TestAsyncHandler.cs" />
-    <Compile Include="Integration\TestConfigurationApi.cs" />
-    <Compile Include="Integration\TestRequestReply.cs" />
-    <Compile Include="Integration\TestRetry.cs" />
-    <Compile Include="Integration\TestSaga.cs" />
-    <Compile Include="Persistence\InMem\InMemorySubscriptionStorageFactory.cs" />
-    <Compile Include="Persistence\InMem\InMemoryTimeoutManagerFactory.cs" />
-    <Compile Include="Pipeline\TestPipelineLogging.cs" />
-    <Compile Include="Pipeline\TestPipelineStepInjector.cs" />
-    <Compile Include="Serialization\JsonSerializerFactory.cs" />
-    <Compile Include="Timers\TestAsyncTask.cs" />
-    <Compile Include="Transport\InMem\InMemNetworkTests.cs" />
-    <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
-    <Compile Include="Pipeline\TestDefaultPipelineInvoker.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Backoff\BackoffBehaviorIntegrationTest.cs" />
-    <Compile Include="Workers\TestDefaultSyncBackoffStrategy.cs" />
-    <Compile Include="Workers\TestSetNumberOfWorkers.cs" />
-    <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
-      <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
-      <Name>Rebus.Tests.Contracts</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Rebus\Rebus.csproj">
-      <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
-      <Name>Rebus</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Persistence\SqlServer\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Messages;
 
@@ -31,6 +32,7 @@ Headers already on the message will not be overwritten.")]
             var messageType = body.GetType();
 
             var headersToAssign = _headersToAssign.GetOrAdd(messageType, type => messageType
+                .GetTypeInfo()
                 .GetCustomAttributes(typeof (HeaderAttribute), true)
                 .OfType<HeaderAttribute>()
                 .ToList());

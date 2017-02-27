@@ -24,7 +24,9 @@ namespace Rebus.Persistence.FileSystem
                 {
                     _fileStream = new FileStream(pathToLock, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                     // Oh and there's no async version!
+#if NET45
                     _fileStream.Lock(0, 1);
+#endif
                     success = true;
                 }
                 catch (IOException)
@@ -72,7 +74,9 @@ namespace Rebus.Persistence.FileSystem
 
             try
             {
+#if NET45
                 _fileStream.Unlock(0, 1);
+#endif
                 _fileStream.Dispose();
             }
             finally

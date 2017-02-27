@@ -65,7 +65,11 @@ namespace Rebus.Serialization
             var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
             var bytes = _encoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
+#if NET45
             headers[Headers.ContentType] = $"{JsonContentType};charset={_encoding.HeaderName}";
+#elif NETSTANDARD1_6
+            headers[Headers.ContentType] = $"{JsonContentType};charset={_encoding.WebName}";
+#endif
             return new TransportMessage(headers, bytes);
         }
 

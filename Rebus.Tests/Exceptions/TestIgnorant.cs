@@ -16,7 +16,7 @@ namespace Rebus.Tests.Exceptions
                 SilencePeriods = new[] { TimeSpan.FromMinutes(1) }
             };
 
-            var isToBeIgnored = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var isToBeIgnored = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             Assert.That(isToBeIgnored, Is.True);
         }
@@ -32,10 +32,10 @@ namespace Rebus.Tests.Exceptions
             };
 
             RebusTimeMachine.FakeIt(now);
-            var first = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var first = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
             
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(1.1));
-            var second = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var second = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             Assert.That(first, Is.True);
             Assert.That(second, Is.False);
@@ -56,22 +56,22 @@ namespace Rebus.Tests.Exceptions
             };
 
             RebusTimeMachine.FakeIt(now);
-            var first = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var first = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
             
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(1.1));
-            var second = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var second = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(11.1));
-            var third = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var third = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(11.2));
-            var fourth = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var fourth = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(21.2));
-            var fifth = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var fifth = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(21.3));
-            var sixth = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var sixth = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             Assert.That(first, Is.True);
             Assert.That(second, Is.False);
@@ -92,11 +92,11 @@ namespace Rebus.Tests.Exceptions
             };
 
             RebusTimeMachine.FakeIt(now);
-            var first = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var first = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(1.1));
-            var second = ignorant.IsToBeIgnored(new ApplicationException("hej"));
-            var third = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var second = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
+            var third = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             Assert.That(first, Is.True);
             Assert.That(second, Is.False);
@@ -114,14 +114,14 @@ namespace Rebus.Tests.Exceptions
             };
 
             RebusTimeMachine.FakeIt(now);
-            var first = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var first = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(0.9));
-            var second = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var second = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             ignorant.Reset();
             RebusTimeMachine.FakeIt(now + TimeSpan.FromMinutes(1.1));
-            var third = ignorant.IsToBeIgnored(new ApplicationException("hej"));
+            var third = ignorant.IsToBeIgnored(new RebusApplicationException("hej"));
 
             Assert.That(first  , Is.True);
             Assert.That(second  , Is.True);
