@@ -40,6 +40,14 @@ namespace Rebus.Routing.TransportMessages
             return new ForwardAction(ActionType.Forward, destinationAddresses.ToArray());
         }
 
+        /// <summary>
+        /// Gets an action that causes the messge to be ignored. THIS WILL EFFECTIVELY LOSE THE MESSAGE
+        /// </summary>
+        public static ForwardAction Ignore()
+        {
+            return new ForwardAction(ActionType.Ignore);
+        }
+
         internal List<string> DestinationAddresses { get; }
 
         internal ActionType ActionType { get; }

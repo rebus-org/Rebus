@@ -4,6 +4,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Retry.Simple;
 using Rebus.Transport;
 
 namespace Rebus.Routing.TransportMessages
@@ -17,7 +18,19 @@ namespace Rebus.Routing.TransportMessages
         /// Adds the given routing function - should return <see cref="ForwardAction.None"/> to do nothing, or another action
         /// available on <see cref="ForwardAction"/> in order to do something to the message
         /// </summary>
-        public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer, Func<TransportMessage, Task<ForwardAction>> routingFunction)
+        public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer,
+            Func<TransportMessage, Task<ForwardAction>> routingFunction)
+        {
+            AddTransportMessageForwarder(configurer, routingFunction, ErrorBehavior.ForwardToErrorQueue);
+        }
+
+        /// <summary>
+        /// Adds the given routing function - should return <see cref="ForwardAction.None"/> to do nothing, or another action
+        /// available on <see cref="ForwardAction"/> in order to do something to the message
+        /// </summary>
+        public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer,
+            Func<TransportMessage, Task<ForwardAction>> routingFunction,
+            ErrorBehavior errorBehavior)
         {
             configurer.OtherService<IPipeline>()
                 .Decorate(c =>
@@ -26,12 +39,15 @@ namespace Rebus.Routing.TransportMessages
                     var transport = c.Get<ITransport>();
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
-                    var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory);
+                    var errorQueueName = c.Has<SimpleRetryStrategySettings>()
+                        ? c.Get<SimpleRetryStrategySettings>().ErrorQueueAddress
+                        : "error";
+
+                    var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory, errorQueueName, errorBehavior);
 
                     return new PipelineStepConcatenator(pipeline)
                         .OnReceive(stepToAdd, PipelineAbsolutePosition.Front);
                 });
         }
-
     }
 }

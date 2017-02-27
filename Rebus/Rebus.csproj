@@ -160,6 +160,7 @@
     <Compile Include="Retry\Simple\VerifyCannotSendFailedMessageWrapperStep.cs" />
     <Compile Include="Routing\Exceptions\AutoForwardOnExceptionConfigurationExtensions.cs" />
     <Compile Include="Routing\TransportMessages\ActionType.cs" />
+    <Compile Include="Routing\TransportMessages\ErrorBehavior.cs" />
     <Compile Include="Routing\TransportMessages\ForwardAction.cs" />
     <Compile Include="Routing\TransportMessages\ForwardTransportMessageStep.cs" />
     <Compile Include="Routing\TransportMessages\TransportMessageRoutingConfigurationExtensions.cs" />

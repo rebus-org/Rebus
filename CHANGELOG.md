@@ -1144,6 +1144,10 @@
 
 * Fix bug that caused uncompressed or unencrypted message bodies to be sent when forwarding messages
 
+## 3.1.0
+
+* Make transport message forwarder error behavior configurable, and make it default to moving the transport message to the error queue
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
