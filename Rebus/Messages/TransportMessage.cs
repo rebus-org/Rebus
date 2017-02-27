@@ -22,11 +22,11 @@ namespace Rebus.Messages
         /// <summary>
         /// Gets the headers of this message
         /// </summary>
-        public Dictionary<string, string> Headers { get; private set; }
+        public Dictionary<string, string> Headers { get; }
 
         /// <summary>
         /// Gets the wrapped body data of this message
         /// </summary>
-        public byte[] Body { get; private set; }
+        public byte[] Body { get; }
     }
 }

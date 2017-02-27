@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Rebus.Pipeline;
 
 namespace Rebus.Sagas
 {
     /// <summary>
     /// Represents a mapping from a field of an incoming message of a specific type to a specific property on a specific type of saga data
     /// </summary>
-    public class CorrelationProperty : ISagaCorrelationProperty
+    class CorrelationProperty : ISagaCorrelationProperty
     {
         /// <summary>
         /// Defines the types that are allowed to use with saga data properties that are intended for correlation
@@ -31,7 +32,7 @@ namespace Rebus.Sagas
         /// <param name="sagaDataType">Specifies the type of saga data that this property can correlate to</param>
         /// <param name="propertyName">Specifies that property name on the saga data that this correlation addresses</param>
         /// <param name="sagaType">Specifies the saga type (i.e. the handler type) that contains the logic of the saga</param>
-        public CorrelationProperty(Type messageType, Func<object, object> valueFromMessage, Type sagaDataType, string propertyName, Type sagaType)
+        public CorrelationProperty(Type messageType, Func<IMessageContext, object, object> valueFromMessage, Type sagaDataType, string propertyName, Type sagaType)
         {
             if (messageType == null) throw new ArgumentNullException(nameof(messageType));
             if (sagaDataType == null) throw new ArgumentNullException(nameof(sagaDataType));
@@ -76,7 +77,7 @@ namespace Rebus.Sagas
         /// <summary>
         /// The function that will be called with the message instance in order to extract a value that should be used for correlation
         /// </summary>
-        public Func<object, object> ValueFromMessage { get; private set; }
+        public Func<IMessageContext, object, object> ValueFromMessage { get; private set; }
         
         /// <summary>
         /// Gets the type of the saga's saga data

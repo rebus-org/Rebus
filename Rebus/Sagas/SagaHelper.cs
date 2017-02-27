@@ -8,7 +8,7 @@ namespace Rebus.Sagas
     /// <summary>
     /// Helper class that can cache configured sets of correlation properties for various saga types
     /// </summary>
-    public class SagaHelper
+    class SagaHelper
     {
         readonly ConcurrentDictionary<string, Dictionary<Type, CorrelationProperty[]>> _cachedCorrelationProperties
                 = new ConcurrentDictionary<string, Dictionary<Type, CorrelationProperty[]>>();

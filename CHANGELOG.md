@@ -1140,6 +1140,16 @@
 
 * Provide `FakeSyncBus` implementation of `ISyncBus`, which can be used to record events for testing
 
+## 3.0.2
+
+* Fix bug that caused uncompressed or unencrypted message bodies to be sent when forwarding messages
+
+## 4.0.0
+
+* Hide some internal types that were never meant to be part of the API
+* Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

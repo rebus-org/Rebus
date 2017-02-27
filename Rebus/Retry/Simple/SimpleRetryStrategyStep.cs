@@ -52,7 +52,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
             if (string.IsNullOrWhiteSpace(messageId))
             {
-                await MoveMessageToErrorQueue(transportMessage, transactionContext,
+                await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext,
 
                     $"Received message with empty or absent '{Headers.MessageId}' header! All messages must be" +
                     " supplied with an ID . If no ID is present, the message cannot be tracked" +
@@ -69,7 +69,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 // if we don't have 2nd level retries, just get the message out of the way
                 if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
                 {
-                    await MoveMessageToErrorQueue(transportMessage, transactionContext, errorDescriptionFor);
+                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, errorDescriptionFor);
                     _errorTracker.CleanUp(messageId);
                     return;
                 }
@@ -79,7 +79,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
                 {
-                    await MoveMessageToErrorQueue(transportMessage, transactionContext, errorDescriptionFor);
+                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, errorDescriptionFor);
                     _errorTracker.CleanUp(messageId);
                     _errorTracker.CleanUp(secondLevelMessageId);
                     return;
@@ -145,8 +145,10 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
         }
 
-        async Task MoveMessageToErrorQueue(TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription)
+        async Task MoveMessageToErrorQueue(OriginalTransportMessage originalTransportMessage, ITransactionContext transactionContext, string errorDescription)
         {
+            var transportMessage = originalTransportMessage.TransportMessage;
+
             await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, errorDescription);
         }
     }

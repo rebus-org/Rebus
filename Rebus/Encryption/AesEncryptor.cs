@@ -23,10 +23,10 @@ namespace Rebus.Encryption
         /// <param name="key"></param>
         public AesEncryptor(string key)
         {
-            _key = Convert.FromBase64String(key);
-
             try
             {
+                _key = Convert.FromBase64String(key);
+            
                 using (var rijndael = Aes.Create())
                 {
                     rijndael.Key = _key;

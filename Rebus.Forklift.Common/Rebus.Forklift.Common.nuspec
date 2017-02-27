@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Forklift.Common</id>
+    <version>$version$</version>
+    <title>Rebus.Forklift.Common</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>common forklift stuff to help with new implementations</description>
+    <copyright>Copyright 2012-2016</copyright>
+    <tags>rebus queue messaging service bus</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="$version$" />
+      <dependency id="GoCommando" version="0.3" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.Forklift.Common.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.Forklift.Common.xml" target="lib\NET45" />
+  </files>
+</package>

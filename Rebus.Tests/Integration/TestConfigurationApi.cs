@@ -19,7 +19,7 @@ namespace Rebus.Tests.Integration
         [Test]
         public void ThrowsIfNoTransportIsSpecified()
         {
-            Assert.Throws<ConfigurationErrorsException>(() => Configure.With(new BuiltinHandlerActivator()).Start());
+            Assert.Throws<RebusConfigurationException>(() => Configure.With(new BuiltinHandlerActivator()).Start());
         }
 
         [Test]
