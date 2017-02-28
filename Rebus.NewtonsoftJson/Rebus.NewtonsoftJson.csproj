@@ -8,6 +8,7 @@
     <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
+    <PackageVersion>3.2.0</PackageVersion>
     <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
     <PackageProjectUrl>http://mookid.dk/oncode/rebus</PackageProjectUrl>
     <Copyright>Copyright 2012-2016</Copyright>
