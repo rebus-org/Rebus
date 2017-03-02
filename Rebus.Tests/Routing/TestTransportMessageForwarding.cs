@@ -7,6 +7,8 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
+using Rebus.Messages;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -131,6 +133,8 @@ namespace Rebus.Tests.Routing
             var message = await network.WaitForNextMessageFrom("error");
 
             Assert.That(Encoding.UTF8.GetString(message.Body), Is.EqualTo(@"""HEJ MED DIG!!!"""));
+            Assert.That(message.Headers.GetValueOrNull(Headers.SourceQueue), Is.EqualTo("forwarder"));
+            Assert.That(message.Headers.GetValueOrNull(Headers.ErrorDetails), Does.Contain("fake an error"));
         }
 
         static IBus GetFailingBus(BuiltinHandlerActivator activator, InMemNetwork network, string recipientQueueName, ErrorBehavior errorBehavior)

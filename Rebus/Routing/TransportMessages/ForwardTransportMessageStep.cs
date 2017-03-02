@@ -74,17 +74,20 @@ namespace Rebus.Routing.TransportMessages
                         throw new ArgumentException($"Unknown forward action type: {actionType}");
                 }
             }
-            catch
+            catch (Exception e2)
             {
                 if (_errorBehavior == ErrorBehavior.ForwardToErrorQueue)
                 {
+                    transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
+                    transportMessage.Headers[Headers.ErrorDetails] = e2.ToString();
+
                     try
                     {
                         var transactionContext = context.Load<ITransactionContext>();
                         await _transport.Send(_errorQueueName, transportMessage, transactionContext);
                         return;
                     }
-                    catch(Exception exception)
+                    catch (Exception exception)
                     {
                         _log.Error(exception, "Could not forward message {0} to '{1}' - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
                         await Task.Delay(TimeSpan.FromSeconds(5));

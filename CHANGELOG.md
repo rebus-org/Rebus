@@ -1148,6 +1148,10 @@
 
 * Make transport message forwarder error behavior configurable, and make it default to moving the transport message to the error queue
 
+## 3.1.1
+
+* Fix bug that accidentally did not include the source queue address and the exception details on a fail-fast-forwarded transport message
+
 ## 4.0.0
 
 * Hide some internal types that were never meant to be part of the API

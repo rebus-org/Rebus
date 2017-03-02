@@ -196,6 +196,12 @@
     <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Persistence\SqlServer\" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj">
       <Project>{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}</Project>
       <Name>Rebus.Tests.Contracts</Name>
@@ -204,12 +210,6 @@
       <Project>{319215F6-B626-4271-8EDA-E31B876F65C0}</Project>
       <Name>Rebus</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Persistence\SqlServer\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
