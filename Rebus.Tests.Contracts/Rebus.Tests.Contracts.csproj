@@ -108,7 +108,6 @@
       <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)\..\scripts\patch_assemblyinfo.cmd $(ProjectDir)</PreBuildEvent>
