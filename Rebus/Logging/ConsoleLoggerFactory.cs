@@ -146,8 +146,6 @@ namespace Rebus.Logging
                                           : "{1} {2} ({3}): {4}";
             }
 
-            #region ILog Members
-
             public void Debug(string message, params object[] objs)
             {
                 Log(LogLevel.Debug, message, _loggingColors.Debug, objs);
@@ -172,8 +170,6 @@ namespace Rebus.Logging
             {
                 Log(LogLevel.Error, message, _loggingColors.Error, objs);
             }
-
-            #endregion
 
             void Log(LogLevel level, string message, ColorSetting colorSetting, params object[] objs)
             {
