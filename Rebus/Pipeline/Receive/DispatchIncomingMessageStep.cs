@@ -49,7 +49,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             // was run before us....) bail out here:
             if (context.Load<bool>(AbortDispatchContextKey))
             {
-                _log.Debug("Skipping dispatch of message {0}", messageLabel);
+                _log.Debug("Skipping dispatch of message {messageLabel}", messageLabel);
                 await next();
                 return;
             }
@@ -64,7 +64,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
                 // if dispatch was aborted at this point, bail out
                 if (context.Load<bool>(AbortDispatchContextKey))
                 {
-                    _log.Debug("Skipping further dispatch of message {0}", messageLabel);
+                    _log.Debug("Skipping further dispatch of message {messageLabel}", messageLabel);
                     break;
                 }
             }
@@ -82,7 +82,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
                 throw new RebusApplicationException(text);
             }
 
-            _log.Debug("Dispatching message {0} to {1} handlers took {2:0} ms", 
+            _log.Debug("Dispatching message {messageLabel} to {count} handlers took {elapsedMs:0} ms", 
                 messageLabel, handlersInvoked, stopwatch.Elapsed.TotalMilliseconds);
 
             await next();

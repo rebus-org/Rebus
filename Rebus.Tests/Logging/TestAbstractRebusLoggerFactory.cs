@@ -81,6 +81,7 @@ namespace Rebus.Tests.Logging
             yield return new InterpolationScenario($"The date today is {DateTime.Today:o}", "The date today is {Date}", DateTime.Today);
             yield return new InterpolationScenario("What happens when you forget the placeholder?", "What happens when you forget the placeholder?", DateTime.Today, TimeSpan.FromMinutes(1));
             yield return new InterpolationScenario("What 23 00:01:00 ??? ??? too many placeholders?", "What {happens} {when} {there} {is} too many placeholders?", 23, TimeSpan.FromMinutes(1));
+            yield return new InterpolationScenario("Sending msg-A to [queue-a, queue-b]", "Sending {messageLabel} to {queueNames}", "msg-A", new[]{ "queue-a", "queue-b" });
         }
 
         public class InterpolationScenario

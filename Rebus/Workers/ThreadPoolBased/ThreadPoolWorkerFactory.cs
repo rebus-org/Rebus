@@ -106,7 +106,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
                 if (stopwatch.Elapsed > workerShutdownTimeout)
                 {
-                    _log.Warn("Not all async tasks were able to finish within given timeout of {0} seconds!", workerShutdownTimeout.TotalSeconds);
+                    _log.Warn("Not all async tasks were able to finish within given timeout of {timeoutSeconds} seconds!", workerShutdownTimeout.TotalSeconds);
                     break;
                 }
             }

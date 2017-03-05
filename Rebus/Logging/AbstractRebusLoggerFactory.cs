@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Rebus.Logging
@@ -56,6 +59,12 @@ namespace Rebus.Logging
         /// </summary>
         protected virtual string FormatObject(object obj)
         {
+            if (obj is IEnumerable && !(obj is string))
+            {
+                var valueStrings = ((IEnumerable)obj).Cast<object>().Select(FormatObject);
+
+                return $"[{string.Join(", ", valueStrings)}]";
+            }
             if (obj is DateTime)
             {
                 return ((DateTime) obj).ToString("O");

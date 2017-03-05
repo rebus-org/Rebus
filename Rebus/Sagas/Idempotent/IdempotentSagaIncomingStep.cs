@@ -60,7 +60,7 @@ If that is the case, message dispatch is skipped, but any messages stored as out
 
                 if (idempotencyData.HasAlreadyHandled(messageId))
                 {
-                    _log.Info("Message with ID {0} has already been handled by saga with ID {1}",
+                    _log.Info("Message with ID {messageId} has already been handled by saga with ID {sagaDataId}",
                         messageId, sagaData.Id);
 
                     var outgoingMessages = idempotencyData
@@ -69,7 +69,7 @@ If that is the case, message dispatch is skipped, but any messages stored as out
 
                     if (outgoingMessages.Any())
                     {
-                        _log.Info("Found {0} outgoing messages to be (re-)sent... will do that now",
+                        _log.Info("Found {messageCount} outgoing messages to be (re-)sent... will do that now",
                             outgoingMessages.Count);
 
                         foreach (var messageToResend in outgoingMessages)

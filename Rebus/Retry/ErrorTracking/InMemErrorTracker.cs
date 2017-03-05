@@ -56,7 +56,7 @@ namespace Rebus.Retry.ErrorTracking
                 id => new ErrorTracking(exception),
                 (id, tracking) => tracking.AddError(exception));
 
-            _log.Warn("Unhandled exception {0} while handling message with ID {1}: {2}", errorTracking.Errors.Count(), messageId, exception);
+            _log.Warn("Unhandled exception {errorNumber} while handling message with ID {messageId}: {exception}", errorTracking.Errors.Count(), messageId, exception);
         }
 
         /// <summary>

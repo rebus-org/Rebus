@@ -65,7 +65,7 @@ namespace Rebus.Bus
         /// </summary>
         public void Start(int numberOfWorkers)
         {
-            _log.Info("Starting bus {0}", _busId);
+            _log.Info("Starting bus {busId}", _busId);
 
             _busLifetimeEvents.RaiseBusStarting();
 
@@ -460,7 +460,7 @@ namespace Rebus.Bus
             }
             catch (Exception exception)
             {
-                _log.Warn("An exception occurred when stopping {0}: {1}", worker.Name, exception);
+                _log.Warn("An exception occurred when stopping {workerName}: {exception}", worker.Name, exception);
             }
         }
 
@@ -479,13 +479,13 @@ namespace Rebus.Bus
 
             if (desiredNumberOfWorkers > _options.MaxParallelism)
             {
-                _log.Warn("Attempted to set number of workers to {0}, but the max allowed parallelism is {1}",
+                _log.Warn("Attempted to set number of workers to {numberOfWorkers}, but the max allowed parallelism is {maxParallelism}",
                     desiredNumberOfWorkers, _options.MaxParallelism);
 
                 desiredNumberOfWorkers = _options.MaxParallelism;
             }
 
-            _log.Info("Setting number of workers to {0}", desiredNumberOfWorkers);
+            _log.Info("Setting number of workers to {numberOfWorkers}", desiredNumberOfWorkers);
             while (desiredNumberOfWorkers > GetNumberOfWorkers())
             {
                 AddWorker();
@@ -511,7 +511,7 @@ namespace Rebus.Bus
             {
                 var workerName = $"Rebus {_busId} worker {_workers.Count + 1}";
 
-                _log.Debug("Adding worker {0}", workerName);
+                _log.Debug("Adding worker {workerName}", workerName);
 
                 try
                 {
@@ -536,7 +536,7 @@ namespace Rebus.Bus
                 while (_workers.Count > desiredNumberOfWorkers)
                 {
                     var lastWorker = _workers.Last();
-                    _log.Debug("Removing worker {0}", lastWorker.Name);
+                    _log.Debug("Removing worker {workerName}", lastWorker.Name);
                     removedWorkers.Add(lastWorker);
                     _workers.Remove(lastWorker);
                 }

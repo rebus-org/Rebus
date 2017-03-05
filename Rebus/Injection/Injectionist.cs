@@ -117,8 +117,9 @@ namespace Rebus.Injection
             {
                 if (handler.PrimaryResolver != null)
                 {
-                    throw new InvalidOperationException(string.Format("Attempted to register {0}, but a primary registration already exists: {1}",
-                        resolver, handler.PrimaryResolver));
+                    var message = $"Attempted to register {resolver}, but a primary registration already exists: {handler.PrimaryResolver}";
+
+                    throw new InvalidOperationException(message);
                 }
             }
 
@@ -166,9 +167,12 @@ namespace Rebus.Injection
 
             public override string ToString()
             {
+                var role = IsDecorator ? "decorator ->" : "primary ->";
+                var type = typeof(TService);
+
                 return !string.IsNullOrWhiteSpace(_description)
-                    ? string.Format("{0} {1} ({2})", IsDecorator ? "decorator ->" : "primary ->", typeof(TService), _description)
-                    : string.Format("{0} {1}", IsDecorator ? "decorator ->" : "primary ->", typeof(TService));
+                    ? $"{role} {type} ({_description})"
+                    : $"{role} {type}";
             }
         }
 
@@ -204,7 +208,7 @@ namespace Rebus.Injection
 
                 if (!_resolvers.ContainsKey(serviceType))
                 {
-                    throw new ResolutionException("Could not find resolver for {0}", serviceType);
+                    throw new ResolutionException("Could not find resolver for {serviceType}");
                 }
 
                 if (!_decoratorDepth.ContainsKey(serviceType))
@@ -242,8 +246,7 @@ namespace Rebus.Injection
                 }
                 catch (Exception exception)
                 {
-                    throw new ResolutionException(exception, "Could not resolve {0} with decorator depth {1} - registrations: {2}",
-                        serviceType, depth, string.Join("; ", handlerForThisType));
+                    throw new ResolutionException(exception, $"Could not resolve {serviceType} with decorator depth {depth} - registrations: {string.Join("; ", handlerForThisType)}");
                 }
                 finally
                 {
@@ -288,16 +291,16 @@ namespace Rebus.Injection
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ResolutionException(string message, params object[] objs)
-            : base(string.Format(message, objs))
+        public ResolutionException(string message)
+            : base(message)
         {
         }
 
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ResolutionException(Exception innerException, string message, params object[] objs)
-            : base(string.Format(message, objs), innerException)
+        public ResolutionException(Exception innerException, string message)
+            : base(message, innerException)
         {
         }
 

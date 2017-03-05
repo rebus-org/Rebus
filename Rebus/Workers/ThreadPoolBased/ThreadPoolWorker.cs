@@ -47,7 +47,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
         void Run()
         {
-            _log.Debug("Starting (threadpool-based) worker {0}", Name);
+            _log.Debug("Starting (threadpool-based) worker {workerName}", Name);
 
             var token = _cancellationTokenSource.Token;
 
@@ -65,7 +65,7 @@ namespace Rebus.Workers.ThreadPoolBased
                 }
             }
 
-            _log.Debug("Worker {0} stopped", Name);
+            _log.Debug("Worker {workerName} stopped", Name);
         }
 
         void TryReceiveNextMessage(CancellationToken token)
@@ -138,7 +138,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
             catch (Exception exception)
             {
-                _log.Warn("An error occurred when attempting to receive the next message: {0}", exception);
+                _log.Warn("An error occurred when attempting to receive the next message: {exception}", exception);
 
                 _backoffStrategy.WaitError();
 
@@ -171,13 +171,13 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 context.Abort();
 
-                _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
+                _log.Error(exception, "Worker was killed while handling message {messageLabel}", transportMessage.GetMessageLabel());
             }
             catch (Exception exception)
             {
                 context.Abort();
 
-                _log.Error(exception, $"Unhandled exception while handling message {transportMessage.GetMessageLabel()}");
+                _log.Error(exception, "Unhandled exception while handling message {messageLabel}", transportMessage.GetMessageLabel());
             }
             finally
             {
@@ -196,7 +196,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
             if (!_workerThread.Join(_options.WorkerShutdownTimeout))
             {
-                _log.Warn($"The '{Name}' worker did not shut down within {_options.WorkerShutdownTimeout.TotalSeconds} seconds!");
+                _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!", _options.WorkerShutdownTimeout.TotalSeconds);
 
                 _workerThread.Abort();
             }

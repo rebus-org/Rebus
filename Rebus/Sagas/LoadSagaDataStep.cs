@@ -128,7 +128,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                 foundExistingSagaData = true;
                 loadedSagaData.Add(new RelevantSagaInfo(sagaData, correlationProperties, sagaInvoker.Saga));
 
-                _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, label);
+                _log.Debug("Found existing saga data with ID {sagaDataId} for message {messageLabel}", sagaData.Id, label);
                 break;
             }
 
@@ -149,13 +149,13 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                     sagaInvoker.SetSagaData(newSagaData);
 
-                    _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
+                    _log.Debug("Created new saga data with ID {sagaDataId} for message {messageLabel}", newSagaData.Id, label);
 
                     newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
                 }
                 else
                 {
-                    _log.Debug("Could not find existing saga data for message {0}", label);
+                    _log.Debug("Could not find existing saga data for message {messageLabel}", label);
                     sagaInvoker.SkipInvocation();
                 }
             }

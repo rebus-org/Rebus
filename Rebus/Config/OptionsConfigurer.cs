@@ -112,10 +112,10 @@ namespace Rebus.Config
 Message pipelines
 ------------------------------------------------------------------------------
 Send pipeline:
-{0}
+{sendPipeline}
 
 Receive pipeline:
-{1}
+{receivePipeline}
 ------------------------------------------------------------------------------
 ", Format(sendPipeline, verbose), Format(receivePipeline, verbose));
 

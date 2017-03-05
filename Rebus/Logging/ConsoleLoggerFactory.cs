@@ -235,7 +235,7 @@ namespace Rebus.Logging
                 }
                 catch
                 {
-                    Warn("Could not render output string: '{0}' with args: {1}", message, string.Join(", ", objs));
+                    Warn("Could not render {message} with args {args}", message, objs);
                 }
             }
 

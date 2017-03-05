@@ -39,7 +39,7 @@ namespace Rebus.Persistence.FileSystem
         {
             if (Directory.Exists(_snapshotDirectory)) return;
 
-            _log.Info("Saga snapshot directory '{0}' does not exist - creating it!", _snapshotDirectory);
+            _log.Info("Saga snapshot directory {directoryPath} does not exist - creating it!", _snapshotDirectory);
 
             Directory.CreateDirectory(_snapshotDirectory);
 

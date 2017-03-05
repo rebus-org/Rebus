@@ -54,7 +54,7 @@ namespace Rebus.Routing.TransportMessages
                         var destinationAddresses = routingResult.DestinationAddresses;
                         var transactionContext = context.Load<ITransactionContext>();
 
-                        _log.Debug("Forwarding {0} to {1}", transportMessage.GetMessageLabel(), string.Join(", ", destinationAddresses));
+                        _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
 
                         await Task.WhenAll(
                             destinationAddresses
@@ -67,7 +67,7 @@ namespace Rebus.Routing.TransportMessages
                         break;
 
                     case ActionType.Ignore:
-                        _log.Debug("Ignoring {0}", transportMessage.GetMessageLabel());
+                        _log.Debug("Ignoring {messageLabel}", transportMessage.GetMessageLabel());
                         break;
 
                     default:
@@ -89,7 +89,7 @@ namespace Rebus.Routing.TransportMessages
                     }
                     catch (Exception exception)
                     {
-                        _log.Error(exception, "Could not forward message {0} to '{1}' - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
+                        _log.Error(exception, "Could not forward message {messageLabel} to {queueName} - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
                         await Task.Delay(TimeSpan.FromSeconds(5));
                         context.Load<ITransactionContext>().Abort();
                     }

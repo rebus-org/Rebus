@@ -61,13 +61,13 @@ namespace Rebus.Retry.PoisonQueues
 
             try
             {
-                _log.Error("Moving message with ID {0} to error queue '{1}' - reason: {2}", messageId, errorQueueAddress, errorDescription);
+                _log.Error("Moving message with ID {messageId} to error queue {queueName} - reason: {errorDetails}", messageId, errorQueueAddress, errorDescription);
 
                 await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
             }
             catch (Exception exception)
             {
-                _log.Error(exception, "Could not move message with ID {0} to error queue '{1}' - will pause {2} to avoid thrashing",
+                _log.Error(exception, "Could not move message with ID {messageId} to error queue {queueName} - will pause {pauseInterval} to avoid thrashing",
                     messageId, errorQueueAddress, MoveToErrorQueueFailedPause);
 
                 // if we can't move to error queue, we need to avoid thrashing over and over

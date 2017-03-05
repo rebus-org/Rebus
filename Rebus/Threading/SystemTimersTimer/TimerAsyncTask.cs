@@ -59,7 +59,7 @@ namespace Rebus.Threading.SystemTimersTimer
         /// </summary>
         public void Start()
         {
-            LogStartStop("Starting periodic task '{0}' with interval {1}", _description, Interval);
+            LogStartStop("Starting periodic task {taskDescription} with interval {timerInterval}", _description, Interval);
 
             _timer = new Timer(Interval.TotalMilliseconds);
             _timer.Elapsed += (o, ea) => Tick();
@@ -83,7 +83,7 @@ namespace Rebus.Threading.SystemTimersTimer
             }
             catch (Exception exception)
             {
-                _log.Warn("Exception in periodic task '{0}': {1}", _description, exception);
+                _log.Warn("Exception in periodic task {taskDescription}: {exception}", _description, exception);
             }
             finally
             {
@@ -102,7 +102,7 @@ namespace Rebus.Threading.SystemTimersTimer
             {
                 if (_timer == null) return;
 
-                LogStartStop("Stopping periodic task '{0}'", _description);
+                LogStartStop("Stopping periodic task {taskDescription}", _description);
 
                 _timer.Dispose();
             }
@@ -123,6 +123,5 @@ namespace Rebus.Threading.SystemTimersTimer
                 _log.Info(message, objs);
             }
         }
-
     }
 }

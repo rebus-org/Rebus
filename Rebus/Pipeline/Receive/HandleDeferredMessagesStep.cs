@@ -64,7 +64,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
             if (UsingExternalTimeoutManager)
             {
-                _log.Info("Using external timeout manager with this address: '{0}'", _options.ExternalTimeoutManagerAddressOrNull);
+                _log.Info("Using external timeout manager with this address: {queueName}", _options.ExternalTimeoutManagerAddressOrNull);
             }
             else
             {
@@ -83,8 +83,8 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                     var transportMessage = dueMessage.ToTransportMessage();
                     var returnAddress = transportMessage.Headers[Headers.DeferredRecipient];
 
-                    _log.Debug("Sending due message {0} to {1}",
-                        transportMessage.Headers[Headers.MessageId],
+                    _log.Debug("Sending due message {messageLabel} to {queueName}",
+                        transportMessage.GetMessageLabel(),
                         returnAddress);
 
                     using (var context = new TransactionContext())
@@ -145,7 +145,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         {
             var timeoutManagerAddress = _options.ExternalTimeoutManagerAddressOrNull;
 
-            _log.Debug("Forwarding deferred message {0} to external timeout manager '{1}'",
+            _log.Debug("Forwarding deferred message {messageLabel} to external timeout manager '{queueName}'",
                 transportMessage.GetMessageLabel(), timeoutManagerAddress);
 
             await _transport.Send(timeoutManagerAddress, transportMessage, transactionContext);
@@ -155,7 +155,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         {
             var approximateDueTime = GetTimeToBeDelivered(deferredUntil);
 
-            _log.Debug("Deferring message {0} until {1}", headers[Headers.MessageId], approximateDueTime);
+            _log.Debug("Deferring message {messageLabel} until {dueTime}", transportMessage.GetMessageLabel(), approximateDueTime);
 
             headers.Remove(Headers.DeferredUntil);
 

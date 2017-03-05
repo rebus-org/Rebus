@@ -110,7 +110,7 @@ namespace Rebus.Config
             {
                 if (numberOfWorkers <= 0) return;
 
-                _log.Warn("Attempted to set number of workers to {0}, but this is a one-way client!", numberOfWorkers);
+                _log.Warn("Attempted to set number of workers to {numberOfWorkers}, but this is a one-way client!", numberOfWorkers);
             }
         }
     }

@@ -26,7 +26,7 @@ namespace Rebus.Auditing.Sagas
             
             var jsonText = JsonConvert.SerializeObject(logData, Formatting.None);
 
-            _log.Info(jsonText);
+            _log.Info("{jsonText}", jsonText);
         }
     }
 }

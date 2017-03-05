@@ -40,11 +40,11 @@ namespace Rebus.DataBus.FileSystem
         {
             if (!Directory.Exists(_directoryPath))
             {
-                _log.Info("Creating directory {0}", _directoryPath);
+                _log.Info("Creating directory {directoryPath}", _directoryPath);
                 Directory.CreateDirectory(_directoryPath);
             }
 
-            _log.Info("Checking that the current process has read/write access to directory {0}", _directoryPath);
+            _log.Info("Checking that the current process has read/write access to directory {directoryPath}", _directoryPath);
             EnsureDirectoryIsWritable();
         }
 

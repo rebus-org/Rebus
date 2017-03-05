@@ -45,7 +45,7 @@ namespace Rebus.Persistence.FileSystem
                 var directoryName = Path.GetDirectoryName(pathToLock);
                 if (!Directory.Exists(directoryName))
                 {
-                    log.Info("Directory {0} does not exist - creating it now", pathToLock);
+                    log.Info("Directory {directoryPath} does not exist - creating it now", pathToLock);
                     Directory.CreateDirectory(directoryName);
                 }
             }

@@ -65,7 +65,7 @@ namespace Rebus.Routing.TypeBased
 
             if (_fallbackAddress != null)
             {
-                _log.Warn("Existing fallback mapping -> {0} overridden by -> {1}", _fallbackAddress, destinationAddress);
+                _log.Warn("Existing fallback mapping -> {queueName} changed to -> {newQueueName}", _fallbackAddress, destinationAddress);
             }
 
             _fallbackAddress = destinationAddress;
@@ -90,12 +90,12 @@ namespace Rebus.Routing.TypeBased
             if (_messageTypeAddresses.ContainsKey(messageType) &&
                 _messageTypeAddresses[messageType] != destinationAddress)
             {
-                _log.Warn("Existing endpoint mapping {0} -> {1} overridden by {0} -> {2}",
+                _log.Warn("Existing endpoint mapping {messageType} -> {queueName} changed to -> {newQueueName}",
                     messageType, _messageTypeAddresses[messageType], destinationAddress);
             }
             else
             {
-                _log.Info("Mapped {0} -> {1}", messageType, destinationAddress);
+                _log.Info("Mapped {messageType} -> {queueName}", messageType, destinationAddress);
             }
 
             _messageTypeAddresses[messageType] = destinationAddress;

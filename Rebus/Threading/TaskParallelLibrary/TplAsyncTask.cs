@@ -64,7 +64,7 @@ namespace Rebus.Threading.TaskParallelLibrary
                 throw new InvalidOperationException($"Cannot start periodic task '{_description}' because it has been disposed!");
             }
 
-            LogStartStop("Starting periodic task '{0}' with interval {1}", _description, Interval);
+            LogStartStop("Starting periodic task {taskDescription} with interval {timerInterval}", _description, Interval);
 
             var token = _tokenSource.Token;
 
@@ -90,7 +90,7 @@ namespace Rebus.Threading.TaskParallelLibrary
                         }
                         catch (Exception exception)
                         {
-                            _log.Warn("Exception in periodic task '{0}': {1}", _description, exception);
+                            _log.Warn("Exception in periodic task {taskDescription}: {exception}", _description, exception);
                         }
                     }
                 }
@@ -113,13 +113,13 @@ namespace Rebus.Threading.TaskParallelLibrary
                 // if it was never started, we don't do anything
                 if (_task == null) return;
 
-                LogStartStop("Stopping periodic task '{0}'", _description);
+                LogStartStop("Stopping periodic task {taskDescription}", _description);
 
                 _tokenSource.Cancel();
 
                 if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
                 {
-                    _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!", _description);
+                    _log.Warn("Periodic task {taskDescription} did not finish within 5 second timeout!", _description);
                 }
             }
             finally

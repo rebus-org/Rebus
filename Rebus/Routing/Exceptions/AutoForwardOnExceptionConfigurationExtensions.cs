@@ -98,19 +98,22 @@ namespace Rebus.Routing.Exceptions
                 var clone = transportMessage.Clone();
                 clone.Headers[Headers.ErrorDetails] = errorDetails;
 
+                const string message = "Forwarding message {messageLabel} to queue '{queueName}' because of: {exception}";
+                var messageLabel = clone.GetMessageLabel();
+
                 switch (_logLevel)
                 {
                     case LogLevel.Debug:
-                        _logger.Debug("Forwarding message {0} to queue '{1}' because of: {2}", clone.GetMessageLabel(), _destinationQueue, errorDetails);
+                        _logger.Debug(message, messageLabel, _destinationQueue, errorDetails);
                         break;
                     case LogLevel.Info:
-                        _logger.Info("Forwarding message {0} to queue '{1}' because of: {2}", clone.GetMessageLabel(), _destinationQueue, errorDetails);
+                        _logger.Info(message, messageLabel, _destinationQueue, errorDetails);
                         break;
                     case LogLevel.Warn:
-                        _logger.Warn("Forwarding message {0} to queue '{1}' because of: {2}", clone.GetMessageLabel(), _destinationQueue, errorDetails);
+                        _logger.Warn(message, messageLabel, _destinationQueue, errorDetails);
                         break;
                     case LogLevel.Error:
-                        _logger.Error("Forwarding message {0} to queue '{1}' because of: {2}", clone.GetMessageLabel(), _destinationQueue, errorDetails);
+                        _logger.Error(message, messageLabel, _destinationQueue, errorDetails);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException($"Unknown log level: {_logLevel}");
