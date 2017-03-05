@@ -1152,7 +1152,7 @@
 
 * Fix bug that accidentally did not include the source queue address and the exception details on a fail-fast-forwarded transport message
 
-## 4.0.0
+## 4.0.0-b01
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
