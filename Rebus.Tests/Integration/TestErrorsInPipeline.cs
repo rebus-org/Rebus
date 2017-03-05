@@ -101,7 +101,7 @@ namespace Rebus.Tests.Integration
             var errorLogLine = loggedErrors.Single(e => e.Level == LogLevel.Error);
 
             Assert.That(errorLogLine.Text, Contains.Substring(
-                $"Moving message with ID {messageId} to error queue 'error'"));
+                $@"Moving message with ID {messageId} to error queue ""error"""));
         }
 
         void PrintLogs()

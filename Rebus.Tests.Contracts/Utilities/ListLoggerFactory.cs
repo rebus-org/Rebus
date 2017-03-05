@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Rebus.Logging;
 
 namespace Rebus.Tests.Contracts.Utilities
@@ -27,7 +28,7 @@ namespace Rebus.Tests.Contracts.Utilities
 
         protected override ILog GetLogger(Type type)
         {
-            return new ListLogger(_loggedLines, type, _outputToConsole, _detailed);
+            return new ListLogger(_loggedLines, type, _outputToConsole, _detailed, this);
         }
 
         public IEnumerator<LogLine> GetEnumerator()
@@ -46,13 +47,15 @@ namespace Rebus.Tests.Contracts.Utilities
             readonly Type _type;
             readonly bool _outputToConsole;
             readonly bool _detailed;
+            readonly ListLoggerFactory _loggerFactory;
 
-            public ListLogger(ConcurrentQueue<LogLine> loggedLines, Type type, bool outputToConsole, bool detailed)
+            public ListLogger(ConcurrentQueue<LogLine> loggedLines, Type type, bool outputToConsole, bool detailed, ListLoggerFactory loggerFactory)
             {
                 _loggedLines = loggedLines;
                 _type = type;
                 _outputToConsole = outputToConsole;
                 _detailed = detailed;
+                _loggerFactory = loggerFactory;
             }
 
             public void Debug(string message, params object[] objs)
@@ -72,7 +75,7 @@ namespace Rebus.Tests.Contracts.Utilities
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                var text = SafeFormat(message, objs);
+                var text = _loggerFactory.RenderString(message, objs);
                 Append(LogLevel.Error, "{0}: {1}", text, exception);
             }
 
@@ -97,19 +100,9 @@ namespace Rebus.Tests.Contracts.Utilities
                     }
                 }
 
-                _loggedLines.Enqueue(new LogLine(level, SafeFormat(message, objs), _type));
-            }
+                var renderedMessage = _loggerFactory.RenderString(message, objs);
 
-            static string SafeFormat(string message, object[] objs)
-            {
-                try
-                {
-                    return string.Format(message, objs);
-                }
-                catch
-                {
-                    return message;
-                }
+                _loggedLines.Enqueue(new LogLine(level, renderedMessage, _type));
             }
         }
     }

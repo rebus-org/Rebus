@@ -59,7 +59,11 @@ namespace Rebus.Logging
         /// </summary>
         protected virtual string FormatObject(object obj)
         {
-            if (obj is IEnumerable && !(obj is string))
+            if (obj is string)
+            {
+                return $@"""{obj}""";
+            }
+            if (obj is IEnumerable)
             {
                 var valueStrings = ((IEnumerable)obj).Cast<object>().Select(FormatObject);
 
