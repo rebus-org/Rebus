@@ -9,7 +9,7 @@ namespace Rebus.Logging
     /// </summary>
     public abstract class AbstractRebusLoggerFactory : IRebusLoggerFactory
     {
-        static readonly Regex PlaceholderRegex = new Regex(@"{\w*}");
+        static readonly Regex PlaceholderRegex = new Regex(@"{\w*}", RegexOptions.Compiled);
 
         /// <inheritdoc />
         protected abstract ILog GetLogger(Type type);

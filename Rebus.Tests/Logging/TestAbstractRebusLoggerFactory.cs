@@ -1,15 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Rebus.Logging;
+using Rebus.Tests.Contracts.Extensions;
 
 namespace Rebus.Tests.Logging
 {
     [TestFixture]
     public class TestAbstractRebusLoggerFactory
     {
+        [TestCase(true, 1000000)]
+        [TestCase(false, 1000000)]
+        public void CompareRenderingTimes(bool useNewMethod, int iterations)
+        {
+            Console.WriteLine($"Using {(useNewMethod ? "NEW method" : "OLD method")}");
+
+            var renderMethod = useNewMethod
+                ? (Func<string, object[], string>)OpenAbstractRebusLoggerFactory.Render
+                : (message, args) => string.Format(message, args);
+
+            const string messageTemplate = "Hello {0}, my name is {1} and I am {2} years old. I like to drink {3} in my {4} - you can say that it is my {5}";
+
+            var objs = new object[] {"there my friend", "Muggie", "37", "beer", "spare time", "hobby"};
+
+            // warm up
+            10.Times(() =>
+            {
+                var result = renderMethod(messageTemplate, objs);
+                Console.WriteLine($"'{messageTemplate}' + {string.Join(", ", objs.Select(o => $"'{o}'"))} => '{result}'");
+            });
+
+            // measure
+            var stopwatch = Stopwatch.StartNew();
+            iterations.Times(() =>
+            {
+                var result = renderMethod(messageTemplate, objs);
+            });
+
+            var elapsed = stopwatch.Elapsed;
+
+            Console.WriteLine($"Performing {iterations} renderings took {elapsed.TotalMilliseconds:0.0} ms - that's {iterations/elapsed.TotalMilliseconds:0.0} /ms");
+        }
+
         [TestCaseSource(nameof(GetScenarios))]
         public void ItWorks(InterpolationScenario scenario)
         {
@@ -27,7 +62,8 @@ namespace Rebus.Tests.Logging
             int counter = -1;
             string input = @"/home/{value1}/something/{anotherValue}";
             Regex reg = new Regex(@"\{([a-zA-Z0-9]*)\}");
-            string result = reg.Replace(input, delegate (Match m) {
+            string result = reg.Replace(input, delegate (Match m)
+            {
                 counter++;
                 return strings[counter];
             });
