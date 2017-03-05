@@ -27,22 +27,22 @@ namespace Rebus.Logging
             /// <summary>
             /// The level of this log statement
             /// </summary>
-            public LogLevel Level { get; private set; }
+            public LogLevel Level { get; }
             
             /// <summary>
             /// The text (possibly inclusing formatting placeholders) of this log statement
             /// </summary>
-            public string Text { get; private set; }
+            public string Text { get; }
             
             /// <summary>
             /// The values to use for string interpolation
             /// </summary>
-            public object[] Args { get; private set; }
+            public object[] Args { get; }
 
             /// <summary>
             /// The type to which this particular logger belongs
             /// </summary>
-            public Type Type { get; set; }
+            public Type Type { get; }
         }
 
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
@@ -214,7 +214,7 @@ namespace Rebus.Logging
                 var typeName = _type.FullName;
                 try
                 {
-                    var renderedMessage = string.Format(message, objs);
+                    var renderedMessage = _factory.RenderString(message, objs);
                     var timeFormat = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
 
                     // ReSharper disable EmptyGeneralCatchClause

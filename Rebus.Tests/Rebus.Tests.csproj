@@ -91,6 +91,7 @@
     <Compile Include="Encryption\TestDisableEncryption.cs" />
     <Compile Include="Events\TestBusLifetimeEvents.cs" />
     <Compile Include="Integration\TestUnserializableException.cs" />
+    <Compile Include="Logging\TestAbstractRebusLoggerFactory.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
     <Compile Include="Routing\TestTransportMessageForwarding.cs" />
