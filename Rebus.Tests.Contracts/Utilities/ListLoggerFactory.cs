@@ -76,6 +76,7 @@ namespace Rebus.Tests.Contracts.Utilities
             public void Error(Exception exception, string message, params object[] objs)
             {
                 var text = _loggerFactory.RenderString(message, objs);
+
                 Append(LogLevel.Error, "{0}: {1}", text, exception);
             }
 
@@ -86,21 +87,22 @@ namespace Rebus.Tests.Contracts.Utilities
 
             void Append(LogLevel level, string message, params object[] objs)
             {
+                var renderedMessage = _loggerFactory.RenderString(message, objs);
+
                 if (_outputToConsole)
                 {
                     if (_detailed)
                     {
                         var now = DateTime.Now;
 
-                        Console.WriteLine($"{now:HH:mm:ss} {level}: {string.Format(message, objs)}");
+                        Console.WriteLine($"{now:HH:mm:ss} {level}: {renderedMessage}");
                     }
                     else
                     {
-                        Console.WriteLine($"{level}: {string.Format(message, objs)}");
+                        Console.WriteLine($"{level}: {renderedMessage}");
                     }
                 }
 
-                var renderedMessage = _loggerFactory.RenderString(message, objs);
 
                 _loggedLines.Enqueue(new LogLine(level, renderedMessage, _type));
             }
