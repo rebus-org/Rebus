@@ -24,7 +24,7 @@ namespace Rebus.Tests.Logging
 
             const string messageTemplate = "Hello {0}, my name is {1} and I am {2} years old. I like to drink {3} in my {4} - you can say that it is my {5}";
 
-            var objs = new object[] {"there my friend", "Muggie", "37", "beer", "spare time", "hobby"};
+            var objs = new object[] { "there my friend", "Muggie", "37", "beer", "spare time", "hobby" };
 
             // warm up
             10.Times(() =>
@@ -42,7 +42,7 @@ namespace Rebus.Tests.Logging
 
             var elapsed = stopwatch.Elapsed;
 
-            Console.WriteLine($"Performing {iterations} renderings took {elapsed.TotalMilliseconds:0.0} ms - that's {iterations/elapsed.TotalMilliseconds:0.0} /ms");
+            Console.WriteLine($"Performing {iterations} renderings took {elapsed.TotalMilliseconds:0.0} ms - that's {iterations / elapsed.TotalMilliseconds:0.0} /ms");
         }
 
         [TestCaseSource(nameof(GetScenarios))]
@@ -72,16 +72,39 @@ namespace Rebus.Tests.Logging
             Console.WriteLine(result);
         }
 
+        [Test]
+        public void CheckRegexForFormats()
+        {
+            var regex = new Regex(@"{\w*[\:(\w|\.|\d|\-)*]+}");
+
+            CheckIt(regex, "{hej}");
+            CheckIt(regex, "{hej:o}");
+            CheckIt(regex, "{hej:yyyy}");
+            CheckIt(regex, "{hej:yyyy-MM-dd}");
+            CheckIt(regex, "{hej:0}");
+            CheckIt(regex, "{hej:0.0}");
+        }
+
+        static void CheckIt(Regex regex, string input)
+        {
+            var isMatch = regex.IsMatch(input);
+            Console.WriteLine($"{input}: match = {isMatch}");
+        }
+
         static IEnumerable<InterpolationScenario> GetScenarios()
         {
-            yield return new InterpolationScenario("Hej El Duderino", "Hej {0}", "El Duderino");
-            yield return new InterpolationScenario("Hej El Duderino", "Hej {name}", "El Duderino");
-            yield return new InterpolationScenario("Hej El Duderino og Donny", "Hej {name} og {name2}", "El Duderino", "Donny");
-            yield return new InterpolationScenario("The operation took 2.46 s", "The operation took {ElapsedSeconds} s", 2.46);
-            yield return new InterpolationScenario($"The date today is {DateTime.Today:o}", "The date today is {Date}", DateTime.Today);
-            yield return new InterpolationScenario("What happens when you forget the placeholder?", "What happens when you forget the placeholder?", DateTime.Today, TimeSpan.FromMinutes(1));
-            yield return new InterpolationScenario("What 23 00:01:00 ??? ??? too many placeholders?", "What {happens} {when} {there} {is} too many placeholders?", 23, TimeSpan.FromMinutes(1));
-            yield return new InterpolationScenario("Sending msg-A to [queue-a, queue-b]", "Sending {messageLabel} to {queueNames}", "msg-A", new[]{ "queue-a", "queue-b" });
+            return new[] {
+                new InterpolationScenario(@"Hej ""El Duderino""", "Hej {0}", "El Duderino"),
+                new InterpolationScenario(@"Hej ""El Duderino""", "Hej {name}", "El Duderino"),
+                new InterpolationScenario(@"Hej ""El Duderino"" og ""Donny""", "Hej {name} og {name2}", "El Duderino", "Donny"),
+                new InterpolationScenario(@"Hej ""El Duderino"" og ""Donny""", "Hej {name} og {name}", "El Duderino", "Donny"),
+                new InterpolationScenario("The operation took 2.46 s", "The operation took {ElapsedSeconds} s", 2.46),
+                new InterpolationScenario($"The date today is {DateTime.Today:o}", "The date today is {Date}", DateTime.Today),
+                new InterpolationScenario("What happens when you forget the placeholder?", "What happens when you forget the placeholder?", DateTime.Today, TimeSpan.FromMinutes(1)),
+                new InterpolationScenario("What 23 00:01:00 ??? ??? too many placeholders?", "What {happens} {when} {there} {is} too many placeholders?", 23, TimeSpan.FromMinutes(1)),
+                new InterpolationScenario(@"Sending ""msg-A"" to [""queue-a"", ""queue-b""]", "Sending {messageLabel} to {queueNames}", "msg-A", new[]{ "queue-a", "queue-b" }),
+                new InterpolationScenario("A number: 2.23", "A number: {number:0.00}", 2.22678976849765),
+            };
         }
 
         public class InterpolationScenario

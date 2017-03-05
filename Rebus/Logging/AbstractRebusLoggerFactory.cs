@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,7 +11,7 @@ namespace Rebus.Logging
     /// </summary>
     public abstract class AbstractRebusLoggerFactory : IRebusLoggerFactory
     {
-        static readonly Regex PlaceholderRegex = new Regex(@"{\w*}", RegexOptions.Compiled);
+        static readonly Regex PlaceholderRegex = new Regex(@"{\w*[\:(\w|\.|\d|\-)*]+}", RegexOptions.Compiled);
 
         /// <inheritdoc />
         protected abstract ILog GetLogger(Type type);
@@ -40,7 +39,13 @@ namespace Rebus.Logging
                     {
                         var value = objs[index];
                         index++;
-                        return FormatObject(value);
+
+                        var format = match.Value.Substring(1, match.Value.Length - 2)
+                            .Split(':')
+                            .Skip(1)
+                            .FirstOrDefault();
+
+                        return FormatObject(value, format);
                     }
                     catch (IndexOutOfRangeException)
                     {
@@ -57,7 +62,7 @@ namespace Rebus.Logging
         /// <summary>
         /// Formatter function that is invoked for each object value to be rendered into a string while interpolating log lines
         /// </summary>
-        protected virtual string FormatObject(object obj)
+        protected virtual string FormatObject(object obj, string format)
         {
             if (obj is string)
             {
@@ -65,25 +70,25 @@ namespace Rebus.Logging
             }
             if (obj is IEnumerable)
             {
-                var valueStrings = ((IEnumerable)obj).Cast<object>().Select(FormatObject);
+                var valueStrings = ((IEnumerable)obj).Cast<object>().Select(o => FormatObject(o, format));
 
                 return $"[{string.Join(", ", valueStrings)}]";
             }
             if (obj is DateTime)
             {
-                return ((DateTime) obj).ToString("O");
+                return ((DateTime)obj).ToString(format ?? "O");
             }
             if (obj is DateTimeOffset)
             {
-                return ((DateTimeOffset) obj).ToString("O");
+                return ((DateTimeOffset)obj).ToString(format ?? "O");
+            }
+            if (obj is IFormattable)
+            {
+                return ((IFormattable)obj).ToString(format, CultureInfo.InvariantCulture);
             }
             if (obj is IConvertible)
             {
                 return ((IConvertible)obj).ToString(CultureInfo.InvariantCulture);
-            }
-            if (obj is IFormattable)
-            {
-                return ((IFormattable)obj).ToString(null, CultureInfo.InvariantCulture);
             }
             return obj.ToString();
         }
