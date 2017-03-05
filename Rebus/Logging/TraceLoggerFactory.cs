@@ -13,41 +13,43 @@ namespace Rebus.Logging
         /// </summary>
         protected override ILog GetLogger(Type type)
         {
-            return new TraceLogger(type);
+            return new TraceLogger(type, this);
         }
 
         class TraceLogger : ILog
         {
             readonly Type _type;
+            readonly TraceLoggerFactory _loggerFactory;
 
-            public TraceLogger(Type type)
+            public TraceLogger(Type type, TraceLoggerFactory loggerFactory)
             {
                 _type = type;
+                _loggerFactory = loggerFactory;
             }
 
             public void Debug(string message, params object[] objs)
             {
-                Trace.TraceInformation(_type + ": " + message, objs);
+                Trace.TraceInformation(_type + ": " + _loggerFactory.RenderString(message, objs));
             }
 
             public void Info(string message, params object[] objs)
             {
-                Trace.TraceInformation(_type + ": " + message, objs);
+                Trace.TraceInformation(_type + ": " + _loggerFactory.RenderString(message, objs));
             }
 
             public void Warn(string message, params object[] objs)
             {
-                Trace.TraceWarning(_type + ": " + message, objs);
+                Trace.TraceWarning(_type + ": " + _loggerFactory.RenderString(message, objs));
             }
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                Trace.TraceError(_type + ": " + string.Format(message, objs) + Environment.NewLine + exception);
+                Trace.TraceError(_type + ": " + _loggerFactory.RenderString(message, objs) + Environment.NewLine + exception);
             }
 
             public void Error(string message, params object[] objs)
             {
-                Trace.TraceError(_type + ": " + message, objs);
+                Trace.TraceError(_type + ": " + _loggerFactory.RenderString(message, objs));
             }
         }
     }
