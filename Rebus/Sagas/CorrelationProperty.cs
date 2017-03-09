@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 
 namespace Rebus.Sagas
 {
@@ -51,7 +52,7 @@ namespace Rebus.Sagas
                 throw new ArgumentException($"Reflected saga data correlation property name from {SagaDataType} is empty! This is most likely because the expression passed to the correlation configuration could not be properly reflected - it's the part indicated by !!! here: config.Correlate<TMessage>(m => m.SomeField, d => !!!) - please be sure that you are pointing to a simple property of the saga data");
             }
 
-            var sagaDataProperty = SagaDataType.GetProperty(PropertyName);
+            var sagaDataProperty = GetPropertyInfo();
 
             if (sagaDataProperty == null)
             {
@@ -67,16 +68,38 @@ namespace Rebus.Sagas
             throw new ArgumentException($"Cannot correlate with the '{PropertyName}' property on the '{SagaDataType.Name}' saga data type - only allowed types are: {allowedTypes}");
         }
 
+        PropertyInfo GetPropertyInfo()
+        {
+            var propertyName = PropertyName;
+            var path = propertyName.Split('.');
+            var type = SagaDataType;
+
+            PropertyInfo propertyInfo = null;
+
+            foreach (var name in path)
+            {
+                propertyInfo = type.GetProperty(name);
+
+                if (propertyInfo == null) return null;
+
+                type = propertyInfo.PropertyType;
+            }
+
+            if (propertyInfo == null) return null;
+
+            return propertyInfo;
+        }
+
         /// <summary>
         /// The message type that this property can correlate
         /// </summary>
         public Type MessageType { get; private set; }
-        
+
         /// <summary>
         /// The function that will be called with the message instance in order to extract a value that should be used for correlation
         /// </summary>
         public Func<object, object> ValueFromMessage { get; private set; }
-        
+
         /// <summary>
         /// Gets the type of the saga's saga data
         /// </summary>
@@ -86,7 +109,7 @@ namespace Rebus.Sagas
         /// Gets the name of the correlation property
         /// </summary>
         public string PropertyName { get; }
-        
+
         /// <summary>
         /// The saga type (i.e. the handler type) that contains the logic of the saga
         /// </summary>

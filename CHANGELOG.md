@@ -1152,6 +1152,10 @@
 
 * Fix bug that accidentally did not include the source queue address and the exception details on a fail-fast-forwarded transport message
 
+## 3.1.2
+
+* Fix regression that too eagerly validated a saga's correlation properties, leading to suddenly no longer being able to correlate by nested properties
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
