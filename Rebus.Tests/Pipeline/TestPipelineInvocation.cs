@@ -69,7 +69,7 @@ namespace Rebus.Tests.Pipeline
                     return new DefaultPipelineInvoker();
 
                 case ThingToCheck.NewPipelineInvoker:
-                    return new NewDefaultPipelineInvoker();
+                    return new DefaultPipelineInvoker();
 
                 default:
                     throw new NotSupportedException("cannot do that yet");
@@ -98,56 +98,56 @@ namespace Rebus.Tests.Pipeline
             }
         }
 
-        class NewDefaultPipelineInvoker : IPipelineInvoker
-        {
-            static readonly Task<int> Noop = Task.FromResult(0);
-            static readonly Func<Task> TerminationStep = () => Noop;
+        //class NewDefaultPipelineInvoker : IPipelineInvoker
+        //{
+        //    static readonly Task<int> Noop = Task.FromResult(0);
+        //    static readonly Func<Task> TerminationStep = () => Noop;
 
-            /// <summary>
-            /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
-            /// </summary>
-            public Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline)
-            {
-                var enumerator = pipeline.GetEnumerator();
+        //    /// <summary>
+        //    /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
+        //    /// </summary>
+        //    public Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline)
+        //    {
+        //        var enumerator = pipeline.GetEnumerator();
 
-                async Task Dispose(IDisposable disposable) => disposable.Dispose();
+        //        async Task Dispose(IDisposable disposable) => disposable.Dispose();
 
-                Task InvokeStep(IIncomingStep step)
-                {
-                    Task Next() => enumerator.MoveNext() ? InvokeStep(enumerator.Current) : Noop;
-                    return step != null ? step.Process(context, Next) : Dispose(enumerator);
-                }
+        //        Task InvokeStep(IIncomingStep step)
+        //        {
+        //            Task Next() => enumerator.MoveNext() ? InvokeStep(enumerator.Current) : Noop;
+        //            return step != null ? step.Process(context, Next) : Dispose(enumerator);
+        //        }
 
-                if (!enumerator.MoveNext())
-                {
-                    using (enumerator) return Noop;
-                }
+        //        if (!enumerator.MoveNext())
+        //        {
+        //            using (enumerator) return Noop;
+        //        }
 
-                return InvokeStep(enumerator.Current);
-            }
+        //        return InvokeStep(enumerator.Current);
+        //    }
 
-            /// <summary>
-            /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
-            /// </summary>
-            public Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline)
-            {
-                var receivePipeline = GetPipeline(pipeline);
-                var step = TerminationStep;
+        //    /// <summary>
+        //    /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
+        //    /// </summary>
+        //    public Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline)
+        //    {
+        //        var receivePipeline = GetPipeline(pipeline);
+        //        var step = TerminationStep;
 
-                for (var index = receivePipeline.Length - 1; index >= 0; index--)
-                {
-                    var nextStep = step;
-                    var stepToInvoke = receivePipeline[index];
-                    step = () => stepToInvoke.Process(context, nextStep);
-                }
+        //        for (var index = receivePipeline.Length - 1; index >= 0; index--)
+        //        {
+        //            var nextStep = step;
+        //            var stepToInvoke = receivePipeline[index];
+        //            step = () => stepToInvoke.Process(context, nextStep);
+        //        }
 
-                return step();
-            }
+        //        return step();
+        //    }
 
-            static TStepType[] GetPipeline<TStepType>(IEnumerable<TStepType> pipeline)
-            {
-                return pipeline as TStepType[] ?? pipeline.ToArray();
-            }
-        }
+        //    static TStepType[] GetPipeline<TStepType>(IEnumerable<TStepType> pipeline)
+        //    {
+        //        return pipeline as TStepType[] ?? pipeline.ToArray();
+        //    }
+        //}
     }
 }
