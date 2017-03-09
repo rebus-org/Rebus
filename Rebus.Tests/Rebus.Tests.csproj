@@ -94,7 +94,9 @@
     <Compile Include="Logging\TestAbstractRebusLoggerFactory.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
+    <Compile Include="Pipeline\TestPipelineInvocation.cs" />
     <Compile Include="Routing\TestTransportMessageForwarding.cs" />
+    <Compile Include="Sagas\TestSagaCorrelationPropertyNesting.cs" />
     <Compile Include="Sagas\TestHeaderCorrelation.cs" />
     <Compile Include="Synchronous\TestAsyncHelpers.cs" />
     <Compile Include="Synchronous\TestSyncBus.cs" />

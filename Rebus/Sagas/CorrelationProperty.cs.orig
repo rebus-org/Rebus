@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
+<<<<<<< HEAD
 using Rebus.Pipeline;
+=======
+using System.Reflection;
+>>>>>>> release/3
 
 namespace Rebus.Sagas
 {
@@ -99,8 +102,13 @@ namespace Rebus.Sagas
         /// <summary>
         /// The function that will be called with the message instance in order to extract a value that should be used for correlation
         /// </summary>
+<<<<<<< HEAD
         public Func<IMessageContext, object, object> ValueFromMessage { get; private set; }
+        
+=======
+        public Func<object, object> ValueFromMessage { get; private set; }
 
+>>>>>>> release/3
         /// <summary>
         /// Gets the type of the saga's saga data
         /// </summary>
