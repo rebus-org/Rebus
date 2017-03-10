@@ -12,19 +12,35 @@ namespace Rebus.Pipeline
         readonly List<IIncomingStep> _receiveSteps = new List<IIncomingStep>();
 
         /// <summary>
+        /// Creates the pipeline, possibly initializing it from the given <paramref name="initialOutgoingSteps"/> and/or <paramref name="initialIncomingSteps"/>
+        /// </summary>
+        public DefaultPipeline(IEnumerable<IOutgoingStep> initialOutgoingSteps = null, IEnumerable<IIncomingStep> initialIncomingSteps = null)
+        {
+            if (initialOutgoingSteps != null)
+            {
+                _sendSteps.AddRange(initialOutgoingSteps);
+            }
+
+            if (initialIncomingSteps != null)
+            {
+                _receiveSteps.AddRange(initialIncomingSteps);
+            }
+        }
+
+        /// <summary>
         /// Gets the send pipeline
         /// </summary>
-        public IEnumerable<IOutgoingStep> SendPipeline()
+        public IOutgoingStep[] SendPipeline()
         {
-            return _sendSteps;
+            return _sendSteps.ToArray();
         }
 
         /// <summary>
         /// Gets the receive pipeline
         /// </summary>
-        public IEnumerable<IIncomingStep> ReceivePipeline()
+        public IIncomingStep[] ReceivePipeline()
         {
-            return _receiveSteps;
+            return _receiveSteps.ToArray();
         }
 
         /// <summary>

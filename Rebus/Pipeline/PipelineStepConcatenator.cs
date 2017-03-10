@@ -62,21 +62,23 @@ namespace Rebus.Pipeline
         /// <summary>
         /// Gets the send pipeline with front and back steps concatenated
         /// </summary>
-        public IEnumerable<IOutgoingStep> SendPipeline()
+        public IOutgoingStep[] SendPipeline()
         {
             return _outgoingFrontSteps
                 .Concat(_pipeline.SendPipeline())
-                .Concat(_outgoingBackSteps);
+                .Concat(_outgoingBackSteps)
+                .ToArray();
         }
 
         /// <summary>
         /// Gets the receive pipeline with front and back steps concatenated
         /// </summary>
-        public IEnumerable<IIncomingStep> ReceivePipeline()
+        public IIncomingStep[] ReceivePipeline()
         {
             return _incomingFrontSteps
                 .Concat(_pipeline.ReceivePipeline())
-                .Concat(_incomingBackSteps);
+                .Concat(_incomingBackSteps)
+                .ToArray();
         }
     }
 }

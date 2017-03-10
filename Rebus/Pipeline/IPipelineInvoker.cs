@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Rebus.Pipeline
 {
@@ -11,11 +10,11 @@ namespace Rebus.Pipeline
         /// <summary>
         /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
         /// </summary>
-        Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline);
+        Task Invoke(IncomingStepContext context);
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
         /// </summary>
-        Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline);
+        Task Invoke(OutgoingStepContext context);
     }
 }

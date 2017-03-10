@@ -79,7 +79,7 @@ namespace Rebus.Tests.Pipeline
         }
 
         [Test]
-        public void InjectsStepAtTheEndIfAnchorCannotBeFound()
+        public void ThrowsExceptionIfAnchorCannotBeFound()
         {
             var pipeline = new DefaultPipeline()
                 .OnReceive(new Step1())
@@ -88,14 +88,9 @@ namespace Rebus.Tests.Pipeline
             var injector = new PipelineStepInjector(pipeline)
                 .OnReceive(new InjectedStep(), PipelineRelativePosition.After, typeof(Step3));
 
-            var receivePipeline = injector.ReceivePipeline().ToArray();
+            var argumentException = Assert.Throws<ArgumentException>(() => injector.ReceivePipeline());
 
-            Assert.That(receivePipeline.Select(s => s.GetType()), Is.EqualTo(new[]
-            {
-                typeof(Step1),
-                typeof(Step2),
-                typeof(InjectedStep),
-            }));
+            Console.WriteLine(argumentException);
         }
 
         class Step1 : IIncomingStep

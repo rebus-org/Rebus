@@ -71,7 +71,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
             var owningBus = _busGetter();
 
-            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipeline, _pipelineInvoker, _parallelOperationsManager, owningBus, _options, _backoffStrategy);
+            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipelineInvoker, _parallelOperationsManager, owningBus, _options, _backoffStrategy);
 
             return worker;
         }

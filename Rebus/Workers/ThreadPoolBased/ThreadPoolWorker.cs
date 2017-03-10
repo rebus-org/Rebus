@@ -15,7 +15,6 @@ namespace Rebus.Workers.ThreadPoolBased
     {
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         readonly ITransport _transport;
-        readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly RebusBus _owningBus;
@@ -24,12 +23,11 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly Thread _workerThread;
         readonly ILog _log;
 
-        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, ISyncBackoffStrategy backoffStrategy)
+        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, ISyncBackoffStrategy backoffStrategy)
         {
             Name = name;
             _log = rebusLoggerFactory.GetLogger<ThreadPoolWorker>();
             _transport = transport;
-            _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _parallelOperationsManager = parallelOperationsManager;
             _owningBus = owningBus;
@@ -154,9 +152,8 @@ namespace Rebus.Workers.ThreadPoolBased
 
                 AmbientTransactionContext.SetCurrent(context);
 
-                var incomingSteps = _pipeline.ReceivePipeline();
                 var stepContext = new IncomingStepContext(transportMessage, context);
-                await _pipelineInvoker.Invoke(stepContext, incomingSteps);
+                await _pipelineInvoker.Invoke(stepContext);
 
                 try
                 {

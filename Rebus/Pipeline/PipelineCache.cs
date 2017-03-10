@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Rebus.Pipeline
 {
@@ -18,12 +17,12 @@ namespace Rebus.Pipeline
             _incomingSteps = pipeline.ReceivePipeline().ToArray();
         }
 
-        public IEnumerable<IOutgoingStep> SendPipeline()
+        public IOutgoingStep[] SendPipeline()
         {
             return _outgoingSteps;
         }
 
-        public IEnumerable<IIncomingStep> ReceivePipeline()
+        public IIncomingStep[] ReceivePipeline()
         {
             return _incomingSteps;
         }

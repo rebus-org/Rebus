@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Pipeline;
 
@@ -29,7 +30,7 @@ namespace Rebus.Profiling
         /// Gets the original send pipeline
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<IOutgoingStep> SendPipeline()
+        public IOutgoingStep[] SendPipeline()
         {
             return _pipeline.SendPipeline();
         }
@@ -37,7 +38,12 @@ namespace Rebus.Profiling
         /// <summary>
         /// Gets a pipeline with time-tracking steps interleaved
         /// </summary>
-        public IEnumerable<IIncomingStep> ReceivePipeline()
+        public IIncomingStep[] ReceivePipeline()
+        {
+            return ComposeReceivePipeline().ToArray();
+        }
+
+        IEnumerable<IIncomingStep> ComposeReceivePipeline()
         {
             yield return new RegisterCollectedProfilerStatsStep(_profilerStats);
 

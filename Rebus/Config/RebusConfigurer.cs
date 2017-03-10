@@ -166,7 +166,11 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
-            PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
+            PossiblyRegisterDefault<IPipelineInvoker>(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+                return new DefaultPipelineInvoker(pipeline);
+            });
 
             PossiblyRegisterDefault<ISyncBackoffStrategy>(c =>
             {
@@ -271,7 +275,6 @@ namespace Rebus.Config
                 c.Get<IWorkerFactory>(),
                 c.Get<IRouter>(),
                 c.Get<ITransport>(),
-                c.Get<IPipeline>(),
                 c.Get<IPipelineInvoker>(),
                 c.Get<ISubscriptionStorage>(),
                 _options,

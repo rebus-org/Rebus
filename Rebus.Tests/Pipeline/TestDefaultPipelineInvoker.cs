@@ -32,7 +32,12 @@ namespace Rebus.Tests.Pipeline
         [Test, Ignore("takes a long time")]
         public void CheckTiming()
         {
-            var invoker = new DefaultPipelineInvoker();
+            var pipeline = Enumerable.Range(0, 15)
+                .Select(stepNumber => new NamedStep($"step {stepNumber}"))
+                .ToArray();
+
+            var defaultPipeline = new DefaultPipeline(initialIncomingSteps: pipeline);
+            var invoker = new DefaultPipelineInvoker(defaultPipeline);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -40,11 +45,7 @@ namespace Rebus.Tests.Pipeline
             {
                 var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), GetFakeTransactionContext());
 
-                var pipeline = Enumerable.Range(0, 15)
-                    .Select(stepNumber => new NamedStep($"step {stepNumber}"))
-                    .ToArray();
-
-                invoker.Invoke(stepContext, pipeline).Wait();
+                invoker.Invoke(stepContext).Wait();
             });
 
             Console.WriteLine($"Execution took {stopwatch.Elapsed.TotalSeconds:0.0} s");
@@ -55,7 +56,8 @@ namespace Rebus.Tests.Pipeline
             return new FakeTransactionContext();
         }
 
-        class FakeTransactionContext : ITransactionContext {
+        class FakeTransactionContext : ITransactionContext
+        {
             public FakeTransactionContext()
             {
                 Items = new ConcurrentDictionary<string, object>();
@@ -100,18 +102,18 @@ namespace Rebus.Tests.Pipeline
         [Test]
         public async Task InvokesInOrder()
         {
-            var invoker = new DefaultPipelineInvoker();
+            var invoker = new DefaultPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            {
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
 
             var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
             var fakeTransactionContext = GetFakeTransactionContext();
             var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
 
-            await invoker.Invoke(stepContext, new IIncomingStep[]
-            {
-                new NamedStep("first"),
-                new NamedStep("second"),
-                new NamedStep("third"),
-            });
+            await invoker.Invoke(stepContext);
 
             Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
         }

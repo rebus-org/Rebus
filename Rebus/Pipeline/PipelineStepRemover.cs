@@ -24,9 +24,22 @@ namespace Rebus.Pipeline
         /// <summary>
         /// Gets the outgoing steps from the wrapped pipeline, unless those where one of the registered outgoing step predicates match
         /// </summary>
-        public IEnumerable<IOutgoingStep> SendPipeline()
+        public IOutgoingStep[] SendPipeline()
         {
-            foreach (var step in _pipeline.SendPipeline())
+            return ComposeSendPipeline().ToArray();
+        }
+
+        /// <summary>
+        /// Gets the incoming steps from the wrapped pipeline, unless those where one of the registered incoming step predicates match
+        /// </summary>
+        public IIncomingStep[] ReceivePipeline()
+        {
+            return ComposeReceivePipeline().ToArray();
+        }
+
+        IEnumerable<IIncomingStep> ComposeReceivePipeline()
+        {
+            foreach (var step in _pipeline.ReceivePipeline())
             {
                 if (HasMatch(step))
                 {
@@ -38,12 +51,9 @@ namespace Rebus.Pipeline
             }
         }
 
-        /// <summary>
-        /// Gets the incoming steps from the wrapped pipeline, unless those where one of the registered incoming step predicates match
-        /// </summary>
-        public IEnumerable<IIncomingStep> ReceivePipeline()
+        IEnumerable<IOutgoingStep> ComposeSendPipeline()
         {
-            foreach (var step in _pipeline.ReceivePipeline())
+            foreach (var step in _pipeline.SendPipeline())
             {
                 if (HasMatch(step))
                 {

@@ -37,7 +37,6 @@ namespace Rebus.Bus
         readonly IWorkerFactory _workerFactory;
         readonly IRouter _router;
         readonly ITransport _transport;
-        readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly ISubscriptionStorage _subscriptionStorage;
         readonly Options _options;
@@ -46,12 +45,11 @@ namespace Rebus.Bus
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus)
         {
             _workerFactory = workerFactory;
             _router = router;
             _transport = transport;
-            _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _subscriptionStorage = subscriptionStorage;
             _options = options;
@@ -394,7 +392,7 @@ namespace Rebus.Bus
         {
             var context = new OutgoingStepContext(logicalMessage, transactionContext, new DestinationAddresses(destinationAddresses));
 
-            await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline());
+            await _pipelineInvoker.Invoke(context);
         }
 
         async Task SendTransportMessage(string destinationAddress, TransportMessage transportMessage)

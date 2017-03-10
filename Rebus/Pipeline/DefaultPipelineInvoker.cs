@@ -1,7 +1,5 @@
 ﻿#pragma warning disable 1998
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rebus.Pipeline
@@ -13,19 +11,30 @@ namespace Rebus.Pipeline
     {
         static readonly Task<int> Noop = Task.FromResult(0);
         static readonly Func<Task> TerminationStep = () => Noop;
+        readonly IOutgoingStep[] _outgoingSteps;
+        readonly IIncomingStep[] _incomingSteps;
+
+        /// <summary>
+        /// Constructs the invoker
+        /// </summary>
+        public DefaultPipelineInvoker(IPipeline pipeline)
+        {
+            if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
+            _outgoingSteps = pipeline.SendPipeline();
+            _incomingSteps = pipeline.ReceivePipeline();
+        }
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
         /// </summary>
-        public Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline)
+        public Task Invoke(IncomingStepContext context)
         {
-            var receivePipeline = GetPipeline(pipeline);
             var step = TerminationStep;
 
-            for (var index = receivePipeline.Length - 1; index >= 0; index--)
+            for (var index = _incomingSteps.Length - 1; index >= 0; index--)
             {
                 var nextStep = step;
-                var stepToInvoke = receivePipeline[index];
+                var stepToInvoke = _incomingSteps[index];
                 step = () => stepToInvoke.Process(context, nextStep);
             }
 
@@ -35,24 +44,18 @@ namespace Rebus.Pipeline
         /// <summary>
         /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
         /// </summary>
-        public Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline)
+        public Task Invoke(OutgoingStepContext context)
         {
-            var receivePipeline = GetPipeline(pipeline);
             var step = TerminationStep;
 
-            for (var index = receivePipeline.Length - 1; index >= 0; index--)
+            for (var index = _outgoingSteps.Length - 1; index >= 0; index--)
             {
                 var nextStep = step;
-                var stepToInvoke = receivePipeline[index];
+                var stepToInvoke = _outgoingSteps[index];
                 step = () => stepToInvoke.Process(context, nextStep);
             }
 
             return step();
-        }
-
-        static TStepType[] GetPipeline<TStepType>(IEnumerable<TStepType> pipeline)
-        {
-            return pipeline as TStepType[] ?? pipeline.ToArray();
         }
     }
 }
