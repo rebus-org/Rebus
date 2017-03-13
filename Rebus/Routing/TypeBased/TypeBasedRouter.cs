@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -40,7 +41,7 @@ namespace Rebus.Routing.TypeBased
         /// </summary>
         public TypeBasedRouter MapAssemblyOf(Type messageType, string destinationAddress)
         {
-            foreach (var typeToMap in messageType.Assembly.GetTypes())
+            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes())
             {
                 SaveMapping(typeToMap, destinationAddress);
             }

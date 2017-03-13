@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas
@@ -27,7 +28,7 @@ namespace Rebus.Tests.Contracts.Sagas
 
         void Validate()
         {
-            var propertyType = SagaDataType.GetProperty(PropertyName).PropertyType;
+            var propertyType = SagaDataType.GetTypeInfo().GetProperty(PropertyName).PropertyType;
 
             if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
 

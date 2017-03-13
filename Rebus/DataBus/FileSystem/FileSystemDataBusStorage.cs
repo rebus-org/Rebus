@@ -105,15 +105,18 @@ namespace Rebus.DataBus.FileSystem
 
             try
             {
-                using (var reader = new StreamReader(metadataFilePath, Encoding.UTF8))
+                using (var fileStream = File.OpenRead(metadataFilePath))
                 {
-                    var jsonText = await reader.ReadToEndAsync();
-                    var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+                    using (var reader = new StreamReader(fileStream, Encoding.UTF8))
+                    {
+                        var jsonText = await reader.ReadToEndAsync();
+                        var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
 
-                    var fileInfo = new FileInfo(filePath);
-                    metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
+                        var fileInfo = new FileInfo(filePath);
+                        metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
 
-                    return metadata;
+                        return metadata;
+                    }
                 }
             }
             catch (Exception exception)

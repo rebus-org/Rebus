@@ -164,7 +164,11 @@ namespace Rebus.Workers.ThreadPoolBased
                     _log.Error(exception, "An error occurred when attempting to complete the transaction context");
                 }
             }
+#if NET45
             catch (ThreadAbortException exception)
+#elif NETSTANDARD1_6
+            catch (OperationCanceledException exception)
+#endif
             {
                 context.Abort();
 
@@ -190,13 +194,14 @@ namespace Rebus.Workers.ThreadPoolBased
         public void Dispose()
         {
             Stop();
-
+#if NET45
             if (!_workerThread.Join(_options.WorkerShutdownTimeout))
             {
                 _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!", _options.WorkerShutdownTimeout.TotalSeconds);
 
                 _workerThread.Abort();
             }
+#endif
         }
     }
 }

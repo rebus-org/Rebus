@@ -9,7 +9,11 @@ namespace Rebus.Persistence.InMem
     /// </summary>
     public class InMemorySubscriberStore
     {
+#if NET45
         static readonly StringComparer StringComparer = StringComparer.InvariantCultureIgnoreCase;
+#elif NETSTANDARD1_6
+        static readonly StringComparer StringComparer = StringComparer.OrdinalIgnoreCase;
+#endif
 
         static readonly string[] NoSubscribers = new string[0];
 

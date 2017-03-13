@@ -38,7 +38,7 @@ namespace Rebus.Tests.Synchronous
         {
             var returnType = method.ReturnType;
 
-            if (!returnType.IsGenericType)
+            if (!returnType.GetTypeInfo().IsGenericType)
                 return returnType == typeof(Task);
 
             return returnType.GetGenericTypeDefinition() == typeof(Task<>);
@@ -51,7 +51,7 @@ namespace Rebus.Tests.Synchronous
 
         static string FormatType(Type type)
         {
-            if (!type.IsGenericType) return type.Name;
+            if (!type.GetTypeInfo().IsGenericType) return type.Name;
 
             var typeParameters = type.GetGenericArguments();
 

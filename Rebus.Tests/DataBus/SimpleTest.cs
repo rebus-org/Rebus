@@ -84,7 +84,7 @@ namespace Rebus.Tests.DataBus
             {
                 var optionalMetadata = new Dictionary<string, string>
                 {
-                    {"username", Thread.CurrentPrincipal.Identity.Name }
+                    {"username", "ExampleUserName" }
                 };
                 var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source, optionalMetadata);
 

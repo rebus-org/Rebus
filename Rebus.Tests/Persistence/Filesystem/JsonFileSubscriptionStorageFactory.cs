@@ -8,8 +8,13 @@ namespace Rebus.Tests.Persistence.Filesystem
 {
     public class JsonFileSubscriptionStorageFactory : ISubscriptionStorageFactory
     {
+#if NET45
         readonly string _xmlDataFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "subscriptions.json");
-        
+#elif NETSTANDARD1_6
+        readonly string _xmlDataFilePath = Path.Combine(AppContext.BaseDirectory, "subscriptions.json");
+#endif
+
+
         public ISubscriptionStorage Create()
         {
             CleanupOldDataFile();

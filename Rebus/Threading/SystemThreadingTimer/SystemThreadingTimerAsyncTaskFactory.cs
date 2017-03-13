@@ -1,6 +1,10 @@
 ﻿using System;
-using System.Threading.Tasks;
+#if NET45
 using System.Timers;
+#elif NETSTANDARD1_6
+using System.Threading;
+#endif
+using System.Threading.Tasks;
 using Rebus.Logging;
 
 namespace Rebus.Threading.SystemThreadingTimer

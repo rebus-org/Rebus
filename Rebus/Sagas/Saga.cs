@@ -28,7 +28,7 @@ namespace Rebus.Sagas
             return CachedUserHasOverriddenConflictResolutionMethod
                 .GetOrAdd(GetType(), type =>
                 {
-                    var typeDeclaringTheConflictResolutionMethod = GetType()
+                    var typeDeclaringTheConflictResolutionMethod = GetType().GetTypeInfo()
                         .GetMethod("ResolveConflict", BindingFlags.Instance | BindingFlags.NonPublic).DeclaringType;
 
                     if (typeDeclaringTheConflictResolutionMethod == null)
@@ -36,8 +36,8 @@ namespace Rebus.Sagas
                         return false;
                     }
 
-                    return !(typeDeclaringTheConflictResolutionMethod.IsGenericType
-                             && typeDeclaringTheConflictResolutionMethod.GetGenericTypeDefinition() == typeof(Saga<>));
+                    return !(typeDeclaringTheConflictResolutionMethod.GetTypeInfo().IsGenericType
+                             && typeDeclaringTheConflictResolutionMethod.GetTypeInfo().GetGenericTypeDefinition() == typeof(Saga<>));
                 });
         }
 

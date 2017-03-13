@@ -1,4 +1,4 @@
-﻿using GoCommando.Api;
+using GoCommando.Api;
 using GoCommando.Attributes;
 using Rebus.Logging;
 

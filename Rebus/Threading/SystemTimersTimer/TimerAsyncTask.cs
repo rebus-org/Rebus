@@ -1,6 +1,10 @@
 ﻿using System;
-using System.Threading.Tasks;
+#if NET45
 using System.Timers;
+#elif NETSTANDARD1_6
+using System.Threading;
+#endif
+using System.Threading.Tasks;
 using Rebus.Logging;
 
 namespace Rebus.Threading.SystemTimersTimer
@@ -60,13 +64,20 @@ namespace Rebus.Threading.SystemTimersTimer
         public void Start()
         {
             LogStartStop("Starting periodic task {taskDescription} with interval {timerInterval}", _description, Interval);
-
+#if NET45
             _timer = new Timer(Interval.TotalMilliseconds);
             _timer.Elapsed += (o, ea) => Tick();
             _timer.Start();
+#elif NETSTANDARD1_6
+            _timer = new Timer(Tick, null, Interval, Interval);
+#endif
         }
 
+#if NET45
         async void Tick()
+#elif NETSTANDARD1_6
+        async void Tick(object state)
+#endif
         {
             if (_executingTick) return;
 

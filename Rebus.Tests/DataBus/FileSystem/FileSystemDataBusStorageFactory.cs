@@ -10,7 +10,12 @@ namespace Rebus.Tests.DataBus.FileSystem
 {
     public class FileSystemDataBusStorageFactory : IDataBusStorageFactory
     {
+#if NET45
         static readonly string DirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "databus");
+#elif NETSTANDARD1_6
+        static readonly string DirectoryPath = Path.Combine(AppContext.BaseDirectory, "databus");
+#endif
+
 
         public FileSystemDataBusStorageFactory()
         {

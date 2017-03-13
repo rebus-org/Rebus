@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Routing.TransportMessages;
@@ -151,7 +152,7 @@ namespace Rebus.Tests.Routing
 
                         if (deliveryAttempts < 10)
                         {
-                            throw new ApplicationException("fake an error");
+                            throw new RebusApplicationException("fake an error");
                         }
 
                         return ForwardAction.ForwardTo(recipientQueueName);

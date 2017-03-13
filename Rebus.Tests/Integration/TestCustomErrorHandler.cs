@@ -43,9 +43,9 @@ namespace Rebus.Tests.Integration
         {
             _activator.Handle<string>(async str =>
             {
-                Console.WriteLine("Throwing AccessViolationException");
+                Console.WriteLine("Throwing UnauthorizedAccessException");
 
-                throw new AccessViolationException("don't do that");
+                throw new UnauthorizedAccessException("don't do that");
             });
 
             _activator.Bus.SendLocal("hej 2").Wait();

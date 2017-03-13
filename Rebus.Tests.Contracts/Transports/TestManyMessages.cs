@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts.Extensions;
-using Timer = System.Timers.Timer;
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Transports
@@ -54,10 +53,8 @@ namespace Rebus.Tests.Contracts.Transports
                 .Select(id => new MessageWithId(id))
                 .ToList();
 
-            using (var printTimer = new Timer(5000))
+            using (BuildPrintTimer(sentMessages, receivedMessages))
             {
-                printTimer.Elapsed += delegate { Console.WriteLine("Sent: {0}, Received: {1}", sentMessages, receivedMessages); };
-                printTimer.Start();
                 stopWatch.Start();
                 Console.WriteLine("Sending {0} messages", messageCount);
                 await Task.WhenAll(messagesToSend.Select(async msg =>
@@ -80,7 +77,14 @@ namespace Rebus.Tests.Contracts.Transports
             Assert.That(idCounts.All(c => c.Value == 1), errorText);
         }
 
-        static string GenerateErrorText(ConcurrentDictionary<int, int> idCounts)
+        private Timer BuildPrintTimer(int sentMessages, int receivedMessages)
+        {
+            return new Timer(
+                (object o) => { Console.WriteLine($"Sent: {sentMessages}, Received: {receivedMessages}"); }, null,
+                TimeSpan.FromMilliseconds(5000), TimeSpan.FromMilliseconds(5000));
+        }
+
+    static string GenerateErrorText(ConcurrentDictionary<int, int> idCounts)
         {
             var errorText =
                 $"The following IDs were received != 1 times: {string.Join(", ", idCounts.Where(kvp => kvp.Value != 1).OrderBy(kvp => kvp.Value).Select(kvp => $"{kvp.Key} (x {kvp.Value})"))}";

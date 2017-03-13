@@ -1,17 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{319215F6-B626-4271-8EDA-E31B876F65C0}</ProjectGuid>
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+ <PropertyGroup>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Authors>mookid8000</Authors>
+    <PackageVersion>3.2.0</PackageVersion>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>http://mookid.dk/oncode/rebus</PackageProjectUrl>
+    <Copyright>Copyright 2012-2016</Copyright>
+    <PackageTags>rebus queue messaging service bus</PackageTags>
+    <PackageIconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Rebus.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Rebus.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,293 +34,33 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Rebus.XML</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile>bin\Release\Rebus.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <DefineConstants>DEBUG;NET45;RELEASE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <DefineConstants>NETSTANDARD1_6</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+    <None Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Activation\BuiltinHandlerActivator.cs" />
-    <Compile Include="Activation\IContainerAdapter.cs" />
-    <Compile Include="Bus\Advanced\AsyncHelpers.cs" />
-    <Compile Include="Bus\Advanced\ISyncBus.cs" />
-    <Compile Include="Exceptions\RebusConfigurationException.cs" />
-    <Compile Include="Properties\AssemblyInfo_Patch.cs" />
-    <Compile Include="Auditing\Messages\AuditHeaders.cs" />
-    <Compile Include="Auditing\Messages\AuditingHelper.cs" />
-    <Compile Include="Auditing\Messages\MessageAuditingConfigurationExtensions.cs" />
-    <Compile Include="Auditing\Messages\IncomingAuditingStep.cs" />
-    <Compile Include="Auditing\Messages\OutgoingAuditingStep.cs" />
-    <Compile Include="Auditing\Sagas\ISagaSnapshotStorage.cs" />
-    <Compile Include="Auditing\Sagas\LoggerSagaSnapperShotter.cs" />
-    <Compile Include="Auditing\Sagas\SagaAuditingConfigurationExtensions.cs" />
-    <Compile Include="Auditing\Sagas\SagaAuditingMetadataKeys.cs" />
-    <Compile Include="Auditing\Sagas\SaveSagaDataSnapshotStep.cs" />
-    <Compile Include="Backoff\BackoffConfigurationExtensions.cs" />
-    <Compile Include="Bus\AdvancedRebusBus.cs" />
-    <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
-    <Compile Include="Bus\Advanced\IRoutingApi.cs" />
-    <Compile Include="Bus\Advanced\ITopicsApi.cs" />
-    <Compile Include="Bus\Advanced\ITransportMessageApi.cs" />
-    <Compile Include="Bus\Advanced\IWorkersApi.cs" />
-    <Compile Include="Bus\BusLifetimeEvents.cs" />
-    <Compile Include="Bus\IBus.cs" />
-    <Compile Include="Bus\IInitializable.cs" />
-    <Compile Include="Compression\DataCompressionMode.cs" />
-    <Compile Include="Compression\ZippingDataBusStorageDecorator.cs" />
-    <Compile Include="Compression\ZippingSerializerDecorator.cs" />
-    <Compile Include="Config\OneWayClientBackdoor.cs" />
-    <Compile Include="DataBus\DataBusAttachment.cs" />
-    <Compile Include="DataBus\DataBusIncomingStep.cs" />
-    <Compile Include="DataBus\DataBusOptionsExtensions.cs" />
-    <Compile Include="DataBus\DefaultDataBus.cs" />
-    <Compile Include="DataBus\DisabledDataBus.cs" />
-    <Compile Include="DataBus\FileSystem\FileSystemDataBusExtensions.cs" />
-    <Compile Include="DataBus\FileSystem\FileSystemDataBusStorage.cs" />
-    <Compile Include="DataBus\InMem\InMemDataBusExtensions.cs" />
-    <Compile Include="DataBus\IDataBus.cs" />
-    <Compile Include="DataBus\IDataBusStorage.cs" />
-    <Compile Include="DataBus\InMem\InMemDataBusStorage.cs" />
-    <Compile Include="DataBus\InMem\InMemDataStore.cs" />
-    <Compile Include="DataBus\MetadataKeys.cs" />
-    <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
-    <Compile Include="Encryption\EncryptedData.cs" />
-    <Compile Include="Encryption\EncryptionConfigurationExtensions.cs" />
-    <Compile Include="Encryption\EncryptionHeaders.cs" />
-    <Compile Include="Encryption\EncryptMessagesOutgoingStep.cs" />
-    <Compile Include="Encryption\RijndaelEncryptor.cs" />
-    <Compile Include="Encryption\IEncryptor.cs" />
-    <Compile Include="Exceptions\RebusApplicationException.cs" />
-    <Compile Include="Extensions\DateTimeExtensions.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
-    <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
-    <Compile Include="Injection\Injectionist.cs" />
-    <Compile Include="Messages\HeaderAttribute.cs" />
-    <Compile Include="Messages\Headers.cs" />
-    <Compile Include="Messages\Message.cs" />
-    <Compile Include="Messages\OriginalTransportMessage.cs" />
-    <Compile Include="Messages\TransportMessage.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemExclusiveLock.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemSagaIndex.cs" />
-    <Compile Include="Persistence\Filesystem\FileSystemSagaSnapshotStorage.cs" />
-    <Compile Include="Persistence\Filesystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemSagaStorage.cs" />
-    <Compile Include="Persistence\Filesystem\FileSystemSagaStorageConfigurationExtensions.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemTimeoutManager.cs" />
-    <Compile Include="Persistence\Filesystem\FilesystemTimeoutStorageConfigurationExtensions.cs" />
-    <Compile Include="Persistence\Filesystem\JsonFileSubscriptionStorage.cs" />
-    <Compile Include="Persistence\Filesystem\JsonFileSubscriptionStorageConfigurationExtensions.cs" />
-    <Compile Include="Persistence\Filesystem\ReaderWriterLockSlimExtensions.cs" />
-    <Compile Include="Persistence\InMem\InMemorySubscriberStore.cs" />
-    <Compile Include="Persistence\InMem\InMemorySubscriptionStorageExtensions.cs" />
-    <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
-    <Compile Include="Pipeline\PipelineStepRemover.cs" />
-    <Compile Include="Pipeline\Receive\HandlerInvoker.cs" />
-    <Compile Include="Pipeline\Send\AssignTypeHeaderStep.cs" />
-    <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
-    <Compile Include="Pipeline\PipelineAbsolutePosition.cs" />
-    <Compile Include="Pipeline\PipelineCache.cs" />
-    <Compile Include="Pipeline\PipelineStepConcatenator.cs" />
-    <Compile Include="Pipeline\PipelineStepInjector.cs" />
-    <Compile Include="Pipeline\PipelineRelativePosition.cs" />
-    <Compile Include="Compression\ZipConfigurationExtensions.cs" />
-    <Compile Include="Compression\Zipper.cs" />
-    <Compile Include="Config\RebusLoggingConfigurer.cs" />
-    <Compile Include="Extensions\TypeExtensions.cs" />
-    <Compile Include="Exceptions\Ignorant.cs" />
-    <Compile Include="Handlers\Reordering\HandlerReorderingConfigurationExtensions.cs" />
-    <Compile Include="Handlers\Reordering\HandlerReorderingStep.cs" />
-    <Compile Include="Pipeline\IIncomingStep.cs" />
-    <Compile Include="Pipeline\IMessageContext.cs" />
-    <Compile Include="Pipeline\IncomingStepContext.cs" />
-    <Compile Include="Pipeline\IOutgoingStep.cs" />
-    <Compile Include="Pipeline\MessageContext.cs" />
-    <Compile Include="Pipeline\OutgoingStepContext.cs" />
-    <Compile Include="Pipeline\Receive\HandlerInvokers.cs" />
-    <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
-    <Compile Include="Pipeline\Send\DestinationAddresses.cs" />
-    <Compile Include="Pipeline\Send\ValidateOutgoingMessageStep.cs" />
-    <Compile Include="Pipeline\StepContext.cs" />
-    <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
-    <Compile Include="Profiling\PipelineStepProfiler.cs" />
-    <Compile Include="Profiling\PipelineStepProfilerStats.cs" />
-    <Compile Include="Profiling\StatsContext.cs" />
-    <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
-    <Compile Include="Retry\IErrorHandler.cs" />
-    <Compile Include="Retry\IErrorTracker.cs" />
-    <Compile Include="Retry\IRetryStrategyStep.cs" />
-    <Compile Include="Retry\PoisonQueues\PoisonQueueErrorHandler.cs" />
-    <Compile Include="Retry\Simple\FailedMessageWrapper.cs" />
-    <Compile Include="Retry\Simple\FailedMessageWrapperStep.cs" />
-    <Compile Include="Retry\Simple\IFailed.cs" />
-    <Compile Include="Retry\Simple\VerifyCannotSendFailedMessageWrapperStep.cs" />
-    <Compile Include="Routing\Exceptions\AutoForwardOnExceptionConfigurationExtensions.cs" />
-    <Compile Include="Routing\TransportMessages\ActionType.cs" />
-    <Compile Include="Routing\TransportMessages\ErrorBehavior.cs" />
-    <Compile Include="Routing\TransportMessages\ForwardAction.cs" />
-    <Compile Include="Routing\TransportMessages\ForwardTransportMessageStep.cs" />
-    <Compile Include="Routing\TransportMessages\TransportMessageRoutingConfigurationExtensions.cs" />
-    <Compile Include="Sagas\IAmInitiatedBy.cs" />
-    <Compile Include="Sagas\Idempotent\IdempotencyData.cs" />
-    <Compile Include="Sagas\Idempotent\IdempotentSaga.cs" />
-    <Compile Include="Sagas\Idempotent\IdempotentSagaConfigurationExtensions.cs" />
-    <Compile Include="Sagas\Idempotent\IdempotentSagaData.cs" />
-    <Compile Include="Sagas\Idempotent\IdempotentSagaIncomingStep.cs" />
-    <Compile Include="Sagas\Idempotent\IdempotentSagaOutgoingStep.cs" />
-    <Compile Include="Sagas\Idempotent\IIdempotentSagaData.cs" />
-    <Compile Include="Sagas\Idempotent\OutgoingMessage.cs" />
-    <Compile Include="Sagas\Idempotent\OutgoingMessages.cs" />
-    <Compile Include="Sagas\ISagaCorrelationProperty.cs" />
-    <Compile Include="Sagas\ISagaData.cs" />
-    <Compile Include="Sagas\SagaData.cs" />
-    <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
-    <Compile Include="Serialization\DictionarySerializer.cs" />
-    <Compile Include="Serialization\ObjectSerializer.cs" />
-    <Compile Include="Serialization\GenericJsonSerializer.cs" />
-    <Compile Include="Testing\Events\FakeBusDisposed.cs" />
-    <Compile Include="Testing\Events\FakeBusEvent.cs" />
-    <Compile Include="Testing\Events\MessageDeferred.cs" />
-    <Compile Include="Testing\Events\MessagePublished.cs" />
-    <Compile Include="Testing\Events\MessageSent.cs" />
-    <Compile Include="Testing\Events\MessageSentToSelf.cs" />
-    <Compile Include="Testing\Events\ReplyMessageSent.cs" />
-    <Compile Include="Testing\Events\Subscribed.cs" />
-    <Compile Include="Testing\Events\Unsubscribed.cs" />
-    <Compile Include="Testing\FakeAdvancedApi.cs" />
-    <Compile Include="Testing\FakeBusEventFactory.cs" />
-    <Compile Include="Testing\FakeBusEventRecorder.cs" />
-    <Compile Include="Testing\FakeSyncBus.cs" />
-    <Compile Include="Testing\FakeBus.cs" />
-    <Compile Include="Testing\FakeDataBus.cs" />
-    <Compile Include="Testing\Internals\LockStepper.cs" />
-    <Compile Include="Testing\LogEvent.cs" />
-    <Compile Include="Testing\SagaFixture.cs" />
-    <Compile Include="Testing\Internals\TestLoggerFactory.cs" />
-    <Compile Include="Threading\AsyncBottleneck.cs" />
-    <Compile Include="Threading\SystemThreadingTimer\SystemThreadingTimerAsyncTask.cs" />
-    <Compile Include="Threading\SystemThreadingTimer\SystemThreadingTimerAsyncTaskFactory.cs" />
-    <Compile Include="Threading\TaskParallelLibrary\TplAsyncTask.cs" />
-    <Compile Include="Threading\IAsyncTask.cs" />
-    <Compile Include="Threading\IAsyncTaskFactory.cs" />
-    <Compile Include="Threading\ParallelOperationsManager.cs" />
-    <Compile Include="Threading\TaskParallelLibrary\TplAsyncTaskFactory.cs" />
-    <Compile Include="Threading\SystemTimersTimer\TimerAsyncTask.cs" />
-    <Compile Include="Threading\SystemTimersTimer\TimerAsyncTaskFactory.cs" />
-    <Compile Include="Timeouts\DueMessage.cs" />
-    <Compile Include="Timeouts\DueMessagesResult.cs" />
-    <Compile Include="Timeouts\ThrowingTimeoutManager.cs" />
-    <Compile Include="Timeouts\TimeoutsConfigurationExtensions.cs" />
-    <Compile Include="Time\RebusTimeMachine.cs" />
-    <Compile Include="Transport\AmbientTransactionContext.cs" />
-    <Compile Include="Transport\DefaultSyncTransactionContextScope.cs" />
-    <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
-    <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
-    <Compile Include="Config\OneWayClientBusDecorator.cs" />
-    <Compile Include="Serialization\HeaderSerializer.cs" />
-    <Compile Include="Transport\TransactionContext.cs" />
-    <Compile Include="Transport\TransactionContextExtensions.cs" />
-    <Compile Include="Workers\ThreadPoolBased\ISyncBackoffStrategy.cs" />
-    <Compile Include="Workers\IWorker.cs" />
-    <Compile Include="Bus\MessageExtensions.cs" />
-    <Compile Include="Bus\RebusBus.cs" />
-    <Compile Include="Config\Configure.cs" />
-    <Compile Include="Config\Options.cs" />
-    <Compile Include="Config\OptionsConfigurer.cs" />
-    <Compile Include="Config\RebusConfigurer.cs" />
-    <Compile Include="Config\StandardConfigurer.cs" />
-    <Compile Include="Exceptions\ConcurrencyException.cs" />
-    <Compile Include="Extensions\EnumerableExtensions.cs" />
-    <Compile Include="Activation\IHandlerActivator.cs" />
-    <Compile Include="Handlers\IHandleMessages.cs" />
-    <Compile Include="Handlers\InternalHandlersContributor.cs" />
-    <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />
-    <Compile Include="Logging\ColorSetting.cs" />
-    <Compile Include="Logging\ConsoleLoggerFactory.cs" />
-    <Compile Include="Logging\ILog.cs" />
-    <Compile Include="Logging\IRebusLoggerFactory.cs" />
-    <Compile Include="Logging\LoggingColors.cs" />
-    <Compile Include="Logging\LogLevel.cs" />
-    <Compile Include="Logging\NullLoggerFactory.cs" />
-    <Compile Include="Logging\TraceLoggerFactory.cs" />
-    <Compile Include="Messages\Control\SubscribeRequest.cs" />
-    <Compile Include="Messages\Control\UnsubscribeRequest.cs" />
-    <Compile Include="Persistence\InMem\InMemorySagaStorage.cs" />
-    <Compile Include="Persistence\InMem\InMemorySubscriptionStorage.cs" />
-    <Compile Include="Persistence\InMem\InMemoryTimeoutManager.cs" />
-    <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
-    <Compile Include="Pipeline\Receive\HandleDeferredMessagesStep.cs" />
-    <Compile Include="Sagas\LoadSagaDataStep.cs" />
-    <Compile Include="Pipeline\Send\FlowCorrelationIdStep.cs" />
-    <Compile Include="Pipeline\Send\SendOutgoingMessageStep.cs" />
-    <Compile Include="Pipeline\Send\SerializeOutgoingMessageStep.cs" />
-    <Compile Include="Reflection\Ponder.cs" />
-    <Compile Include="Retry\IRetryStrategy.cs" />
-    <Compile Include="Retry\Simple\SimpleRetryStrategyConfigurationExtensions.cs" />
-    <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
-    <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
-    <Compile Include="Subscriptions\ISubscriptionStorage.cs" />
-    <Compile Include="Sagas\CorrelationProperty.cs" />
-    <Compile Include="Sagas\ICorrelationConfig.cs" />
-    <Compile Include="Sagas\ISagaStorage.cs" />
-    <Compile Include="Sagas\Saga.cs" />
-    <Compile Include="Sagas\SagaHelper.cs" />
-    <Compile Include="Timeouts\ITimeoutManager.cs" />
-    <Compile Include="Time\RebusTime.cs" />
-    <Compile Include="Transport\InMem\InMemNetwork.cs" />
-    <Compile Include="Transport\InMem\InMemTransport.cs" />
-    <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />
-    <Compile Include="Transport\InMem\InMemTransportMessage.cs" />
-    <Compile Include="Transport\InMem\InMemTransportMessageExtensions.cs" />
-    <Compile Include="Pipeline\DefaultPipeline.cs" />
-    <Compile Include="Pipeline\IPipelineInvoker.cs" />
-    <Compile Include="Pipeline\IStep.cs" />
-    <Compile Include="Pipeline\IPipeline.cs" />
-    <Compile Include="Pipeline\DefaultPipelineInvoker.cs" />
-    <Compile Include="Pipeline\Receive\DeserializeIncomingMessageStep.cs" />
-    <Compile Include="Pipeline\Receive\DispatchIncomingMessageStep.cs" />
-    <Compile Include="Retry\Simple\SimpleRetryStrategyStep.cs" />
-    <Compile Include="Pipeline\Send\AssignGuidMessageIdStep.cs" />
-    <Compile Include="Pipeline\Send\AssignReturnAddressStep.cs" />
-    <Compile Include="Routing\TypeBased\TypeBasedRouter.cs" />
-    <Compile Include="Routing\TypeBased\TypeBasedRouterConfigurationExtensions.cs" />
-    <Compile Include="Transport\ITransport.cs" />
-    <None Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Extensions\DictionaryExtensions.cs" />
-    <Compile Include="Routing\IRouter.cs" />
-    <Compile Include="Serialization\ISerializer.cs" />
-    <Compile Include="Serialization\JsonSerializer.cs" />
-    <Compile Include="Transport\DefaultTransactionContextScope.cs" />
-    <Compile Include="Transport\ITransactionContext.cs" />
-    <Compile Include="Workers\IWorkerFactory.cs" />
-    <Compile Include="Workers\ThreadPoolBased\DefaultSyncBackoffStrategy.cs" />
-    <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorker.cs" />
-    <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkerFactory.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Persistence\SqlServer\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="Rebus.nuspec" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)\..\scripts\patch_assemblyinfo.cmd $(ProjectDir)</PreBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="$(ProjectDir)..\scripts\patch_assemblyinfo.cmd $(ProjectDir)" />
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

@@ -21,6 +21,9 @@ _ReSharper.*
 _NCrunch_*
 *.user
 *.backup
+*.orig
+*.swp
+*.swo
 
 # MS Guideline
 **/packages/*

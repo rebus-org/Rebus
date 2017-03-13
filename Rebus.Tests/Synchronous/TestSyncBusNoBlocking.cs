@@ -182,7 +182,7 @@ async implementation underneath the covers without deadlocking, even in a single
 
                 _cancellationTokenSource?.Cancel();
 
-                if (!_workerThread.Join(TimeSpan.FromSeconds(1)))
+                if (!_workerThread.Join(1000))
                 {
                     Console.WriteLine("Worker thread did not stop within 1 s");
                 }

@@ -79,7 +79,7 @@ namespace Rebus.Sagas
 
             foreach (var name in path)
             {
-                propertyInfo = type.GetProperty(name);
+                propertyInfo = type.GetTypeInfo().GetProperty(name);
 
                 if (propertyInfo == null) return null;
 
@@ -94,12 +94,12 @@ namespace Rebus.Sagas
         /// <summary>
         /// The message type that this property can correlate
         /// </summary>
-        public Type MessageType { get; private set; }
+        public Type MessageType { get; }
 
         /// <summary>
         /// The function that will be called with the message instance in order to extract a value that should be used for correlation
         /// </summary>
-        public Func<IMessageContext, object, object> ValueFromMessage { get; private set; }
+        public Func<IMessageContext, object, object> ValueFromMessage { get; }
 
         /// <summary>
         /// Gets the type of the saga's saga data

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
 using Rebus.Logging;
@@ -43,7 +44,7 @@ namespace Rebus.Persistence.FileSystem
                 {
                     var sagaData = index.FindById((Guid) propertyValue);
 
-                    if (!sagaDataType.IsInstanceOfType(sagaData))
+                    if (!sagaDataType.GetTypeInfo().IsInstanceOfType(sagaData))
                     {
                         return null;
                     }

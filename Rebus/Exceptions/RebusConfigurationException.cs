@@ -1,13 +1,19 @@
 using System;
+#if NET45
 using System.Runtime.Serialization;
+#endif
 
 namespace Rebus.Exceptions
 {
     /// <summary>
     /// Generic configuration exception to use instead of ConfigurationErrorsException from System.Configuration
     /// </summary>
+#if NET45
     [Serializable]
+    public class RebusConfigurationException : ApplicationException
+# elif NETSTANDARD1_6
     public class RebusConfigurationException : Exception
+#endif
     {
         /// <summary>
         /// Constructs the exception with the given message
@@ -25,12 +31,14 @@ namespace Rebus.Exceptions
         {
         }
 
+#if NET45
         /// <summary>
         /// Happy cross-domain serialization!
         /// </summary>
         public RebusConfigurationException(SerializationInfo info, StreamingContext context)
-            :base(info, context)
+            : base(info, context)
         {
         }
+#endif
     }
 }

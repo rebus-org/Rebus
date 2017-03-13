@@ -63,6 +63,7 @@ namespace Rebus.Pipeline.Receive
         MethodInfo GetDispatchMethod(Type messageType)
         {
             return GetType()
+                .GetTypeInfo()
                 .GetMethod(nameof(GetHandlerInvokers), BindingFlags.NonPublic | BindingFlags.Instance)
                 .MakeGenericMethod(messageType);
         }

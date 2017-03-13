@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -56,7 +57,7 @@ namespace Rebus.Tests.Integration
             _handlerActivator.Handle<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
-                throw new ApplicationException("omgwtf!");
+                throw new RebusApplicationException("omgwtf!");
             });
 
             await _bus.Send("hej");
@@ -80,7 +81,7 @@ namespace Rebus.Tests.Integration
             _handlerActivator.Handle<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
-                throw new ApplicationException("omgwtf!");
+                throw new RebusApplicationException("omgwtf!");
             });
 
             await _bus.Send("hej");

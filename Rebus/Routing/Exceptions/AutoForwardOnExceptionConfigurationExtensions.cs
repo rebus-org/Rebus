@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Config;
@@ -76,7 +77,7 @@ namespace Rebus.Routing.Exceptions
                 }
                 catch (Exception exception)
                 {
-                    if (!_exceptionType.IsInstanceOfType(exception))
+                    if (!_exceptionType.GetTypeInfo().IsInstanceOfType(exception))
                     {
                         throw;
                     }

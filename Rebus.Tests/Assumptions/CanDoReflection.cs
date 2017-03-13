@@ -16,12 +16,12 @@ namespace Rebus.Tests.Assumptions
         {
             IBus bus = GetBus();
 
-            var assemblyToScan = Assembly.GetExecutingAssembly();
+            var assemblyToScan = typeof(CanDoReflection).GetTypeInfo().Assembly;
 
             var handledMessageTypes = assemblyToScan
                 .GetTypes()
                 .SelectMany(t => t.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
+                    .Where(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
                     .Select(i => i.GetGenericArguments().Single()))
                 .Distinct()
                 .ToList();

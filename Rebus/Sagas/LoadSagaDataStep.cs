@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
@@ -167,7 +168,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             {
                 if (IgnoredProperties.Contains(correlationProperty.PropertyName)) return;
 
-                var correlationPropertyInfo = newSagaData.GetType().GetProperty(correlationProperty.PropertyName);
+                var correlationPropertyInfo = newSagaData.GetType().GetTypeInfo().GetProperty(correlationProperty.PropertyName);
 
                 if (correlationPropertyInfo == null) return;
 
@@ -223,7 +224,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                     if (freshSagaData == null)
                     {
-                        throw new ApplicationException($"Could not find saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
+                        throw new RebusApplicationException($"Could not find saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
                     }
 
                     await saga.InvokeConflictResolution(freshSagaData);

@@ -38,7 +38,7 @@ namespace Rebus.Testing
         {
             const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance;
 
-            var constructor = eventType.GetConstructors(flags).FirstOrDefault();
+            var constructor = eventType.GetTypeInfo().GetConstructors(flags).FirstOrDefault();
             if (constructor != null)
             {
                 return constructor;
