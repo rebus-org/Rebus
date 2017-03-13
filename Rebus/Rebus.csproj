@@ -64,7 +64,7 @@
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="$(ProjectDir)..\scripts\patch_assemblyinfo.cmd $(ProjectDir)" />
   </Target>
-  <Target Name="PostBuild" BeforeTargets="PostBuildEvent" Condition=" '$(TargetFramework)|$(Configuration)|$(Platform)' == 'net45|Release|AnyCPU'">
+  <Target Name="PostBuild" BeforeTargets="PostBuildEvent" Condition=" '$(TargetFramework)|$(Configuration)|$(Platform)|$(ShouldMerge)' == 'net45|Release|AnyCPU|1'">
     <Exec Command="$(ProjectDir)..\scripts\merge_rebus_dll.cmd $(TargetDir)" />
   </Target>
 </Project>
