@@ -1161,9 +1161,11 @@
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
 * Change all logging to have named placeholders (Serilog style) instead of the semantically useless .NET placeholders (logging libraries that have no use for named placeholders can use `AbstractRebusLoggerFactory`'s `RenderString` method)
+* Add .NET Core support (targeting netstandard 1.6) - thanks [mvandevy]
 
 
 ---
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -1194,6 +1196,7 @@
 [mgibas]: https://github.com/mgibas
 [mortenherman]: https://github.com/mortenherman
 [MrMDavidson]: https://github.com/MrMDavidson
+[mvandevy]: https://github.com/mvandevy
 [NKnusperer]: https://github.com/NKnusperer
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
