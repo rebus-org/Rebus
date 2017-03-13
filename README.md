@@ -76,7 +76,7 @@ License
 
 Rebus is licensed under [The MIT License (MIT)][1]. Basically, this license grants you the right to use Rebus in any way you see fit. See [LICENSE.md](/LICENSE.md) for more info.
 
-Rebus (the core DLL) comes with [Newtonsoft JSON.NET][JSON] merged in. You can see [the JSON.NET license her][JSON-license] (spoiler: it's also MIT).
+Rebus (the core DLL) comes with [Newtonsoft JSON.NET][JSON] merged in. You can see the JSON.NET license [here][JSON-license] (spoiler: it's also MIT).
 
 
 [1]: https://opensource.org/licenses/MIT
