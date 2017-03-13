@@ -1,3 +1,5 @@
+image: Visual Studio 2017
+
 before_build:
   - appveyor-retry dotnet restore -v Minimal
 
