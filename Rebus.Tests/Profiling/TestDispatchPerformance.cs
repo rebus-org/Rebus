@@ -85,14 +85,14 @@ Stats:
                     network.Deliver("perftest", inMemTransportMessage);
                 });
 
-
                 var numberOfReceivedMessages = 0;
                 var gotAllMessages = new ManualResetEvent(false);
 
                 adapter.Handle<SomeMessage>(async m =>
                 {
-                    numberOfReceivedMessages++;
-                    if (numberOfReceivedMessages == numberOfMessages)
+                    Interlocked.Increment(ref numberOfReceivedMessages);
+
+                    if (Volatile.Read(ref numberOfReceivedMessages) == numberOfMessages)
                     {
                         gotAllMessages.Set();
                     }
