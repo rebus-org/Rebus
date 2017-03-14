@@ -58,10 +58,10 @@ namespace Rebus.Tests.Pipeline
             {
                 var step = receivePipeline[index];
                 var processMethod = GetProcessMethod(step);
-                var currentExpression = expression.Compile();
+                //var currentExpression = expression.Compile();
 
                 var stepReference = Expression.Constant(step);
-                var nextExpression = Expression.Lambda<Func<Task>>();
+                var nextExpression = Expression.Lambda<Func<Task>>(Expression.Invoke(expression));
                 var invocation = Expression.Call(stepReference, processMethod, contextParameter, nextExpression);
 
                 expression = Expression.Lambda<Func<IncomingStepContext, Task>>(invocation, contextParameter);
