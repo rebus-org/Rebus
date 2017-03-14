@@ -49,7 +49,7 @@ namespace Rebus.Pipeline
                 });            
             }); 
         */
-        static Func<TContext, Task> GenerateFunc<TContext, TStep>(IReadOnlyList<TStep> sendPipeline, string processMethodName)
+        static Func<TContext, Task> GenerateFunc<TContext, TStep>(IReadOnlyList<TStep> steps, string processMethodName)
             where TContext : StepContext
             where TStep : IStep
         {
@@ -60,9 +60,9 @@ namespace Rebus.Pipeline
 
             // start with the end - construct each step function such that its invocation looks like this
             // (context) => step[n-1].Process(context, () => step[n].Process(...))
-            for (var index = sendPipeline.Count - 1; index >= 0; index--)
+            for (var index = steps.Count - 1; index >= 0; index--)
             {
-                var step = sendPipeline[index];
+                var step = steps[index];
                 var processMethod = GetProcessMethod(step, processMethodName, typeof(TContext));
 
                 var contextParameterp = Expression.Parameter(typeof(TContext), $"context{index}");
