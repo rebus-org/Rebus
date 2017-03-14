@@ -54,7 +54,7 @@ namespace Rebus.Pipeline
             where TStep : IStep
         {
             // pipeline terminator: create function (context) => CompletedTask
-            var contextParameter = Expression.Parameter(typeof(TContext), "contextPPP");
+            var contextParameter = Expression.Parameter(typeof(TContext), $"context{steps.Count}");
             var noopExpression = Expression.Constant(CompletedTask);
             var expression = Expression.Lambda<Func<TContext, Task>>(noopExpression, contextParameter);
 
@@ -72,6 +72,8 @@ namespace Rebus.Pipeline
                 var callExpression = Expression.Call(stepReference, processMethod, contextParameterp, nextExpression);
 
                 expression = Expression.Lambda<Func<TContext, Task>>(callExpression, contextParameterp);
+
+                Console.WriteLine($"EXP: {expression}");
             }
 
             return expression.Compile();
