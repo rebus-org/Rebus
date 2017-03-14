@@ -21,11 +21,11 @@ namespace Rebus.Pipeline
         {
             var receivePipeline = pipeline.ReceivePipeline();
 
-            _invokeReceivePipeline = GenerateAction<IncomingStepContext, IIncomingStep>(receivePipeline, nameof(IIncomingStep.Process));
+            _invokeReceivePipeline = GenerateFunc<IncomingStepContext, IIncomingStep>(receivePipeline, nameof(IIncomingStep.Process));
 
             var sendPipeline = pipeline.SendPipeline();
 
-            _invokeSendPipeline = GenerateAction<OutgoingStepContext, IOutgoingStep>(sendPipeline, nameof(IOutgoingStep.Process));
+            _invokeSendPipeline = GenerateFunc<OutgoingStepContext, IOutgoingStep>(sendPipeline, nameof(IOutgoingStep.Process));
         }
 
         public Task Invoke(IncomingStepContext context)
@@ -49,7 +49,7 @@ namespace Rebus.Pipeline
                 });            
             }); 
         */
-        static Func<TContext, Task> GenerateAction<TContext, TStep>(IReadOnlyList<TStep> sendPipeline, string processMethodName)
+        static Func<TContext, Task> GenerateFunc<TContext, TStep>(IReadOnlyList<TStep> sendPipeline, string processMethodName)
             where TContext : StepContext
             where TStep : IStep
         {
