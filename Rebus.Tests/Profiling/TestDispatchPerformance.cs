@@ -22,8 +22,8 @@ namespace Rebus.Tests.Profiling
     [TestFixture]
     public class TestDispatchPerformance : FixtureBase
     {
-        [TestCase(10000, 20, true)]
-        [TestCase(10000, 20, false)]
+        [TestCase(100000, 5, true)]
+        [TestCase(100000, 5, false)]
         public void TakeTime(int numberOfMessages, int numberOfSamples, bool useExperimentalPipelineInvoker)
         {
             var profilerStats = new PipelineStepProfilerStats();
@@ -42,6 +42,8 @@ namespace Rebus.Tests.Profiling
             Console.WriteLine($@"{numberOfSamples} runs
 Avg s: {results.Average():0.00###}
 Avg msg/s: {numberOfMessages * numberOfSamples / results.Sum():0}
+
+Experimental pipeline invoker: {useExperimentalPipelineInvoker}
 
 Stats:
 {string.Join(Environment.NewLine, profilerStats.GetAndResetStats().Select(s => $"    {s}"))}");
