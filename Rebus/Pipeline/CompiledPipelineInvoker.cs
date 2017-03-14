@@ -67,10 +67,11 @@ namespace Rebus.Pipeline
 
                 var contextParameterp = Expression.Parameter(typeof(TContext), $"context{index}");
                 var stepReference = Expression.Constant(step);
-                var nextExpression = Expression.Lambda<Func<Task>>(Expression.Invoke(expression, contextParameterp));
-                var invocation = Expression.Call(stepReference, processMethod, contextParameterp, nextExpression);
+                var invocationExpression = Expression.Invoke(expression, contextParameterp);
+                var nextExpression = Expression.Lambda<Func<Task>>(invocationExpression);
+                var callExpression = Expression.Call(stepReference, processMethod, contextParameterp, nextExpression);
 
-                expression = Expression.Lambda<Func<TContext, Task>>(invocation, contextParameterp);
+                expression = Expression.Lambda<Func<TContext, Task>>(callExpression, contextParameterp);
             }
 
             return expression.Compile();
