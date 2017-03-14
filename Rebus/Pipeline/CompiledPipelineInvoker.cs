@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -15,10 +16,12 @@ namespace Rebus.Pipeline
         public CompiledPipelineInvoker(IPipeline pipeline)
         {
             var receivePipeline = pipeline.ReceivePipeline();
-            _invokeReceivePipeline = GenerateReceiveAction(receivePipeline);
+
+            _invokeReceivePipeline = GenerateAction<IncomingStepContext, IIncomingStep>(receivePipeline, nameof(IIncomingStep.Process));
 
             var sendPipeline = pipeline.SendPipeline();
-            _invokeSendPipeline = GenerateSendAction(sendPipeline);
+
+            _invokeSendPipeline = GenerateAction<OutgoingStepContext, IOutgoingStep>(sendPipeline, nameof(IOutgoingStep.Process));
         }
 
         public Task Invoke(IncomingStepContext context)
@@ -31,32 +34,7 @@ namespace Rebus.Pipeline
             return _invokeSendPipeline(context);
         }
 
-        Func<OutgoingStepContext, Task> GenerateSendAction(IOutgoingStep[] sendPipeline)
-        {
-            // pipeline terminator: create function (context) => CompletedTask
-            var contextParameter = Expression.Parameter(typeof(OutgoingStepContext), "context");
-            var noopExpression = Expression.Constant(CompletedTask);
-            var expression = Expression.Lambda<Func<OutgoingStepContext, Task>>(noopExpression, contextParameter);
-
-            // start with the end - construct each step function such that its invocation looks like this
-            // (context) => step[n-1].Process(context, () => step[n].Process(...))
-            for (var index = sendPipeline.Length - 1; index >= 0; index--)
-            {
-                var step = sendPipeline[index];
-                var processMethod = GetProcessMethod(step, nameof(IOutgoingStep.Process), typeof(OutgoingStepContext));
-
-                var stepReference = Expression.Constant(step);
-                var nextExpression = Expression.Lambda<Func<Task>>(Expression.Invoke(expression, contextParameter));
-                var invocation = Expression.Call(stepReference, processMethod, contextParameter, nextExpression);
-
-                expression = Expression.Lambda<Func<OutgoingStepContext, Task>>(invocation, contextParameter);
-            }
-
-            return expression.Compile();
-        }
-
-        // we want to compile this bad boy
-        /*
+        /* we want to compile this bad boy
             return firstStep.Process(context0, () => {
                 return secondStep.Process(context1, () => {
                     return thirdStep.Process(context2, () => {
@@ -67,25 +45,27 @@ namespace Rebus.Pipeline
                 });            
             }); 
         */
-        Func<IncomingStepContext, Task> GenerateReceiveAction(IIncomingStep[] receivePipeline)
+        static Func<TContext, Task> GenerateAction<TContext, TStep>(IReadOnlyList<TStep> sendPipeline, string processMethodName)
+            where TContext : StepContext
+            where TStep : IStep
         {
             // pipeline terminator: create function (context) => CompletedTask
-            var contextParameter = Expression.Parameter(typeof(IncomingStepContext), "context");
+            var contextParameter = Expression.Parameter(typeof(TContext), "context");
             var noopExpression = Expression.Constant(CompletedTask);
-            var expression = Expression.Lambda<Func<IncomingStepContext, Task>>(noopExpression, contextParameter);
+            var expression = Expression.Lambda<Func<TContext, Task>>(noopExpression, contextParameter);
 
             // start with the end - construct each step function such that its invocation looks like this
             // (context) => step[n-1].Process(context, () => step[n].Process(...))
-            for (var index = receivePipeline.Length - 1; index >= 0; index--)
+            for (var index = sendPipeline.Count - 1; index >= 0; index--)
             {
-                var step = receivePipeline[index];
-                var processMethod = GetProcessMethod(step, nameof(IIncomingStep.Process), typeof(IncomingStepContext));
+                var step = sendPipeline[index];
+                var processMethod = GetProcessMethod(step, processMethodName, typeof(TContext));
 
                 var stepReference = Expression.Constant(step);
                 var nextExpression = Expression.Lambda<Func<Task>>(Expression.Invoke(expression, contextParameter));
                 var invocation = Expression.Call(stepReference, processMethod, contextParameter, nextExpression);
 
-                expression = Expression.Lambda<Func<IncomingStepContext, Task>>(invocation, contextParameter);
+                expression = Expression.Lambda<Func<TContext, Task>>(invocation, contextParameter);
             }
 
             return expression.Compile();
@@ -93,7 +73,7 @@ namespace Rebus.Pipeline
 
         static MethodInfo GetProcessMethod(IStep step, string methodName, Type contextType)
         {
-            var processMethod = step.GetType().GetMethod(methodName, new[] {contextType, typeof(Func<Task>)});
+            var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
 
             if (processMethod == null)
             {

@@ -169,7 +169,6 @@ namespace Rebus.Config
             PossiblyRegisterDefault<IPipelineInvoker>(c =>
             {
                 var pipeline = c.Get<IPipeline>();
-                //return new CompiledPipelineInvoker(pipeline);
                 return new DefaultPipelineInvoker(pipeline);
             });
 
