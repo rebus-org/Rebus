@@ -72,8 +72,6 @@ namespace Rebus.Pipeline
                 var callExpression = Expression.Call(stepReference, processMethod, contextParameterp, nextExpression);
 
                 expression = Expression.Lambda<Func<TContext, Task>>(callExpression, contextParameterp);
-
-                Console.WriteLine($"EXP: {expression}");
             }
 
             return expression.Compile();
