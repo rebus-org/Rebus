@@ -22,8 +22,9 @@ namespace Rebus.Tests.Profiling
     [TestFixture]
     public class TestDispatchPerformance : FixtureBase
     {
-        [TestCase(10000, 20)]
-        public void TakeTime(int numberOfMessages, int numberOfSamples)
+        [TestCase(10000, 20, true)]
+        [TestCase(10000, 20, false)]
+        public void TakeTime(int numberOfMessages, int numberOfSamples, bool useExperimentalPipelineInvoker)
         {
             var profilerStats = new PipelineStepProfilerStats();
 
@@ -31,7 +32,7 @@ namespace Rebus.Tests.Profiling
                 .Select(i =>
                 {
                     Console.Write($"Performing sample {i}: ");
-                    var result = RunTest(numberOfMessages, profilerStats);
+                    var result = RunTest(numberOfMessages, profilerStats, useExperimentalPipelineInvoker);
                     Console.WriteLine($"{result.TotalSeconds:0.#####}");
                     return result;
                 })
@@ -46,7 +47,7 @@ Stats:
 {string.Join(Environment.NewLine, profilerStats.GetAndResetStats().Select(s => $"    {s}"))}");
         }
 
-        static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats)
+        static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats, bool useExperimentalPipelineInvoker)
         {
             using (var adapter = new BuiltinHandlerActivator())
             {
@@ -61,6 +62,11 @@ Stats:
                         o.SetMaxParallelism(1);
                         
                         o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
+
+                        if (useExperimentalPipelineInvoker)
+                        {
+                            o.UseExperimentalPipelineInvoker();
+                        }
                     })
                     .Start();
 

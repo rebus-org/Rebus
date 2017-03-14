@@ -50,6 +50,7 @@
     <Compile Include="Bus\Advanced\ISyncBus.cs" />
     <Compile Include="Exceptions\RebusConfigurationException.cs" />
     <Compile Include="Pipeline\CompiledPipelineInvoker.cs" />
+    <Compile Include="Pipeline\CompiledPipelineInvokerConfigurationExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo_Patch.cs" />
     <Compile Include="Auditing\Messages\AuditHeaders.cs" />
     <Compile Include="Auditing\Messages\AuditingHelper.cs" />

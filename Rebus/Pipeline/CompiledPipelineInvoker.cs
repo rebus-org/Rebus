@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Rebus.Pipeline
 {
+    /// <summary>
+    /// Implementation of <see cref="IPipelineInvoker"/> that builds an expression to invoke the steps
+    /// of a pipeline
+    /// </summary>
     class CompiledPipelineInvoker : IPipelineInvoker
     {
         static readonly Task CompletedTask = Task.FromResult(0);
@@ -50,7 +54,7 @@ namespace Rebus.Pipeline
             where TStep : IStep
         {
             // pipeline terminator: create function (context) => CompletedTask
-            var contextParameter = Expression.Parameter(typeof(TContext), "context");
+            var contextParameter = Expression.Parameter(typeof(TContext), "contextPPP");
             var noopExpression = Expression.Constant(CompletedTask);
             var expression = Expression.Lambda<Func<TContext, Task>>(noopExpression, contextParameter);
 
@@ -61,11 +65,12 @@ namespace Rebus.Pipeline
                 var step = sendPipeline[index];
                 var processMethod = GetProcessMethod(step, processMethodName, typeof(TContext));
 
+                var contextParameterp = Expression.Parameter(typeof(TContext), $"context{index}");
                 var stepReference = Expression.Constant(step);
-                var nextExpression = Expression.Lambda<Func<Task>>(Expression.Invoke(expression, contextParameter));
-                var invocation = Expression.Call(stepReference, processMethod, contextParameter, nextExpression);
+                var nextExpression = Expression.Lambda<Func<Task>>(Expression.Invoke(expression, contextParameterp));
+                var invocation = Expression.Call(stepReference, processMethod, contextParameterp, nextExpression);
 
-                expression = Expression.Lambda<Func<TContext, Task>>(invocation, contextParameter);
+                expression = Expression.Lambda<Func<TContext, Task>>(invocation, contextParameterp);
             }
 
             return expression.Compile();
