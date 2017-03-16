@@ -11,6 +11,7 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Profiling;
 using Rebus.Serialization;
+using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;

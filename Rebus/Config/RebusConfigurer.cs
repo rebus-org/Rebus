@@ -19,6 +19,7 @@ using Rebus.Routing;
 using Rebus.Routing.TypeBased;
 using Rebus.Sagas;
 using Rebus.Serialization;
+using Rebus.Serialization.Json;
 using Rebus.Subscriptions;
 using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;

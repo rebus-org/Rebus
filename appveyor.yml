@@ -11,12 +11,10 @@ before_build:
 
 build_script:
   - dotnet build Rebus                  -c Release --no-dependencies
-  - dotnet build Rebus.NewtonsoftJson   -c Release --no-dependencies
   - dotnet build Rebus.Tests.Contracts  -c Release --no-dependencies
   - dotnet build Rebus.Tests            -c Release --no-dependencies
 
 after_build:
-  - dotnet pack Rebus                  -c Release /p:ShouldMerge=1
-  - dotnet pack Rebus.NewtonsoftJson   -c Release
+  - dotnet pack Rebus                  -c Release
   - dotnet pack Rebus.Tests.Contracts  -c Release
   - dotnet pack Rebus.Tests            -c Release

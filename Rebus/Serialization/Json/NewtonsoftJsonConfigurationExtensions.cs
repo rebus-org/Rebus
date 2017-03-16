@@ -1,10 +1,8 @@
 ﻿using System;
 using Newtonsoft.Json;
 using Rebus.Config;
-using Rebus.Serialization;
-using JsonSerializer = Rebus.Serialization.JsonSerializer;
 
-namespace Rebus.NewtonsoftJson
+namespace Rebus.Serialization.Json
 {
     /// <summary>
     /// Configuration extensions for the honest Newtonsoft JSON.NET-based Rebus message serializer

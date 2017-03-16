@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Extensions;
 using Rebus.Messages;
+
 #pragma warning disable 1998
 
-namespace Rebus.Serialization
+namespace Rebus.Serialization.Json
 {
     /// <summary>
     /// Implementation of <see cref="ISerializer"/> that uses Newtonsoft JSON.NET internally, with some pretty robust settings
