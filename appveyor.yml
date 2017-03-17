@@ -14,7 +14,7 @@ build_script:
   - dotnet build Rebus.Tests.Contracts  -c Release --no-dependencies
   - dotnet build Rebus.Tests            -c Release --no-dependencies
 
-after_build:
-  - dotnet pack Rebus                  -c Release /p:PackageVersion=%Version%
-  - dotnet pack Rebus.Tests.Contracts  -c Release /p:PackageVersion=%Version%
-  - dotnet pack Rebus.Tests            -c Release /p:PackageVersion=%Version%
+#after_build:
+#  - dotnet pack Rebus                  -c Release /p:PackageVersion=%Version%
+#  - dotnet pack Rebus.Tests.Contracts  -c Release /p:PackageVersion=%Version%
+#  - dotnet pack Rebus.Tests            -c Release /p:PackageVersion=%Version%
