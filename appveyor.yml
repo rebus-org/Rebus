@@ -11,8 +11,8 @@ before_build:
 
 build_script:
   - dotnet build Rebus                  -c Release --no-dependencies
-  - dotnet build Rebus.Tests.Contracts  -c Release --no-dependencies
-  - dotnet build Rebus.Tests            -c Release --no-dependencies
+  - dotnet build Rebus.Tests.Contracts  -c Release --no-dependencies /p:WarningLevel=3
+  - dotnet build Rebus.Tests            -c Release --no-dependencies /p:WarningLevel=3
 
 #after_build:
 #  - dotnet pack Rebus                  -c Release /p:PackageVersion=%Version%
