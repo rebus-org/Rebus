@@ -10,12 +10,6 @@ before_build:
   - appveyor-retry dotnet restore -v Minimal
 
 build_script:
-#  - dotnet build Rebus2.sln                  -c Release --no-dependencies
   - dotnet build Rebus                  -c Release 
   - dotnet build Rebus.Tests.Contracts  -c Release /p:WarningLevel=3
   - dotnet build Rebus.Tests            -c Release /p:WarningLevel=3
-
-#after_build:
-#  - dotnet pack Rebus                  -c Release /p:PackageVersion=%Version%
-#  - dotnet pack Rebus.Tests.Contracts  -c Release /p:PackageVersion=%Version%
-#  - dotnet pack Rebus.Tests            -c Release /p:PackageVersion=%Version%
