@@ -21,7 +21,7 @@ set Version=%version%
 
 pushd %root%
 
-dotnet build "%project%" -c Release
+dotnet build "%root%\Rebus2.sln" -c Release
 if %ERRORLEVEL% neq 0 (
 	popd
  	echo Error calling %clean%

@@ -2,6 +2,7 @@
 
 set scriptsdir=%~dp0
 set root=%scriptsdir%\..
+set deploydir=%root%\deploy
 set project=%1
 set version=%2
 
@@ -21,12 +22,14 @@ set Version=%version%
 
 pushd %root%
 
-dotnet pack "%project%" -c Release /p:PackageVersion=%version%
+dotnet pack "%root%/Rebus2.sln" -c Release -o "%deploydir%" /p:PackageVersion=%version%
 if %ERRORLEVEL% neq 0 (
 	popd
  	echo Error calling %clean%
  	goto exit_fail
 )
+
+call scripts\push.cmd "%version%"
 
 popd
 
