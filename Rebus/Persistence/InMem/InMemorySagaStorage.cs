@@ -86,7 +86,7 @@ namespace Rebus.Persistence.InMem
             {
                 if (_data.ContainsKey(id))
                 {
-                    throw new ConcurrencyException("Saga data with ID {0} already exists!", id);
+                    throw new ConcurrencyException($"Saga data with ID {id} already exists!");
                 }
 
                 VerifyCorrelationPropertyUniqueness(sagaData, correlationProperties);
@@ -113,7 +113,7 @@ namespace Rebus.Persistence.InMem
             {
                 if (!_data.ContainsKey(id))
                 {
-                    throw new ConcurrencyException("Saga data with ID {0} no longer exists and cannot be updated", id);
+                    throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be updated");
                 }
 
                 VerifyCorrelationPropertyUniqueness(sagaData, correlationProperties);
@@ -122,8 +122,7 @@ namespace Rebus.Persistence.InMem
 
                 if (existingCopy.Revision != sagaData.Revision)
                 {
-                    throw new ConcurrencyException("Attempted to update saga data with ID {0} with revision {1}, but the existing data was updated to revision {2}",
-                        id, sagaData.Revision, existingCopy.Revision);
+                    throw new ConcurrencyException($"Attempted to update saga data with ID {id} with revision {sagaData.Revision}, but the existing data was updated to revision {existingCopy.Revision}");
                 }
 
                 var clone = Clone(sagaData);
@@ -149,8 +148,7 @@ namespace Rebus.Persistence.InMem
 
                     if (Equals(valueFromSagaData, valueFromExistingInstance))
                     {
-                        throw new ConcurrencyException("Correlation property '{0}' has value '{1}' in existing saga data with ID {2}",
-                            property.PropertyName, valueFromExistingInstance, existingSagaData.Id);
+                        throw new ConcurrencyException($"Correlation property '{property.PropertyName}' has value '{valueFromExistingInstance}' in existing saga data with ID {existingSagaData.Id}");
                     }
                 }
             }
@@ -167,7 +165,7 @@ namespace Rebus.Persistence.InMem
             {
                 if (!_data.ContainsKey(id))
                 {
-                    throw new ConcurrencyException("Saga data with ID {0} no longer exists and cannot be deleted", id);
+                    throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be deleted");
                 }
 
                 ISagaData temp;

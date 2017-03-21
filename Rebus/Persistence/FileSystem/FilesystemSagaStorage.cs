@@ -72,7 +72,7 @@ namespace Rebus.Persistence.FileSystem
                 var existingSaga = index.FindById(id);
                 if (existingSaga != null)
                 {
-                    throw new ConcurrencyException("Saga data with ID {0} already exists!", id);
+                    throw new ConcurrencyException($"Saga data with ID {id} already exists!");
                 }
                 index.Insert(sagaData, correlationProperties);
 
@@ -91,12 +91,11 @@ namespace Rebus.Persistence.FileSystem
                 var existingCopy = index.FindById(id);
                 if (existingCopy == null)
                 {
-                    throw new ConcurrencyException("Saga data with ID {0} does not exist!", id);
+                    throw new ConcurrencyException($"Saga data with ID {id} does not exist!");
                 }
                 if (existingCopy.Revision != sagaData.Revision)
                 {
-                    throw new ConcurrencyException("Attempted to update saga data with ID {0} with revision {1}, but the existing data was updated to revision {2}",
-                        id, sagaData.Revision, existingCopy.Revision);
+                    throw new ConcurrencyException($"Attempted to update saga data with ID {id} with revision {sagaData.Revision}, but the existing data was updated to revision {existingCopy.Revision}");
                 }
                 sagaData.Revision++;
                 index.Insert(sagaData, correlationProperties);
@@ -114,7 +113,7 @@ namespace Rebus.Persistence.FileSystem
                 var id = sagaData.Id;
                 if (!index.Contains(id))
                 {
-                    throw new ConcurrencyException("Saga data with ID {0} no longer exists and cannot be deleted", id);
+                    throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be deleted");
                 }
                 index.Remove(id);
             }
