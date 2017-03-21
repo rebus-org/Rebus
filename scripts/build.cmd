@@ -24,7 +24,6 @@ pushd %root%
 dotnet build "%root%\Rebus" -c Release
 if %ERRORLEVEL% neq 0 (
 	popd
- 	echo Error calling %clean%
  	goto exit_fail
 )
 

@@ -29,7 +29,6 @@ pushd %root%
 dotnet pack "%root%/Rebus" -c Release -o "%deploydir%" /p:PackageVersion=%version%
 if %ERRORLEVEL% neq 0 (
 	popd
- 	echo Error calling %clean%
  	goto exit_fail
 )
 

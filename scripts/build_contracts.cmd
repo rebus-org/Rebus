@@ -2,17 +2,10 @@
 
 set scriptsdir=%~dp0
 set root=%scriptsdir%\..
-set project=%1
-set version=%2
-
-if "%project%"=="" (
-	echo Please invoke the build script with a project name as its first argument.
-	echo.
-	goto exit_fail
-)
+set version=%1
 
 if "%version%"=="" (
-	echo Please invoke the build script with a version as its second argument.
+	echo Please invoke the build script with a version as its single argument.
 	echo.
 	goto exit_fail
 )
@@ -21,17 +14,28 @@ set Version=%version%
 
 pushd %root%
 
-dotnet build "%root%\Rebus" -c Release
+git status
+
+echo.
+echo Are you sure you want to git clean -dxf and stuff?
+echo.
+pause
+
+git clean -dxf
 if %ERRORLEVEL% neq 0 (
 	popd
- 	echo Error calling %clean%
+ 	goto exit_fail
+)
+
+dotnet restore
+if %ERRORLEVEL% neq 0 (
+	popd
  	goto exit_fail
 )
 
 dotnet build "%root%\Rebus.Tests.Contracts" -c Release /p:WarningLevel=3
 if %ERRORLEVEL% neq 0 (
 	popd
- 	echo Error calling %clean%
  	goto exit_fail
 )
 

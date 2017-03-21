@@ -3,17 +3,10 @@
 set scriptsdir=%~dp0
 set root=%scriptsdir%\..
 set deploydir=%root%\deploy
-set project=%1
-set version=%2
-
-if "%project%"=="" (
-	echo Please invoke the build script with a project name as its first argument.
-	echo.
-	goto exit_fail
-)
+set version=%1
 
 if "%version%"=="" (
-	echo Please invoke the build script with a version as its second argument.
+	echo Please invoke the build script with a version as its single argument.
 	echo.
 	goto exit_fail
 )
@@ -22,17 +15,9 @@ set Version=%version%
 
 pushd %root%
 
-dotnet pack "%root%/Rebus" -c Release -o "%deploydir%" /p:PackageVersion=%version%
-if %ERRORLEVEL% neq 0 (
-	popd
- 	echo Error calling %clean%
- 	goto exit_fail
-)
-
 dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" /p:PackageVersion=%version%;WarningLevel=3
 if %ERRORLEVEL% neq 0 (
 	popd
- 	echo Error calling %clean%
  	goto exit_fail
 )
 
