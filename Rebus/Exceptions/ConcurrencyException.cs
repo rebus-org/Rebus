@@ -10,7 +10,7 @@ namespace Rebus.Exceptions
     /// </summary>
 #if NET45
     [Serializable]
-    public class ConcurrencyException : ApplicationException
+    public class ConcurrencyException : Exception
 # elif NETSTANDARD1_6
     public class ConcurrencyException : Exception
 #endif
@@ -18,16 +18,16 @@ namespace Rebus.Exceptions
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ConcurrencyException(string message, params object[] objs)
-            : base(string.Format(message, objs))
+        public ConcurrencyException(string message)
+            : base(message)
         {
         }
 
         /// <summary>
         /// Constructs the exception
         /// </summary>
-        public ConcurrencyException(Exception innerException, string message, params object[] objs)
-            : base(string.Format(message, objs), innerException)
+        public ConcurrencyException(Exception innerException, string message)
+            : base(message, innerException)
         {
         }
 
