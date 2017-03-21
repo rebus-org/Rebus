@@ -21,7 +21,14 @@ set Version=%version%
 
 pushd %root%
 
-dotnet build "%root%\Rebus2.sln" -c Release
+dotnet build "%root%\Rebus" -c Release
+if %ERRORLEVEL% neq 0 (
+	popd
+ 	echo Error calling %clean%
+ 	goto exit_fail
+)
+
+dotnet build "%root%\Rebus.Tests.Contracts" -c Release /p:WarningLevel=3
 if %ERRORLEVEL% neq 0 (
 	popd
  	echo Error calling %clean%

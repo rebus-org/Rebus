@@ -22,7 +22,14 @@ set Version=%version%
 
 pushd %root%
 
-dotnet pack "%root%/Rebus2.sln" -c Release -o "%deploydir%" /p:PackageVersion=%version%
+dotnet pack "%root%/Rebus" -c Release -o "%deploydir%" /p:PackageVersion=%version%
+if %ERRORLEVEL% neq 0 (
+	popd
+ 	echo Error calling %clean%
+ 	goto exit_fail
+)
+
+dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" /p:PackageVersion=%version%;WarningLevel=3
 if %ERRORLEVEL% neq 0 (
 	popd
  	echo Error calling %clean%
