@@ -15,6 +15,25 @@ set Version=%version%
 
 pushd %root%
 
+git status
+
+echo.
+echo Are you sure you want to git clean -dxf and stuff?
+echo.
+pause
+
+git clean -dxf
+if %ERRORLEVEL% neq 0 (
+	popd
+ 	goto exit_fail
+)
+
+dotnet restore
+if %ERRORLEVEL% neq 0 (
+	popd
+ 	goto exit_fail
+)
+
 dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" /p:PackageVersion=%version%;WarningLevel=3
 if %ERRORLEVEL% neq 0 (
 	popd
