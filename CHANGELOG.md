@@ -1156,7 +1156,7 @@
 
 * Fix regression that too eagerly validated a saga's correlation properties, leading to suddenly no longer being able to correlate by nested properties
 
-## 4.0.0-b01
+## 4.0.0-b02
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
