@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -7,8 +8,7 @@ using System.Threading.Tasks;
 namespace Rebus.Pipeline
 {
     /// <summary>
-    /// Implementation of <see cref="IPipelineInvoker"/> that builds an expression to invoke the steps
-    /// of a pipeline
+    /// Expression-based pipeline invoker that builds a compiled function to invoke the pipeline(s)
     /// </summary>
     class CompiledPipelineInvoker : IPipelineInvoker
     {
@@ -19,13 +19,15 @@ namespace Rebus.Pipeline
 
         public CompiledPipelineInvoker(IPipeline pipeline)
         {
-            var receivePipeline = pipeline.ReceivePipeline();
+            _invokeReceivePipeline = GenerateFunc<IncomingStepContext, IIncomingStep>(
+                pipeline.ReceivePipeline(),
+                nameof(IIncomingStep.Process)
+            );
 
-            _invokeReceivePipeline = GenerateFunc<IncomingStepContext, IIncomingStep>(receivePipeline, nameof(IIncomingStep.Process));
-
-            var sendPipeline = pipeline.SendPipeline();
-
-            _invokeSendPipeline = GenerateFunc<OutgoingStepContext, IOutgoingStep>(sendPipeline, nameof(IOutgoingStep.Process));
+            _invokeSendPipeline = GenerateFunc<OutgoingStepContext, IOutgoingStep>(
+                pipeline.SendPipeline(),
+                nameof(IOutgoingStep.Process)
+            );
         }
 
         public Task Invoke(IncomingStepContext context)
@@ -38,55 +40,55 @@ namespace Rebus.Pipeline
             return _invokeSendPipeline(context);
         }
 
-        /* we want to compile this bad boy
-            return firstStep.Process(context0, () => {
-                return secondStep.Process(context1, () => {
-                    return thirdStep.Process(context2, () => {
-                        return fourthStep.Process(context3, () => {
-                            return Task.FromResult(0);
-                        });
-                    });
-                });            
-            }); 
-        */
         static Func<TContext, Task> GenerateFunc<TContext, TStep>(IReadOnlyList<TStep> steps, string processMethodName)
             where TContext : StepContext
             where TStep : IStep
         {
-            // pipeline terminator: create function (context) => CompletedTask
-            var contextParameter = Expression.Parameter(typeof(TContext), $"context{steps.Count}");
-            var noopExpression = Expression.Constant(CompletedTask);
-            var expression = Expression.Lambda<Func<TContext, Task>>(noopExpression, contextParameter);
-
-            // start with the end - construct each step function such that its invocation looks like this
-            // (context) => step[n-1].Process(context, () => step[n].Process(...))
-            for (var index = steps.Count - 1; index >= 0; index--)
-            {
-                var step = steps[index];
-                var processMethod = GetProcessMethod(step, processMethodName, typeof(TContext));
-
-                var contextParameterp = Expression.Parameter(typeof(TContext), $"context{index}");
-                var stepReference = Expression.Constant(step);
-                var invocationExpression = Expression.Invoke(expression, contextParameterp);
-                var nextExpression = Expression.Lambda<Func<Task>>(invocationExpression);
-                var callExpression = Expression.Call(stepReference, processMethod, contextParameterp, nextExpression);
-
-                expression = Expression.Lambda<Func<TContext, Task>>(callExpression, contextParameterp);
-            }
+            var expression = GenerateExpression<TContext, TStep>(steps, processMethodName, 0);
 
             return expression.Compile();
+        }
+
+        /// <summary>
+        /// Recursively builds and expression that invokes the pipeline, FUN STYLE BABY!
+        /// </summary>
+        static Expression<Func<TContext, Task>> GenerateExpression<TContext, TStep>(IReadOnlyCollection<TStep> steps, string processMethodName, int index)
+            where TContext : StepContext
+            where TStep : IStep
+        {
+            // we need a context parameter no matter what
+            var contextParameter = Expression.Parameter(typeof(TContext), $"context{index}");
+
+            // if we have no steps to invoke, just return the terminator expression
+            if (!steps.Any())
+            {
+                var noopExpression = Expression.Constant(CompletedTask);
+
+                return Expression.Lambda<Func<TContext, Task>>(noopExpression, contextParameter);
+            }
+
+            // otherwise, get an expression for invoking the tail of the pipeline...
+            var tail = steps.Skip(1).ToList();
+            var tailExpression = GenerateExpression<TContext, TStep>(tail, processMethodName, index + 1);
+
+            // ...and attach it to the invocation of the head of the pipeline:
+            var head = steps.First();
+            var processMethod = GetProcessMethod(head, processMethodName, typeof(TContext));
+
+            var stepReference = Expression.Constant(head);
+            var invocationExpression = Expression.Invoke(tailExpression, contextParameter);
+            var nextExpression = Expression.Lambda<Func<Task>>(invocationExpression);
+            var callExpression = Expression.Call(stepReference, processMethod, contextParameter, nextExpression);
+
+            return Expression.Lambda<Func<TContext, Task>>(callExpression, contextParameter);
         }
 
         static MethodInfo GetProcessMethod(IStep step, string methodName, Type contextType)
         {
             var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
+            if (processMethod != null) return processMethod;
 
-            if (processMethod == null)
-            {
-                throw new ArgumentException($"Could not find method with signature {methodName}({contextType.Name} context, Func<Task> next) on {step}");
-            }
-
-            return processMethod;
+            throw new ArgumentException($"Could not find method with signature {methodName}({contextType.Name} context, Func<Task> next) on {step}");
         }
     }
 }

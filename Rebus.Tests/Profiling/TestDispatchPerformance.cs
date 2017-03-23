@@ -22,8 +22,8 @@ namespace Rebus.Tests.Profiling
     [TestFixture]
     public class TestDispatchPerformance : FixtureBase
     {
-        [TestCase(100000, 5, true)]
-        [TestCase(100000, 5, false)]
+        [TestCase(100000, 1, true)]
+        [TestCase(100000, 1, false)]
         public void TakeTime(int numberOfMessages, int numberOfSamples, bool useExperimentalPipelineInvoker)
         {
             var profilerStats = new PipelineStepProfilerStats();
