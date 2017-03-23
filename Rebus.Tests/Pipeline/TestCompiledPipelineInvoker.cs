@@ -28,6 +28,8 @@ namespace Rebus.Tests.Pipeline
         /// 
         /// 2016/07/18:
         ///     Execution took 23,5 s
+        /// 2017/03/23
+        ///     @dadhi: With FastExpressionCompiler execution took 18 s vs Expression.Compile 38 s
         /// </summary>
         [Test]
         public void CheckTiming()
