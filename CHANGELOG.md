@@ -1162,6 +1162,7 @@
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
 * Change all logging to have named placeholders (Serilog style) instead of the semantically useless .NET placeholders (logging libraries that have no use for named placeholders can use `AbstractRebusLoggerFactory`'s `RenderString` method)
 * Add experimental expression-based pipeline invoker
+* Compile expression-based pipeline with [FastExpressionCompiler](https://github.com/dadhi/FastExpressionCompiler) - thanks [dadhi]
 
 ---
 
