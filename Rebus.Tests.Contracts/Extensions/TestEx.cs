@@ -18,6 +18,11 @@ namespace Rebus.Tests.Contracts.Extensions
 {
     public static class TestEx
     {
+        public static double Median(this IEnumerable<double> values)
+        {
+            return values.GetMedianBy(d => d);
+        }
+
         public static TItem GetMedianBy<TItem, TValue>(this IEnumerable<TItem> items, Func<TItem, TValue> valueGetter)
         {
             var list = items.OrderBy(valueGetter).ToList();

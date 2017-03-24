@@ -1,212 +1,185 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Reflection;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Invokers;
+using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 
 namespace Rebus.Tests.Pipeline
 {
     [TestFixture]
-    public class TestCompiledPipelineInvoker
+    public class TestCompiledPipelineInvoker : FixtureBase
     {
-        static bool _functionWasInvoked = false;
-        static bool _asyncFunctionWasInvoked = false;
-        static bool _asyncFunctionWithParameterWasInvoked = false;
+        /// <summary>
+        /// 1M iterations
+        /// 
+        /// Initial: 
+        ///     Execution took 21,4 s
+        /// Without unnecessary async/await:
+        ///     Execution took 19,5 s
+        /// With recursive invocation:
+        ///     Execution took 21,6 s
+        /// 
+        /// 2016/07/18:
+        ///     Execution took 23,5 s
+        /// 2017/03/23
+        ///     @dadhi: With FastExpressionCompiler execution took 18 s vs Expression.Compile 38 s
+        /// </summary>
+        [Test]
+        public void CheckTiming()
+        {
+            var pipeline = Enumerable.Range(0, 15)
+                .Select(stepNumber => new NamedStep($"step {stepNumber}"))
+                .ToArray();
+
+            var defaultPipeline = new DefaultPipeline(initialIncomingSteps: pipeline);
+            var invoker = new CompiledPipelineInvoker(defaultPipeline);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            1000000.Times(() =>
+            {
+                var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), GetFakeTransactionContext());
+
+                invoker.Invoke(stepContext).Wait();
+            });
+
+            Console.WriteLine($"Execution took {stopwatch.Elapsed.TotalSeconds:0.0} s");
+        }
+
+        ITransactionContext GetFakeTransactionContext()
+        {
+            return new FakeTransactionContext();
+        }
+
+        class FakeTransactionContext : ITransactionContext
+        {
+            public FakeTransactionContext()
+            {
+                Items = new ConcurrentDictionary<string, object>();
+            }
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+
+            public ConcurrentDictionary<string, object> Items { get; }
+            public void OnCommitted(Func<Task> commitAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnAborted(Action abortedAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnCompleted(Func<Task> completedAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnDisposed(Action disposedAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Abort()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Commit()
+            {
+                throw new NotImplementedException();
+            }
+        }
 
         [Test]
-        public void CanInvokeProcessMethodOfAnIncomingStep()
-        {
-            var step = new FakeStep("WOOHOO");
-            var processMethod = step.GetType().GetMethod("Process");
-            var context = GetIncomingStepContext();
-
-            var nextExpression = Expression.Lambda<Func<Task>>(Expression.Constant(Task.FromResult(0)));
-
-            var stepReference = Expression.Constant(step);
-            var contextArgument = Expression.Constant(context);
-            var callExpression = Expression.Call(stepReference, processMethod, contextArgument, nextExpression);
-        }
-
-        [Test]
-        public async Task CanBuildSimpleAsyncCallExpressionWithParameter()
-        {
-            var method = GetType().GetMethod(nameof(AsyncFunctionWithParameter), BindingFlags.Instance | BindingFlags.NonPublic);
-            var textParameter = Expression.Parameter(typeof(string), "text");
-            var callExpression = Expression.Call(Expression.Constant(this), method, textParameter);
-            var lambda = Expression.Lambda<Func<string, Task>>(callExpression, textParameter);
-            var action = lambda.Compile();
-
-            await action("hej med dig!!");
-
-            Assert.That(_asyncFunctionWithParameterWasInvoked, Is.True);
-        }
-
-        Task AsyncFunctionWithParameter(string text)
-        {
-            Console.WriteLine($"Yay ASYNC it works: {text}");
-            _asyncFunctionWithParameterWasInvoked = true;
-            return Task.FromResult(0);
-        }
-
-        [Test]
-        public async Task CanBuildSimpleAsyncCallExpression()
-        {
-            var method = GetType().GetMethod(nameof(AsyncFunction), BindingFlags.Instance | BindingFlags.NonPublic);
-            var callExpression = Expression.Call(Expression.Constant(this), method);
-            var lambda = Expression.Lambda<Func<Task>>(callExpression);
-            var action = lambda.Compile();
-
-            await action();
-
-            Assert.That(_asyncFunctionWasInvoked, Is.True);
-        }
-
-        Task AsyncFunction()
-        {
-            Console.WriteLine("Yay ASYNC it works!!!");
-            _asyncFunctionWasInvoked = true;
-            return Task.FromResult(0);
-        }
-
-        [Test]
-        public void CanBuildSimpleCallExpression()
-        {
-            var method = GetType().GetMethod(nameof(Function), BindingFlags.Instance | BindingFlags.NonPublic);
-            var callExpression = Expression.Call(Expression.Constant(this), method);
-            var lambda = Expression.Lambda<Action>(callExpression);
-            var action = lambda.Compile();
-
-            action();
-
-            Assert.That(_functionWasInvoked, Is.True);
-        }
-
-        void Function()
-        {
-            Console.WriteLine("Yay it works!!!");
-            _functionWasInvoked = true;
-        }
-
-
-        [Test]
-        public async Task CanDoIt()
+        public async Task InvokesInOrder_Compiled()
         {
             var invoker = new CompiledPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
             {
-                new FakeStep("step 1"),
-                new FakeStep("step 2"),
-                new FakeStep("step 3"),
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
             }));
 
-            var context = GetIncomingStepContext();
-            await invoker.Invoke(context);
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
 
-            var events = context.Load<List<string>>();
+            await invoker.Invoke(stepContext);
 
-            Console.WriteLine();
-            Console.WriteLine("Result:");
-            Console.WriteLine(string.Join(Environment.NewLine, events));
-            Console.WriteLine();
-
-            Assert.That(events.ToArray(), Is.EqualTo(new[]
-            {
-                "step 1 before",
-                "step 2 before",
-                "step 3 before",
-                "step 3 after",
-                "step 2 after",
-                "step 1 after",
-            }));
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
         }
 
         [Test]
-        public async Task DoItManually()
+        public async Task InvokesInOrder_Action()
         {
-            var step1 = new FakeStep("step 1");
-            var step2 = new FakeStep("step 2");
-            var step3 = new FakeStep("step 3");
-            var step4 = new FakeStep("step 4");
-
-            Func<IncomingStepContext, Task> invokerFunction = context => step1.Process(context, () =>
+            var invoker = new ActionPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
             {
-                return step2.Process(context, () =>
-                {
-                    return step3.Process(context, () =>
-                    {
-                        return step4.Process(context, () =>
-                        {
-                            return Task.FromResult(0);
-                        });
-                    });
-                });
-            });
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
 
-            var c = GetIncomingStepContext();
-            await invokerFunction(c);
-            Console.WriteLine(string.Join(Environment.NewLine, c.Load<List<string>>()));
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
+
+            await invoker.Invoke(stepContext);
+
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
         }
 
         [Test]
-        public async Task BuildItManually()
+        public async Task InvokesInOrder_DefaultNew()
         {
-            var step1 = new FakeStep("step 1");
-            var step2 = new FakeStep("step 2");
-            var step3 = new FakeStep("step 3");
-            var step4 = new FakeStep("step 4");
+            var invoker = new DefaultPipelineInvokerNew(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            {
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
 
-            Func<IncomingStepContext, Task> invokerFunction = BuildFunction(step1);
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
 
-            var c = GetIncomingStepContext();
-            await invokerFunction(c);
-            Console.WriteLine(string.Join(Environment.NewLine, c.Load<List<string>>()));
+            await invoker.Invoke(stepContext);
+
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
         }
 
-        Func<IncomingStepContext, Task> BuildFunction(FakeStep step1)
-        {
-            var parameterExpression = Expression.Parameter(typeof(IncomingStepContext), "initialContext");
-            var constantExpression = Expression.Constant(Task.FromResult(0));
-            var function = Expression.Lambda<Func<IncomingStepContext, Task>>(constantExpression, parameterExpression);
-
-            var processMethod = step1.GetType().GetMethod("Process");
-            var target = Expression.Constant(step1);
-            var callExpression = Expression.Call(target, processMethod, Expression.Constant(Expression.Parameter(typeof(IncomingStepContext), "step1parameter")));
-            var lambda = Expression.Lambda<Func<IncomingStepContext, Task>>(callExpression,
-                Expression.Parameter(typeof(IncomingStepContext), "step1parameter"));
-
-            return lambda.Compile();
-        }
-
-        static IncomingStepContext GetIncomingStepContext()
-        {
-            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[] { 1, 2, 3 });
-            var transactionContext = new TransactionContext();
-            var context = new IncomingStepContext(transportMessage, transactionContext);
-            context.Save(new List<string>());
-            return context;
-        }
-
-        class FakeStep : IIncomingStep
+        class NamedStep : IIncomingStep
         {
             readonly string _name;
 
-            public FakeStep(string name)
+            public NamedStep(string name)
             {
                 _name = name;
             }
 
             public async Task Process(IncomingStepContext context, Func<Task> next)
             {
-                var events = context.Load<List<string>>();
-
-                events.Add($"{_name} before");
+                GetActionList(context).Add($"enter {_name}");
 
                 await next();
 
-                events.Add($"{_name} after");
+                GetActionList(context).Add($"leave {_name}");
+            }
+
+            static List<string> GetActionList(StepContext context)
+            {
+                return context.Load<List<string>>() ?? context.Save(new List<string>());
             }
         }
     }
