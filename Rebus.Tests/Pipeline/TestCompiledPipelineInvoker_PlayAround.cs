@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Invokers;
 using Rebus.Pipeline.Send;
 using Rebus.Transport;
 // ReSharper disable ArgumentsStyleOther

@@ -2,22 +2,21 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Rebus.Pipeline
+namespace Rebus.Pipeline.Invokers
 {
     /// <summary>
     /// give me a pipeline and I'll invoke it
     /// </summary>
-    public class DefaultPipelineInvoker : IPipelineInvoker
+    class DefaultPipelineInvokerNew : IPipelineInvoker
     {
         static readonly Task<int> Noop = Task.FromResult(0);
-        static readonly Func<Task> TerminationStep = () => Noop;
         readonly IOutgoingStep[] _outgoingSteps;
         readonly IIncomingStep[] _incomingSteps;
 
         /// <summary>
         /// Constructs the invoker
         /// </summary>
-        public DefaultPipelineInvoker(IPipeline pipeline)
+        public DefaultPipelineInvokerNew(IPipeline pipeline)
         {
             if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
             _outgoingSteps = pipeline.SendPipeline();
@@ -29,16 +28,17 @@ namespace Rebus.Pipeline
         /// </summary>
         public Task Invoke(IncomingStepContext context)
         {
-            var step = TerminationStep;
-
-            for (var index = _incomingSteps.Length - 1; index >= 0; index--)
+            Task InvokerFunction(int index)
             {
-                var nextStep = step;
-                var stepToInvoke = _incomingSteps[index];
-                step = () => stepToInvoke.Process(context, nextStep);
+                if (index == _incomingSteps.Length) return Noop;
+
+                Task InvokeNext() => InvokerFunction(index + 1);
+
+                return _incomingSteps[index]
+                    .Process(context, InvokeNext);
             }
 
-            return step();
+            return InvokerFunction(0);
         }
 
         /// <summary>
@@ -46,16 +46,17 @@ namespace Rebus.Pipeline
         /// </summary>
         public Task Invoke(OutgoingStepContext context)
         {
-            var step = TerminationStep;
-
-            for (var index = _outgoingSteps.Length - 1; index >= 0; index--)
+            Task InvokerFunction(int index)
             {
-                var nextStep = step;
-                var stepToInvoke = _outgoingSteps[index];
-                step = () => stepToInvoke.Process(context, nextStep);
+                if (index == _outgoingSteps.Length) return Noop;
+
+                Task InvokeNext() => InvokerFunction(index + 1);
+
+                return _outgoingSteps[index]
+                    .Process(context, InvokeNext);
             }
 
-            return step();
+            return InvokerFunction(0);
         }
     }
 }

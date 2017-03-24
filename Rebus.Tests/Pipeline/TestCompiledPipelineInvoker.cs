@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Invokers;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
@@ -102,9 +103,47 @@ namespace Rebus.Tests.Pipeline
         }
 
         [Test]
-        public async Task InvokesInOrder()
+        public async Task InvokesInOrder_Compiled()
         {
             var invoker = new CompiledPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            {
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
+
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
+
+            await invoker.Invoke(stepContext);
+
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
+        }
+
+        [Test]
+        public async Task InvokesInOrder_Action()
+        {
+            var invoker = new ActionPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            {
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
+
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
+
+            await invoker.Invoke(stepContext);
+
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
+        }
+
+        [Test]
+        public async Task InvokesInOrder_DefaultNew()
+        {
+            var invoker = new DefaultPipelineInvokerNew(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
             {
                 new NamedStep("first"),
                 new NamedStep("second"),

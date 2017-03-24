@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using FastExpressionCompiler;
 
-namespace Rebus.Pipeline
+namespace Rebus.Pipeline.Invokers
 {
     /// <summary>
     /// Expression-based pipeline invoker that builds a compiled function to invoke the pipeline(s)
