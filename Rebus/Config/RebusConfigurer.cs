@@ -9,6 +9,7 @@ using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Persistence.InMem;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Invokers;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Retry;
@@ -169,7 +170,7 @@ namespace Rebus.Config
             PossiblyRegisterDefault<IPipelineInvoker>(c =>
             {
                 var pipeline = c.Get<IPipeline>();
-                return new DefaultPipelineInvoker(pipeline);
+                return new DefaultPipelineInvokerNew(pipeline);
             });
 
             PossiblyRegisterDefault<ISyncBackoffStrategy>(c =>

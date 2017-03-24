@@ -15,7 +15,7 @@ using Rebus.Transport;
 namespace Rebus.Tests.Pipeline
 {
     [TestFixture]
-    public class TestDefaultPipelineInvoker : FixtureBase
+    public class TestCompiledPipelineInvoker : FixtureBase
     {
         /// <summary>
         /// 1M iterations
@@ -29,8 +29,10 @@ namespace Rebus.Tests.Pipeline
         /// 
         /// 2016/07/18:
         ///     Execution took 23,5 s
+        /// 2017/03/23
+        ///     @dadhi: With FastExpressionCompiler execution took 18 s vs Expression.Compile 38 s
         /// </summary>
-        [Test, Ignore("takes a long time")]
+        [Test]
         public void CheckTiming()
         {
             var pipeline = Enumerable.Range(0, 15)
@@ -38,7 +40,7 @@ namespace Rebus.Tests.Pipeline
                 .ToArray();
 
             var defaultPipeline = new DefaultPipeline(initialIncomingSteps: pipeline);
-            var invoker = new DefaultPipelineInvoker(defaultPipeline);
+            var invoker = new CompiledPipelineInvoker(defaultPipeline);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -101,9 +103,47 @@ namespace Rebus.Tests.Pipeline
         }
 
         [Test]
-        public async Task InvokesInOrder()
+        public async Task InvokesInOrder_Compiled()
         {
-            var invoker = new DefaultPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            var invoker = new CompiledPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            {
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
+
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
+
+            await invoker.Invoke(stepContext);
+
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
+        }
+
+        [Test]
+        public async Task InvokesInOrder_Action()
+        {
+            var invoker = new ActionPipelineInvoker(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
+            {
+                new NamedStep("first"),
+                new NamedStep("second"),
+                new NamedStep("third"),
+            }));
+
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
+
+            await invoker.Invoke(stepContext);
+
+            Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
+        }
+
+        [Test]
+        public async Task InvokesInOrder_DefaultNew()
+        {
+            var invoker = new DefaultPipelineInvokerNew(new DefaultPipeline(initialIncomingSteps: new IIncomingStep[]
             {
                 new NamedStep("first"),
                 new NamedStep("second"),

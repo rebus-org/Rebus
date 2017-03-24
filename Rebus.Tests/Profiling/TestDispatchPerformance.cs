@@ -9,6 +9,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Invokers;
 using Rebus.Profiling;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
@@ -22,16 +23,29 @@ namespace Rebus.Tests.Profiling
     [TestFixture]
     public class TestDispatchPerformance : FixtureBase
     {
-        [TestCase(10000, 20)]
-        public void TakeTime(int numberOfMessages, int numberOfSamples)
+        public enum PipelineInvokerMode
         {
+            Default,
+            DefaultNew,
+            Compiled,
+            Action,
+        }
+
+        [TestCase(100000, 10, PipelineInvokerMode.Action)]
+        [TestCase(100000, 10, PipelineInvokerMode.Compiled)]
+        [TestCase(100000, 10, PipelineInvokerMode.Default)]
+        [TestCase(100000, 10, PipelineInvokerMode.DefaultNew)]
+        public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
+        {
+            Console.WriteLine($"Running {numberOfSamples} samples with {numberOfMessages} msgs and mode {pipelineInvokerMode}");
+
             var profilerStats = new PipelineStepProfilerStats();
 
             var results = Enumerable.Range(1, numberOfSamples)
                 .Select(i =>
                 {
                     Console.Write($"Performing sample {i}: ");
-                    var result = RunTest(numberOfMessages, profilerStats);
+                    var result = RunTest(numberOfMessages, profilerStats, pipelineInvokerMode);
                     Console.WriteLine($"{result.TotalSeconds:0.#####}");
                     return result;
                 })
@@ -40,13 +54,18 @@ namespace Rebus.Tests.Profiling
 
             Console.WriteLine($@"{numberOfSamples} runs
 Avg s: {results.Average():0.00###}
-Avg msg/s: {numberOfMessages * numberOfSamples / results.Sum():0}
+Avg msg/s: {numberOfMessages / results.Average():0}
+
+Med s: {results.Median():0.00###}
+Med msg/s: {numberOfMessages / results.Median():0}
+
+Pipeline invoker: {pipelineInvokerMode}
 
 Stats:
 {string.Join(Environment.NewLine, profilerStats.GetAndResetStats().Select(s => $"    {s}"))}");
         }
 
-        static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats)
+        static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats, PipelineInvokerMode pipelineInvokerMode)
         {
             using (var adapter = new BuiltinHandlerActivator())
             {
@@ -59,8 +78,26 @@ Stats:
                     {
                         o.SetNumberOfWorkers(0);
                         o.SetMaxParallelism(1);
-                        
+
                         o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
+
+                        switch (pipelineInvokerMode)
+                        {
+                            case PipelineInvokerMode.Default:
+                                o.Register<IPipelineInvoker>(c => new DefaultPipelineInvoker(c.Get<IPipeline>()));
+                                break;
+                            case PipelineInvokerMode.DefaultNew:
+                                o.Register<IPipelineInvoker>(c => new DefaultPipelineInvokerNew(c.Get<IPipeline>()));
+                                break;
+                            case PipelineInvokerMode.Compiled:
+                                o.Register<IPipelineInvoker>(c => new CompiledPipelineInvoker(c.Get<IPipeline>()));
+                                break;
+                            case PipelineInvokerMode.Action:
+                                o.Register<IPipelineInvoker>(c => new ActionPipelineInvoker(c.Get<IPipeline>()));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException($"Unknown pipeline invoker: {pipelineInvokerMode}");
+                        }
                     })
                     .Start();
 
@@ -77,14 +114,14 @@ Stats:
                     network.Deliver("perftest", inMemTransportMessage);
                 });
 
-
                 var numberOfReceivedMessages = 0;
                 var gotAllMessages = new ManualResetEvent(false);
 
                 adapter.Handle<SomeMessage>(async m =>
                 {
-                    numberOfReceivedMessages++;
-                    if (numberOfReceivedMessages == numberOfMessages)
+                    Interlocked.Increment(ref numberOfReceivedMessages);
+
+                    if (Volatile.Read(ref numberOfReceivedMessages) == numberOfMessages)
                     {
                         gotAllMessages.Set();
                     }

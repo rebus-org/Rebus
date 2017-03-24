@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Invokers;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 
@@ -84,7 +85,7 @@ namespace Rebus.Tests.Pipeline
 
                 case ThingToCheck.NewPipelineInvoker:
                     //return new NewDefaultPipelineInvoker();
-                    return new DefaultPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline));
+                    return new CompiledPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline));
 
                 default:
                     throw new NotSupportedException("cannot do that yet");

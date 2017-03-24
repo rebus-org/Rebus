@@ -1161,6 +1161,8 @@
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
 * Change all logging to have named placeholders (Serilog style) instead of the semantically useless .NET placeholders (logging libraries that have no use for named placeholders can use `AbstractRebusLoggerFactory`'s `RenderString` method)
+* Add experimental expression-based pipeline invoker
+* Compile expression-based pipeline with [FastExpressionCompiler](https://github.com/dadhi/FastExpressionCompiler) - thanks [dadhi]
 * Add .NET Core support (targeting netstandard 1.6) in addition to the current .NET 4.5 target - thanks [mvandevy]
 * Move JSON serializer into core (still default, but now exposed so it can be customized)
 
