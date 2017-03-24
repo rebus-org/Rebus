@@ -45,21 +45,9 @@ namespace Rebus.Pipeline
             where TContext : StepContext
             where TStep : IStep
         {
-            //var expression = GenerateExpression<TContext, TStep>(steps, processMethodName, 0);
-            //return expression.Compile();
-
             var expression = GenerateExpression<TContext, TStep>(steps, processMethodName, 0);
-            var contextParameter = Expression.Parameter(typeof(TContext), "context");
-            var lambdaExpression = Expression.Lambda(expression, contextParameter);
-            return ExpressionCompiler.Compile<Func<TContext, Task>>(lambdaExpression);
-
-            //var expression = GenerateExpression<TContext, TStep>(steps, processMethodName, 0);
-            //var contextParameter = Expression.Parameter(typeof(TContext), "context");
-            //return ExpressionCompiler.TryCompile<Func<TContext, Task>>(
-            //    expression,
-            //    new List<ParameterExpression> {contextParameter},
-            //    new[] {typeof(TContext)}, typeof(Task)
-            //);
+            return ExpressionCompiler.Compile<Func<TContext, Task>>(expression);
+            //return expression.Compile();
         }
 
         /// <summary>
