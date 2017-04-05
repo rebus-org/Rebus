@@ -1165,6 +1165,7 @@
 * Compile expression-based pipeline with [FastExpressionCompiler](https://github.com/dadhi/FastExpressionCompiler) - thanks [dadhi]
 * Add .NET Core support (targeting netstandard 1.6) in addition to the current .NET 4.5 target - thanks [mvandevy]
 * Move JSON serializer into core (still default, but now exposed so it can be customized)
+* Rename transaction scope to `RebusTransactionScope` and make it expose `CompleteAsync()` and `Complete()` methods for completing in an async/sync manner respectively
 
 ---
 
