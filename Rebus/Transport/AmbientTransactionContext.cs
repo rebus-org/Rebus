@@ -54,7 +54,7 @@ namespace Rebus.Transport
 
         /// <summary>
         /// Sets the current transaction context. Please note that in most cases, it is not necessary to set the context using this method
-        /// - when using <see cref="RebusTransactionScope"/> and <see cref="DefaultSyncTransactionContextScope"/> the ambient transaction context
+        /// - when using <see cref="RebusTransactionScope"/> and <see cref="RebusTransactionScope"/> the ambient transaction context
         /// is automatically set/unset when the object is created/disposed.
         /// </summary>
         public static void SetCurrent(ITransactionContext transactionContext)
