@@ -59,7 +59,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
             while (true)
             {
-                using (var context = new DefaultTransactionContextScope())
+                using (var context = new RebusTransactionScope())
                 {
                     var nextMessage = await transport.Receive(AmbientTransactionContext.Current, new CancellationToken());
 
@@ -68,7 +68,7 @@ namespace Rebus.Tests.Contracts.Extensions
                         return nextMessage;
                     }
 
-                    await context.Complete();
+                    await context.CompleteAsync();
                 }
 
                 await Task.Delay(100);

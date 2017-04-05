@@ -1,15 +1,16 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Rebus.Bus.Advanced;
 
 namespace Rebus.Transport
 {
     /// <summary>
-    /// Default (synchronous, as in: the <see cref="Complete"/> method returns void) transaction scope 
-    /// that sets up an ambient <see cref="ITransactionContext"/> and removes it when the scope is disposed. 
-    /// Call <code>await scope.Complete();</code> in order to end the scope
+    /// Default (async, as in: the <see cref="CompleteAsync"/> method returns a <see cref="Task"/> to be awaited) transaction scope 
+    /// that sets up an ambient <see cref="ITransactionContext"/> and removes
+    /// it when the scope is disposed. Call <code>await scope.Complete();</code> in order to end the scope
     /// by committing any actions enlisted to be executed.
     /// </summary>
-    public class DefaultSyncTransactionContextScope : IDisposable
+    public class RebusTransactionScope : IDisposable
     {
         readonly TransactionContext _transactionContext = new TransactionContext();
 
@@ -17,15 +18,25 @@ namespace Rebus.Transport
         /// Creates a new transaction context and mounts it on <see cref="AmbientTransactionContext.Current"/>, making it available for Rebus
         /// to pick up
         /// </summary>
-        public DefaultSyncTransactionContextScope()
+        public RebusTransactionScope()
         {
             AmbientTransactionContext.SetCurrent(_transactionContext);
         }
 
         /// <summary>
+        /// Gets the transaction context instance that this scope is holding
+        /// </summary>
+        public ITransactionContext TransactionContext => _transactionContext;
+
+        /// <summary>
         /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion
         /// </summary>
-        public void Complete() => AsyncHelpers.RunSync(_transactionContext.Complete);
+        public Task CompleteAsync() => _transactionContext.Complete();
+
+        /// <summary>
+        /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion (synchronous version)
+        /// </summary>
+        public void Complete() => AsyncHelpers.RunSync(() => _transactionContext.Complete());
 
         /// <summary>
         /// Disposes the transaction context and removes it from <see cref="AmbientTransactionContext.Current"/> again

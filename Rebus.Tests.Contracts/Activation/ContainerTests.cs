@@ -82,7 +82,7 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var context = new DefaultTransactionContextScope())
+            using (var context = new RebusTransactionScope())
             {
                 var handlers = handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current).Result.ToList();
 
@@ -283,7 +283,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current)).ToList();
 
@@ -297,11 +297,11 @@ namespace Rebus.Tests.Contracts.Activation
         class BaseMessageHandler : IHandleMessages<BaseMessage> { public async Task Handle(BaseMessage message) { } }
 
         [Test]
-        public async Task ResolvingWithoutRegistrationYieldsEmptySequenec()
+        public async Task ResolvingWithoutRegistrationYieldsEmptySequence()
         {
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
 
@@ -315,7 +315,7 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeStringHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
 

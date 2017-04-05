@@ -27,7 +27,7 @@ namespace Rebus.Tests.Profiling
 
             var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
 
-            using (new DefaultTransactionContextScope())
+            using (new RebusTransactionScope())
             {
                 var stepContext = new IncomingStepContext(transportMessage, AmbientTransactionContext.Current);
                 var invoker = new DefaultPipelineInvoker(profiler);

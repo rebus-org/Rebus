@@ -32,7 +32,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -40,15 +40,15 @@ namespace Rebus.Tests.Contracts.Transports
                     {"recognizzle", id}
                 };
                 await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
-                await transactionContext.Complete();
+                await transactionContext.CompleteAsync();
             }
 
             await Task.Delay(5000);
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
-                await transactionContext.Complete();
+                await transactionContext.CompleteAsync();
 
                 Assert.That(transportMessage, Is.Not.Null);
 
@@ -66,7 +66,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -75,7 +75,7 @@ namespace Rebus.Tests.Contracts.Transports
                     {Headers.TimeToBeReceived, "00:00:04"} //< expires after 4 seconds!
                 };
                 await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
-                await transactionContext.Complete();
+                await transactionContext.CompleteAsync();
             }
 
             const int millisecondsDelay = 7000;
@@ -84,10 +84,10 @@ namespace Rebus.Tests.Contracts.Transports
             await Task.Delay(millisecondsDelay);
             Console.WriteLine($"Delay of {millisecondsDelay} ms actually lasted {stopwatch.ElapsedMilliseconds:0} ms");
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
-                await transactionContext.Complete();
+                await transactionContext.CompleteAsync();
 
                 Assert.That(transportMessage, Is.Null);
             }
@@ -100,7 +100,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transport = _factory.Create(queueName);
             var id = Guid.NewGuid().ToString();
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var headers = new Dictionary<string, string>
                 {
@@ -110,15 +110,15 @@ namespace Rebus.Tests.Contracts.Transports
                     {Headers.SentTime,DateTimeOffset.UtcNow.ToString("O")}//< expires after 10 seconds!
                 };
                 await transport.Send(queueName, MessageWith(headers), AmbientTransactionContext.Current);
-                await transactionContext.Complete();
+                await transactionContext.CompleteAsync();
             }
 
             await Task.Delay(3000);
 
-            using (var transactionContext = new DefaultTransactionContextScope())
+            using (var transactionContext = new RebusTransactionScope())
             {
                 var transportMessage = await transport.Receive(AmbientTransactionContext.Current, _cancellationToken);
-                await transactionContext.Complete();
+                await transactionContext.CompleteAsync();
 
                 Assert.That(transportMessage, Is.Not.Null);
             }

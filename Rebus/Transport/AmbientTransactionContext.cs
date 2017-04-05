@@ -16,7 +16,7 @@ namespace Rebus.Transport
 #if NET45
         const string TransactionContextKey = "rebus2-current-transaction-context";
 #elif NETSTANDARD1_6
-        static AsyncLocal<ITransactionContext> _asyncLocalTxContext = new AsyncLocal<ITransactionContext>();
+        static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new AsyncLocal<ITransactionContext>();
 #endif
 
 #if NET45
@@ -28,7 +28,7 @@ namespace Rebus.Transport
         /// <summary>
         /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
         /// </summary>
-        public static readonly Action<ITransactionContext> DefaultSetter = context => _asyncLocalTxContext.Value = context;
+        public static readonly Action<ITransactionContext> DefaultSetter = context => AsyncLocalTxContext.Value = context;
 #endif
 
 #if NET45
@@ -40,7 +40,7 @@ namespace Rebus.Transport
         /// <summary>
         /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
         /// </summary>
-        public static readonly Func<ITransactionContext> DefaultGetter = () => _asyncLocalTxContext.Value;
+        public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value;
 #endif
 
         static Action<ITransactionContext> _setCurrent = DefaultSetter;
@@ -54,7 +54,7 @@ namespace Rebus.Transport
 
         /// <summary>
         /// Sets the current transaction context. Please note that in most cases, it is not necessary to set the context using this method
-        /// - when using <see cref="DefaultTransactionContextScope"/> and <see cref="DefaultSyncTransactionContextScope"/> the ambient transaction context
+        /// - when using <see cref="RebusTransactionScope"/> and <see cref="DefaultSyncTransactionContextScope"/> the ambient transaction context
         /// is automatically set/unset when the object is created/disposed.
         /// </summary>
         public static void SetCurrent(ITransactionContext transactionContext)
