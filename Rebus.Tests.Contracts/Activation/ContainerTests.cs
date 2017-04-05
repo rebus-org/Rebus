@@ -283,7 +283,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new RebusTransactionScope())
+            using (new RebusTransactionScope())
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current)).ToList();
 
@@ -292,9 +292,38 @@ namespace Rebus.Tests.Contracts.Activation
             }
         }
 
+        [Test]
+        public async Task ResolvesHandlersPolymorphically_MultipleHandlers()
+        {
+            _factory.RegisterHandlerType<BaseMessageHandler>();
+            _factory.RegisterHandlerType<DerivedMessageHandler>();
+
+            var handlerActivator = _factory.GetActivator();
+
+            using (new RebusTransactionScope())
+            {
+                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current))
+                    .OrderBy(h => h.GetType().Name)
+                    .ToList();
+
+                Assert.That(handlers.Count, Is.EqualTo(2));
+                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
+                Assert.That(handlers[1], Is.TypeOf<DerivedMessageHandler>());
+            }
+        }
+
         abstract class BaseMessage { }
         class DerivedMessage : BaseMessage { }
-        class BaseMessageHandler : IHandleMessages<BaseMessage> { public async Task Handle(BaseMessage message) { } }
+
+        class BaseMessageHandler : IHandleMessages<BaseMessage>
+        {
+            public async Task Handle(BaseMessage message) { }
+        }
+
+        class DerivedMessageHandler : IHandleMessages<DerivedMessage>
+        {
+            public async Task Handle(DerivedMessage message) { }
+        }
 
         [Test]
         public async Task ResolvingWithoutRegistrationYieldsEmptySequence()
