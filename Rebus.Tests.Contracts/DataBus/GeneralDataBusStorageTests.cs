@@ -55,7 +55,12 @@ namespace Rebus.Tests.Contracts.DataBus
             var metadata = await _storage.ReadMetadata(knownId);
 
             Assert.That(metadata.ContainsKey(MetadataKeys.ReadTime), Is.True);
-            Assert.That(metadata[MetadataKeys.ReadTime], Is.EqualTo(justSomeTime.ToString("O")));
+
+            var readTimeMetadata = metadata[MetadataKeys.ReadTime];
+            var readTime = DateTimeOffset.Parse(readTimeMetadata);
+
+            Assert.That(readTime, Is.EqualTo(justSomeTime),
+                $"Expected that the '{MetadataKeys.ReadTime}' metadata value '{readTimeMetadata}' would equal {justSomeTime} when passed to DateTimeOffset.Parse(...)");
         }
 
         [Test]
