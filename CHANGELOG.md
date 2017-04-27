@@ -1156,6 +1156,11 @@
 
 * Fix regression that too eagerly validated a saga's correlation properties, leading to suddenly no longer being able to correlate by nested properties
 
+## 3.1.3
+
+* Make data storage test of last read time slightly more tolerant
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
