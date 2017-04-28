@@ -9,6 +9,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
@@ -54,6 +55,28 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             public string Text { get; }
+        }
+
+        [Test]
+        public void MultipleRegistrationsException()
+        {
+            var handlerActivator = _factory.GetActivator();
+            var containerAdapter = handlerActivator as IContainerAdapter;
+
+            if (containerAdapter == null)
+            {
+                Console.WriteLine($"Skipping this test because {handlerActivator} is not an IContainerAdapter");
+                return;
+            }
+
+            containerAdapter.SetBus(new Testing.FakeBus());
+
+            var exception = Assert.Throws<RebusApplicationException>(() =>
+            {
+                containerAdapter.SetBus(new Testing.FakeBus());
+            }, "Expected that the second call to SetBus on the container adapter with another bus instance would throw an exception");
+
+            Console.WriteLine(exception);
         }
 
         [Test]
