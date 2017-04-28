@@ -136,8 +136,18 @@ namespace Rebus.Serialization.Json
             }
             catch (Exception exception)
             {
+                if (bodyString.Length > 32768)
+                {
+                    throw new FormatException($"Could not deserialize JSON text (original length: {bodyString.Length}): '{Limit(bodyString, 5000)}'", exception);
+                }
+
                 throw new FormatException($"Could not deserialize JSON text: '{bodyString}'", exception);
             }
+        }
+
+        static string Limit(string bodyString, int maxLength)
+        {
+            return string.Concat(bodyString.Substring(0, maxLength), " (......)");
         }
     }
 }
