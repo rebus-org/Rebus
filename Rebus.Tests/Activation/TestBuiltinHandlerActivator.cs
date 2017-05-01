@@ -30,9 +30,9 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(() => new SomeHandler());
 
-            using (var transactionContext = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
+                var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
 
                 Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }
@@ -43,9 +43,9 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(context => new SomeHandler());
 
-            using (var transactionContext = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
+                var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
 
                 Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }
@@ -56,9 +56,9 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register((bus, context) => new SomeHandler());
 
-            using (var transactionContext = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = _activator.GetHandlers("hej med dig", AmbientTransactionContext.Current).Result;
+                var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
 
                 Assert.That(handlers.Single(), Is.TypeOf<SomeHandler>());
             }

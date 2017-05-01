@@ -186,14 +186,14 @@ namespace Rebus.Tests.Contracts.Transports
 
             while (receivedNulls < 5)
             {
-                using (var transactionContext = new RebusTransactionScope())
+                using (var scope = new RebusTransactionScope())
                 {
-                    var msg = await input.Receive(AmbientTransactionContext.Current, _cancellationToken);
+                    var msg = await input.Receive(scope.TransactionContext, _cancellationToken);
 
                     if (msg != null)
                     {
                         transportMessages.Add(GetStringBody(msg));
-                        await transactionContext.CompleteAsync();
+                        await scope.CompleteAsync();
                         continue;
                     }
 
@@ -207,13 +207,13 @@ namespace Rebus.Tests.Contracts.Transports
 
         async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
         {
-            using (var context = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                await contextAction(AmbientTransactionContext.Current);
+                await contextAction(scope.TransactionContext);
 
                 if (completeTransaction)
                 {
-                    await context.CompleteAsync();
+                    await scope.CompleteAsync();
                 }
             }
         }

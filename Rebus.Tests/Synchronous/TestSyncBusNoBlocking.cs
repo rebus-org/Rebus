@@ -88,14 +88,12 @@ async implementation underneath the covers without deadlocking, even in a single
             {
                 aspNet.Post(s =>
                 {
-                    using (var context = new RebusTransactionScope())
+                    using (var scope = new RebusTransactionScope())
                     {
-                        var transactionContext = AmbientTransactionContext.Current;
-
                         try
                         {
                             // enlist some other async thing
-                            transactionContext.OnCommitted(async () =>
+                            scope.TransactionContext.OnCommitted(async () =>
                             {
                                 Console.WriteLine("waiting....");
                                 await Task.Delay(100);
@@ -108,7 +106,7 @@ async implementation underneath the covers without deadlocking, even in a single
                             // enlist an operation in the context
                             bus.SendLocal("HEJ MED DIG MIN VEN");
 
-                            context.Complete();
+                            scope.Complete();
                         }
                         finally
                         {

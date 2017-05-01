@@ -16,7 +16,7 @@ namespace Rebus.Transport
 
         /// <summary>
         /// Creates a new transaction context and mounts it on <see cref="AmbientTransactionContext.Current"/>, making it available for Rebus
-        /// to pick up
+        /// to pick up. The context can also be retrieved simply via <see cref="TransactionContext"/>
         /// </summary>
         public RebusTransactionScope()
         {

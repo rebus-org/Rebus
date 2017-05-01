@@ -9,7 +9,6 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
-using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
@@ -105,9 +104,9 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var context = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current).Result.ToList();
+                var handlers = handlerActivator.GetHandlers("hej", scope.TransactionContext).Result.ToList();
 
                 //context.Complete().Wait();
             }
@@ -149,6 +148,8 @@ namespace Rebus.Tests.Contracts.Activation
                     int temp;
                     DisposedInstances.TryDequeue(out temp);
                 }
+
+                _instanceIdCounter = 0;
             }
         }
 
@@ -306,9 +307,9 @@ namespace Rebus.Tests.Contracts.Activation
 
             var handlerActivator = _factory.GetActivator();
 
-            using (new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current)).ToList();
+                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), scope.TransactionContext)).ToList();
 
                 Assert.That(handlers.Count, Is.EqualTo(1));
                 Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
@@ -323,9 +324,9 @@ namespace Rebus.Tests.Contracts.Activation
 
             var handlerActivator = _factory.GetActivator();
 
-            using (new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), AmbientTransactionContext.Current))
+                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), scope.TransactionContext))
                     .OrderBy(h => h.GetType().Name)
                     .ToList();
 
@@ -353,9 +354,9 @@ namespace Rebus.Tests.Contracts.Activation
         {
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
+                var handlers = (await handlerActivator.GetHandlers("hej", scope.TransactionContext)).ToList();
 
                 Assert.That(handlers.Count, Is.EqualTo(0));
             }
@@ -367,9 +368,9 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeStringHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            using (var transactionContext = new RebusTransactionScope())
+            using (var scope = new RebusTransactionScope())
             {
-                var handlers = (await handlerActivator.GetHandlers("hej", AmbientTransactionContext.Current)).ToList();
+                var handlers = (await handlerActivator.GetHandlers("hej", scope.TransactionContext)).ToList();
 
                 Assert.That(handlers.Count, Is.EqualTo(1));
                 Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>());
