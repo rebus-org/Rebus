@@ -1,10 +1,24 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace Rebus.Tests.Contracts
 {
     public class TestConfig
     {
+        /// <summary>
+        /// Gets a path in the file system which can be used for testing things
+        /// </summary>
+        public static string DirectoryPath()
+        {
+#if NET45
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test");
+#elif NETSTANDARD1_6
+        return Path.Combine(AppContext.BaseDirectory, "test");
+#endif
+
+        }
+
         /// <summary>
         /// Gets a suffix that can be appended to things in order to have tests run on separate sets of queues/databases/whatever
         /// </summary>

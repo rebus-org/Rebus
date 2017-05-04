@@ -18,7 +18,7 @@ namespace Rebus.Transport.FileSystem
     /// <summary>
     /// Transport implementation that uses the file system to send/receive messages.
     /// </summary>
-    public class FileSystemTransport : ITransport, IInitializable
+    public class FileSystemTransport : ITransport, IInitializable, ITransportInspector
     {
         static readonly JsonSerializerSettings SuperSecretSerializerSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
         static readonly Encoding FavoriteEncoding = Encoding.UTF8;
@@ -182,20 +182,18 @@ namespace Rebus.Transport.FileSystem
             EnsureQueueInitialized(_inputQueue);
         }
 
+        /// <summary>
+        /// Gets the number of messages waiting in this "queue"
+        /// </summary>
+        public async Task<int> GetCount(CancellationToken cancellationToken)
+        {
+            return Directory.GetFiles(GetDirectoryForQueueNamed(_inputQueue), "*.rebusmessage.json").Length;
+        }
+
         string GetNextFileName()
         {
             return
                 $"{DateTime.UtcNow:yyyy_MM_dd_HH_mm_ss}_{Interlocked.Increment(ref _incrementingCounter):0000000}_{Guid.NewGuid()}.rebusmessage.json";
-        }
-
-        string Serialize(TransportMessage message)
-        {
-            return JsonConvert.SerializeObject(message, SuperSecretSerializerSettings);
-        }
-
-        TransportMessage Deserialize(string serialiedMessage)
-        {
-            return JsonConvert.DeserializeObject<TransportMessage>(serialiedMessage, SuperSecretSerializerSettings);
         }
 
         void EnsureQueueNameIsValid(string queueName)
@@ -243,6 +241,16 @@ namespace Rebus.Transport.FileSystem
         string GetDirectoryForQueueNamed(string queueName)
         {
             return Path.Combine(_baseDirectory, queueName);
+        }
+
+        static string Serialize(TransportMessage message)
+        {
+            return JsonConvert.SerializeObject(message, SuperSecretSerializerSettings);
+        }
+
+        static TransportMessage Deserialize(string serialiedMessage)
+        {
+            return JsonConvert.DeserializeObject<TransportMessage>(serialiedMessage, SuperSecretSerializerSettings);
         }
     }
 }

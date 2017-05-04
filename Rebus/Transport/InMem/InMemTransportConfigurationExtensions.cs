@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using System;
+using Rebus.Config;
 
 namespace Rebus.Transport.InMem
 {
@@ -12,7 +13,17 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public static void UseInMemoryTransport(this StandardConfigurer<ITransport> configurer, InMemNetwork network, string inputQueueName)
         {
-            configurer.Register(context => new InMemTransport(network, inputQueueName));
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (network == null) throw new ArgumentNullException(nameof(network));
+            if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
+
+            configurer.OtherService<InMemTransport>()
+                .Register(context => new InMemTransport(network, inputQueueName));
+
+            configurer.OtherService<ITransportInspector>()
+                .Register(context => context.Get<InMemTransport>());
+
+            configurer.Register(context => context.Get<InMemTransport>());
         }
 
         /// <summary>
@@ -20,6 +31,9 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public static void UseInMemoryTransportAsOneWayClient(this StandardConfigurer<ITransport> configurer, InMemNetwork network)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (network == null) throw new ArgumentNullException(nameof(network));
+
             configurer.Register(c => new InMemTransport(network, null));
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);

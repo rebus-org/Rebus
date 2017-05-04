@@ -11,7 +11,7 @@ namespace Rebus.Transport.InMem
     /// In-mem implementation of <see cref="ITransport"/> that uses one particular <see cref="InMemNetwork"/> to deliver messages. Can
     /// be used for in-process messaging and unit testing
     /// </summary>
-    public class InMemTransport : ITransport, IInitializable
+    public class InMemTransport : ITransport, ITransportInspector, IInitializable
     {
         readonly InMemNetwork _network;
         readonly string _inputQueueAddress;
@@ -23,9 +23,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {
-            if (network == null) throw new ArgumentNullException(nameof(network), "You need to provide a network that this in-mem transport should use for communication");
-
-            _network = network;
+            _network = network ?? throw new ArgumentNullException(nameof(network), "You need to provide a network that this in-mem transport should use for communication");
             _inputQueueAddress = inputQueueAddress;
         }
 
@@ -82,6 +80,19 @@ namespace Rebus.Transport.InMem
             if (_inputQueueAddress == null) return;
 
             CreateQueue(_inputQueueAddress);
+        }
+
+        /// <summary>
+        /// Gets the number of messages waiting in the queue
+        /// </summary>
+        public async Task<int> GetCount(CancellationToken cancellationToken)
+        {
+            if (_inputQueueAddress == null)
+            {
+                throw new InvalidOperationException("Cannot get message count from one-way transport");
+            }
+
+            return _network.GetCount(_inputQueueAddress);
         }
 
         /// <summary>

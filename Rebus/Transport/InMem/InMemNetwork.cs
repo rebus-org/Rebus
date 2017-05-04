@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Messages;
 
@@ -101,17 +102,6 @@ namespace Rebus.Transport.InMem
             }
         }
 
-        bool MessageIsExpired(InMemTransportMessage message)
-        {
-            var headers= message.Headers;
-            if (!headers.ContainsKey(Headers.TimeToBeReceived)) return false;
-
-            var timeToBeReceived = headers[Headers.TimeToBeReceived];
-            var maximumAge = TimeSpan.Parse(timeToBeReceived);
-
-            return message.Age > maximumAge;
-        }
-
         /// <summary>
         /// Returns whether the network has a queue with the specified name
         /// </summary>
@@ -126,6 +116,27 @@ namespace Rebus.Transport.InMem
         public void CreateQueue(string address)
         {
             _queues.TryAdd(address, new ConcurrentQueue<InMemTransportMessage>());
+        }
+
+        /// <summary>
+        /// Gets the number of messages in the queue with the given <paramref name="address"/>
+        /// </summary>
+        public int GetCount(string address)
+        {
+            return _queues.TryGetValue(address, out var queue)
+                ? queue.Count
+                : 0;
+        }
+
+        static bool MessageIsExpired(InMemTransportMessage message)
+        {
+            var headers= message.Headers;
+            if (!headers.ContainsKey(Headers.TimeToBeReceived)) return false;
+
+            var timeToBeReceived = headers[Headers.TimeToBeReceived];
+            var maximumAge = TimeSpan.Parse(timeToBeReceived);
+
+            return message.Age > maximumAge;
         }
     }
 }

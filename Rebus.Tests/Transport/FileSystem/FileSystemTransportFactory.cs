@@ -1,5 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
@@ -13,11 +13,7 @@ namespace Rebus.Tests.Transport.FileSystem
 
         public FileSystemTransportFactory()
         {
-#if NET45
-            _baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "messages");
-#elif NETSTANDARD1_6
-            _baseDirectory = Path.Combine(AppContext.BaseDirectory, "messages");
-#endif
+            _baseDirectory = Path.Combine(TestConfig.DirectoryPath(), "messages");
 
             CleanUp();
         }
