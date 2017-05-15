@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -53,23 +55,21 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             if (string.IsNullOrWhiteSpace(messageId))
             {
                 await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext,
-
-                    $"Received message with empty or absent '{Headers.MessageId}' header! All messages must be" +
-                    " supplied with an ID . If no ID is present, the message cannot be tracked" +
-                    " between delivery attempts, and other stuff would also be much harder to" +
-                    " do - therefore, it is a requirement that messages be supplied with an ID.");
+                    new RebusApplicationException($"Received message with empty or absent '{Headers.MessageId}' header! All messages must be" +
+                                                  " supplied with an ID . If no ID is present, the message cannot be tracked" +
+                                                  " between delivery attempts, and other stuff would also be much harder to" +
+                                                  " do - therefore, it is a requirement that messages be supplied with an ID."));
 
                 return;
             }
 
             if (_errorTracker.HasFailedTooManyTimes(messageId))
             {
-                var errorDescriptionFor = GetErrorDescriptionFor(messageId);
-
                 // if we don't have 2nd level retries, just get the message out of the way
                 if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
                 {
-                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, errorDescriptionFor);
+                    var aggregateException = GetAggregateException(messageId);
+                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException);
                     _errorTracker.CleanUp(messageId);
                     return;
                 }
@@ -79,7 +79,8 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
                 {
-                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, errorDescriptionFor);
+                    var aggregateException = GetAggregateException(messageId, secondLevelMessageId);
+                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException);
                     _errorTracker.CleanUp(messageId);
                     _errorTracker.CleanUp(secondLevelMessageId);
                     return;
@@ -93,6 +94,13 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
 
             await DispatchWithTrackerIdentifier(next, messageId, transactionContext, new[] { messageId });
+        }
+
+        AggregateException GetAggregateException(params string[] ids)
+        {
+            var exceptions = ids.SelectMany(_errorTracker.GetExceptions).ToArray();
+
+            return new AggregateException($"{exceptions.Length} unhandled exceptions", exceptions);
         }
 
         static string GetSecondLevelMessageId(string messageId)
@@ -121,35 +129,11 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
         }
 
-        string GetErrorDescriptionFor(string messageId, bool brief = false)
-        {
-            var secondLevelMessageId = GetSecondLevelMessageId(messageId);
-
-            if (brief)
-            {
-                var secondLevelErrorDescription = _errorTracker.GetShortErrorDescription(secondLevelMessageId);
-                var firstLevelErrorDescription = _errorTracker.GetShortErrorDescription(messageId);
-
-                return secondLevelErrorDescription == null
-                    ? firstLevelErrorDescription
-                    : string.Join(Environment.NewLine, firstLevelErrorDescription, secondLevelErrorDescription);
-            }
-            else
-            {
-                var secondLevelErrorDescription = _errorTracker.GetFullErrorDescription(secondLevelMessageId);
-                var firstLevelErrorDescription = _errorTracker.GetFullErrorDescription(messageId);
-
-                return secondLevelErrorDescription == null
-                    ? firstLevelErrorDescription
-                    : string.Join(Environment.NewLine, firstLevelErrorDescription, secondLevelErrorDescription);
-            }
-        }
-
-        async Task MoveMessageToErrorQueue(OriginalTransportMessage originalTransportMessage, ITransactionContext transactionContext, string errorDescription)
+        async Task MoveMessageToErrorQueue(OriginalTransportMessage originalTransportMessage, ITransactionContext transactionContext, Exception exception)
         {
             var transportMessage = originalTransportMessage.TransportMessage;
 
-            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, errorDescription);
+            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
         }
     }
 }

@@ -1173,6 +1173,7 @@
 * Rename transaction scope to `RebusTransactionScope` and make it expose `CompleteAsync()` and `Complete()` methods for completing in an async/sync manner respectively
 * Add optional transport inspector service
 * Extend `ILog` interface with warning signature that accepts an `Exception`
+* Log uncaught exceptions from message handlers by passing real exceptions to the logger
 
 ---
 

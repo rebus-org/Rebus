@@ -61,7 +61,7 @@ namespace Rebus.Tests.Integration
         {
             public readonly ConcurrentQueue<TransportMessage> FailedMessages = new ConcurrentQueue<TransportMessage>();
 
-            public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription)
+            public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
             {
                 FailedMessages.Enqueue(transportMessage);
             }

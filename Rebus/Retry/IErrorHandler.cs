@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Rebus.Messages;
 using Rebus.Transport;
 
@@ -12,6 +13,6 @@ namespace Rebus.Retry
         /// <summary>
         /// Handles the poisonous message in the right way
         /// </summary>
-        Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription);
+        Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception);
     }
 }
