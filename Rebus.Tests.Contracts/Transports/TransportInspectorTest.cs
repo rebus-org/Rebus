@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -31,7 +32,8 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task InitialCountIsZero()
         {
-            var count = await _transportInspector.GetCount(CancellationToken.None);
+            var info = await _transportInspector.GetProperties(CancellationToken.None);
+            var count = Convert.ToInt32(info[TransportInspectorPropertyKeys.QueueLength]);
 
             Assert.That(count, Is.EqualTo(0));
         }

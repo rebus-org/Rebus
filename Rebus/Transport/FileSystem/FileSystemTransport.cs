@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -158,7 +159,7 @@ namespace Rebus.Transport.FileSystem
 
         static async Task<string> ReadAllText(string fileName)
         {
-            using(var stream = File.OpenRead(fileName))
+            using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream, FavoriteEncoding))
             {
                 return await reader.ReadToEndAsync();
@@ -185,9 +186,31 @@ namespace Rebus.Transport.FileSystem
         /// <summary>
         /// Gets the number of messages waiting in this "queue"
         /// </summary>
-        public async Task<int> GetCount(CancellationToken cancellationToken)
+        public async Task<Dictionary<string, object>> GetProperties(CancellationToken cancellationToken)
         {
-            return Directory.GetFiles(GetDirectoryForQueueNamed(_inputQueue), "*.rebusmessage.json").Length;
+            var count = GetCount(cancellationToken);
+
+            return new Dictionary<string, object>
+            {
+                {TransportInspectorPropertyKeys.QueueLength, count.ToString()}
+            };
+        }
+
+        int GetCount(CancellationToken cancellationToken)
+        {
+            var count = 0;
+            var directoryPath = GetDirectoryForQueueNamed(_inputQueue);
+
+            using (var enumerator = Directory.EnumerateFiles(directoryPath, "*.rebusmessage.json").GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    count++;
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+
+            return count;
         }
 
         string GetNextFileName()

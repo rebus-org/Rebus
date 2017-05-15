@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus;
@@ -85,14 +86,19 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Gets the number of messages waiting in the queue
         /// </summary>
-        public async Task<int> GetCount(CancellationToken cancellationToken)
+        public async Task<Dictionary<string, object>> GetProperties(CancellationToken cancellationToken)
         {
             if (_inputQueueAddress == null)
             {
                 throw new InvalidOperationException("Cannot get message count from one-way transport");
             }
 
-            return _network.GetCount(_inputQueueAddress);
+            var count = _network.GetCount(_inputQueueAddress);
+
+            return new Dictionary<string, object>
+            {
+                {TransportInspectorPropertyKeys.QueueLength, count.ToString()}
+            };
         }
 
         /// <summary>

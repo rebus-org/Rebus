@@ -52,9 +52,9 @@
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.3.0"/>
-    <PackageReference Include="System.Reflection.Emit.LightWeight" Version="4.3.0"/>
-    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0"/>
+    <PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.LightWeight" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />

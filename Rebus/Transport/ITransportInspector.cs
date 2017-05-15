@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rebus.Transport
@@ -9,8 +10,8 @@ namespace Rebus.Transport
     public interface ITransportInspector
     {
         /// <summary>
-        /// Gets the number of messages waiting in the queue
+        /// Gets a dictionary of properties for the transport
         /// </summary>
-        Task<int> GetCount(CancellationToken cancellationToken);
+        Task<Dictionary<string, object>> GetProperties(CancellationToken cancellationToken);
     }
 }
