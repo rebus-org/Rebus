@@ -31,6 +31,10 @@ namespace Rebus.Logging
             {
             }
 
+            public void Warn(Exception exception, string message, params object[] objs)
+            {
+            }
+
             public void Error(Exception exception, string message, params object[] objs)
             {
             }

@@ -23,13 +23,18 @@ namespace Rebus.Logging
         void Warn(string message, params object[] objs);
 
         /// <summary>
-        /// Writes the specified message with the ERROR level and includes the full details of the specified exception
+        /// Writes the specified message with the WARN level and includes the full details of the specified exception
         /// </summary>
-        void Error(Exception exception, string message, params object[] objs);
+        void Warn(Exception exception, string message, params object[] objs);
 
         /// <summary>
         /// Writes the specified message with the ERROR level
         /// </summary>
         void Error(string message, params object[] objs);
+
+        /// <summary>
+        /// Writes the specified message with the ERROR level and includes the full details of the specified exception
+        /// </summary>
+        void Error(Exception exception, string message, params object[] objs);
     }
 }

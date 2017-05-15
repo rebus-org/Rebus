@@ -1161,7 +1161,7 @@
 * Make data storage test of last read time slightly more tolerant
 
 
-## 4.0.0-b08
+## 4.0.0-b09
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
@@ -1172,6 +1172,7 @@
 * Move JSON serializer into core (still default, but now exposed so it can be customized)
 * Rename transaction scope to `RebusTransactionScope` and make it expose `CompleteAsync()` and `Complete()` methods for completing in an async/sync manner respectively
 * Add optional transport inspector service
+* Extend `ILog` interface with warning signature that accepts an `Exception`
 
 ---
 

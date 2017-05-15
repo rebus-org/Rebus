@@ -14,18 +14,20 @@ namespace Rebus.Testing.Internals
 
         protected override ILog GetLogger(Type type)
         {
-            return new TestLogger(type, _logEvents);
+            return new TestLogger(type, _logEvents, this);
         }
 
         class TestLogger : ILog
         {
             readonly Type _type;
             readonly ConcurrentQueue<LogEvent> _logEvents;
+            readonly TestLoggerFactory _testLoggerFactory;
 
-            public TestLogger(Type type, ConcurrentQueue<LogEvent> logEvents)
+            public TestLogger(Type type, ConcurrentQueue<LogEvent> logEvents, TestLoggerFactory testLoggerFactory)
             {
                 _type = type;
                 _logEvents = logEvents;
+                _testLoggerFactory = testLoggerFactory;
             }
 
             public void Debug(string message, params object[] objs)
@@ -43,6 +45,11 @@ namespace Rebus.Testing.Internals
                 Log(LogLevel.Warn, message, objs);
             }
 
+            public void Warn(Exception exception, string message, params object[] objs)
+            {
+                Log(LogLevel.Warn, message, objs, exception);
+            }
+
             public void Error(Exception exception, string message, params object[] objs)
             {
                 Log(LogLevel.Error, message, objs, exception);
@@ -58,16 +65,9 @@ namespace Rebus.Testing.Internals
                 _logEvents.Enqueue(new LogEvent(level, SafeFormat(message, objs), exception, _type));
             }
 
-            static string SafeFormat(string message, object[] objs)
+            string SafeFormat(string message, object[] objs)
             {
-                try
-                {
-                    return string.Format(message, objs);
-                }
-                catch
-                {
-                    return message;
-                }
+                return _testLoggerFactory.RenderString(message, objs);
             }
         }
     }

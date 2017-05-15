@@ -42,6 +42,11 @@ namespace Rebus.Logging
                 Trace.TraceWarning(_type + ": " + _loggerFactory.RenderString(message, objs));
             }
 
+            public void Warn(Exception exception, string message, params object[] objs)
+            {
+                Trace.TraceWarning(_type + ": " + _loggerFactory.RenderString(message, objs) + Environment.NewLine + exception);
+            }
+
             public void Error(Exception exception, string message, params object[] objs)
             {
                 Trace.TraceError(_type + ": " + _loggerFactory.RenderString(message, objs) + Environment.NewLine + exception);

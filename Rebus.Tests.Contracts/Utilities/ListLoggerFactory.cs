@@ -73,6 +73,13 @@ namespace Rebus.Tests.Contracts.Utilities
                 Append(LogLevel.Warn, message, objs);
             }
 
+            public void Warn(Exception exception, string message, params object[] objs)
+            {
+                var text = _loggerFactory.RenderString(message, objs);
+
+                Append(LogLevel.Warn, "{0}: {1}", text, exception);
+            }
+
             public void Error(Exception exception, string message, params object[] objs)
             {
                 var text = _loggerFactory.RenderString(message, objs);

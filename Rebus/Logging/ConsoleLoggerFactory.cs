@@ -161,9 +161,14 @@ namespace Rebus.Logging
                 Log(LogLevel.Warn, message, _loggingColors.Warn, objs);
             }
 
+            public void Warn(Exception exception, string message, params object[] objs)
+            {
+                Log(LogLevel.Warn, _factory.RenderString(message, objs) + Environment.NewLine + exception, _loggingColors.Error);
+            }
+
             public void Error(Exception exception, string message, params object[] objs)
             {
-                Log(LogLevel.Error, string.Format(message, objs) + Environment.NewLine + exception, _loggingColors.Error);
+                Log(LogLevel.Error, _factory.RenderString(message, objs) + Environment.NewLine + exception, _loggingColors.Error);
             }
 
             public void Error(string message, params object[] objs)
