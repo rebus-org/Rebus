@@ -1161,7 +1161,7 @@
 * Make data storage test of last read time slightly more tolerant
 
 
-## 4.0.0-b09
+## 4.0.0-b10
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
