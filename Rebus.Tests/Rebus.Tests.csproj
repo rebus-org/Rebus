@@ -92,6 +92,7 @@
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Encryption\TestDisableEncryption.cs" />
     <Compile Include="Events\TestBusLifetimeEvents.cs" />
+    <Compile Include="Extensions\TestTypeExtensions.cs" />
     <Compile Include="Integration\TestUnserializableException.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />

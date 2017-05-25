@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Rebus.Extensions
 {
@@ -31,7 +32,37 @@ namespace Rebus.Extensions
         /// </summary>
         public static string GetSimpleAssemblyQualifiedName(this Type type)
         {
-            return $"{type.FullName}, {type.Assembly.GetName().Name}";
+            return BuildSimpleAssemblyQualifiedName(type, new StringBuilder()).ToString();
+        }
+
+        private static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
+        {
+            if (!type.IsGenericType)
+            {
+                sb.Append($"{type.FullName}, {type.Assembly.GetName().Name}");
+                return sb;
+            }
+
+            if (type.DeclaringType != null)
+                if (!type.DeclaringType.IsGenericType)
+                    sb.Append($"{type.DeclaringType.FullName}+");
+                else
+                    throw new NotSupportedException("Generic declaring types are not supported");
+            else
+                sb.Append($"{type.Namespace}.");
+
+            sb.Append($"{type.Name}[");
+            var arguments = type.GetGenericArguments();
+            for (var i = 0; i < arguments.Length; i++)
+            {
+                sb.Append(i == 0 ? "[" : ",[");
+                BuildSimpleAssemblyQualifiedName(arguments[i], sb);
+                sb.Append("]");
+            }
+
+            sb.Append($"], {type.Assembly.GetName().Name}");
+
+            return sb;
         }
     }
 }
