@@ -43,19 +43,18 @@ namespace Rebus.Extensions
                 return sb;
             }
 
-            if (type.DeclaringType != null)
-                if (!type.DeclaringType.IsGenericType)
-                    sb.Append($"{type.DeclaringType.FullName}+");
-                else
-                    throw new NotSupportedException("Generic declaring types are not supported");
-            else
-                sb.Append($"{type.Namespace}.");
+            if (!type.IsConstructedGenericType)
+                return sb;
 
-            sb.Append($"{type.Name}[");
+            var fullName = type.FullName;
+            var requiredPosition = fullName.IndexOf("[", StringComparison.Ordinal);
+            var name = fullName.Substring(0, requiredPosition);     
+            sb.Append($"{name}[");
+
             var arguments = type.GetGenericArguments();
             for (var i = 0; i < arguments.Length; i++)
             {
-                sb.Append(i == 0 ? "[" : ",[");
+                sb.Append(i == 0 ? "[" : ", [");
                 BuildSimpleAssemblyQualifiedName(arguments[i], sb);
                 sb.Append("]");
             }

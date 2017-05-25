@@ -114,7 +114,7 @@ namespace Rebus.Tests.Extensions
         {
             // arrange
             var expectedType = typeof(ComplexGenericMessage<SimpleMessage, int>);
-            var expectedTypeString = "Rebus.Tests.Extensions.ComplexGenericMessage`2[[Rebus.Tests.Extensions.SimpleMessage, Rebus.Tests],[System.Int32, mscorlib]], Rebus.Tests";
+            var expectedTypeString = "Rebus.Tests.Extensions.ComplexGenericMessage`2[[Rebus.Tests.Extensions.SimpleMessage, Rebus.Tests], [System.Int32, mscorlib]], Rebus.Tests";
 
             // act
             var actualTypeStringStatic = typeof(ComplexGenericMessage<SimpleMessage, int>).GetSimpleAssemblyQualifiedName();
@@ -141,7 +141,7 @@ namespace Rebus.Tests.Extensions
         {
             // arrange
             var expectedType = typeof(DeclaringClass.ComplexNestedGenericMessage<SimpleMessage, int>);
-            var expectedTypeString = "Rebus.Tests.Extensions.DeclaringClass+ComplexNestedGenericMessage`2[[Rebus.Tests.Extensions.SimpleMessage, Rebus.Tests],[System.Int32, mscorlib]], Rebus.Tests";
+            var expectedTypeString = "Rebus.Tests.Extensions.DeclaringClass+ComplexNestedGenericMessage`2[[Rebus.Tests.Extensions.SimpleMessage, Rebus.Tests], [System.Int32, mscorlib]], Rebus.Tests";
 
             // act
             var actualTypeStringStatic = typeof(DeclaringClass.ComplexNestedGenericMessage<SimpleMessage, int>).GetSimpleAssemblyQualifiedName();
@@ -161,7 +161,85 @@ namespace Rebus.Tests.Extensions
             actualTypeInstance.ShouldBeEquivalentTo(expectedType);
             actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
         }
-    }
+
+        [Test]
+        public void SimplifiedNameForSimpleNestedInGenericMessage()
+        {
+            // arrange
+            var expectedType = typeof(DeclaringGenericClass<int>.SimpleNestedMessage);
+            var expectedTypeString = "Rebus.Tests.Extensions.DeclaringGenericClass`1+SimpleNestedMessage[[System.Int32, mscorlib]], Rebus.Tests";
+
+            // act
+            var actualTypeStringStatic = typeof(DeclaringGenericClass<int>.SimpleNestedMessage).GetSimpleAssemblyQualifiedName();
+            var actualTypeStringInstance = new DeclaringGenericClass<int>.SimpleNestedMessage().GetType().GetSimpleAssemblyQualifiedName();
+            var actualTypeStringInstanceRuntimeConstructed = typeof(DeclaringGenericClass<>.SimpleNestedMessage).MakeGenericType(typeof(int)).GetSimpleAssemblyQualifiedName();
+
+            var actualTypeStatic = Type.GetType(actualTypeStringStatic, false);
+            var actualTypeInstance = Type.GetType(actualTypeStringInstance, false);
+            var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
+
+            // assert   
+            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
+            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
+            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+
+            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
+            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
+            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+        }
+
+        [Test]
+        public void SimplifiedNameForSimpleGenericNestedInGenericMessage()
+        {
+            // arrange
+            var expectedType = typeof(DeclaringGenericClass<int>.SimpleNestedGenericMessage<SimpleMessage>);
+            var expectedTypeString = "Rebus.Tests.Extensions.DeclaringGenericClass`1+SimpleNestedGenericMessage`1[[System.Int32, mscorlib], [Rebus.Tests.Extensions.SimpleMessage, Rebus.Tests]], Rebus.Tests";
+
+            // act
+            var actualTypeStringStatic = typeof(DeclaringGenericClass<int>.SimpleNestedGenericMessage<SimpleMessage>).GetSimpleAssemblyQualifiedName();
+            var actualTypeStringInstance = new DeclaringGenericClass<int>.SimpleNestedGenericMessage<SimpleMessage>().GetType().GetSimpleAssemblyQualifiedName();
+            var actualTypeStringInstanceRuntimeConstructed = typeof(DeclaringGenericClass<>.SimpleNestedGenericMessage<>).MakeGenericType(typeof(int), typeof(SimpleMessage)).GetSimpleAssemblyQualifiedName();
+
+            var actualTypeStatic = Type.GetType(actualTypeStringStatic, false);
+            var actualTypeInstance = Type.GetType(actualTypeStringInstance, false);
+            var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
+
+            // assert   
+            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
+            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
+            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+
+            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
+            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
+            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+        }
+
+        [Test]
+        public void SimplifiedNameForComplexGenericNestedInGenericMessage()
+        {
+            // arrange
+            var expectedType = typeof(DeclaringGenericClass<int>.ComplexNestedGenericMessage<SimpleMessage, double>);
+            var expectedTypeString = "Rebus.Tests.Extensions.DeclaringGenericClass`1+ComplexNestedGenericMessage`2[[System.Int32, mscorlib], [Rebus.Tests.Extensions.SimpleMessage, Rebus.Tests], [System.Double, mscorlib]], Rebus.Tests";
+
+            // act
+            var actualTypeStringStatic = typeof(DeclaringGenericClass<int>.ComplexNestedGenericMessage<SimpleMessage, double>).GetSimpleAssemblyQualifiedName();
+            var actualTypeStringInstance = new DeclaringGenericClass<int>.ComplexNestedGenericMessage<SimpleMessage, double>().GetType().GetSimpleAssemblyQualifiedName();
+            var actualTypeStringInstanceRuntimeConstructed = typeof(DeclaringGenericClass<>.ComplexNestedGenericMessage<,>).MakeGenericType(typeof(int), typeof(SimpleMessage), typeof(double)).GetSimpleAssemblyQualifiedName();
+
+            var actualTypeStatic = Type.GetType(actualTypeStringStatic, false);
+            var actualTypeInstance = Type.GetType(actualTypeStringInstance, false);
+            var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
+
+            // assert   
+            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
+            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
+            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+
+            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
+            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
+            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+        }
+    }   
 
 
     public class SimpleGenericMessage<T1>
@@ -197,4 +275,22 @@ namespace Rebus.Tests.Extensions
             public string Something { get; set; }
         }
     }
+
+    public class DeclaringGenericClass<TDeclaring>
+    {
+        public class SimpleNestedMessage
+        {
+            public string SomethingElse { get; set; }
+        }
+
+        public class SimpleNestedGenericMessage<T1>
+        {
+            public string Something { get; set; }
+        }
+
+        public class ComplexNestedGenericMessage<T1, T2>
+        {
+            public string Something { get; set; }
+        }
+    }   
 }   
