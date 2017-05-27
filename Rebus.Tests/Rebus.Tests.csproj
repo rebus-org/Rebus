@@ -62,6 +62,7 @@
     <Compile Include="Assumptions\CanDoReflection.cs" />
     <Compile Include="Assumptions\TestAsyncWrapper.cs" />
     <Compile Include="Assumptions\TestConcurrentDictionary.cs" />
+    <Compile Include="Assumptions\TestDateTimeParsing.cs" />
     <Compile Include="Assumptions\TestReflectInheritance.cs" />
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Encryption\TestDisableEncryption.cs" />
     <Compile Include="Events\TestBusLifetimeEvents.cs" />
+    <Compile Include="Extensions\TestTypeExtensions.cs" />
     <Compile Include="Integration\TestUnserializableException.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemBasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Persistence\InMem\TestSagaCorrelationInMem.cs" />
