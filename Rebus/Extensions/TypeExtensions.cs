@@ -32,10 +32,11 @@ namespace Rebus.Extensions
         /// </summary>
         public static string GetSimpleAssemblyQualifiedName(this Type type)
         {
+            if (type == null) throw new ArgumentNullException(nameof(type));
             return BuildSimpleAssemblyQualifiedName(type, new StringBuilder()).ToString();
         }
 
-        private static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
+        static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
         {
             if (!type.IsGenericType)
             {
@@ -44,7 +45,9 @@ namespace Rebus.Extensions
             }
 
             if (!type.IsConstructedGenericType)
+            {
                 return sb;
+            }
 
             var fullName = type.FullName;
             var requiredPosition = fullName.IndexOf("[", StringComparison.Ordinal);

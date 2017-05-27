@@ -1160,6 +1160,10 @@
 
 * Make data storage test of last read time slightly more tolerant
 
+## 3.1.4
+
+* Fix `GetSimpleAssemblyQualifiedName` extension to handle generic message types better (i.e. make version tolerance work with type parameters too) - thanks [Rzpeg]
+
 
 ---
 
