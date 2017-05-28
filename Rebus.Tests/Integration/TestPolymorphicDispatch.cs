@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Handlers;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
@@ -117,5 +118,51 @@ namespace Rebus.Tests.Integration
         interface IMessage { }
 
         class ImplementorOfInterface : IMessage { }
+
+        [Test]
+        public async Task WorksWithHandlerPipelineToo()
+        {
+            var events = new ConcurrentQueue<string>();
+
+            _handlerActivator
+                .Register(() => new Handler1(events))
+                .Register(() => new Handler2(events));
+
+            await _bus.SendLocal(new SomeMessage());
+
+            await events.WaitUntil(q => q.Count == 2);
+
+            Console.WriteLine($@"Got these events:
+
+{string.Join(Environment.NewLine, events)}
+");
+
+            Assert.That(events.ToArray(), Is.EqualTo(new[]
+            {
+                "Handled by Handler1",
+                "Handled by Handler2"
+            }));
+        }
+
+        public interface ISomeInterface { }
+
+        public class SomeMessage : ISomeInterface { }
+
+        public class Handler1 : IHandleMessages<SomeMessage>
+        {
+            readonly ConcurrentQueue<string> _events;
+
+            public Handler1(ConcurrentQueue<string> events) => _events = events;
+
+            public async Task Handle(SomeMessage message) => _events.Enqueue("Handled by Handler1");
+        }
+        public class Handler2 : IHandleMessages<ISomeInterface>
+        {
+            readonly ConcurrentQueue<string> _events;
+
+            public Handler2(ConcurrentQueue<string> events) => _events = events;
+
+            public async Task Handle(ISomeInterface message) => _events.Enqueue("Handled by Handler2");
+        }
     }
 }

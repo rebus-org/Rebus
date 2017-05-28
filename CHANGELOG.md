@@ -1160,8 +1160,12 @@
 
 * Make data storage test of last read time slightly more tolerant
 
+## 3.1.4
 
-## 4.0.0-b10
+* Fix `GetSimpleAssemblyQualifiedName` extension to handle generic message types better (i.e. make version tolerance work with type parameters too) - thanks [Rzpeg]
+
+
+## 4.0.0-b11
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
