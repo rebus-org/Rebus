@@ -95,7 +95,9 @@ namespace Rebus.Tests.Contracts.Activation
 
             Thread.Sleep(2000);
 
-            Assert.That(StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text, Is.EqualTo("hej med dig"));
+            Assert.That(StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text, 
+                Is.EqualTo("hej med dig"),
+                "Expected that StaticHandler would have been invoked, setting the static text property to 'hej med dig'");
         }
 
         [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
@@ -112,10 +114,10 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             var createdInstances = SomeHandler.CreatedInstances.ToList();
-            Assert.That(createdInstances, Is.EqualTo(new[] { 0 }));
+            Assert.That(createdInstances, Is.EqualTo(new[] { 0 }), "Expected that one single instance (with # 0) would have been created");
 
             var disposedInstances = SomeHandler.DisposedInstances.ToList();
-            Assert.That(disposedInstances, Is.EqualTo(new[] { 0 }));
+            Assert.That(disposedInstances, Is.EqualTo(new[] { 0 }), "Expected that one single instance (with # 0) would have been disposed");
         }
 
         class SomeHandler : IHandleMessages<string>, IDisposable
@@ -163,8 +165,8 @@ namespace Rebus.Tests.Contracts.Activation
 
             var busReturnedFromContainer = _factory.GetBus();
 
-            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>());
-            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>());
+            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>(), "Expected the bus returned from Configure(...).(...).Start() to be of type TestBusDecorator");
+            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>(), "Expected the bus returned from the container to be of type TestBuDecorator");
 
         }
 
@@ -311,8 +313,10 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), scope.TransactionContext)).ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(1));
-                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
+                const string message = @"Expected that a single BaseMessageHandler instance would have been returned because it implements IHandleMessages<BaseMessage> and we resolved handlers for a DerivedMessage";
+
+                Assert.That(handlers.Count, Is.EqualTo(1), message);
+                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>(), message);
             }
         }
 
@@ -330,13 +334,19 @@ namespace Rebus.Tests.Contracts.Activation
                     .OrderBy(h => h.GetType().Name)
                     .ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(2));
-                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
-                Assert.That(handlers[1], Is.TypeOf<DerivedMessageHandler>());
+                const string message = @"Expected two instances to be returned when resolving handlers for DerivedMessage: 
+
+    BaseMessageHandler (because it implements IHandleMessages<BaseMessage>), and
+    DerivedMessageHandler (because it implements IHandleMessages<DerivedMessage>)";
+
+                Assert.That(handlers.Count, Is.EqualTo(2), message);
+                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>(), message);
+                Assert.That(handlers[1], Is.TypeOf<DerivedMessageHandler>(), message);
             }
         }
 
         abstract class BaseMessage { }
+
         class DerivedMessage : BaseMessage { }
 
         class BaseMessageHandler : IHandleMessages<BaseMessage>
@@ -358,7 +368,7 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", scope.TransactionContext)).ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(0));
+                Assert.That(handlers.Count, Is.EqualTo(0), "Did not expected any handlers to be returned because none were registered");
             }
         }
 
@@ -372,8 +382,10 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", scope.TransactionContext)).ToList();
 
-                Assert.That(handlers.Count, Is.EqualTo(1));
-                Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>());
+                const string message = "Expected one single SomeStringHandler instance to be returned, because that's what was registered";
+
+                Assert.That(handlers.Count, Is.EqualTo(1), message);
+                Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>(), message);
             }
         }
 
