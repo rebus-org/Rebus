@@ -45,6 +45,18 @@ namespace Rebus.Tests.Logging
             Console.WriteLine($"Performing {iterations} renderings took {elapsed.TotalMilliseconds:0.0} ms - that's {iterations / elapsed.TotalMilliseconds:0.0} /ms");
         }
 
+        [Test]
+        public void CheckOneParticularExample()
+        {
+            // _log.Debug("Initializing HTTP forwarder with URI {uri}", _client.BaseAddress);
+
+            var message = OpenAbstractRebusLoggerFactory.Render("Initializing HTTP forwarder with URI {uri}", new Uri("http://localhustler/whambamboozle"));
+
+            Console.WriteLine(message);
+
+            Assert.That(message, Is.EqualTo("Initializing HTTP forwarder with URI http://localhustler/whambamboozle"));
+        }
+
         [TestCaseSource(nameof(GetScenarios))]
         public void ItWorks(InterpolationScenario scenario)
         {
