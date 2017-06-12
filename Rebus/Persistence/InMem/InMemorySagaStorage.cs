@@ -173,6 +173,7 @@ namespace Rebus.Persistence.InMem
                 {
                     Deleted?.Invoke(temp);
                 }
+                sagaData.Revision++;
             }
         }
 

@@ -1164,6 +1164,11 @@
 
 * Fix `GetSimpleAssemblyQualifiedName` extension to handle generic message types better (i.e. make version tolerance work with type parameters too) - thanks [Rzpeg]
 
+## 3.1.5
+
+* Fix unspecified behavior that did not assign a revision number to a deleted saga
+* Add contract test to verify correct behavior of saga persisters
+
 
 ## 4.0.0-b11
 
