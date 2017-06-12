@@ -268,6 +268,29 @@ namespace Rebus.Tests.Contracts.Sagas
         }
 
         [Test]
+        public async Task RevisionIsIncrementedOnPassedInInstanceWhenDeleting()
+        {
+            var sagaId = Guid.NewGuid();
+
+            var instance = new TestSagaData { Id = sagaId, Data = "yes, den kender jeg" };
+            var initialRevision = instance.Revision;
+
+            await _sagaStorage.Insert(instance, _noCorrelationProperties);
+            var revisionAfterInsert = instance.Revision;
+
+            await _sagaStorage.Update(instance, _noCorrelationProperties);
+            var revisionAfterUpdate = instance.Revision;
+
+            await _sagaStorage.Delete(instance);
+            var revisionAfterDelete = instance.Revision;
+
+            Assert.That(initialRevision, Is.EqualTo(0), "Expected initial revisio (before any saga persister actions) to be 0");
+            Assert.That(revisionAfterInsert, Is.EqualTo(0), "Expected revision after first INSERT to be 0 because this is the first revision");
+            Assert.That(revisionAfterUpdate, Is.EqualTo(1), "Expected revision after UPDATE to be 1 because is has now been saved as REV 1");
+            Assert.That(revisionAfterDelete, Is.EqualTo(2), "Expceted revision after DELETE to be 2 because it's the best bet revision number to use even though it has most likely been deleted for good from the underlying storage");
+        }
+
+        [Test]
         public async Task CanDeleteSagaData()
         {
             var sagaId = Guid.NewGuid();

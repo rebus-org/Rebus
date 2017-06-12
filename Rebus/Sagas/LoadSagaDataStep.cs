@@ -8,6 +8,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Sagas
 {

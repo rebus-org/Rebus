@@ -116,6 +116,7 @@ namespace Rebus.Persistence.FileSystem
                     throw new ConcurrencyException("Saga data with ID {0} no longer exists and cannot be deleted", id);
                 }
                 index.Remove(id);
+                sagaData.Revision++;
             }
         }
 
