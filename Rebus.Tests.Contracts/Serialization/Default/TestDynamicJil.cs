@@ -61,7 +61,7 @@ namespace Rebus.Tests.Contracts.Serialization.Default
 }"));
             _network.Deliver(InputQueueName, new InMemTransportMessage(transportMessage));
 
-            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(2));
+            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(3));
 
             Assert.That(messageText, Is.EqualTo("OMG dynamic JSON BABY!!"));
         }
