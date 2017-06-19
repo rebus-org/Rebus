@@ -17,13 +17,14 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public abstract class ContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
+    public abstract class ContainerTests<TActivationContext> : FixtureBase 
+        where TActivationContext : IActivationContext, new()
     {
-        TFactory _factory;
+        TActivationContext _activationCtx;
 
         protected override void SetUp()
         {
-            _factory = new TFactory();
+            _activationCtx = new TActivationContext();
 
             DisposableHandler.Reset();
             SomeHandler.Reset();
@@ -59,7 +60,7 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public void MultipleRegistrationsException()
         {
-            var handlerActivator = _factory.GetActivator();
+            var handlerActivator = _activationCtx.CreateActivator();
             var containerAdapter = handlerActivator as IContainerAdapter;
 
             if (containerAdapter == null)
@@ -81,15 +82,9 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public void IntegrationTest()
         {
-            _factory.RegisterHandlerType<StaticHandler>();
-
-            var activator = _factory.GetActivator();
-
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "container-integration-test"))
-                .Start();
-
-            var bus = _factory.GetBus();
+            var bus = _activationCtx.CreateBus(
+                handlers => handlers.Register<StaticHandler>(), 
+                configure => configure.Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "container-integration-test")));
 
             bus.SendLocal(new StaticHandlerMessage("hej med dig")).Wait();
 
@@ -103,8 +98,7 @@ namespace Rebus.Tests.Contracts.Activation
         [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
         public void DoesNotDoubleResolveBecauseOfLazyEnumerableEvaluation()
         {
-            _factory.RegisterHandlerType<SomeHandler>();
-            var handlerActivator = _factory.GetActivator();
+            var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<SomeHandler>());
 
             using (var scope = new RebusTransactionScope())
             {
@@ -158,16 +152,15 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public void CanGetDecoratedBus()
         {
-            var busReturnedFromConfiguration = Configure.With(_factory.GetActivator())
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "decorated-bus-test"))
-                .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>())))
-                .Start();
+            IActivatedContainer container;
+            var busReturnedFromConfiguration = _activationCtx.CreateBus(configure => configure
+                    .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "decorated-bus-test"))
+                    .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>()))), out container);
 
-            var busReturnedFromContainer = _factory.GetBus();
+            var busReturnedFromContainer = container.ResolveBus();
 
             Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>(), "Expected the bus returned from Configure(...).(...).Start() to be of type TestBusDecorator");
             Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>(), "Expected the bus returned from the container to be of type TestBuDecorator");
-
         }
 
         class TestBusDecorator : IBus
@@ -205,21 +198,17 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public void CanSetBusAndDisposeItAfterwards()
         {
-            var factoryForThisTest = new TFactory();
+            var contextForThisTest = new TActivationContext();
             var fakeBus = new FakeBus();
+            IActivatedContainer container;
+            var activator = contextForThisTest.CreateActivator(out container);
 
-            try
+            using (container)
             {
-                var activator = factoryForThisTest.GetActivator();
-
                 if (activator is IContainerAdapter)
                 {
-                    ((IContainerAdapter)activator).SetBus(fakeBus);
+                    ((IContainerAdapter) activator).SetBus(fakeBus);
                 }
-            }
-            finally
-            {
-                factoryForThisTest.CleanUp();
             }
 
             Assert.That(fakeBus.Disposed, Is.True, "The disposable bus instance was NOT disposed when the container was disposed");
@@ -305,9 +294,7 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public async Task ResolvesHandlersPolymorphically()
         {
-            _factory.RegisterHandlerType<BaseMessageHandler>();
-
-            var handlerActivator = _factory.GetActivator();
+            var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<BaseMessageHandler>());
 
             using (var scope = new RebusTransactionScope())
             {
@@ -323,10 +310,9 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public async Task ResolvesHandlersPolymorphically_MultipleHandlers()
         {
-            _factory.RegisterHandlerType<BaseMessageHandler>();
-            _factory.RegisterHandlerType<DerivedMessageHandler>();
-
-            var handlerActivator = _factory.GetActivator();
+            var handlerActivator = _activationCtx.CreateActivator(handlers => handlers
+                .Register<BaseMessageHandler>()
+                .Register<DerivedMessageHandler>());
 
             using (var scope = new RebusTransactionScope())
             {
@@ -362,7 +348,7 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public async Task ResolvingWithoutRegistrationYieldsEmptySequence()
         {
-            var handlerActivator = _factory.GetActivator();
+            var handlerActivator = _activationCtx.CreateActivator();
 
             using (var scope = new RebusTransactionScope())
             {
@@ -375,8 +361,7 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public async Task CanRegisterHandler()
         {
-            _factory.RegisterHandlerType<SomeStringHandler>();
-            var handlerActivator = _factory.GetActivator();
+            var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<SomeStringHandler>());
 
             using (var scope = new RebusTransactionScope())
             {
@@ -392,11 +377,9 @@ namespace Rebus.Tests.Contracts.Activation
         [Test]
         public async Task ResolvedHandlerIsDisposed()
         {
-            _factory.RegisterHandlerType<DisposableHandler>();
-
-            var bus = Configure.With(_factory.GetActivator())
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(true), "somequeue"))
-                .Start();
+            var bus = _activationCtx.CreateBus(
+                handlers => handlers.Register<DisposableHandler>(),
+                configure => configure.Transport(t => t.UseInMemoryTransport(new InMemNetwork(true), "somequeue")));
 
             Using(bus);
 

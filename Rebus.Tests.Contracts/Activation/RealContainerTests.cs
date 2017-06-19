@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus.Advanced;
-using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport.InMem;
@@ -9,26 +8,23 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public class RealContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
+    public class RealContainerTests<TActivationContext> : FixtureBase where TActivationContext : IActivationContext, new()
     {
-        TFactory _factory;
+        TActivationContext _activationCtx;
 
         protected override void SetUp()
         {
-            _factory = new TFactory();
+            _activationCtx = new TActivationContext();
         }
 
         [Test]
         public async Task CanInjectSyncBus()
         {
             HandlerThatGetsSyncBusInjected.SyncBusWasInjected = false;
-            _factory.RegisterHandlerType<HandlerThatGetsSyncBusInjected>();
 
-            var activator = _factory.GetActivator();
-
-            var bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "hvassåbimse"))
-                .Start();
+            var bus = _activationCtx.CreateBus(
+                handlers => handlers.Register<HandlerThatGetsSyncBusInjected>(),
+                configure => configure.Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "hvassåbimse")));
 
             Using(bus);
 
@@ -44,13 +40,10 @@ namespace Rebus.Tests.Contracts.Activation
         public async Task CanInjectMessageContext()
         {
             HandlerThatGetsMessageContextInjected.MessageContextWasInjected = false;
-            _factory.RegisterHandlerType<HandlerThatGetsMessageContextInjected>();
 
-            var activator = _factory.GetActivator();
-
-            var bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "hvassåbimse"))
-                .Start();
+            var bus = _activationCtx.CreateBus(
+                handlers => handlers.Register<HandlerThatGetsMessageContextInjected>(),
+                configure => configure.Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "hvassåbimse")));
 
             Using(bus);
 

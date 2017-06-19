@@ -4,5 +4,5 @@ using Rebus.Tests.Contracts.Activation;
 namespace Rebus.Tests.Activation
 {
     [TestFixture]
-    public class BuiltinHandlerActivatorContainerTests : ContainerTests<BuiltinContainerAdapterFactory> { }
+    public class BuiltinHandlerActivatorContainerTests : ContainerTests<BuiltinActivationContext> { }
 }
