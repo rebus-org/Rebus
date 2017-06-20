@@ -1183,6 +1183,7 @@
 * Add optional transport inspector service
 * Extend `ILog` interface with warning signature that accepts an `Exception`
 * Log uncaught exceptions from message handlers by passing real exceptions to the logger
+* Change contract tests to better support "immutable containers" (i.e. containers that cannot have things registered in them after they are built) - thanks [trevorreeves]
 
 ---
 
@@ -1229,5 +1230,6 @@
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor
 [torangel]: https://github.com/torangel
+[trevorreeves]: https://github.com/trevorreeves
 [xenoputtss]: https://github.com/xenoputtss
 [zabulus]: https://github.com/zabulus

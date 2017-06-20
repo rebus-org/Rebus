@@ -29,9 +29,9 @@ namespace Rebus.Tests.Activation
             return configureBus(Configure.With(activator)).Start();
         }
 
-        private class HandlerRegistry : IHandlerRegistry
+        class HandlerRegistry : IHandlerRegistry
         {
-            private readonly BuiltinHandlerActivator _activator;
+            readonly BuiltinHandlerActivator _activator;
 
             public HandlerRegistry(BuiltinHandlerActivator activator)
             {
@@ -45,9 +45,9 @@ namespace Rebus.Tests.Activation
             }
         }
 
-        private class ActivatedContainer : IActivatedContainer
+        class ActivatedContainer : IActivatedContainer
         {
-            private readonly BuiltinHandlerActivator _activator;
+            readonly BuiltinHandlerActivator _activator;
 
             public ActivatedContainer(BuiltinHandlerActivator activator)
             {
