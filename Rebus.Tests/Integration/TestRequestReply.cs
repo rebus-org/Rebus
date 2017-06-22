@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
+using Rebus.Messages;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
@@ -62,5 +66,35 @@ namespace Rebus.Tests.Integration
 
             gotMessage.WaitOrDie(TimeSpan.FromSeconds(30));
         }
+
+        [Test]
+        public async Task SetsReplyToHeader()
+        {
+            var gotMessage = new ManualResetEvent(false);
+            var receivedInReplyToHeaderValue = "not set";
+
+            _handlerActivator
+                .Handle<Request>(async (bus, request) =>
+                {
+                    await bus.Reply(new Reply());
+                })
+                .Handle<Reply>(async (bus, context, reply) =>
+                {
+                    receivedInReplyToHeaderValue = context.Headers.GetValueOrNull(Headers.InReplyTo);
+                    gotMessage.Set();
+                });
+
+
+            const string knownMessageId = "known-id";
+
+            await _bus.SendLocal(new Request(), new Dictionary<string, string> { { Headers.MessageId, knownMessageId } });
+
+            gotMessage.WaitOrDie(TimeSpan.FromSeconds(5));
+
+            Assert.That(receivedInReplyToHeaderValue, Is.EqualTo(knownMessageId));
+        }
+
+        class Request { }
+        class Reply { }
     }
 }

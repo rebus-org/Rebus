@@ -1170,7 +1170,7 @@
 * Add contract test to verify correct behavior of saga persisters
 
 
-## 4.0.0-b14
+## 4.0.0-b15
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
@@ -1184,6 +1184,7 @@
 * Extend `ILog` interface with warning signature that accepts an `Exception`
 * Log uncaught exceptions from message handlers by passing real exceptions to the logger
 * Change contract tests to better support "immutable containers" (i.e. containers that cannot have things registered in them after they are built) - thanks [trevorreeves]
+* Set `rbs2-in-reply-to` header on replies containing message ID of the request
 
 ---
 

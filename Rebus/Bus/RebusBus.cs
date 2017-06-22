@@ -18,6 +18,7 @@ using Rebus.Subscriptions;
 using Rebus.Time;
 using Rebus.Transport;
 using Rebus.Workers;
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Bus
 {
@@ -137,6 +138,8 @@ namespace Rebus.Bus
             var logicalMessage = CreateMessage(replyMessage, Operation.Reply, optionalHeaders);
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
+
+            logicalMessage.Headers[Headers.InReplyTo] = transportMessage.GetMessageId();
 
             await InnerSend(new[] { returnAddress }, logicalMessage);
         }
