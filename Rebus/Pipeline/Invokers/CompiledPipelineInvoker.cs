@@ -86,8 +86,8 @@ namespace Rebus.Pipeline.Invokers
 
         static MethodInfo GetProcessMethod(IStep step, string methodName, Type contextType)
         {
-#if NETSTANDARD1_6
-            var processMethod = step.GetType().GetTypeInfo().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
+#if NETSTANDARD1_3
+            var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
 #else
             var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
 #endif

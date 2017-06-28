@@ -34,7 +34,7 @@ namespace Rebus.Auditing.Sagas
                 .Where(i => i.HasSaga)
                 .Select(i => new
                 {
-                    Handler = i.Handler,
+                    i.Handler,
                     SagaData = i.GetSagaData()
                 })
                 .Where(a => a.SagaData != null)
@@ -60,8 +60,17 @@ namespace Rebus.Auditing.Sagas
                 {SagaAuditingMetadataKeys.SagaHandlerType, handler.GetType().GetSimpleAssemblyQualifiedName()},
                 {SagaAuditingMetadataKeys.MessageType, message.GetMessageType()},
                 {SagaAuditingMetadataKeys.MessageId, message.GetMessageId()},
-                {SagaAuditingMetadataKeys.MachineName, Environment.MachineName},
+                {SagaAuditingMetadataKeys.MachineName, GetMachineName()}
             };
+        }
+
+        private static string GetMachineName()
+        {
+#if NETSTANDARD1_3
+            return Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+#else
+            return Environment.MachineName;
+#endif
         }
     }
 }

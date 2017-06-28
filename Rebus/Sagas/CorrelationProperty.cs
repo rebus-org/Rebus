@@ -79,7 +79,7 @@ namespace Rebus.Sagas
 
             foreach (var name in path)
             {
-                propertyInfo = type.GetTypeInfo().GetProperty(name);
+                propertyInfo = type.GetProperty(name);
 
                 if (propertyInfo == null) return null;
 

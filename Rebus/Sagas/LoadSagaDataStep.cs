@@ -169,7 +169,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             {
                 if (IgnoredProperties.Contains(correlationProperty.PropertyName)) return;
 
-                var correlationPropertyInfo = newSagaData.GetType().GetTypeInfo().GetProperty(correlationProperty.PropertyName);
+                var correlationPropertyInfo = newSagaData.GetType().GetProperty(correlationProperty.PropertyName);
 
                 if (correlationPropertyInfo == null) return;
 

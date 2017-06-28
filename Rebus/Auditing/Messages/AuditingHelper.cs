@@ -37,7 +37,16 @@ namespace Rebus.Auditing.Messages
             }
 
             headers[AuditHeaders.AuditTime] = RebusTime.Now.ToString("O");
-            headers[AuditHeaders.MachineName] = Environment.MachineName;
+            headers[AuditHeaders.MachineName] = GetMachineName();
+        }
+
+        private static string GetMachineName()
+        {
+#if NETSTANDARD1_3
+            return Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+#else
+            return Environment.MachineName;
+#endif
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Rebus.Tests.Contracts.Sagas
 
         void Validate()
         {
-            var propertyType = SagaDataType.GetTypeInfo().GetProperty(PropertyName).PropertyType;
+            var propertyType = SagaDataType.GetProperty(PropertyName).PropertyType;
 
             if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
 

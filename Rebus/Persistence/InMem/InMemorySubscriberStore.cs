@@ -11,7 +11,7 @@ namespace Rebus.Persistence.InMem
     {
 #if NET45
         static readonly StringComparer StringComparer = StringComparer.InvariantCultureIgnoreCase;
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
         static readonly StringComparer StringComparer = StringComparer.OrdinalIgnoreCase;
 #endif
 

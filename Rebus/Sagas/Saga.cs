@@ -28,7 +28,7 @@ namespace Rebus.Sagas
             return CachedUserHasOverriddenConflictResolutionMethod
                 .GetOrAdd(GetType(), type =>
                 {
-                    var typeDeclaringTheConflictResolutionMethod = GetType().GetTypeInfo()
+                    var typeDeclaringTheConflictResolutionMethod = GetType()
                         .GetMethod("ResolveConflict", BindingFlags.Instance | BindingFlags.NonPublic).DeclaringType;
 
                     if (typeDeclaringTheConflictResolutionMethod == null)

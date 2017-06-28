@@ -54,7 +54,7 @@ namespace Rebus.Persistence.FileSystem
 #if NET45
                 var message =
                     $"Could not write dummy file to saga snapshot directory '{_snapshotDirectory}' - is it writable for the {Environment.UserDomainName} / {Environment.UserName} account?";
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
                 var message =
                     $"Could not write dummy file to saga snapshot directory '{_snapshotDirectory}' - is it writable for the current user account?";
 #endif
