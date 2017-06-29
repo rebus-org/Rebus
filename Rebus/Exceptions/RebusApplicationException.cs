@@ -10,10 +10,8 @@ namespace Rebus.Exceptions
     /// </summary>
 #if NET45
     [Serializable]
-    public class RebusApplicationException : Exception
-# elif NETSTANDARD1_3
-    public class RebusApplicationException : Exception
 #endif
+    public class RebusApplicationException : Exception
     {
         /// <summary>
         /// Constructs the exception with the given message

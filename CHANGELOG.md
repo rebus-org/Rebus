@@ -1177,7 +1177,7 @@
 * Change all logging to have named placeholders (Serilog style) instead of the semantically useless .NET placeholders (logging libraries that have no use for named placeholders can use `AbstractRebusLoggerFactory`'s `RenderString` method)
 * Add experimental expression-based pipeline invoker
 * Compile expression-based pipeline with [FastExpressionCompiler](https://github.com/dadhi/FastExpressionCompiler) - thanks [dadhi]
-* Add .NET Core support (targeting netstandard 1.6) in addition to the current .NET 4.5 target - thanks [mvandevy]
+* Add .NET Core support (~~~targeting netstandard 1.6~~~) in addition to the current .NET 4.5 target - thanks [mvandevy]
 * Move JSON serializer into core (still default, but now exposed so it can be customized)
 * Rename transaction scope to `RebusTransactionScope` and make it expose `CompleteAsync()` and `Complete()` methods for completing in an async/sync manner respectively
 * Add optional transport inspector service
@@ -1185,6 +1185,7 @@
 * Log uncaught exceptions from message handlers by passing real exceptions to the logger
 * Change contract tests to better support "immutable containers" (i.e. containers that cannot have things registered in them after they are built) - thanks [trevorreeves]
 * Set `rbs2-in-reply-to` header on replies containing message ID of the request
+* Lower .NET Core compatible target to netstandard 1.3 - thanks [mirandaasm]
 
 ---
 
@@ -1214,6 +1215,7 @@
 [maxx1337]: https://github.com/maxx1337
 [mclausen]: https://github.com/mclausen
 [meyce]: https://github.com/Meyce
+[mirandaasm]: https://github.com/mirandaasm
 [mgayeski]: https://github.com/mgayeski
 [mgibas]: https://github.com/mgibas
 [mortenherman]: https://github.com/mortenherman
