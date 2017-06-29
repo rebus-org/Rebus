@@ -1170,7 +1170,7 @@
 * Add contract test to verify correct behavior of saga persisters
 
 
-## 4.0.0-b15
+## 4.0.0-b16
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
