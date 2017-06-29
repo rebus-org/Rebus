@@ -44,7 +44,7 @@ namespace Rebus.Persistence.FileSystem
                 {
                     var sagaData = index.FindById((Guid) propertyValue);
 
-                    if (!sagaDataType.GetTypeInfo().IsInstanceOfType(sagaData))
+                    if (!sagaDataType.IsInstanceOfType(sagaData))
                     {
                         return null;
                     }

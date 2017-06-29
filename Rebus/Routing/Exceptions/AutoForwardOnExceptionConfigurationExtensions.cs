@@ -77,7 +77,7 @@ namespace Rebus.Routing.Exceptions
                 }
                 catch (Exception exception)
                 {
-                    if (!_exceptionType.GetTypeInfo().IsInstanceOfType(exception))
+                    if (!_exceptionType.IsInstanceOfType(exception))
                     {
                         throw;
                     }

@@ -166,7 +166,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
 #if NET45
             catch (ThreadAbortException exception)
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
             catch (OperationCanceledException exception)
 #endif
             {

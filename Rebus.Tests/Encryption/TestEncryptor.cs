@@ -15,7 +15,7 @@ namespace Rebus.Tests.Encryption
             {
 #if NET45
                 new RijndaelEncryptor("not a valid key");
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
                 new AesEncryptor("not a valid key");
 #endif
 

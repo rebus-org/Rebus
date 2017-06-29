@@ -118,7 +118,7 @@ namespace Rebus.Persistence.FileSystem
 
             foreach (var dot in dots)
             {
-                var propertyInfo = obj.GetType().GetTypeInfo().GetProperty(dot);
+                var propertyInfo = obj.GetType().GetProperty(dot);
                 if (propertyInfo == null) return null;
                 obj = propertyInfo.GetValue(obj, new object[0]);
                 if (obj == null) break;

@@ -1,7 +1,7 @@
 ﻿using System;
 #if NET45
 using System.Timers;
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
 using System.Threading;
 #endif
 using System.Threading.Tasks;
@@ -68,14 +68,14 @@ namespace Rebus.Threading.SystemTimersTimer
             _timer = new Timer(Interval.TotalMilliseconds);
             _timer.Elapsed += (o, ea) => Tick();
             _timer.Start();
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
             _timer = new Timer(Tick, null, Interval, Interval);
 #endif
         }
 
 #if NET45
         async void Tick()
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
         async void Tick(object state)
 #endif
         {

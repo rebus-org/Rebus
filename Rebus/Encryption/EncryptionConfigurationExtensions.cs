@@ -19,7 +19,7 @@ namespace Rebus.Encryption
         {
 #if NET45
             EnableCustomEncryption(configurer).Register(c => new RijndaelEncryptor(key));
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
             EnableCustomEncryption(configurer).Register(c => new AesEncryptor(key));
 #endif
         }

@@ -11,7 +11,7 @@ namespace Rebus.Exceptions
 #if NET45
     [Serializable]
     public class ConcurrencyException : Exception
-# elif NETSTANDARD1_6
+# elif NETSTANDARD1_3
     public class ConcurrencyException : Exception
 #endif
     {

@@ -11,7 +11,7 @@ namespace Rebus.Exceptions
 #if NET45
     [Serializable]
     public class RebusConfigurationException : ApplicationException
-# elif NETSTANDARD1_6
+# elif NETSTANDARD1_3
     public class RebusConfigurationException : Exception
 #endif
     {

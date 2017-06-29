@@ -15,7 +15,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static IEnumerable<Type> GetBaseTypes(this Type type)
         {
-            foreach (var implementedInterface in type.GetTypeInfo().GetInterfaces())
+            foreach (var implementedInterface in type.GetInterfaces())
             {
                 yield return implementedInterface;
             }
@@ -39,7 +39,7 @@ namespace Rebus.Extensions
 
         static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
         {
-#if NETSTANDARD1_6
+#if NETSTANDARD1_3
             var typeInfo = type.GetTypeInfo();
             if (!typeInfo.IsGenericType)
             {
@@ -57,7 +57,7 @@ namespace Rebus.Extensions
             var name = fullName.Substring(0, requiredPosition);
             sb.Append($"{name}[");
 
-            var arguments = typeInfo.GetGenericArguments();
+            var arguments = type.GetGenericArguments();
             for (var i = 0; i < arguments.Length; i++)
             {
                 sb.Append(i == 0 ? "[" : ", [");

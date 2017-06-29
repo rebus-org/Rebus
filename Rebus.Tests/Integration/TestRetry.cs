@@ -22,7 +22,7 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestRetry : FixtureBase
     {
-        static readonly string InputQueueName = TestConfig.GetName($"test.rebus2.retries.input@{Environment.MachineName}");
+        static readonly string InputQueueName = TestConfig.GetName($"test.rebus2.retries.input@{GetMachineName()}");
         static readonly string ErrorQueueName = TestConfig.GetName("rebus2.error");
 
         BuiltinHandlerActivator _handlerActivator;
@@ -91,6 +91,15 @@ namespace Rebus.Tests.Integration
             var expectedNumberOfAttemptedDeliveries = numberOfRetries;
 
             Assert.That(attemptedDeliveries, Is.EqualTo(expectedNumberOfAttemptedDeliveries));
+        }
+
+        private static string GetMachineName()
+        {
+#if NETSTANDARD1_3
+            return Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+#else
+            return Environment.MachineName;
+#endif
         }
     }
 }

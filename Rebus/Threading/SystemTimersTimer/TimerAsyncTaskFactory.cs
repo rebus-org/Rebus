@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 #if NET45
 using System.Timers;
-#elif NETSTANDARD1_6
+#elif NETSTANDARD1_3
 using System.Threading;
 #endif
 using Rebus.Logging;

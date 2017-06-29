@@ -48,7 +48,7 @@ namespace Rebus.Testing
             {
                 var compatibleHandlerType = typeof(Action<>).MakeGenericType(fakeBusEvent.GetType());
 
-                if (!compatibleHandlerType.GetTypeInfo().IsInstanceOfType(callback)) continue;
+                if (!compatibleHandlerType.IsInstanceOfType(callback)) continue;
 
                 try
                 {

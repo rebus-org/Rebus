@@ -59,7 +59,7 @@ which is then detected by this wrapper step.")]
                     {
                         const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-                        var genericWrapMethod = GetType().GetTypeInfo().GetMethod(nameof(Wrap), bindingFlags);
+                        var genericWrapMethod = GetType().GetMethod(nameof(Wrap), bindingFlags);
 
                         return genericWrapMethod.MakeGenericMethod(type);
                     })

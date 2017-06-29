@@ -27,7 +27,7 @@ namespace Rebus.Pipeline.Receive
             return CanBeInitiatedByCache
                 .GetOrAdd($"{Handler.GetType().FullName}::{messageType.FullName}", _ =>
                 {
-                    var implementedInterfaces = Saga.GetType().GetTypeInfo().GetInterfaces();
+                    var implementedInterfaces = Saga.GetType().GetInterfaces();
 
                     var handlerTypesToLookFor = new[] { messageType }.Concat(messageType.GetBaseTypes())
                         .Select(baseType => typeof(IAmInitiatedBy<>).MakeGenericType(baseType));
@@ -167,7 +167,7 @@ namespace Rebus.Pipeline.Receive
                 throw new InvalidOperationException($"Attempted to set {sagaData} as saga data on handler {_handler}, but the handler is not a saga!");
             }
 
-            var dataProperty = _handler.GetType().GetTypeInfo().GetProperty(SagaDataPropertyName);
+            var dataProperty = _handler.GetType().GetProperty(SagaDataPropertyName);
 
             if (dataProperty == null)
             {
