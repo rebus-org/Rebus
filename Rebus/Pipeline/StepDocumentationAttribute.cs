@@ -9,7 +9,9 @@ namespace Rebus.Pipeline
     public class StepDocumentationAttribute : Attribute
     {
         /// <summary>
-        /// Creates the attribute with the given documentation test
+        /// Creates the attribute with the given documentation text. Will be included in the output
+        /// when logging the message pipelines at startup, which is done by calling
+        /// <code>.Options(o => o.LogPipeline(verbose: true|false))</code>
         /// </summary>
         public StepDocumentationAttribute(string text)
         {
