@@ -58,6 +58,8 @@ namespace Rebus.Routing
 
         internal string GetReturnAddress => _returnAddressOrNull;
 
+        internal bool HasExplicitlySpecifiedReturnAddress => !string.IsNullOrWhiteSpace(_returnAddressOrNull);
+
         internal List<string> GetDestinationAddresses() => _destinations.ToList();
     }
 }

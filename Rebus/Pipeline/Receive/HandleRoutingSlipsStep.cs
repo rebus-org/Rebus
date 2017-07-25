@@ -47,12 +47,6 @@ namespace Rebus.Pipeline.Receive
 
         async Task HandleRoutingSlip(IncomingStepContext context, Message message)
         {
-            // if there is not return address, the routing slip is done
-            if (!message.Headers.ContainsKey(Headers.ReturnAddress))
-            {
-                return;
-            }
-
             var transactionContext = context.Load<ITransactionContext>();
             var transportMessage = await _serialier.Serialize(message);
             var headers = transportMessage.Headers;
@@ -62,8 +56,8 @@ namespace Rebus.Pipeline.Receive
 
             if (nextDestination == null)
             {
-                nextDestination = headers.GetValue(Headers.ReturnAddress);
-                headers.Remove(Headers.ReturnAddress);
+                // no more destinations - stop forwarding it now
+                return;
             }
 
             var remainingDestinations = itinerary.Skip(1);
@@ -74,7 +68,6 @@ namespace Rebus.Pipeline.Receive
             travelogue.Add(_transport.Address);
 
             transportMessage.Headers[Headers.RoutingSlipTravelogue] = string.Join(";", travelogue);
-
             transportMessage.Headers[Headers.CorrelationSequence] = GetNextSequenceNumber(transportMessage.Headers);
 
             await _transport.Send(nextDestination, transportMessage, transactionContext);
@@ -86,6 +79,7 @@ namespace Rebus.Pipeline.Receive
                 ? (sequenceNumber + 1).ToString()
                 : "0";
 
-        static List<string> GetDestinations(Dictionary<string, string> headers, string headerKey) => headers.GetValue(headerKey).Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        static List<string> GetDestinations(Dictionary<string, string> headers, string headerKey) => 
+            headers.GetValue(headerKey).Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
     }
 }

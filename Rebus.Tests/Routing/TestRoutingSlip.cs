@@ -9,10 +9,12 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Routing;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 // ReSharper disable RedundantLambdaParameterType
 #pragma warning disable 1998
@@ -23,9 +25,11 @@ namespace Rebus.Tests.Routing
     public class TestRoutingSlip : FixtureBase
     {
         readonly InMemNetwork _network = new InMemNetwork();
+        readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory(true);
 
         protected override void SetUp()
         {
+            _listLoggerFactory.Clear();
             _network.Reset();
         }
 
@@ -117,7 +121,45 @@ namespace Rebus.Tests.Routing
         }
 
         [Test]
-        public async Task CanRouteMessageAsExpected()
+        public async Task CanRouteMessageAsExpected_NeverReturn()
+        {
+            var done = new ManualResetEvent(false);
+            var events = new ConcurrentQueue<string>();
+
+            StartBus("endpoint-a").Activator.Handle<string>(async str => events.Enqueue("a"));
+            StartBus("endpoint-b").Activator.Handle<string>(async str => events.Enqueue("b"));
+            StartBus("endpoint-c").Activator.Handle<string>(async str => events.Enqueue("c"));
+                    
+            StartBus("endpoint-d").Activator.Handle<string>(async str =>
+            {
+                events.Enqueue("d");
+                done.Set();
+            });
+
+            var initiator = StartBus("initiator");
+
+            var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c", "endpoint-d");
+
+            await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, "YO!!");
+
+            done.WaitOrDie(TimeSpan.FromSeconds(3));
+
+            await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+            Assert.That(events, Is.EqualTo(new[] { "a", "b", "c", "d" }));
+
+            var warningLinesOrWorse = _listLoggerFactory.Where(l => l.Level >= LogLevel.Warn).ToList();
+            Assert.That(warningLinesOrWorse.Any, Is.False, $@"Did NOT expect any warnings or errors in the log - got these lines with WARN level or above:
+
+{string.Join(Environment.NewLine, warningLinesOrWorse)}
+
+
+They should not have been there
+");
+        }
+
+        [Test]
+        public async Task CanRouteMessageAsExpected_ReturnToSender()
         {
             var a = StartBus("endpoint-a");
             var b = StartBus("endpoint-b");
@@ -171,6 +213,7 @@ namespace Rebus.Tests.Routing
             }
 
             Configure.With(activator)
+                .Logging(l => l.Use(_listLoggerFactory))
                 .Transport(t => t.UseInMemoryTransport(_network, queueName))
                 .Start();
 
