@@ -252,12 +252,13 @@ namespace Rebus.Config
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
-                    .OnSend(new AssignGuidMessageIdStep())
-                    .OnSend(new AssignReturnAddressStep(transport))
-                    .OnSend(new AssignDateTimeOffsetHeader())
+                    .OnSend(new AssignDefaultHeadersStep(transport))
+                    //.OnSend(new AssignGuidMessageIdStep())
+                    //.OnSend(new AssignReturnAddressStep(transport))
+                    //.OnSend(new AssignDateTimeOffsetHeader())
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
-                    .OnSend(new AssignTypeHeaderStep())
+                    //.OnSend(new AssignTypeHeaderStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
                     .OnSend(new ValidateOutgoingMessageStep())
                     .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));

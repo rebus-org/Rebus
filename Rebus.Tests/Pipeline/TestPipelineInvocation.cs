@@ -119,51 +119,5 @@ namespace Rebus.Tests.Pipeline
                 await next();
             }
         }
-
-        //class NewDefaultPipelineInvoker : IPipelineInvoker
-        //{
-        //    static readonly Task<int> Noop = Task.FromResult(0);
-        //    static readonly Func<Task> TerminationStep = () => Noop;
-
-        //    /// <summary>
-        //    /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
-        //    /// </summary>
-        //    public Task Invoke(IncomingStepContext context, IIncomingStep[] pipeline)
-        //    {
-        //        var enumerator = pipeline.GetEnumerator();
-
-        //        async Task Dispose(IDisposable disposable) => disposable.Dispose();
-
-        //        Task InvokeStep(IIncomingStep step)
-        //        {
-        //            Task Next() => enumerator.MoveNext() ? InvokeStep((IIncomingStep)enumerator.Current) : Noop;
-        //            return step != null ? step.Process(context, Next) : Noop;
-        //        }
-
-        //        if (!enumerator.MoveNext())
-        //        {
-        //            return Noop;
-        //        }
-
-        //        return InvokeStep((IIncomingStep)enumerator.Current);
-        //    }
-
-        //    /// <summary>
-        //    /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
-        //    /// </summary>
-        //    public Task Invoke(OutgoingStepContext context, IOutgoingStep[] pipeline)
-        //    {
-        //        var step = TerminationStep;
-
-        //        for (var index = pipeline.Length - 1; index >= 0; index--)
-        //        {
-        //            var nextStep = step;
-        //            var stepToInvoke = pipeline[index];
-        //            step = () => stepToInvoke.Process(context, nextStep);
-        //        }
-
-        //        return step();
-        //    }
-        //}
     }
 }

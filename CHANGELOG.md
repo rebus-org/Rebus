@@ -1186,6 +1186,7 @@
 * Change contract tests to better support "immutable containers" (i.e. containers that cannot have things registered in them after they are built) - thanks [trevorreeves]
 * Set `rbs2-in-reply-to` header on replies containing message ID of the request
 * Lower .NET Core compatible target to netstandard 1.3 - thanks [mirandaasm]
+* Consolidate several header steps into one single `AssignDefaultHeadersStep` for outgoing messages
 
 ---
 
