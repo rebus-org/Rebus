@@ -42,6 +42,16 @@ namespace Rebus.Messages
         public const string ReturnAddress = "rbs2-return-address";
 
         /// <summary>
+        /// A ;-separated list of addresses that the routing slip must visit
+        /// </summary>
+        public const string RoutingSlipItinerary = "rbs2-itinerary";
+
+        /// <summary>
+        /// A ;-separated list of addresses that the routing slip has visited
+        /// </summary>
+        public const string RoutingSlipTravelogue = "rbs2-travelogue";
+
+        /// <summary>
         /// Describes the contents of the message with a type and an encoding
         /// </summary>
         public const string ContentType = "rbs2-content-type";

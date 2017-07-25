@@ -248,6 +248,7 @@ namespace Rebus.Config
                     .OnReceive(c.Get<IRetryStrategyStep>())
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
+                    .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
                     .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))

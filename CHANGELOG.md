@@ -1187,6 +1187,7 @@
 * Set `rbs2-in-reply-to` header on replies containing message ID of the request
 * Lower .NET Core compatible target to netstandard 1.3 - thanks [mirandaasm]
 * Consolidate several header steps into one single `AssignDefaultHeadersStep` for outgoing messages
+* Add routing slips
 
 ---
 

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Bus.Advanced;
 using Rebus.DataBus;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Routing;
 using Rebus.Time;
 using Rebus.Transport;
 // ReSharper disable ArgumentsStyleLiteral
@@ -167,6 +169,22 @@ namespace Rebus.Bus
                 var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
 
                 return _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
+            }
+
+            public Task SendRoutingSlip(Itinerary itinerary, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                var logicalMessage = CreateMessage(message, Operation.Send, optionalHeaders);
+                var destinationAddresses = itinerary.GetDestinationAddresses();
+
+                var first = destinationAddresses.First();
+                var rest = destinationAddresses.Skip(1);
+
+                var value = string.Join(";", rest);
+
+                logicalMessage.Headers[Headers.RoutingSlipItinerary] = value;
+                logicalMessage.Headers[Headers.RoutingSlipTravelogue] = "";
+
+                return _rebusBus.InnerSend(new[] { first}, logicalMessage);
             }
         }
 
