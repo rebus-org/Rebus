@@ -73,10 +73,18 @@ namespace Rebus.Pipeline.Receive
             var travelogue = GetDestinations(transportMessage.Headers, Headers.RoutingSlipTravelogue);
             travelogue.Add(_transport.Address);
 
-            transportMessage.Headers[Headers.RoutingSlipTravelogue] += string.Join(";", travelogue);
+            transportMessage.Headers[Headers.RoutingSlipTravelogue] = string.Join(";", travelogue);
+
+            transportMessage.Headers[Headers.CorrelationSequence] = GetNextSequenceNumber(transportMessage.Headers);
 
             await _transport.Send(nextDestination, transportMessage, transactionContext);
         }
+
+        static string GetNextSequenceNumber(IReadOnlyDictionary<string, string> headers) =>
+            headers.TryGetValue(Headers.CorrelationSequence, out var sequenceNumberString)
+            && int.TryParse(sequenceNumberString, out var sequenceNumber)
+                ? (sequenceNumber + 1).ToString()
+                : "0";
 
         static List<string> GetDestinations(Dictionary<string, string> headers, string headerKey) => headers.GetValue(headerKey).Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
     }

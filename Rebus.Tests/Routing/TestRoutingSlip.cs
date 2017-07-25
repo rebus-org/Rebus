@@ -8,6 +8,8 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
+using Rebus.Messages;
 using Rebus.Routing;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -25,6 +27,52 @@ namespace Rebus.Tests.Routing
         protected override void SetUp()
         {
             _network.Reset();
+        }
+
+        [Test]
+        public async Task CheckHeaders()
+        {
+            var seqValues = new List<string>();
+            var travelogueValues = new List<string>();
+            var correlationIdValues = new List<string>();
+
+            void HandleHeaders(Dictionary<string, string> headers)
+            {
+                Console.WriteLine($@"Headers:
+{string.Join(Environment.NewLine, headers.Select(kvp => $"    {kvp.Key}: {kvp.Value}"))}
+");
+                seqValues.Add(headers.GetValue(Headers.CorrelationSequence));
+                travelogueValues.Add(headers.GetValue(Headers.RoutingSlipTravelogue));
+                correlationIdValues.Add(headers.GetValue(Headers.CorrelationId));
+            }
+
+            StartBus("endpoint-a").Activator.Handle<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+            StartBus("endpoint-b").Activator.Handle<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+            StartBus("endpoint-c").Activator.Handle<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+
+            var routingSlipWasReturnedToSender = new ManualResetEvent(false);
+
+            var initiator = StartBus("initiator").Activator.Handle<string>(async (bus, context, message) =>
+            {
+                HandleHeaders(context.Headers);
+                routingSlipWasReturnedToSender.Set();
+            });
+
+            var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c").ReturnToSender();
+
+            await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, "HEJ MED DIG DU");
+
+            routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
+
+            Assert.That(seqValues, Is.EqualTo(new[] { "0", "1", "2", "3" }));
+            Assert.That(travelogueValues, Is.EqualTo(new[]
+            {
+                "",
+                "endpoint-a",
+                "endpoint-a;endpoint-b",
+                "endpoint-a;endpoint-b;endpoint-c",
+            }));
+            Assert.That(correlationIdValues, Is.EqualTo(Enumerable.Repeat(correlationIdValues.First(), 4)));
         }
 
         [Test]
