@@ -11,6 +11,7 @@ using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Sagas.Idempotent;
 using Rebus.Tests.Contracts;
@@ -55,6 +56,8 @@ namespace Rebus.Tests.Integration
 
                         return new SagaStorageTap(sagaStorage, _persistentSagaData);
                     });
+
+                    s.StoreInMemory();
                 })
                 .Options(o =>
                 {

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
@@ -29,6 +30,7 @@ namespace Rebus.Tests.Sagas
                     o.SetMaxParallelism(1);
                     o.SetNumberOfWorkers(1);
                 })
+                .Sagas(s => s.StoreInMemory())
                 .Start();
         }
 

@@ -8,6 +8,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Messages;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
@@ -36,6 +37,7 @@ namespace Rebus.Tests.Integration
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(1);
                 })
+                .Sagas(s => s.StoreInMemory())
                 .Start();
 
             Using(_bus);

@@ -7,9 +7,9 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
+using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Timeouts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -32,6 +32,7 @@ namespace Rebus.Tests.Bugs
 
             Configure.With(Using(new BuiltinHandlerActivator()))
                 .Transport(t => t.UseInMemoryTransport(_network, TimeoutsQueueName))
+                .Timeouts(t => t.StoreInMemory())
                 .Start();
 
             _destination = new BuiltinHandlerActivator();

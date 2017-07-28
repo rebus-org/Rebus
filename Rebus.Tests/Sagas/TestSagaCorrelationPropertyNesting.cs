@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
@@ -26,6 +27,7 @@ namespace Rebus.Tests.Sagas
 
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-property-nesting"))
+                .Sagas(s => s.StoreInMemory())
                 .Start();
 
             await activator.Bus.SendLocal(new MyMsg("hej1"));

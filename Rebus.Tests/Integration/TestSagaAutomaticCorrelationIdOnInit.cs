@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
@@ -27,6 +28,7 @@ namespace Rebus.Tests.Integration
 
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "auto-set-correlation-id-when-initiating"))
+                .Sagas(s => s.StoreInMemory())
                 .Start();
 
             activator.Bus.SendLocal(new JobMessage("bimse!!")).Wait();

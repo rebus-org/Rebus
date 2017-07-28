@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Exceptions;
 using Rebus.Logging;
+using Rebus.Persistence.InMem;
 using Rebus.Routing.Exceptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -42,6 +43,7 @@ namespace Rebus.Tests.Integration
                         });
                 })
                 .Options(o => o.LogPipeline(verbose: true))
+                .Timeouts(t => t.StoreInMemory())
                 .Start();
         }
 

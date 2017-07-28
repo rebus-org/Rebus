@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
+using Rebus.Persistence.InMem;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -47,6 +48,7 @@ It could happen to you too!
             Configure.With(_activator)
                 .Logging(l => l.None())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "check that it works"))
+                .Timeouts(t => t.StoreInMemory())
                 .Options(o =>
                 {
                     o.SimpleRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);

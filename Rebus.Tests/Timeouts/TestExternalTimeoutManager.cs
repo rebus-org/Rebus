@@ -9,6 +9,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
@@ -39,6 +40,7 @@ namespace Rebus.Tests.Timeouts
             Configure.With(Using(new BuiltinHandlerActivator()))
                 .Logging(l => l.Use(logger))
                 .Transport(t => t.UseInMemoryTransport(_network, _queueNameTimeoutManager))
+                .Timeouts(t => t.StoreInMemory())
                 .Start();
 
             _gotTheMessage = new ManualResetEvent(false);

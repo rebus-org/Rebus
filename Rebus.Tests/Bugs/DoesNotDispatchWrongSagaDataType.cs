@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -25,6 +26,7 @@ namespace Rebus.Tests.Bugs
             Configure.With(_activator)
                 .Logging(l => l.Use(new ListLoggerFactory(true)))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesntmatter"))
+                .Sagas(s => s.StoreInMemory())
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);
@@ -44,7 +46,7 @@ namespace Rebus.Tests.Bugs
 
             3.Times(() => _activator.Bus.SendLocal(new Message(sagaId)).Wait());
 
-            counter.WaitForResetEvent(2000);
+            counter.WaitForResetEvent(3);
         }
 
         class FirstSagaData : ISagaData

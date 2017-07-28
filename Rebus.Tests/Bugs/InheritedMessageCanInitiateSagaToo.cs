@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
@@ -22,6 +23,7 @@ namespace Rebus.Tests.Bugs
 
             Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "inherited-message-can-be-an-initiating-message-too"))
+                .Sagas(s => s.StoreInMemory())
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);

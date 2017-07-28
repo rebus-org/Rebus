@@ -8,6 +8,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
+using Rebus.Persistence.InMem;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -35,6 +36,8 @@ namespace Rebus.Tests.Integration
 
                     o.Decorate<ISubscriptionStorage>(c => new AwaitingSubscriptionStorageDecorator(c.Get<ISubscriptionStorage>()));
                 })
+                .Sagas(s => s.StoreInMemory())
+                .Subscriptions(s => s.StoreInMemory())
                 .Start();
         }
 

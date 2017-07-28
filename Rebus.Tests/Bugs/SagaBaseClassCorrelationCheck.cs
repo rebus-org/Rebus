@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -30,6 +31,7 @@ namespace Rebus.Tests.Bugs
 
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "two sagas with same type of saga data"))
+                .Sagas(s => s.StoreInMemory())
                 .Start();
 
             await activator.Bus.SendLocal(new Message1 { CorrelationId = "correlation1" });

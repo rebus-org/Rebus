@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
@@ -27,6 +28,7 @@ namespace Rebus.Tests.Sagas
 
             Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "header-correlation"))
+                .Sagas(s => s.StoreInMemory())
                 .Start();
 
             _bus = _activator.Bus;

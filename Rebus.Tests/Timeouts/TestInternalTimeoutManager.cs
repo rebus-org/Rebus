@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
@@ -29,6 +30,7 @@ namespace Rebus.Tests.Timeouts
 
                 Configure.With(activator)
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), _queueName))
+                    .Timeouts(t => t.StoreInMemory())
                     .Start();
 
                 var stopwatch = Stopwatch.StartNew();

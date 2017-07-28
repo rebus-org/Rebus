@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Exceptions;
 using Rebus.Handlers;
+using Rebus.Persistence.InMem;
 using Rebus.Retry.Simple;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
@@ -27,6 +28,7 @@ namespace Rebus.Tests.Integration
 
             Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "polycorrrewwllll"))
+                .Sagas(s => s.StoreInMemory())
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);

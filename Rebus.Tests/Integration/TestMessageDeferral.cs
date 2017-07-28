@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
@@ -25,6 +26,7 @@ namespace Rebus.Tests.Integration
 
             _bus = Configure.With(_handlerActivator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(true), "test.message.deferral"))
+                .Timeouts(t => t.StoreInMemory())
                 .Start();
 
             Using(_bus);

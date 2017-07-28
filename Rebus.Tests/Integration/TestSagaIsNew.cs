@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -28,6 +29,7 @@ namespace Rebus.Tests.Integration
 
             _bus = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_is_new"))
+                .Sagas(s => s.StoreInMemory())
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);
