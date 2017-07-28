@@ -24,6 +24,9 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
+            if (headers == null) throw new ArgumentNullException(nameof(headers));
+            if (body == null) throw new ArgumentNullException(nameof(body));
+
             lock (_deferredMessages)
             {
                 _deferredMessages

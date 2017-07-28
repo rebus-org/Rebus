@@ -7,6 +7,7 @@ using Rebus.Sagas;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+using Rebus.Persistence.InMem;
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
@@ -22,19 +23,19 @@ namespace Rebus.Tests.Bugs
 
             Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-is-preserved"))
+                .Sagas(s => s.StoreInMemory())
                 .Start();
         }
 
         [Test]
-        public void ItHasBeenFixed()
+        public async Task ItHasBeenFixed()
         {
             var counter = new SharedCounter(1);
             var fields = new Fields();
 
             _activator.Register(() => new MySaga(counter, fields));
 
-            var newGuid = Guid.NewGuid();
-            _activator.Bus.SendLocal(new MyMessageWithGuid {SagaId = newGuid}).Wait();
+            await _activator.Bus.SendLocal(new MyMessageWithGuid {SagaId = Guid.NewGuid()});
 
             counter.WaitForResetEvent();
 

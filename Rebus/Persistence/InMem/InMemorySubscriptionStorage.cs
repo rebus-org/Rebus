@@ -13,25 +13,27 @@ namespace Rebus.Persistence.InMem
     {
         readonly InMemorySubscriberStore _subscriberStore;
 
+        InMemorySubscriptionStorage(InMemorySubscriberStore subscriberStore, bool isCentralized)
+        {
+            if (subscriberStore == null) throw new ArgumentNullException(nameof(subscriberStore));
+            _subscriberStore = subscriberStore;
+            IsCentralized = isCentralized;
+        }
+
         /// <summary>
         /// Creates the in-mem subscription storage as a decentralized subscription storage with its
         /// own private subscriber store
         /// </summary>
-        public InMemorySubscriptionStorage()
+        public InMemorySubscriptionStorage() : this(new InMemorySubscriberStore(), false)
         {
-            _subscriberStore = new InMemorySubscriberStore();
-            IsCentralized = false;
         }
 
         /// <summary>
         /// Creates the in-mem subscription storage as a centralized subscription storage, using the given
         /// <see cref="InMemorySubscriberStore"/> to share subscriptions
         /// </summary>
-        public InMemorySubscriptionStorage(InMemorySubscriberStore subscriberStore)
+        public InMemorySubscriptionStorage(InMemorySubscriberStore subscriberStore) : this(subscriberStore, true)
         {
-            if (subscriberStore == null) throw new ArgumentNullException(nameof(subscriberStore));
-            _subscriberStore = subscriberStore;
-            IsCentralized = true;
         }
 
         /// <summary>
@@ -39,6 +41,7 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
             return _subscriberStore.GetSubscribers(topic);
         }
 
@@ -47,6 +50,8 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
             _subscriberStore.AddSubscriber(topic, subscriberAddress);
         }
 
@@ -55,6 +60,8 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
             _subscriberStore.RemoveSubscriber(topic, subscriberAddress);
         }
 

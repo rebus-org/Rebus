@@ -8,6 +8,7 @@ using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Persistence.InMem;
+using Rebus.Persistence.Throwing;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Invokers;
 using Rebus.Pipeline.Receive;
@@ -161,12 +162,17 @@ namespace Rebus.Config
                 return new TypeBasedRouter(rebusLoggerFactory);
             });
 
-            PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
+            //PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
+            PossiblyRegisterDefault<ISubscriptionStorage>(c => new DisabledSubscriptionStorage());
 
-            PossiblyRegisterDefault<ISagaStorage>(c => new InMemorySagaStorage());
+            //PossiblyRegisterDefault<ISagaStorage>(c => new InMemorySagaStorage());
+            PossiblyRegisterDefault<ISagaStorage>(c => new DisabledSagaStorage());
+
+            //PossiblyRegisterDefault<ITimeoutManager>(c => new InMemoryTimeoutManager());
+            PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
-
+             
             PossiblyRegisterDefault<IPipelineInvoker>(c =>
             {
                 var pipeline = c.Get<IPipeline>();
@@ -224,8 +230,6 @@ namespace Rebus.Config
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
-
-            PossiblyRegisterDefault<ITimeoutManager>(c => new InMemoryTimeoutManager());
 
             PossiblyRegisterDefault(c =>
             {

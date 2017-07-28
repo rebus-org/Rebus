@@ -14,10 +14,11 @@ namespace Rebus.Persistence.InMem
         /// with this overload because a <see cref="InMemorySubscriberStore"/> is passed in.  PLEASE NOTE that this 
         /// is probably not useful for any other scenario  than TESTING because usually you want subscriptions to be PERSISTENT.
         /// </summary>
-        public static void StoreInMemory(this StandardConfigurer<ISubscriptionStorage> configurer, InMemorySubscriberStore inMemorySubscriberStore)
+        public static void StoreInMemory(this StandardConfigurer<ISubscriptionStorage> configurer, InMemorySubscriberStore subscriberStore)
         {
-            if (inMemorySubscriberStore == null) throw new ArgumentNullException(nameof(inMemorySubscriberStore));
-            configurer.Register(c => new InMemorySubscriptionStorage(inMemorySubscriberStore));
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (subscriberStore == null) throw new ArgumentNullException(nameof(subscriberStore));
+            configurer.Register(c => new InMemorySubscriptionStorage(subscriberStore));
         }
 
         /// <summary>
@@ -28,6 +29,7 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public static void StoreInMemory(this StandardConfigurer<ISubscriptionStorage> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             configurer.Register(c => new InMemorySubscriptionStorage());
         }
     }

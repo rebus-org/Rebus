@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Rebus.DataBus;
 
-namespace Rebus.DataBus
+namespace Rebus.Persistence.Throwing
 {
     class DisabledDataBus : IDataBus
     {

@@ -8,6 +8,7 @@ using Rebus.Auditing.Messages;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
+using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
@@ -32,6 +33,7 @@ namespace Rebus.Tests.Auditing
             
             _bus = Configure.With(_adapter)
                 .Transport(t => t.UseInMemoryTransport(_network, "test"))
+                .Subscriptions(s => s.StoreInMemory())
                 .Options(o =>
                 {
                     o.LogPipeline(true);
