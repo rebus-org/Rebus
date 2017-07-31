@@ -20,7 +20,7 @@ namespace Rebus.Tests.Timeouts
         readonly string _queueName = TestConfig.GetName("timeouts");
 
         [Test]
-        public async Task WorksOutOfTheBoxWithInternalTimeoutManager()
+        public async Task WorksOutOfTheBoxWithInternalTimeoutManager_WhenInMemTimeoutsIsConfigure()
         {
             using (var activator = new BuiltinHandlerActivator())
             {
@@ -35,7 +35,7 @@ namespace Rebus.Tests.Timeouts
 
                 var stopwatch = Stopwatch.StartNew();
 
-                await activator.Bus.Defer(TimeSpan.FromSeconds(5), "hej med dig min ven!");
+                await activator.Bus.DeferLocal(TimeSpan.FromSeconds(5), "hej med dig min ven!");
 
                 gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(6.5),
                     "Message was not received within 6,5 seconds (which it should have been since it was only deferred 5 seconds)");

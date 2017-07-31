@@ -3,13 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -94,9 +92,9 @@ namespace Rebus.Tests.Integration
         {
             var activator = new BuiltinHandlerActivator();
 
-            Using(_server);
+            Using(activator);
 
-            var configurer = Configure.With(_server)
+            var configurer = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(_network, queueName));
 
             additionalConfiguration?.Invoke(configurer);

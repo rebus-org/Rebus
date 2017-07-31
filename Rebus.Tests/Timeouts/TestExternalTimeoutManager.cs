@@ -82,7 +82,7 @@ namespace Rebus.Tests.Timeouts
         {
             var stopwatch = Stopwatch.StartNew();
 
-            await _bus.Defer(TimeSpan.FromSeconds(5), "hej med dig min ven!");
+            await _bus.DeferLocal(TimeSpan.FromSeconds(5), "hej med dig min ven!");
 
             _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(8.5), "Message was not received within 8,5 seconds (which it should have been since it was only deferred 5 seconds)");
 
