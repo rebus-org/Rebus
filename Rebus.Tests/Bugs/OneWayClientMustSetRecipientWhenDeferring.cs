@@ -51,7 +51,7 @@ namespace Rebus.Tests.Bugs
         {
             var aggregateException = Assert.Throws<AggregateException>(() =>
             {
-                _oneWayClient.Defer(TimeSpan.FromSeconds(1), "hej med dig min ven!!").Wait();
+                _oneWayClient.DeferLocal(TimeSpan.FromSeconds(1), "hej med dig min ven!!").Wait();
             });
 
             var baseException = aggregateException.GetBaseException();
@@ -76,7 +76,7 @@ namespace Rebus.Tests.Bugs
                 { Headers.DeferredRecipient, DestinationQueueName }
             };
 
-            await _oneWayClient.Defer(TimeSpan.FromSeconds(1), "hej med dig min ven!!", headers);
+            await _oneWayClient.DeferLocal(TimeSpan.FromSeconds(1), "hej med dig min ven!!", headers);
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(4));
         }
