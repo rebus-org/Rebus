@@ -6,6 +6,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
+using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
@@ -17,28 +18,37 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestMessageDeferral : FixtureBase
     {
-        IBus _bus;
-        BuiltinHandlerActivator _handlerActivator;
+        readonly InMemNetwork _network = new InMemNetwork(true);
+
+        BuiltinHandlerActivator _server;
+        BuiltinHandlerActivator _client;
 
         protected override void SetUp()
         {
-            _handlerActivator = new BuiltinHandlerActivator();
+            _network.Reset();
 
-            _bus = Configure.With(_handlerActivator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(true), "test.message.deferral"))
-                .Timeouts(t => t.StoreInMemory())
-                .Start();
+            _server = CreateBus("test.message.deferral", configurer =>
+            {
+                configurer.Timeouts(t => t.StoreInMemory());
+            });
 
-            Using(_bus);
+            _client = CreateBus("test.message.deferral.CLIENT", configurer =>
+            {
+                configurer.Routing(r =>
+                {
+                    r.TypeBased()
+                        .Map<string>("test.message.deferral");
+                });
+            });
         }
 
         [Test]
-        public async Task CanDeferMessage()
+        public async Task CanDeferMessage_ToSelf()
         {
             var messageReceived = new ManualResetEvent(false);
             var deliveryTime = DateTime.MaxValue;
 
-            _handlerActivator.Handle<string>(async s =>
+            _server.Handle<string>(async s =>
             {
                 deliveryTime = DateTime.UtcNow;
                 messageReceived.Set();
@@ -47,13 +57,53 @@ namespace Rebus.Tests.Integration
             var sendTime = DateTime.UtcNow;
             var delay = TimeSpan.FromSeconds(5);
 
-            await _bus.Defer(delay, "hej med dig!");
+            await _server.Bus.DeferLocal(delay, "hej med dig!");
 
             messageReceived.WaitOrDie(TimeSpan.FromSeconds(8));
 
             var timeToBeDelivered = deliveryTime - sendTime;
 
             Assert.That(timeToBeDelivered, Is.GreaterThanOrEqualTo(delay));
+        }
+
+        [Test]
+        public async Task CanDeferMessage_ToAnotherDestination()
+        {
+            var messageReceived = new ManualResetEvent(false);
+            var deliveryTime = DateTime.MaxValue;
+
+            _server.Handle<string>(async s =>
+            {
+                deliveryTime = DateTime.UtcNow;
+                messageReceived.Set();
+            });
+
+            var sendTime = DateTime.UtcNow;
+            var delay = TimeSpan.FromSeconds(5);
+
+            await _client.Bus.DeferLocal(delay, "hej med dig!");
+
+            messageReceived.WaitOrDie(TimeSpan.FromSeconds(8));
+
+            var timeToBeDelivered = deliveryTime - sendTime;
+
+            Assert.That(timeToBeDelivered, Is.GreaterThanOrEqualTo(delay));
+        }
+
+        BuiltinHandlerActivator CreateBus(string queueName, Action<RebusConfigurer> additionalConfiguration = null)
+        {
+            var activator = new BuiltinHandlerActivator();
+
+            Using(_server);
+
+            var configurer = Configure.With(_server)
+                .Transport(t => t.UseInMemoryTransport(_network, queueName));
+
+            additionalConfiguration?.Invoke(configurer);
+
+            configurer.Start();
+
+            return activator;
         }
     }
 }
