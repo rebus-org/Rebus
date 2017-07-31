@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
-using Rebus.Messages;
-using Rebus.Routing;
 using Rebus.Testing.Events;
 
 #pragma warning disable 1998
@@ -80,6 +78,14 @@ namespace Rebus.Testing
 
         /// <inheritdoc />
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        {
+            var messageDeferredEvent = _factory.CreateEventGeneric<MessageDeferred>(typeof(MessageDeferred<>), message.GetType(), delay, message, optionalHeaders);
+
+            Record(messageDeferredEvent);
+        }
+
+        /// <inheritdoc />
+        public async Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var messageDeferredEvent = _factory.CreateEventGeneric<MessageDeferred>(typeof(MessageDeferred<>), message.GetType(), delay, message, optionalHeaders);
 

@@ -11,8 +11,7 @@ namespace Rebus.Testing.Events
     {
         internal MessagePublished(object eventMessage, Dictionary<string, string> optionalHeaders)
         {
-            if (eventMessage == null) throw new ArgumentNullException(nameof(eventMessage));
-            EventMessage = eventMessage;
+            EventMessage = eventMessage ?? throw new ArgumentNullException(nameof(eventMessage));
             OptionalHeaders = optionalHeaders?.Clone();
         }
 

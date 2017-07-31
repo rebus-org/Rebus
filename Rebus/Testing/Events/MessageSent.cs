@@ -11,9 +11,8 @@ namespace Rebus.Testing.Events
     {
         internal MessageSent(object commandMessage, Dictionary<string, string> optionalHeaders)
         {
-            if (commandMessage == null) throw new ArgumentNullException(nameof(commandMessage));
             OptionalHeaders = optionalHeaders?.Clone();
-            CommandMessage = commandMessage;
+            CommandMessage = commandMessage ?? throw new ArgumentNullException(nameof(commandMessage));
         }
 
         /// <summary>

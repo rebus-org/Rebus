@@ -44,6 +44,11 @@ namespace Rebus.Config
             return _innerBus.Defer(delay, message, optionalHeaders);
         }
 
+        public Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        {
+            return _innerBus.DeferLocal(delay, message, optionalHeaders);
+        }
+
         public IAdvancedApi Advanced => _advancedApiDecorator;
 
         public Task Subscribe<TEvent>()

@@ -104,11 +104,28 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.ReturnAddress"/> is specified
-        /// in a header, the instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
+        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// in a header, the endpoint mapping corresponding to the sent message will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        {
+            var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
+            var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
+
+            logicalMessage.SetDeferHeaders(RebusTime.Now + delay, destinationAddress);
+
+            var timeoutManagerAddress = GetTimeoutManagerAddress();
+
+            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+        }
+
+        /// <summary>
+        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// in a header, the bus instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
+        /// has elapsed.
+        /// </summary>
+        public async Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
             

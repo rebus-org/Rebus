@@ -14,8 +14,7 @@ namespace Rebus.Testing.Events
 
         internal Subscribed(Type eventType)
         {
-            if (eventType == null) throw new ArgumentNullException(nameof(eventType));
-            EventType = eventType;
+            EventType = eventType ?? throw new ArgumentNullException(nameof(eventType));
         }
     }
 }

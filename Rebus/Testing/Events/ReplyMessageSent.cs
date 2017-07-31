@@ -11,8 +11,7 @@ namespace Rebus.Testing.Events
     {
         internal ReplyMessageSent(object replyMessage, Dictionary<string, string> optionalHeaders)
         {
-            if (replyMessage == null) throw new ArgumentNullException(nameof(replyMessage));
-            ReplyMessage = replyMessage;
+            ReplyMessage = replyMessage ?? throw new ArgumentNullException(nameof(replyMessage));
             OptionalHeaders = optionalHeaders?.Clone();
         }
 

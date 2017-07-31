@@ -18,7 +18,7 @@ namespace Rebus.Bus
         Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Sends the specified message to a destination that is determined by calling <see cref="IRouter.GetDestinationAddress"/>
+        /// Sends the specified message to the destination that is determined by calling <see cref="IRouter.GetDestinationAddress"/>
         /// </summary>
         Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null);
 
@@ -29,8 +29,16 @@ namespace Rebus.Bus
         Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Defers the delivery of the message by attaching a <see cref="Headers.DeferredUntil"/> header to it and delivering it to the configured timeout manager endpoint
-        /// (defaults to be ourselves). When the time is right, the deferred message is returned to the address indicated by the <see cref="Headers.ReturnAddress"/> header.
+        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// in a header, the bus instance's own input queue address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
+        /// has elapsed.
+        /// </summary>
+        Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
+
+        /// <summary>
+        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// in a header, the endpoint mapping corresponding to the sent message will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
+        /// has elapsed.
         /// </summary>
         Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
 

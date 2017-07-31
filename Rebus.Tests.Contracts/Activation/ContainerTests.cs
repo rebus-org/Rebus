@@ -182,6 +182,8 @@ namespace Rebus.Tests.Contracts.Activation
 
             public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null) => _bus.Defer(delay, message, optionalHeaders);
 
+            public Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null) => _bus.DeferLocal(delay, message, optionalHeaders);
+
             public IAdvancedApi Advanced => _bus.Advanced;
 
             public Task Subscribe<TEvent>() => _bus.Subscribe<TEvent>();
@@ -244,6 +246,11 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
