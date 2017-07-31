@@ -8,6 +8,7 @@ using Rebus.Persistence.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Timeouts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -32,11 +33,9 @@ namespace Rebus.Tests.Integration
 
             _client = CreateBus("test.message.deferral.CLIENT", configurer =>
             {
-                configurer.Routing(r =>
-                {
-                    r.TypeBased()
-                        .Map<string>("test.message.deferral");
-                });
+                configurer
+                    .Routing(r => r.TypeBased().Map<string>("test.message.deferral"))
+                    .Timeouts(t => t.UseExternalTimeoutManager("test.message.deferral"));
             });
         }
 
