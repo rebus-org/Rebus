@@ -58,8 +58,8 @@ namespace Rebus.Tests.Transactions
             var warnings = lines.Count(l => l.Level == LogLevel.Warn);
             var errors = lines.Count(l => l.Level == LogLevel.Error);
 
-            Assert.That(warnings, Is.EqualTo(5));
-            Assert.That(errors, Is.EqualTo(1));
+            Assert.That(warnings, Is.EqualTo(5), "Expected exactly 5 warnings: One for each failed delivery attempt");
+            Assert.That(errors, Is.EqualTo(1), "Expected exactly 1 error: One that says that the message is moved to the error queue");
         }
 
         class ConcurrencyException : Exception { }

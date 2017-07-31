@@ -162,13 +162,10 @@ namespace Rebus.Config
                 return new TypeBasedRouter(rebusLoggerFactory);
             });
 
-            //PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
             PossiblyRegisterDefault<ISubscriptionStorage>(c => new DisabledSubscriptionStorage());
 
-            //PossiblyRegisterDefault<ISagaStorage>(c => new InMemorySagaStorage());
             PossiblyRegisterDefault<ISagaStorage>(c => new DisabledSagaStorage());
 
-            //PossiblyRegisterDefault<ITimeoutManager>(c => new InMemoryTimeoutManager());
             PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
@@ -258,12 +255,8 @@ namespace Rebus.Config
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
                     .OnSend(new AssignDefaultHeadersStep(transport))
-                    //.OnSend(new AssignGuidMessageIdStep())
-                    //.OnSend(new AssignReturnAddressStep(transport))
-                    //.OnSend(new AssignDateTimeOffsetHeader())
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
-                    //.OnSend(new AssignTypeHeaderStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
                     .OnSend(new ValidateOutgoingMessageStep())
                     .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
