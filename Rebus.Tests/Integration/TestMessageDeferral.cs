@@ -78,7 +78,7 @@ namespace Rebus.Tests.Integration
             var sendTime = DateTime.UtcNow;
             var delay = TimeSpan.FromSeconds(5);
 
-            await _client.Bus.DeferLocal(delay, "hej med dig!");
+            await _client.Bus.Defer(delay, "hej med dig!");
 
             messageReceived.WaitOrDie(TimeSpan.FromSeconds(8));
 
