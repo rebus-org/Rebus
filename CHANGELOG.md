@@ -1170,7 +1170,7 @@
 * Add contract test to verify correct behavior of saga persisters
 
 
-## 4.0.0-b17
+## 4.0.0-b18
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
@@ -1188,6 +1188,7 @@
 * Lower .NET Core compatible target to netstandard 1.3 - thanks [mirandaasm]
 * Consolidate several header steps into one single `AssignDefaultHeadersStep` for outgoing messages
 * Add routing slips
+* Add `DeferLocal` and make deferral work analogous to sending
 
 ---
 
