@@ -81,6 +81,14 @@ namespace Rebus.Testing
         }
 
         /// <inheritdoc />
+        public void DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        {
+            var messageDeferredEvent = _factory.CreateEventGeneric<MessageDeferredToSelf>(typeof(MessageDeferredToSelf<>), message.GetType(), delay, message, optionalHeaders);
+
+            Record(messageDeferredEvent);
+        }
+
+        /// <inheritdoc />
         public void Subscribe<TEvent>()
         {
             Record(new Subscribed(typeof(TEvent)));

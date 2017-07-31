@@ -129,6 +129,11 @@ namespace Rebus.Bus
                 AsyncHelpers.RunSync(() => _rebusBus.Defer(delay, message, optionalHeaders));
             }
 
+            public void DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                AsyncHelpers.RunSync(() => _rebusBus.DeferLocal(delay, message, optionalHeaders));
+            }
+
             public void Subscribe<TEvent>()
             {
                 AsyncHelpers.RunSync(() => _rebusBus.Subscribe<TEvent>());

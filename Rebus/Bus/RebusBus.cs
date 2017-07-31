@@ -105,6 +105,22 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// in a header, the bus instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
+        /// has elapsed.
+        /// </summary>
+        public async Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        {
+            var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
+            
+            logicalMessage.SetDeferHeaders(RebusTime.Now + delay, _transport.Address);
+
+            var timeoutManagerAddress = GetTimeoutManagerAddress();
+
+            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+        }
+
+        /// <summary>
+        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
         /// in a header, the endpoint mapping corresponding to the sent message will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
@@ -114,22 +130,6 @@ namespace Rebus.Bus
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
             logicalMessage.SetDeferHeaders(RebusTime.Now + delay, destinationAddress);
-
-            var timeoutManagerAddress = GetTimeoutManagerAddress();
-
-            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
-        }
-
-        /// <summary>
-        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
-        /// in a header, the bus instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
-        /// has elapsed.
-        /// </summary>
-        public async Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
-        {
-            var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
-            
-            logicalMessage.SetDeferHeaders(RebusTime.Now + delay, _transport.Address);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 
@@ -240,6 +240,10 @@ namespace Rebus.Bus
             return InnerPublish(topic, eventMessage, optionalHeaders);
         }
 
+        /// <summary>
+        /// Gets the API for advanced features of the bus
+        /// </summary>
+        public IAdvancedApi Advanced => new AdvancedApi(this);
 
         /// <summary>
         /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message
@@ -596,10 +600,5 @@ namespace Rebus.Bus
         {
             return $"RebusBus {_busId}";
         }
-
-        /// <summary>
-        /// Gets the API for advanced features of the bus
-        /// </summary>
-        public IAdvancedApi Advanced => new AdvancedApi(this);
     }
 }

@@ -13,20 +13,14 @@ namespace Rebus.Bus
     public interface IBus : IDisposable
     {
         /// <summary>
-        /// Sends the specified message to our own input queue address
+        /// Sends the specified command message to this instance's own input queue, optionally specifying some headers to attach to the message
         /// </summary>
         Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Sends the specified message to the destination that is determined by calling <see cref="IRouter.GetDestinationAddress"/>
+        /// Sends the specified command message to the address mapped as the owner of the message type, optionally specifying some headers to attach to the message
         /// </summary>
         Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null);
-
-        /// <summary>
-        /// Sends the specified reply message to a destination that is determined by looking up the <see cref="Headers.ReturnAddress"/> header of the message currently being handled.
-        /// This method can only be called from within a message handler.
-        /// </summary>
-        Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
@@ -43,9 +37,9 @@ namespace Rebus.Bus
         Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Gets the API for advanced features of the bus
+        /// Replies back to the endpoint specified as return address on the message currently being handled. Throws an <see cref="InvalidOperationException"/> if called outside of a proper message context.
         /// </summary>
-        IAdvancedApi Advanced { get; }
+        Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
@@ -81,7 +75,7 @@ namespace Rebus.Bus
         /// Unsubscribes from the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>
         /// </summary>
         Task Unsubscribe<TEvent>();
-        
+
         /// <summary>
         /// Unsubscribes from the topic defined by the assembly-qualified name of <paramref name="eventType"/>
         /// </summary>
@@ -101,5 +95,10 @@ namespace Rebus.Bus
         /// in the configuration
         /// </summary>
         Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null);
+
+        /// <summary>
+        /// Gets the API for advanced features of the bus
+        /// </summary>
+        IAdvancedApi Advanced { get; }
     }
 }

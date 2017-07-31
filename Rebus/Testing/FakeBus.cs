@@ -87,7 +87,7 @@ namespace Rebus.Testing
         /// <inheritdoc />
         public async Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
-            var messageDeferredEvent = _factory.CreateEventGeneric<MessageDeferred>(typeof(MessageDeferred<>), message.GetType(), delay, message, optionalHeaders);
+            var messageDeferredEvent = _factory.CreateEventGeneric<MessageDeferredToSelf>(typeof(MessageDeferredToSelf<>), message.GetType(), delay, message, optionalHeaders);
 
             Record(messageDeferredEvent);
         }
