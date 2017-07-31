@@ -1170,7 +1170,7 @@
 * Add contract test to verify correct behavior of saga persisters
 
 
-## 4.0.0-b18
+## 4.0.0-b19
 
 * Hide some internal types that were never meant to be part of the API
 * Add correlation configuration API to make it easy to correlate headers of incoming messages with saga data
@@ -1189,6 +1189,7 @@
 * Consolidate several header steps into one single `AssignDefaultHeadersStep` for outgoing messages
 * Add routing slips
 * Add `DeferLocal` and make deferral work analogous to sending
+* Add ability to forcibly limit the length of the `rbs2-error-details` header to overcome limitations of the transport in cases where e.g. a long stack trace would make it impossible to forward a failed message to the error queue
 
 ---
 

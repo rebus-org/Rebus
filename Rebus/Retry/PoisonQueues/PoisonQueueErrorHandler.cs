@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Retry.Simple;
@@ -34,7 +35,9 @@ namespace Rebus.Retry.PoisonQueues
         /// </summary>
         public void Initialize()
         {
-            _transport.CreateQueue(_simpleRetryStrategySettings.ErrorQueueAddress);
+            var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
+
+            _transport.CreateQueue(errorQueueAddress);
         }
 
         /// <summary>
@@ -51,7 +54,7 @@ namespace Rebus.Retry.PoisonQueues
                 messageId = "<unknown>";
             }
 
-            headers[Headers.ErrorDetails] = exception.ToString();
+            headers[Headers.ErrorDetails] = GetErrorDetails(exception);
             headers[Headers.SourceQueue] = _transport.Address;
 
             var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
@@ -71,5 +74,21 @@ namespace Rebus.Retry.PoisonQueues
                 await Task.Delay(MoveToErrorQueueFailedPause);
             }
         }
+
+        string GetErrorDetails(Exception exception)
+        {
+            var maxLength = _simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength;
+
+            // if there's not even room for the placeholder, just cut the crap
+            if (maxLength < 5)
+            {
+                return "";
+            }
+
+            var errorDetails = exception.ToString().Truncate(maxLength);
+
+            return errorDetails;
+        }
+
     }
 }
