@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+#if NETSTANDARD1_3
 using System.Reflection;
+#endif
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
@@ -9,8 +11,8 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
-// ReSharper disable ArgumentsStyleLiteral
 using Rebus.Transport;
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Sagas
 {
@@ -24,7 +26,6 @@ If that's the case, relevant saga data is loaded/created, and the rest of the pi
 Afterwards, all the created/loaded saga data is updated appropriately.")]
     public class LoadSagaDataStep : IIncomingStep
     {
-        const string IdPropertyName = nameof(ISagaData.Id);
         const string RevisionPropertyName = nameof(ISagaData.Revision);
 
         /// <summary>
@@ -32,7 +33,6 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         /// </summary>
         static readonly string[] IgnoredProperties =
         {
-            //IdPropertyName,
             RevisionPropertyName
         };
 
@@ -45,10 +45,8 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         /// </summary>
         public LoadSagaDataStep(ISagaStorage sagaStorage, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (sagaStorage == null) throw new ArgumentNullException(nameof(sagaStorage));
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            _sagaStorage = sagaStorage;
-            _log = rebusLoggerFactory.GetLogger<LoadSagaDataStep>();
+            _sagaStorage = sagaStorage ?? throw new ArgumentNullException(nameof(sagaStorage));
+            _log = rebusLoggerFactory?.GetLogger<LoadSagaDataStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         }
 
         /// <summary>
@@ -177,7 +175,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                 correlationPropertyInfo.SetValue(newSagaData, valueFromMessage);
             }
-            catch(Exception)
+            catch (Exception)
             {
                 // if this fails it might be because the property is not settable.... just leave it to the programmer in the other end to set it
             }
@@ -186,6 +184,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         async Task SaveSagaData(RelevantSagaInfo sagaDataToUpdate, bool insert)
         {
             var sagaData = sagaDataToUpdate.SagaData;
+            var sagaDataType = sagaData.GetType();
             var saga = sagaDataToUpdate.Saga;
 
             var saveAttempts = 0;
@@ -221,11 +220,11 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                         throw;
                     }
 
-                    var freshSagaData = await _sagaStorage.Find(sagaData.GetType(), "Id", sagaData.Id);
+                    var freshSagaData = await _sagaStorage.Find(sagaDataType, "Id", sagaData.Id);
 
                     if (freshSagaData == null)
                     {
-                        throw new RebusApplicationException($"Could not find saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
+                        throw new RebusApplicationException($"Could not find {sagaDataType} saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
                     }
 
                     await saga.InvokeConflictResolution(freshSagaData);
