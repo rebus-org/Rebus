@@ -115,6 +115,7 @@ Note: this may cause message reordering")]
 			catch (Exception ex)
 			{
 				_log.Error(ex, "Error during processing of single access sagas - will revert any locks");
+				throw;
 			}
 			finally
 			{
