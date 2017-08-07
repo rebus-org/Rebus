@@ -210,7 +210,7 @@ namespace Rebus.Injection
 
                 if (!_resolvers.ContainsKey(serviceType))
                 {
-                    throw new ResolutionException("Could not find resolver for {serviceType}");
+                    throw new ResolutionException($"Could not find resolver for {serviceType}");
                 }
 
                 if (!_decoratorDepth.ContainsKey(serviceType))
