@@ -227,7 +227,7 @@ namespace Rebus.Config
                 return new SimpleRetryStrategy(simpleRetryStrategySettings, errorTracker, errorHandler);
             });
 
-			PossiblyRegisterDefault(c => new SemaphoreSagaLockProvider());
+			PossiblyRegisterDefault<ISagaLockProvider>(c => new SemaphoreSagaLockProvider());
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
 
