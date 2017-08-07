@@ -20,6 +20,7 @@ using Rebus.Retry.Simple;
 using Rebus.Routing;
 using Rebus.Routing.TypeBased;
 using Rebus.Sagas;
+using Rebus.Sagas.SingleAccess;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Subscriptions;
@@ -225,6 +226,8 @@ namespace Rebus.Config
                 var errorHandler = c.Get<IErrorHandler>();
                 return new SimpleRetryStrategy(simpleRetryStrategySettings, errorTracker, errorHandler);
             });
+
+			PossiblyRegisterDefault(c => new SemaphoreSagaLockProvider());
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
 
