@@ -9,7 +9,7 @@ namespace Rebus.Sagas
     /// <summary>
     /// Contains a set of correlation properties relevant for one particular saga data
     /// </summary>
-    class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
+    public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
     {
         readonly Dictionary<Type, CorrelationProperty[]> _correlationProperties;
         readonly Type _sagaDataType;
@@ -19,11 +19,8 @@ namespace Rebus.Sagas
         /// </summary>
         public SagaDataCorrelationProperties(Dictionary<Type, CorrelationProperty[]> correlationProperties, Type sagaDataType)
         {
-            if (correlationProperties == null) throw new ArgumentNullException(nameof(correlationProperties));
-            if (sagaDataType == null) throw new ArgumentNullException(nameof(sagaDataType));
-            
-            _correlationProperties = correlationProperties;
-            _sagaDataType = sagaDataType;
+            _correlationProperties = correlationProperties ?? throw new ArgumentNullException(nameof(correlationProperties));
+            _sagaDataType = sagaDataType ?? throw new ArgumentNullException(nameof(sagaDataType));
         }
 
         /// <summary>
@@ -58,14 +55,8 @@ namespace Rebus.Sagas
         /// <summary>
         /// Gets the correlation properties contained in this collection
         /// </summary>
-        public IEnumerator<CorrelationProperty> GetEnumerator()
-        {
-            return _correlationProperties.SelectMany(kvp => kvp.Value).GetEnumerator();
-        }
+        public IEnumerator<CorrelationProperty> GetEnumerator() => _correlationProperties.SelectMany(kvp => kvp.Value).GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
