@@ -8,6 +8,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Rebus.Compression;
 using Rebus.DataBus;
+using Rebus.Extensions;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Time;
 
@@ -120,13 +121,13 @@ namespace Rebus.Tests.Contracts.DataBus
             // special case: zipped data has different size (and is actually bigger in this case :))
             if (_storage is ZippingDataBusStorageDecorator)
             {
-                Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("23"));
+                Assert.That(readMetadata.GetValue(MetadataKeys.Length), Is.EqualTo("23"));
             }
             else
             {
-                Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("3"));
+                Assert.That(readMetadata.GetValue(MetadataKeys.Length), Is.EqualTo("3"));
             }
-            Assert.That(readMetadata[MetadataKeys.SaveTime], Is.EqualTo(fakeTime.ToString("O")));
+            Assert.That(readMetadata.GetValue(MetadataKeys.SaveTime), Is.EqualTo(fakeTime.ToString("O")));
         }
 
         [Test]

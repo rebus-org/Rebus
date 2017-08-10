@@ -10,6 +10,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
@@ -37,6 +38,7 @@ namespace Rebus.Tests.Contracts.Sagas
             _bus = Configure.With(_activator)
                 .Logging(l => l.Use(_logger))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_snapshots_integration_testerino"))
+                .Sagas(s => s.StoreInMemory())
                 .Options(o => o.EnableSagaAuditing().Register(c => _factory.Create()))
                 .Start();
         }
