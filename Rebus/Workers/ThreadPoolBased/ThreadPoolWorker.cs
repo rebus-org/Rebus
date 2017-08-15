@@ -168,6 +168,8 @@ namespace Rebus.Workers.ThreadPoolBased
             catch (ThreadAbortException exception)
 #elif NETSTANDARD1_3
             catch (OperationCanceledException exception)
+#elif NETSTANDARD2_0
+            catch (OperationCanceledException exception)
 #endif
             {
                 context.Abort();

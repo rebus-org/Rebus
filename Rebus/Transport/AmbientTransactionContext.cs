@@ -1,7 +1,7 @@
 using System;
 #if NET45
 using System.Runtime.Remoting.Messaging;
-#elif NETSTANDARD1_3
+#else
 using System.Threading;
 #endif
 
@@ -15,28 +15,24 @@ namespace Rebus.Transport
     {
 #if NET45
         const string TransactionContextKey = "rebus2-current-transaction-context";
-#elif NETSTANDARD1_3
-        static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new AsyncLocal<ITransactionContext>();
-#endif
 
-#if NET45
         /// <summary>
         /// Gets the default set function (which is using <see cref="CallContext.LogicalSetData"/> to do its thing)
         /// </summary>
         public static readonly Action<ITransactionContext> DefaultSetter = context => CallContext.LogicalSetData(TransactionContextKey, context);
-#elif NETSTANDARD1_3
-        /// <summary>
-        /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
-        /// </summary>
-        public static readonly Action<ITransactionContext> DefaultSetter = context => AsyncLocalTxContext.Value = context;
-#endif
 
-#if NET45
         /// <summary>
         /// Gets the default set function (which is using <see cref="CallContext.LogicalGetData"/> to do its thing)
         /// </summary>
         public static readonly Func<ITransactionContext> DefaultGetter = () => CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
-#elif NETSTANDARD1_3
+#else
+        static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new AsyncLocal<ITransactionContext>();
+      
+        /// <summary>
+        /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
+        /// </summary>
+        public static readonly Action<ITransactionContext> DefaultSetter = context => AsyncLocalTxContext.Value = context;
+
         /// <summary>
         /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
         /// </summary>
@@ -68,11 +64,8 @@ namespace Rebus.Transport
         /// </summary>
         public static void SetAccessors(Action<ITransactionContext> setter, Func<ITransactionContext> getter)
         {
-            if (setter == null) throw new ArgumentNullException(nameof(setter));
-            if (getter == null) throw new ArgumentNullException(nameof(getter));
-
-            _setCurrent = setter;
-            _getCurrent = getter;
+            _setCurrent = setter ?? throw new ArgumentNullException(nameof(setter));
+            _getCurrent = getter ?? throw new ArgumentNullException(nameof(getter));
         }
     }
 }

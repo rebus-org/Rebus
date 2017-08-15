@@ -1190,6 +1190,7 @@
 * Add routing slips
 * Add `DeferLocal` and make deferral work analogous to sending
 * Add ability to forcibly limit the length of the `rbs2-error-details` header to overcome limitations of the transport in cases where e.g. a long stack trace would make it impossible to forward a failed message to the error queue
+* Add .NET Standard 2.0 target too (thus targeting .NET 4.5, .NET Standard 1.3, and .NET Standard 2.0)
 
 ---
 

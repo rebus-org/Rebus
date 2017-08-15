@@ -12,7 +12,6 @@ using Rebus.Tests.Timers.Factories;
 namespace Rebus.Tests.Timers
 {
     [TestFixture(typeof(TplTaskFactory))]
-    [TestFixture(typeof(TimerTaskFactory))]
     [TestFixture(typeof(ThreadingTimerTaskFactory))]
     public class TestAsyncTask<TFactory> : FixtureBase where TFactory : IAsyncTaskFactory, new()
     {
