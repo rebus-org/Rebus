@@ -25,18 +25,21 @@ pause
 git clean -dxf
 if %ERRORLEVEL% neq 0 (
 	popd
+	echo Could not clean.
  	goto exit_fail
 )
 
 dotnet restore
 if %ERRORLEVEL% neq 0 (
 	popd
+	echo Could not restore NuGet packages.
  	goto exit_fail
 )
 
 dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" /p:PackageVersion=%version%;WarningLevel=3
 if %ERRORLEVEL% neq 0 (
 	popd
+	echo Could pack Rebus.Tests.Contracts
  	goto exit_fail
 )
 
@@ -50,6 +53,9 @@ popd
 
 
 goto exit_success
+
 :exit_fail
 exit /b 1
+
+
 :exit_success
