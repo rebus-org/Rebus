@@ -1,7 +1,7 @@
 ﻿using System;
 #if NET45
 using System.Timers;
-#elif NETSTANDARD1_3
+#else
 using System.Threading;
 #endif
 using System.Threading.Tasks;
