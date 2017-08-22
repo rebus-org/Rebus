@@ -13,6 +13,7 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration

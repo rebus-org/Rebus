@@ -1191,6 +1191,11 @@
 * Add `DeferLocal` and make deferral work analogous to sending
 * Add ability to forcibly limit the length of the `rbs2-error-details` header to overcome limitations of the transport in cases where e.g. a long stack trace would make it impossible to forward a failed message to the error queue
 
+## 4.0.1
+
+* Fix exceptions thrown by default persistence implementations
+* Fix exception thrown by Injectionist if a resolver cannot be found
+
 ---
 
 

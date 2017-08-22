@@ -14,9 +14,7 @@ namespace Rebus.Persistence.Throwing
 
         public bool IsCentralized => false;
 
-        static InvalidOperationException GetException()
-        {
-            return new InvalidOperationException(@"A subscription storage has not been configured. Please configure a subscription storage with the .Subscriptions(...) configurer, e.g. like so:
+        static InvalidOperationException GetException() => new InvalidOperationException(@"A subscription storage has not been configured. Please configure a subscription storage with the .Subscriptions(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)
@@ -32,6 +30,5 @@ Configure.With(..)
 
 if you have imported the Rebus.SqlServer package and want to store subscriptions in SQL Server.
 ");
-        }
     }
 }
