@@ -2,9 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-#if NET45
-using System.Runtime.Serialization;
-#endif
 
 namespace Rebus.Injection
 {
@@ -210,7 +207,7 @@ namespace Rebus.Injection
 
                 if (!_resolvers.ContainsKey(serviceType))
                 {
-                    throw new ResolutionException("Could not find resolver for {serviceType}");
+                    throw new ResolutionException($"Could not find resolver for {serviceType}");
                 }
 
                 if (!_decoratorDepth.ContainsKey(serviceType))
@@ -256,90 +253,7 @@ namespace Rebus.Injection
                 }
             }
 
-            public IEnumerable TrackedInstances
-            {
-                get { return _resolvedInstances.ToList(); }
-            }
+            public IEnumerable TrackedInstances => _resolvedInstances.ToList();
         }
-    }
-
-    /// <summary>
-    /// Represents the context of resolving one root service and can be used throughout the tree to fetch something to be injected
-    /// </summary>
-    public interface IResolutionContext
-    {
-        /// <summary>
-        /// Gets an instance of the specified <typeparamref name="TService"/>.
-        /// </summary>
-        TService Get<TService>();
-
-        /// <summary>
-        /// Gets all instances resolved within this resolution context at this time.
-        /// </summary>
-        IEnumerable TrackedInstances { get; }
-
-        /// <summary>
-        /// Gets whether there exists a primary registration for the <typeparamref name="TService"/> type
-        /// </summary>
-        bool Has<TService>(bool primary = true);
-    }
-
-    /// <summary>
-    /// Exceptions that is thrown when something goes wrong while working with the injectionist
-    /// </summary>
-#if NET45
-    [Serializable]
-#endif
-    public class ResolutionException : Exception
-    {
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ResolutionException(string message)
-            : base(message)
-        {
-        }
-
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ResolutionException(Exception innerException, string message)
-            : base(message, innerException)
-        {
-        }
-
-#if NET45
-        /// <summary>
-        /// Constructs the exception
-        /// </summary>
-        public ResolutionException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-#endif
-    }
-
-    /// <summary>
-    /// Contains a built object instance along with all the objects that were used to build the instance
-    /// </summary>
-    public class ResolutionResult<TService>
-    {
-        internal ResolutionResult(TService instance, IEnumerable trackedInstances)
-        {
-            if (instance == null) throw new ArgumentNullException("instance");
-            if (trackedInstances == null) throw new ArgumentNullException("trackedInstances");
-            Instance = instance;
-            TrackedInstances = trackedInstances;
-        }
-
-        /// <summary>
-        /// Gets the instance that was built
-        /// </summary>
-        public TService Instance { get; private set; }
-
-        /// <summary>
-        /// Gets all object instances that were used to build <see cref="Instance"/>, including the instance itself
-        /// </summary>
-        public IEnumerable TrackedInstances { get; private set; }
     }
 }
