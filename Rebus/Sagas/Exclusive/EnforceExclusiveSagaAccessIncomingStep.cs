@@ -8,6 +8,7 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Sagas.Exclusive
 {
