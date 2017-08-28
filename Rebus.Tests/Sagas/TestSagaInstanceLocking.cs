@@ -27,7 +27,7 @@ namespace Rebus.Tests.Sagas
     public class TestSagaInstanceLocking : FixtureBase
     {
         readonly InMemNetwork _network = new InMemNetwork();
-        readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory(outputToConsole: true);
+        readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory();
 
         BuiltinHandlerActivator _activator;
         IBus _bus;
@@ -52,11 +52,8 @@ namespace Rebus.Tests.Sagas
                 .Options(o =>
                 {
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 0);
-                    o.SetNumberOfWorkers(4);
-                    o.SetMaxParallelism(10);
-
-                    // force all saga operations to be slow
-                    o.ForceSagaPersistenceToBeSlow();
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(20);
                 })
                 .Start();
 
@@ -64,6 +61,9 @@ namespace Rebus.Tests.Sagas
         }
 
         [TestCase(10)]
+        [TestCase(100)]
+        [TestCase(1000)]
+        [TestCase(10000)]
         public async Task NotASingleConcurrencyExceptionPlease(int messageCount)
         {
             const string caseNumber = "case-123";
@@ -88,7 +88,7 @@ namespace Rebus.Tests.Sagas
                 .Select(replyId => _bus.SendLocal(new SimulateReply(caseNumber, replyId))));
 
             // wait until saga is completed
-            sagaWasMarkedAsComplete.WaitOrDie(TimeSpan.FromSeconds(5), 
+            sagaWasMarkedAsComplete.WaitOrDie(TimeSpan.FromSeconds(messageCount / (double)10 + 5),
                 @"The saga was not completed within timeout. 
 
 This is most likely a sign that too many ConcurrencyExceptions 
@@ -165,8 +165,6 @@ Bummer dude.");
             public async Task Handle(SimulateReply message)
             {
                 Data.PendingReplies.Remove(message.ReplyId);
-
-                await Task.Delay(100);
 
                 if (!Data.PendingReplies.Any())
                 {

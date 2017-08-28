@@ -58,7 +58,7 @@ namespace Rebus.Sagas.Exclusive
             }
             finally
             {
-                ReleaseLocks(locksToObtain);
+                await ReleaseLocks(locksToObtain);
             }
         }
 
@@ -68,12 +68,12 @@ namespace Rebus.Sagas.Exclusive
             {
                 while (!_locks.TryAdd(id, messageId))
                 {
-                    await Task.Delay(200);
+                    await Task.Yield();
                 }
             }
         }
 
-        void ReleaseLocks(List<string> lockIds)
+        async Task ReleaseLocks(List<string> lockIds)
         {
             foreach (var lockId in lockIds)
             {
