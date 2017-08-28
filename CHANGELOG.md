@@ -1196,6 +1196,10 @@
 * Fix exceptions thrown by default persistence implementations
 * Fix exception thrown by Injectionist if a resolver cannot be found
 
+## 4.1.0-b1
+
+* Add optional in-process locking middleware for saga instances
+
 ---
 
 
