@@ -15,11 +15,19 @@ namespace Rebus.Auditing.Sagas
     public static class SagaAuditingConfigurationExtensions
     {
         /// <summary>
-        /// Enables message auditing whereby Rebus will forward to the audit queue a copy of each properly handled message and
-        /// each published message
+        /// Enables saga auditing which will cause Rebus to save a snapshot of each saga state to the configured snapshot storage.
+        /// Please remember to select a saga snapshot storage by calling an extension on the returned <see cref="StandardConfigurer{TService}"/>, e.g. like so:
+        /// <code>
+        /// Configure.With(..)
+        ///     .(...)
+        ///     .Options(o => o.EnableSagaAuditing().StoreInSqlServer(....))
+        ///     .Start();
+        /// </code>
         /// </summary>
         public static StandardConfigurer<ISagaSnapshotStorage> EnableSagaAuditing(this OptionsConfigurer configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
             configurer.Decorate<IPipeline>(c =>
             {
                 var pipeline = c.Get<IPipeline>();
@@ -40,6 +48,8 @@ namespace Rebus.Auditing.Sagas
         /// </summary>
         public static void OutputToLog(this StandardConfigurer<ISagaSnapshotStorage> configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
             configurer.Register(c => new LoggerSagaSnapperShotter(c.Get<IRebusLoggerFactory>()));
         }
 

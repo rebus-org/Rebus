@@ -12,10 +12,12 @@ using Rebus.Transport;
 
 namespace Rebus.Auditing.Sagas
 {
+    [StepDocumentation("Saves a snapshot of each piece of saga data to the selected snapshot storage.")]
     class SaveSagaDataSnapshotStep : IIncomingStep
     {
         readonly ISagaSnapshotStorage _sagaSnapshotStorage;
         readonly ITransport _transport;
+        readonly string _machineName = GetMachineName();
 
         public SaveSagaDataSnapshotStep(ISagaSnapshotStorage sagaSnapshotStorage, ITransport transport)
         {
@@ -60,11 +62,11 @@ namespace Rebus.Auditing.Sagas
                 {SagaAuditingMetadataKeys.SagaHandlerType, handler.GetType().GetSimpleAssemblyQualifiedName()},
                 {SagaAuditingMetadataKeys.MessageType, message.GetMessageType()},
                 {SagaAuditingMetadataKeys.MessageId, message.GetMessageId()},
-                {SagaAuditingMetadataKeys.MachineName, GetMachineName()}
+                {SagaAuditingMetadataKeys.MachineName, _machineName}
             };
         }
 
-        private static string GetMachineName()
+        static string GetMachineName()
         {
 #if NETSTANDARD1_3
             return Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");

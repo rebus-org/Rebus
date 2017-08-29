@@ -13,7 +13,14 @@ namespace Rebus.DataBus
     public static class DataBusOptionsExtensions
     {
         /// <summary>
-        /// Enables the data bus
+        /// Enables the data bus. 
+        /// Please remember to select a data bus storage by calling an extension on the returned <see cref="StandardConfigurer{TService}"/>, e.g. like so:
+        /// <code>
+        /// Configure.With(..)
+        ///     .(...)
+        ///     .Options(o => o.EnableDataBus().StoreInSqlServer(....))
+        ///     .Start();
+        /// </code>
         /// </summary>
         public static StandardConfigurer<IDataBusStorage> EnableDataBus(this OptionsConfigurer configurer)
         {
