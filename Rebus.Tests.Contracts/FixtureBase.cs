@@ -92,9 +92,7 @@ namespace Rebus.Tests.Contracts
 
         protected void CleanUpDisposables()
         {
-            IDisposable disposable;
-
-            while (_disposables.TryPop(out disposable))
+            while (_disposables.TryPop(out var disposable))
             {
                 Console.WriteLine($"Disposing {disposable}");
                 disposable.Dispose();

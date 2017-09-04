@@ -4,11 +4,9 @@ using System.Threading;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.DataBus;
-using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
-using Rebus.Persistence.InMem;
 using Rebus.Persistence.Throwing;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Invokers;
@@ -172,7 +170,7 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
-             
+
             PossiblyRegisterDefault<IPipelineInvoker>(c =>
             {
                 var pipeline = c.Get<IPipeline>();
@@ -288,10 +286,11 @@ namespace Rebus.Config
             PossiblyRegisterDefault<IBus>(c =>
             {
                 var bus = c.Get<RebusBus>();
+                var cancellationTokenSource = c.Get<CancellationTokenSource>();
 
                 bus.Disposed += () =>
                 {
-                    c.Get<CancellationTokenSource>().Cancel();
+                    cancellationTokenSource.Cancel();
 
                     var disposableInstances = c.TrackedInstances.OfType<IDisposable>().Reverse();
 

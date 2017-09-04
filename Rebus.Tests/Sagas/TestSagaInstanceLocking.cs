@@ -63,8 +63,7 @@ namespace Rebus.Tests.Sagas
         //[TestCase(10)]
         //[TestCase(100)]
         //[TestCase(1000)]
-        [TestCase(10000)]
-        [TestCase(12000)]
+        [TestCase(100)]
         public async Task NotASingleConcurrencyExceptionPlease(int messageCount)
         {
             const string caseNumber = "case-123";
@@ -89,7 +88,7 @@ namespace Rebus.Tests.Sagas
                 .Select(replyId => _bus.SendLocal(new SimulateReply(caseNumber, replyId))));
 
             // wait until saga is completed
-            sagaWasMarkedAsComplete.WaitOrDie(TimeSpan.FromSeconds(messageCount / (double)10 + 5),
+            sagaWasMarkedAsComplete.WaitOrDie(TimeSpan.FromSeconds(100*messageCount / (double)10 + 5),
                 @"The saga was not completed within timeout. 
 
 This is most likely a sign that too many ConcurrencyExceptions 
@@ -166,6 +165,8 @@ Bummer dude.");
             public async Task Handle(SimulateReply message)
             {
                 Data.PendingReplies.Remove(message.ReplyId);
+
+                await Task.Delay(200);
 
                 if (!Data.PendingReplies.Any())
                 {

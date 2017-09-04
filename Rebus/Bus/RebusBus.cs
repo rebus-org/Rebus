@@ -438,6 +438,7 @@ namespace Rebus.Bus
         }
 
         bool _disposing;
+        bool _disposed;
 
         /// <summary>
         /// Stops all workers, allowing them to finish handling the current message (for up to 1 minute) before exiting
@@ -447,6 +448,7 @@ namespace Rebus.Bus
             // this Dispose may be called when the Disposed event is raised - therefore, we need
             // to guard against recursively entering this method
             if (_disposing) return;
+            if (_disposed) return;
 
             try
             {
@@ -469,6 +471,7 @@ namespace Rebus.Bus
             finally
             {
                 _disposing = false;
+                _disposed = true;
 
                 _busLifetimeEvents.RaiseBusDisposed();
             }
