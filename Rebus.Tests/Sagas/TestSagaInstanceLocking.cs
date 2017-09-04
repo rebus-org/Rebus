@@ -166,7 +166,7 @@ Bummer dude.");
             {
                 Data.PendingReplies.Remove(message.ReplyId);
 
-                await Task.Delay(200);
+                await Task.Delay(100);
 
                 if (!Data.PendingReplies.Any())
                 {
