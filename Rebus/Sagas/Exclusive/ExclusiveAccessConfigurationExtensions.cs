@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Rebus.Config;
 using Rebus.Pipeline;
 
@@ -21,7 +22,9 @@ namespace Rebus.Sagas.Exclusive
                 .Decorate(c =>
                 {
                     var pipeline = c.Get<IPipeline>();
-                    var step = new EnforceExclusiveSagaAccessIncomingStep();
+                    //var step = new EnforceExclusiveSagaAccessIncomingStep();
+                    var cancellationToken = c.Get<CancellationToken>();
+                    var step = new NewEnforceExclusiveSagaAccessIncomingStep(1000, cancellationToken);
 
                     return new PipelineStepInjector(pipeline)
                         .OnReceive(step, PipelineRelativePosition.Before, typeof(LoadSagaDataStep));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.DataBus;
@@ -146,6 +147,8 @@ namespace Rebus.Config
             VerifyRequirements();
 
             _injectionist.Register(c => _options);
+            _injectionist.Register(c => new CancellationTokenSource());
+            _injectionist.Register(c => c.Get<CancellationTokenSource>().Token);
 
             PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
 
@@ -288,6 +291,8 @@ namespace Rebus.Config
 
                 bus.Disposed += () =>
                 {
+                    c.Get<CancellationTokenSource>().Cancel();
+
                     var disposableInstances = c.TrackedInstances.OfType<IDisposable>().Reverse();
 
                     foreach (var disposableInstance in disposableInstances)

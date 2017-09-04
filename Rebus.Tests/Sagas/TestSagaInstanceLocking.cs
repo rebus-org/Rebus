@@ -60,10 +60,11 @@ namespace Rebus.Tests.Sagas
             _bus = _activator.Bus;
         }
 
-        [TestCase(10)]
-        [TestCase(100)]
-        [TestCase(1000)]
+        //[TestCase(10)]
+        //[TestCase(100)]
+        //[TestCase(1000)]
         [TestCase(10000)]
+        [TestCase(12000)]
         public async Task NotASingleConcurrencyExceptionPlease(int messageCount)
         {
             const string caseNumber = "case-123";

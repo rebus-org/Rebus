@@ -1,21 +1,28 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Transport;
-#pragma warning disable 1998
 
 namespace Rebus.Sagas.Exclusive
 {
-    class EnforceExclusiveSagaAccessIncomingStep : IIncomingStep
+    class NewEnforceExclusiveSagaAccessIncomingStep : IIncomingStep, IDisposable
     {
-        readonly ConcurrentDictionary<string, string> _locks = new ConcurrentDictionary<string, string>();
+        readonly CancellationToken _cancellationToken;
         readonly SagaHelper _sagaHelper = new SagaHelper();
+        readonly SemaphoreSlim[] _locks;
+
+        public NewEnforceExclusiveSagaAccessIncomingStep(int lockBuckets, CancellationToken cancellationToken)
+        {
+            _cancellationToken = cancellationToken;
+            _locks = Enumerable.Range(0, lockBuckets)
+                .Select(n => new SemaphoreSlim(1, 1))
+                .ToArray();
+        }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
@@ -38,7 +45,7 @@ namespace Rebus.Sagas.Exclusive
             var correlationProperties = handlerInvokersForSagas
                 .Select(h => h.Saga)
                 .SelectMany(saga => _sagaHelper.GetCorrelationProperties(messageBody, saga).ForMessage(messageBody)
-                    .Select(correlationProperty => new {saga, correlationProperty}))
+                    .Select(correlationProperty => new { saga, correlationProperty }))
                     .ToList();
 
             var locksToObtain = correlationProperties
@@ -49,39 +56,61 @@ namespace Rebus.Sagas.Exclusive
                     CorrelationPropertyValue = a.correlationProperty.ValueFromMessage(messageContext, messageBody)
                 })
                 .Select(a => a.ToString())
-                .OrderBy(str => str) // enforce consistent ordering to avoid deadlocks
+                .Select(lockId => Math.Abs(lockId.GetHashCode()) % _locks.Length)
+                .OrderBy(bucket => bucket) // enforce consistent ordering to avoid deadlocks
                 .ToList();
 
             try
             {
-                await WaitForLocks(locksToObtain, message.GetMessageId());
+                await WaitForLocks(locksToObtain);
                 await next();
             }
             finally
             {
-                await ReleaseLocks(locksToObtain);
+                ReleaseLocks(locksToObtain);
             }
         }
 
-        async Task WaitForLocks(List<string> lockIds, string messageId)
+        async Task WaitForLocks(List<int> lockIds)
         {
-            foreach (var id in lockIds)
+            for (var index = 0; index < lockIds.Count; index++)
             {
-                while (!_locks.TryAdd(id, messageId))
+                var id = lockIds[index];
+                await _locks[id].WaitAsync(_cancellationToken);
+            }
+        }
+
+        void ReleaseLocks(List<int> lockIds)
+        {
+            for (var index = 0; index < lockIds.Count; index++)
+            {
+                var id = lockIds[index];
+                _locks[id].Release();
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"NewEnforceExclusiveSagaAccessIncomingStep({_locks.Length})";
+        }
+
+        bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            try
+            {
+                foreach (var disposable in _locks)
                 {
-                    await Task.Yield();
+                    disposable.Dispose();
                 }
             }
-        }
-
-        async Task ReleaseLocks(List<string> lockIds)
-        {
-            foreach (var lockId in lockIds)
+            finally
             {
-                _locks.TryRemove(lockId, out var dummy);
+                _disposed = true;
             }
         }
-
-        public override string ToString() => "EnforceExclusiveSagaAccessIncomingStep";
     }
 }
