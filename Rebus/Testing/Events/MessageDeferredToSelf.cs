@@ -35,7 +35,7 @@ namespace Rebus.Testing.Events
     /// <summary>
     /// Recorded when a message was deferred
     /// </summary>
-    public class MessageDeferredToSelf<TMessage> : MessageDeferred
+    public class MessageDeferredToSelf<TMessage> : MessageDeferredToSelf
     {
         internal MessageDeferredToSelf(TimeSpan delay, object commandMessage, Dictionary<string, string> optionalHeaders)
             : base(delay, commandMessage, optionalHeaders)
