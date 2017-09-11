@@ -123,10 +123,14 @@ namespace Rebus.Tests.Contracts.Transports
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
 
+            Console.WriteLine($"Sending message to {input2QueueName}");
+
             await WithContext(async context =>
             {
                 await input1.Send(input2QueueName, MessageWith("hej"), context);
             });
+
+            Console.WriteLine("Receiving message in tx context, which is rolled back");
 
             await WithContext(async context =>
             {
@@ -136,6 +140,8 @@ namespace Rebus.Tests.Contracts.Transports
                 Assert.That(stringBody, Is.EqualTo("hej"));
             }, completeTransaction: false);
 
+            Console.WriteLine("Receiving message in tx context, which is completed");
+
             await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context, _cancellationToken);
@@ -143,6 +149,8 @@ namespace Rebus.Tests.Contracts.Transports
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
             });
+
+            Console.WriteLine("Receiving message in tx context, expecting null this time");
 
             await WithContext(async context =>
             {
