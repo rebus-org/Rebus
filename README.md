@@ -46,35 +46,44 @@ Getting started
 Rebus is a simple .NET library, and everything revolves around the `RebusBus` class. One way to get Rebus
 up and running, is to manually go
 
-	var bus = new RebusBus(...);
-	bus.Start(1); //< 1 worker thread
+```csharp
+var bus = new RebusBus(...);
+bus.Start(1); //< 1 worker thread
 
-	// use the bus for the duration of the application lifetime
+// use the bus for the duration of the application lifetime
 
-	// remember to dispose the bus when your application exits
-	bus.Dispose();
+// remember to dispose the bus when your application exits
+bus.Dispose();
+```
 
 where `...` is a bunch of dependencies that vary depending on how you want to send/receive messages etc.
 Another way is to use the configuration API, in which case you would go
 
-    var someContainerAdapter = new BuiltinHandlerActivator();
+
+```csharp
+var someContainerAdapter = new BuiltinHandlerActivator();
+```
 
 for the built-in container adapter, or
 
-    var someContainerAdapter = new AdapterForMyFavoriteIocContainer(myFavoriteIocContainer);
+```csharp
+var someContainerAdapter = new AdapterForMyFavoriteIocContainer(myFavoriteIocContainer);
+```
 
 to integrate with your favorite IoC container, and then
 
-    Configure.With(someContainerAdapter)
-        .Logging(l => l.Serilog())
-        .Transport(t => t.UseMsmq("myInputQueue"))
-        .Routing(r => r.TypeBased().MapAssemblyOf<SomeMessageType>("anotherInputQueue"))
-        .Start();
+```csharp
+Configure.With(someContainerAdapter)
+    .Logging(l => l.Serilog())
+    .Transport(t => t.UseMsmq("myInputQueue"))
+    .Routing(r => r.TypeBased().MapAssemblyOf<SomeMessageType>("anotherInputQueue"))
+    .Start();
 
-    // have IBus injected in application services for the duration of the application lifetime    
+// have IBus injected in application services for the duration of the application lifetime    
 
-    // let the container dispose the bus when your application exits
-    myFavoriteIocContainer.Dispose();
+// let the container dispose the bus when your application exits
+myFavoriteIocContainer.Dispose();
+```
 
 which will stuff the resulting `IBus` in the container as a singleton and use the container to look up
 message handlers. Check out the Configuration section on [the official Rebus documentation wiki][REBUS_WIKI] for
