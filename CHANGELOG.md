@@ -1196,9 +1196,10 @@
 * Fix exceptions thrown by default persistence implementations
 * Fix exception thrown by Injectionist if a resolver cannot be found
 
-## 4.1.0-b4
+## 4.1.0-b5
 
 * Add optional in-process locking middleware for saga instances
+* Force initialization of the configuration system at startup to avoid risking that it is initialized in a Rebus handler (almost always triggered by Entity Framework, results in exceptions complaining that Rebus' transaction context contains unserializable things)
 
 ---
 

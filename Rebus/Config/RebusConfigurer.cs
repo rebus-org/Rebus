@@ -142,6 +142,14 @@ namespace Rebus.Config
         /// </summary>
         public IBus Start()
         {
+            #if NET45
+            // force the silly configuration subsystem to initialize itself as a service to users, thus
+            // avoiding the oft-encountered stupid Entity Framework initialization exception
+            // complaining that something in Rebus' transaction context is not serializable
+            System.Configuration.ConfigurationManager.GetSection("system.xml/xmlReader");
+            // if you want to know more about this issue, check this out: https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/mitigation-deserialization-of-objects-across-app-domains
+            #endif
+
             VerifyRequirements();
 
             _injectionist.Register(c => _options);
