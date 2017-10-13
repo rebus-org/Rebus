@@ -82,7 +82,7 @@ Configure.With(someContainerAdapter)
 // have IBus injected in application services for the duration of the application lifetime    
 
 // let the container dispose the bus when your application exits
-myFavoriteIocContainer.Dispose();
+someContainerAdapter.Dispose();
 ```
 
 which will stuff the resulting `IBus` in the container as a singleton and use the container to look up
