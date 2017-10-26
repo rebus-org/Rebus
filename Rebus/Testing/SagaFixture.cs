@@ -9,6 +9,7 @@ using Rebus.Pipeline;
 using Rebus.Sagas;
 using Rebus.Testing.Internals;
 using Rebus.Transport.InMem;
+using Rebus.Bus;
 
 namespace Rebus.Testing
 {
@@ -52,13 +53,21 @@ namespace Rebus.Testing
             var activator = new BuiltinHandlerActivator();
             activator.Register(sagaHandlerFactory);
 
+            return For<TSagaHandler>(() => Configure.With(activator));
+        }
+
+        /// <summary>
+        /// Creates a saga fixture for the specified saga handler, which will be instantiated by the given factory method
+        /// </summary>
+        public static SagaFixture<TSagaHandler> For<TSagaHandler>(Func<RebusConfigurer> configurerFactory) where TSagaHandler : Saga, IHandleMessages
+        {
             if (!LoggingInfoHasBeenShown)
             {
                 Console.WriteLine("Remember that the saga fixture collects all internal logs which you can access with fixture.LogEvents");
                 LoggingInfoHasBeenShown = true;
             }
 
-            return new SagaFixture<TSagaHandler>(activator);
+            return new SagaFixture<TSagaHandler>(configurerFactory);
         }
     }
 
@@ -68,7 +77,7 @@ namespace Rebus.Testing
     public class SagaFixture<TSagaHandler> : IDisposable where TSagaHandler : Saga
     {
         const string SagaInputQueueName = "sagafixture";
-        readonly BuiltinHandlerActivator _activator;
+        readonly IBus _bus;
         readonly InMemNetwork _network;
         readonly InMemorySagaStorage _inMemorySagaStorage;
         readonly LockStepper _lockStepper;
@@ -104,10 +113,10 @@ namespace Rebus.Testing
         /// </summary>
         public event Action<ISagaData> Deleted;
 
-        internal SagaFixture(BuiltinHandlerActivator activator)
+        internal SagaFixture(Func<RebusConfigurer> configurerFactory)
         {
-            if (activator == null) throw new ArgumentNullException(nameof(activator));
-            _activator = activator;
+            if (configurerFactory == null) throw new ArgumentNullException(nameof(configurerFactory));
+
             _network = new InMemNetwork();
 
             _inMemorySagaStorage = new InMemorySagaStorage();
@@ -121,7 +130,7 @@ namespace Rebus.Testing
 
             _loggerFactory = new TestLoggerFactory();
 
-            Configure.With(activator)
+            _bus = configurerFactory()
                 .Logging(l => l.Use(_loggerFactory))
                 .Transport(t => t.UseInMemoryTransport(_network, SagaInputQueueName))
                 .Sagas(s => s.Register(c => _inMemorySagaStorage))
@@ -161,7 +170,7 @@ namespace Rebus.Testing
             var resetEvent = new ManualResetEvent(false);
             _lockStepper.AddResetEvent(resetEvent);
 
-            _activator.Bus.SendLocal(message, optionalHeaders);
+            _bus.SendLocal(message, optionalHeaders);
 
             if (!resetEvent.WaitOne(TimeSpan.FromSeconds(deliveryTimeoutSeconds)))
             {
@@ -195,7 +204,7 @@ namespace Rebus.Testing
         /// </summary>
         public void Dispose()
         {
-            _activator.Dispose();
+            _bus.Dispose();
         }
     }
 }
