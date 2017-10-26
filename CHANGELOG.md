@@ -1196,10 +1196,11 @@
 * Fix exceptions thrown by default persistence implementations
 * Fix exception thrown by Injectionist if a resolver cannot be found
 
-## 4.1.0-b5
+## 4.1.0
 
 * Add optional in-process locking middleware for saga instances
 * Force initialization of the configuration system at startup to avoid risking that it is initialized in a Rebus handler (almost always triggered by Entity Framework, results in exceptions complaining that Rebus' transaction context contains unserializable things)
+* Add option to externally configure the bus used internally by saga fixture, allowing for customizing everything but logging, transport, and saga storage (could e.g. be serialization) - thanks [boyanio]
 
 ---
 
@@ -1208,6 +1209,7 @@
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
 [bjomi]: https://github.com/bjomi
+[boyanio]: https://github.com/boyanio
 [caspertdk]: https://github.com/caspertdk
 [dadhi]: https://github.com/dadhi
 [dev4ce]: https://github.com/dev4ce
