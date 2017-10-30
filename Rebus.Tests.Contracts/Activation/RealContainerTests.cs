@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus.Advanced;
+using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport.InMem;
@@ -8,13 +10,52 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public class RealContainerTests<TActivationContext> : FixtureBase where TActivationContext : IActivationContext, new()
+    public abstract class RealContainerTests<TActivationContext> : FixtureBase where TActivationContext : IActivationContext, new()
     {
         TActivationContext _activationCtx;
 
         protected override void SetUp()
         {
             _activationCtx = new TActivationContext();
+        }
+
+        [Test]
+        public void BusIsDisposedAfterUse()
+        {
+            var wasDisposed = false;
+
+            _activationCtx
+                .CreateBus(configurer => configurer
+                    .Transport(t =>
+                    {
+                        t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter");
+                    })
+                    .Options(o =>
+                    {
+                        o.Register(c => new DisposableCallbacker(() => wasDisposed = true));
+
+                        o.Decorate(c =>
+                        {
+                            // force this into resolution context to have it disposed
+                            c.Get<DisposableCallbacker>();
+                            return c.Get<Options>();
+                        });
+                    }), out var container);
+
+            container.ResolveBus();
+
+            container.Dispose();
+
+            Assert.That(wasDisposed, Is.True, "The registered DisposableCallbacker was not disposed, which indicates that the bus probably wasn't either");
+        }
+
+        class DisposableCallbacker : IDisposable
+        {
+            readonly Action _disposed;
+
+            public DisposableCallbacker(Action disposed) => _disposed = disposed;
+
+            public void Dispose() => _disposed();
         }
 
         [Test]
