@@ -330,7 +330,13 @@ namespace Rebus.Config
                 return internalHandlersContributor;
             });
             
-            _injectionist.Decorate<ISerializer>(c => new UnzippingSerializerDecorator(c.Get<ISerializer>(), new Zipper()));
+            _injectionist.Decorate<ISerializer>(c =>
+            {
+                var serializer = c.Get<ISerializer>();
+                var zipper = new Zipper();
+                var unzippingSerializerDecorator = new UnzippingSerializerDecorator(serializer, zipper);
+                return unzippingSerializerDecorator;
+            });
 
             var busResolutionResult = _injectionist.Get<IBus>();
             var busInstance = busResolutionResult.Instance;
