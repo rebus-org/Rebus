@@ -1202,6 +1202,10 @@
 * Force initialization of the configuration system at startup to avoid risking that it is initialized in a Rebus handler (almost always triggered by Entity Framework, results in exceptions complaining that Rebus' transaction context contains unserializable things)
 * Add option to externally configure the bus used internally by saga fixture, allowing for customizing everything but logging, transport, and saga storage (could e.g. be serialization) - thanks [boyanio]
 
+## 4.2.0
+
+* Decompression enabled by default because there's no reason why it shouldn't be
+
 ---
 
 

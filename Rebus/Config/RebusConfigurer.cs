@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Rebus.Activation;
 using Rebus.Bus;
+using Rebus.Compression;
 using Rebus.DataBus;
 using Rebus.Handlers;
 using Rebus.Injection;
@@ -328,6 +329,8 @@ namespace Rebus.Config
                 var internalHandlersContributor = new InternalHandlersContributor(handlerActivator, subscriptionStorage);
                 return internalHandlersContributor;
             });
+            
+            _injectionist.Decorate<ISerializer>(c => new UnzippingSerializerDecorator(c.Get<ISerializer>(), new Zipper()));
 
             var busResolutionResult = _injectionist.Get<IBus>();
             var busInstance = busResolutionResult.Instance;
