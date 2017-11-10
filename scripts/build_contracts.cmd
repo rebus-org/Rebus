@@ -33,7 +33,7 @@ if %ERRORLEVEL% neq 0 (
  	goto exit_fail
 )
 
-dotnet build "%root%\Rebus.Tests.Contracts" -c Release /p:WarningLevel=3
+msbuild "/p:Configuration=Release;Version=%version%;" "%root%\Rebus.Tests.Contracts"
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail

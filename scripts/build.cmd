@@ -21,7 +21,8 @@ set Version=%version%
 
 pushd %root%
 
-dotnet build "%root%\Rebus" -c Release
+dotnet msbuild "/p:Configuration=Release;Version=%version%" "%root%\Rebus"
+
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail
