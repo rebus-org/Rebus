@@ -6,7 +6,7 @@
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
     <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
     <PackageVersion>4.0.0-b01</PackageVersion>
     <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
@@ -76,7 +76,7 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <!-- <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="$(ProjectDir)..\scripts\patch_assemblyinfo.cmd $(ProjectDir)" />
-  </Target>
+  </Target> -->
 </Project>
