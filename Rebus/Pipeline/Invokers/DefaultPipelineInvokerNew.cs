@@ -10,8 +10,9 @@ namespace Rebus.Pipeline.Invokers
     class DefaultPipelineInvokerNew : IPipelineInvoker
     {
         static readonly Task<int> Noop = Task.FromResult(0);
-        readonly IOutgoingStep[] _outgoingSteps;
-        readonly IIncomingStep[] _incomingSteps;
+
+        readonly Func<IncomingStepContext, Task> _processIncoming;
+        readonly Func<OutgoingStepContext, Task> _processOutgoing;
 
         /// <summary>
         /// Constructs the invoker
@@ -19,44 +20,53 @@ namespace Rebus.Pipeline.Invokers
         public DefaultPipelineInvokerNew(IPipeline pipeline)
         {
             if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
-            _outgoingSteps = pipeline.SendPipeline();
-            _incomingSteps = pipeline.ReceivePipeline();
+
+            var outgoingSteps = pipeline.SendPipeline();
+            var incomingSteps = pipeline.ReceivePipeline();
+
+            Task ProcessIncoming(IncomingStepContext context)
+            {
+                Task InvokerFunction(int index)
+                {
+                    if (index == incomingSteps.Length) return Noop;
+
+                    Task InvokeNext() => InvokerFunction(index + 1);
+
+                    return incomingSteps[index]
+                        .Process(context, InvokeNext);
+                }
+
+                return InvokerFunction(0);
+            }
+
+            _processIncoming = ProcessIncoming;
+
+            Task ProcessOutgoing(OutgoingStepContext context)
+            {
+                Task InvokerFunction(int index)
+                {
+                    if (index == outgoingSteps.Length) return Noop;
+
+                    Task InvokeNext() => InvokerFunction(index + 1);
+
+                    return outgoingSteps[index]
+                        .Process(context, InvokeNext);
+                }
+
+                return InvokerFunction(0);
+            }
+
+            _processOutgoing = ProcessOutgoing;
         }
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
         /// </summary>
-        public Task Invoke(IncomingStepContext context)
-        {
-            Task InvokerFunction(int index)
-            {
-                if (index == _incomingSteps.Length) return Noop;
-
-                Task InvokeNext() => InvokerFunction(index + 1);
-
-                return _incomingSteps[index]
-                    .Process(context, InvokeNext);
-            }
-
-            return InvokerFunction(0);
-        }
+        public Task Invoke(IncomingStepContext context) => _processIncoming(context);
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
         /// </summary>
-        public Task Invoke(OutgoingStepContext context)
-        {
-            Task InvokerFunction(int index)
-            {
-                if (index == _outgoingSteps.Length) return Noop;
-
-                Task InvokeNext() => InvokerFunction(index + 1);
-
-                return _outgoingSteps[index]
-                    .Process(context, InvokeNext);
-            }
-
-            return InvokerFunction(0);
-        }
+        public Task Invoke(OutgoingStepContext context) => _processOutgoing(context);
     }
 }

@@ -11,6 +11,7 @@ namespace Rebus.Pipeline.Invokers
     {
         static readonly Task<int> Noop = Task.FromResult(0);
         static readonly Func<Task> TerminationStep = () => Noop;
+
         readonly Func<IncomingStepContext, Task> _processIncoming;
         readonly Func<OutgoingStepContext, Task> _processOutgoing;
 
