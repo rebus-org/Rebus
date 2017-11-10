@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
@@ -19,6 +19,26 @@ namespace Rebus.Tests.Serialization
         protected override void SetUp()
         {
             _serializer = new JsonSerializer();
+        }
+
+        [Test]
+        public async Task WorksWithoutFullTypeNameHandlingToo()
+        {
+            var simpleSerializer = new JsonSerializer(new JsonSerializerSettings());
+            var message = new RandomMessage("hei allihoppa");
+            var transportMessage = await simpleSerializer.Serialize(new Message(new Dictionary<string, string>(), message));
+            var roundtrippedMessage = (await simpleSerializer.Deserialize(transportMessage)).Body;
+            Assert.That(roundtrippedMessage, Is.TypeOf<RandomMessage>());
+        }
+
+        class RandomMessage
+        {
+            public RandomMessage(string greeting)
+            {
+                Greeting = greeting;
+            }
+
+            public string Greeting { get; }
         }
 
         [Test]
@@ -39,7 +59,7 @@ namespace Rebus.Tests.Serialization
             Console.WriteLine();
             Console.WriteLine($"JSON text length: {jsonText.Length}");
             Console.WriteLine();
-            
+
             BreakMessage(transportMessage);
 
             var aggregateException = Assert.Throws<AggregateException>(() =>

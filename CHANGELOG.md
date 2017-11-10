@@ -1205,6 +1205,7 @@
 ## 4.2.0
 
 * Decompression enabled by default because there's no reason why it shouldn't be
+* Ability for default JSON serializer to deserialize based on the serialized type, enabling JSON objects devoid of .NET type information
 
 ---
 
