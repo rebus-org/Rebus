@@ -38,6 +38,7 @@ namespace Rebus.Transport.FileSystem
             if (baseDirectory == null) throw new ArgumentNullException(nameof(baseDirectory));
 
             configurer.Register(context => new FileSystemTransport(baseDirectory, null));
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
     }
 }
