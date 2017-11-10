@@ -46,7 +46,10 @@ namespace Rebus.Pipeline.Invokers
             where TStep : IStep
         {
             var expression = GenerateExpression<TContext, TStep>(steps, processMethodName, 0);
+
+            // use Dadhi's fast expression compiler because he's awesome - https://github.com/dadhi
             return ExpressionCompiler.Compile<Func<TContext, Task>>(expression);
+            
             //return expression.Compile();
         }
 
