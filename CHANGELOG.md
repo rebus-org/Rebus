@@ -1202,12 +1202,12 @@
 * Force initialization of the configuration system at startup to avoid risking that it is initialized in a Rebus handler (almost always triggered by Entity Framework, results in exceptions complaining that Rebus' transaction context contains unserializable things)
 * Add option to externally configure the bus used internally by saga fixture, allowing for customizing everything but logging, transport, and saga storage (could e.g. be serialization) - thanks [boyanio]
 
-## 4.2.0
+## 4.2.0-b01
 
 * Decompression enabled by default because there's no reason why it shouldn't be
 * Ability for default JSON serializer to deserialize based on the serialized type, enabling JSON objects devoid of .NET type information
 * Fix it so that the file system transport does not output errors when in one-way client mode - thanks [pheiberg]
-
+* Make Rebus buildable on OS X - thanks [bartul]
 
 
 ---
@@ -1215,6 +1215,7 @@
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
+[bartul]: https://github.com/bartul
 [bchavez]: https://github.com/bchavez
 [bjomi]: https://github.com/bjomi
 [boyanio]: https://github.com/boyanio
