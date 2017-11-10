@@ -1206,6 +1206,9 @@
 
 * Decompression enabled by default because there's no reason why it shouldn't be
 * Ability for default JSON serializer to deserialize based on the serialized type, enabling JSON objects devoid of .NET type information
+* Fix it so that the file system transport does not output errors when in one-way client mode - thanks [pheiberg]
+
+
 
 ---
 
@@ -1245,6 +1248,7 @@
 [NKnusperer]: https://github.com/NKnusperer
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
+[pheiberg]: https://github.com/pheiberg
 [pruiz]: https://github.com/pruiz
 [puzsol]: https://github.com/puzsol
 [runes83]: https://github.com/runes83
