@@ -6,7 +6,7 @@
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
     <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
     <PackageVersion>4.0.0-b01</PackageVersion>
     <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
@@ -47,10 +47,6 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Properties\AssemblyInfo.cs" />
-    <None Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
@@ -76,7 +72,4 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="$(ProjectDir)..\scripts\patch_assemblyinfo.cmd $(ProjectDir)" />
-  </Target>
 </Project>
