@@ -15,7 +15,6 @@ using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
-
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Profiling
