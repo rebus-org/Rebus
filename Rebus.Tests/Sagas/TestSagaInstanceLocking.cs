@@ -159,7 +159,7 @@ Bummer dude.");
                     Data.PendingReplies.Add(replyId);
                 }
 
-                _sagaWasInitiated.Set();
+                await Task.Run(() => _sagaWasInitiated.Set());
             }
 
             public async Task Handle(SimulateReply message)
