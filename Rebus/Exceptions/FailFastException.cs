@@ -29,9 +29,10 @@ namespace Rebus.Exceptions
         {
         }
 
-#if NET45 /// <summary>
-/// Happy cross-domain serialization!
-/// </summary>
+#if NET45
+        /// <summary>
+        /// Happy cross-domain serialization!
+        /// </summary>
         public FailFastException(SerializationInfo info, StreamingContext context)
             :base(info, context)
         {
