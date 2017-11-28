@@ -17,7 +17,7 @@ namespace Rebus.Exceptions
         /// Constructs the exception with the given message
         /// </summary>
         public FailFastException(string message)
-            :base(message)
+            : base(message)
         {
         }
 
@@ -25,14 +25,13 @@ namespace Rebus.Exceptions
         /// Constructs the exception with the given message and inner exception
         /// </summary>
         public FailFastException(Exception innerException, string message)
-            :base(message, innerException)
+            : base(message, innerException)
         {
         }
 
-#if NET45
-        /// <summary>
-        /// Happy cross-domain serialization!
-        /// </summary>
+#if NET45 /// <summary>
+/// Happy cross-domain serialization!
+/// </summary>
         public FailFastException(SerializationInfo info, StreamingContext context)
             :base(info, context)
         {

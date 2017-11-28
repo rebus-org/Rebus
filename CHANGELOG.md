@@ -1208,7 +1208,7 @@
 * Ability for default JSON serializer to deserialize based on the serialized type, enabling JSON objects devoid of .NET type information
 * Fix it so that the file system transport does not output errors when in one-way client mode - thanks [pheiberg]
 * Make Rebus buildable on OS X - thanks [bartul]
-
+* Add ability to fail fast (i.e. immediately move the message to the error queue) either by throwing `FailFastException` or by configuring a custom `IFailFastChecker` to execute arbitrary logic - thanks [boyanio]
 
 ---
 

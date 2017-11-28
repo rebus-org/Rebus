@@ -9,9 +9,12 @@ namespace Rebus.Retry
     public interface IErrorTracker
     {
         /// <summary>
-        /// This method is called on each experienced failed delivery
+        /// This method is called on each experienced failed delivery. The <paramref name="final"/> flag
+        /// can be set to true if this error is to be considered the final delivery attempt, meaning
+        /// that the error tracker should immediately max out its internal counter (or whatever it is
+        /// doing), resulting in <see cref="HasFailedTooManyTimes"/> yielding true from now on
         /// </summary>
-        void RegisterError(string messageId, Exception exception);
+        void RegisterError(string messageId, Exception exception, bool final = false);
         
         /// <summary>
         /// This method is called when there's no need to track the error anymore

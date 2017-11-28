@@ -229,10 +229,7 @@ namespace Rebus.Config
                 return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
             });
 
-            PossiblyRegisterDefault<IFailFastChecker>(c =>
-            {
-                return new FailFastChecker();
-            });
+            PossiblyRegisterDefault<IFailFastChecker>(c => new FailFastChecker());
 
             PossiblyRegisterDefault<IRetryStrategy>(c =>
             {
@@ -262,8 +259,8 @@ namespace Rebus.Config
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
                 return new DefaultPipeline()
-                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>()))
                     .OnReceive(c.Get<IRetryStrategyStep>())
+                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>()))
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
                     .OnReceive(new HandleRoutingSlipsStep(transport, serializer))

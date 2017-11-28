@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
+
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Retry.FailFast
 {
@@ -26,11 +29,8 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
         /// </summary>
         public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker)
         {
-            if (errorTracker == null) throw new ArgumentNullException(nameof(errorTracker));
-            if (failFastChecker == null) throw new ArgumentNullException(nameof(failFastChecker));
-
-            _errorTracker = errorTracker;
-            _failFastChecker = failFastChecker;
+            _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
+            _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
         }
 
         /// <summary>
@@ -40,27 +40,19 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.Load<TransportMessage>();
-            var transactionContext = context.Load<ITransactionContext>();
-            var messageId = transportMessage.Headers.GetValueOrNull(Headers.MessageId);
-
-            if (!string.IsNullOrWhiteSpace(messageId))
+            try
             {
-                var trackedExceptions = _errorTracker.GetExceptions(messageId).ToArray();
-                if (trackedExceptions.Any() && trackedExceptions.All(e => _failFastChecker.ShouldFailFast(messageId, e)))
-                {
-                    MarkAsFailedTooManyTimes(messageId, trackedExceptions.Last());
-                }
+                await next();
             }
-
-            await next();
-        }
-
-        void MarkAsFailedTooManyTimes(string messageId, Exception exception)
-        {
-            while (!_errorTracker.HasFailedTooManyTimes(messageId))
+            catch (Exception exception)
             {
-                _errorTracker.RegisterError(messageId, exception);
+                var transportMessage = context.Load<TransportMessage>();
+                var messageId = transportMessage.GetMessageId();
+                if (_failFastChecker.ShouldFailFast(messageId, exception))
+                {
+                    _errorTracker.RegisterError(messageId, exception, final: true);
+                }
+                throw;
             }
         }
     }

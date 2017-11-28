@@ -42,7 +42,11 @@ namespace Rebus.Tests.Integration
                 .Routing(r => r.TypeBased().Map<string>(InputQueueName))
                 .Options(o =>
                 {
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(1);
+
                     o.SimpleRetryStrategy(maxDeliveryAttempts: numberOfRetries, errorQueueAddress: ErrorQueueName);
+
                     if (failFastChecker != null)
                     {
                         o.Register(_ => failFastChecker);
@@ -73,7 +77,7 @@ namespace Rebus.Tests.Integration
             var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName);
 
             Assert.That(attemptedDeliveries, Is.EqualTo(1));
-            Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring($"{numberOfRetries} unhandled exceptions"));
+            Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("1 unhandled exceptions"));
             Assert.That(failedMessage.Headers.GetValue(Headers.SourceQueue), Is.EqualTo(InputQueueName));
         }
 
@@ -118,14 +122,14 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName);
+            var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName, timeoutSeconds: 5000);
 
             Assert.That(attemptedDeliveries, Is.EqualTo(1));
-            Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring($"{numberOfRetries} unhandled exceptions"));
+            Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("1 unhandled exceptions"));
             Assert.That(failedMessage.Headers.GetValue(Headers.SourceQueue), Is.EqualTo(InputQueueName));
         }
 
-        private class CustomFailFastChecker : IFailFastChecker
+        class CustomFailFastChecker : IFailFastChecker
         {
             public bool ShouldFailFast(string messageId, Exception exception)
             {

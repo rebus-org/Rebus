@@ -42,22 +42,27 @@ namespace Rebus.Retry.ErrorTracking
         /// <summary>
         /// Initializes the in-mem error tracker - starts a background task that periodically cleans up tracked errors that haven't had any activity for 10 minutes or more
         /// </summary>
-        public void Initialize()
-        {
-            _cleanupOldTrackedErrorsTask.Start();
-        }
+        public void Initialize() => _cleanupOldTrackedErrorsTask.Start();
 
         /// <summary>
         /// Registers the given <paramref name="exception"/> under the supplied <paramref name="messageId"/>
         /// </summary>
-        public void RegisterError(string messageId, Exception exception)
+        public void RegisterError(string messageId, Exception exception, bool final = false)
         {
             var errorTracking = _trackedErrors.AddOrUpdate(messageId,
-                id => new ErrorTracking(exception),
-                (id, tracking) => tracking.AddError(exception));
+                id => new ErrorTracking(exception, final),
+                (id, tracking) => tracking.AddError(exception, final));
 
-            _log.Warn("Unhandled exception {errorNumber} while handling message with ID {messageId}", errorTracking.Errors.Count(), messageId);
-            //_log.Warn(exception, "Unhandled exception {errorNumber} while handling message with ID {messageId}", errorTracking.Errors.Count(), messageId);
+            if (final)
+            {
+                _log.Warn(exception, "Unhandled exception {errorNumber} (FINAL) while handling message with ID {messageId}",
+                    errorTracking.Errors.Count(), messageId);
+            }
+            else
+            {
+                _log.Warn(exception, "Unhandled exception {errorNumber} while handling message with ID {messageId}",
+                    errorTracking.Errors.Count(), messageId);
+            }
         }
 
         /// <summary>
@@ -65,12 +70,11 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public bool HasFailedTooManyTimes(string messageId)
         {
-            ErrorTracking existingTracking;
-            var hasTrackingForThisMessage = _trackedErrors.TryGetValue(messageId, out existingTracking);
-
+            var hasTrackingForThisMessage = _trackedErrors.TryGetValue(messageId, out var existingTracking);
             if (!hasTrackingForThisMessage) return false;
 
-            var hasFailedTooManyTimes = existingTracking.ErrorCount >= _maxDeliveryAttempts;
+            var hasFailedTooManyTimes = existingTracking.Final
+                                        || existingTracking.ErrorCount >= _maxDeliveryAttempts;
 
             return hasFailedTooManyTimes;
         }
@@ -145,21 +149,31 @@ namespace Rebus.Retry.ErrorTracking
 
         class ErrorTracking
         {
-            readonly ConcurrentQueue<CaughtException> _caughtExceptions = new ConcurrentQueue<CaughtException>();
+            readonly CaughtException[] _caughtExceptions;
 
-            public ErrorTracking(Exception exception)
+            ErrorTracking(IEnumerable<CaughtException> caughtExceptions, bool final)
             {
-                AddError(exception);
+                Final = final;
+                _caughtExceptions = caughtExceptions.ToArray();
             }
 
-            public int ErrorCount => _caughtExceptions.Count;
+            public ErrorTracking(Exception exception, bool final)
+                : this(new[] {new CaughtException(exception)}, final)
+            {
+            }
+
+            public int ErrorCount => _caughtExceptions.Length;
+
+            public bool Final { get;  }
 
             public IEnumerable<CaughtException> Errors => _caughtExceptions;
 
-            public ErrorTracking AddError(Exception caughtException)
+            public ErrorTracking AddError(Exception caughtException, bool final)
             {
-                _caughtExceptions.Enqueue(new CaughtException(caughtException));
-                return this;
+                // don't change anymore if this one is already final
+                if (Final) return this;
+
+                return new ErrorTracking(_caughtExceptions.Concat(new[] {new CaughtException(caughtException)}), final);
             }
 
             public TimeSpan ElapsedSinceLastError

@@ -6,6 +6,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
+// ReSharper disable ForCanBeConvertedToForeach
 
 namespace Rebus.Retry.Simple
 {
@@ -33,13 +34,9 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         /// </summary>
         public SimpleRetryStrategyStep(SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker, IErrorHandler errorHandler)
         {
-            if (simpleRetryStrategySettings == null) throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
-            if (errorTracker == null) throw new ArgumentNullException(nameof(errorTracker));
-            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
-
-            _simpleRetryStrategySettings = simpleRetryStrategySettings;
-            _errorTracker = errorTracker;
-            _errorHandler = errorHandler;
+            _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
+            _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         }
 
         /// <summary>
@@ -88,12 +85,11 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 context.Save(DispatchAsFailedMessageKey, true);
 
-                await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext, new[] { messageId, secondLevelMessageId });
-
+                await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext, messageId, secondLevelMessageId);
                 return;
             }
 
-            await DispatchWithTrackerIdentifier(next, messageId, transactionContext, new[] { messageId });
+            await DispatchWithTrackerIdentifier(next, messageId, transactionContext, messageId);
         }
 
         AggregateException GetAggregateException(params string[] ids)
@@ -108,7 +104,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             return messageId + "-2nd-level";
         }
 
-        async Task DispatchWithTrackerIdentifier(Func<Task> next, string identifierToTrackMessageBy, ITransactionContext transactionContext, string[] identifiersToClearOnSuccess)
+        async Task DispatchWithTrackerIdentifier(Func<Task> next, string identifierToTrackMessageBy, ITransactionContext transactionContext, string messageId, string secondLevelMessageId = null)
         {
             try
             {
@@ -116,9 +112,11 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 await transactionContext.Commit();
 
-                foreach (var id in identifiersToClearOnSuccess)
+                _errorTracker.CleanUp(messageId);
+
+                if (secondLevelMessageId != null)
                 {
-                    _errorTracker.CleanUp(id);
+                    _errorTracker.CleanUp(secondLevelMessageId);
                 }
             }
             catch (Exception exception)
