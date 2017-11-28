@@ -29,6 +29,7 @@ using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
+using Rebus.Retry.FailFast;
 
 namespace Rebus.Config
 {
@@ -228,6 +229,11 @@ namespace Rebus.Config
                 return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
             });
 
+            PossiblyRegisterDefault<IFailFastChecker>(c =>
+            {
+                return new FailFastChecker();
+            });
+
             PossiblyRegisterDefault<IRetryStrategy>(c =>
             {
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
@@ -256,6 +262,7 @@ namespace Rebus.Config
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
                 return new DefaultPipeline()
+                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>()))
                     .OnReceive(c.Get<IRetryStrategyStep>())
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
