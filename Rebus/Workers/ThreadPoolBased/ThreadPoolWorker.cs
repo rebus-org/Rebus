@@ -90,7 +90,7 @@ namespace Rebus.Workers.ThreadPoolBased
                 using (parallelOperation)
                 using (var context = new TransactionContext())
                 {
-                    var transportMessage = await ReceiveTransportMessage(token, context);
+                    var transportMessage = await ReceiveTransportMessage(token, context).ConfigureAwait(false);
 
                     if (transportMessage == null)
                     {
@@ -105,7 +105,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
                     _backoffStrategy.Reset();
 
-                    await ProcessMessage(context, transportMessage);
+                    await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }
             }
             catch (TaskCanceledException)
@@ -126,7 +126,7 @@ namespace Rebus.Workers.ThreadPoolBased
         {
             try
             {
-                return await _transport.Receive(context, token);
+                return await _transport.Receive(context, token).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {
@@ -157,11 +157,11 @@ namespace Rebus.Workers.ThreadPoolBased
                 AmbientTransactionContext.SetCurrent(context);
 
                 var stepContext = new IncomingStepContext(transportMessage, context);
-                await _pipelineInvoker.Invoke(stepContext);
+                await _pipelineInvoker.Invoke(stepContext).ConfigureAwait(false);
 
                 try
                 {
-                    await context.Complete();
+                    await context.Complete().ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
@@ -186,10 +186,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
-        public void Stop()
-        {
-            _cancellationTokenSource.Cancel();
-        }
+        public void Stop() => _cancellationTokenSource.Cancel();
 
         public void Dispose()
         {

@@ -89,7 +89,7 @@ namespace Rebus.Bus
 
             var logicalMessage = CreateMessage(commandMessage, Operation.SendLocal, optionalHeaders);
 
-            await InnerSend(new[] { destinationAddress }, logicalMessage);
+            await InnerSend(new[] { destinationAddress }, logicalMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -98,9 +98,10 @@ namespace Rebus.Bus
         public async Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(commandMessage, Operation.Send, optionalHeaders);
-            var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
-            await InnerSend(new[] { destinationAddress }, logicalMessage);
+            var destinationAddress = await _router.GetDestinationAddress(logicalMessage).ConfigureAwait(false);
+            
+            await InnerSend(new[] { destinationAddress }, logicalMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace Rebus.Bus
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 
-            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -127,13 +128,13 @@ namespace Rebus.Bus
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
-            var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
+            var destinationAddress = await _router.GetDestinationAddress(logicalMessage).ConfigureAwait(false);
 
             logicalMessage.SetDeferHeaders(RebusTime.Now + delay, destinationAddress);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 
-            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -158,7 +159,7 @@ namespace Rebus.Bus
 
             logicalMessage.Headers[Headers.InReplyTo] = transportMessage.GetMessageId();
 
-            await InnerSend(new[] { returnAddress }, logicalMessage);
+            await InnerSend(new[] { returnAddress }, logicalMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -251,9 +252,10 @@ namespace Rebus.Bus
         async Task InnerPublish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);
-            var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
 
-            await InnerSend(subscriberAddresses, logicalMessage);
+            var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic).ConfigureAwait(false);
+
+            await InnerSend(subscriberAddresses, logicalMessage).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -271,11 +273,11 @@ namespace Rebus.Bus
 
             if (_subscriptionStorage.IsCentralized)
             {
-                await _subscriptionStorage.RegisterSubscriber(topic, subscriberAddress);
+                await _subscriptionStorage.RegisterSubscriber(topic, subscriberAddress).ConfigureAwait(false);
             }
             else
             {
-                var destinationAddress = await _router.GetOwnerAddress(topic);
+                var destinationAddress = await _router.GetOwnerAddress(topic).ConfigureAwait(false);
 
                 var logicalMessage = CreateMessage(new SubscribeRequest
                 {
@@ -283,7 +285,7 @@ namespace Rebus.Bus
                     SubscriberAddress = subscriberAddress,
                 }, Operation.Subscribe);
 
-                await InnerSend(new[] { destinationAddress }, logicalMessage);
+                await InnerSend(new[] { destinationAddress }, logicalMessage).ConfigureAwait(false);
             }
         }
 
@@ -302,7 +304,7 @@ namespace Rebus.Bus
 
             if (_subscriptionStorage.IsCentralized)
             {
-                await _subscriptionStorage.UnregisterSubscriber(topic, subscriberAddress);
+                await _subscriptionStorage.UnregisterSubscriber(topic, subscriberAddress).ConfigureAwait(false);
             }
             else
             {
@@ -314,7 +316,7 @@ namespace Rebus.Bus
                     SubscriberAddress = subscriberAddress,
                 }, Operation.Unsubscribe);
 
-                await InnerSend(new[] { destinationAddress }, logicalMessage);
+                await InnerSend(new[] { destinationAddress }, logicalMessage).ConfigureAwait(false);
             }
         }
 
@@ -400,14 +402,14 @@ namespace Rebus.Bus
 
             if (currentTransactionContext != null)
             {
-                await SendUsingTransactionContext(destinationAddresses, logicalMessage, currentTransactionContext);
+                await SendUsingTransactionContext(destinationAddresses, logicalMessage, currentTransactionContext).ConfigureAwait(false);
             }
             else
             {
                 using (var context = new TransactionContext())
                 {
-                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
-                    await context.Complete();
+                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, context).ConfigureAwait(false);
+                    await context.Complete().ConfigureAwait(false);
                 }
             }
         }
@@ -416,7 +418,7 @@ namespace Rebus.Bus
         {
             var context = new OutgoingStepContext(logicalMessage, transactionContext, new DestinationAddresses(destinationAddresses));
 
-            await _pipelineInvoker.Invoke(context);
+            await _pipelineInvoker.Invoke(context).ConfigureAwait(false);
         }
 
         async Task SendTransportMessage(string destinationAddress, TransportMessage transportMessage)
@@ -427,13 +429,13 @@ namespace Rebus.Bus
             {
                 using (var context = new TransactionContext())
                 {
-                    await _transport.Send(destinationAddress, transportMessage, context);
-                    await context.Complete();
+                    await _transport.Send(destinationAddress, transportMessage, context).ConfigureAwait(false);
+                    await context.Complete().ConfigureAwait(false);
                 }
             }
             else
             {
-                await _transport.Send(destinationAddress, transportMessage, transactionContext);
+                await _transport.Send(destinationAddress, transportMessage, transactionContext).ConfigureAwait(false);
             }
         }
 

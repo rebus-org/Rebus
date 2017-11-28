@@ -60,7 +60,7 @@ namespace Rebus.Profiling
                 // save stats context for all the ProfilerSteps to find
                 context.Save(statsContext);
 
-                await next();
+                await next().ConfigureAwait(false);
 
                 _profilerStats.Register(statsContext);
             }
@@ -79,7 +79,7 @@ namespace Rebus.Profiling
 
                 using (statsContext.Measure(_nextStep))
                 {
-                    await next();
+                    await next().ConfigureAwait(false);
                 }
             }
         }

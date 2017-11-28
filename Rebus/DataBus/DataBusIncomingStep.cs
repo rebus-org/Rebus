@@ -12,8 +12,7 @@ namespace Rebus.DataBus
 
         public DataBusIncomingStep(IDataBusStorage dataBusStorage)
         {
-            if (dataBusStorage == null) throw new ArgumentNullException(nameof(dataBusStorage));
-            _dataBusStorage = dataBusStorage;
+            _dataBusStorage = dataBusStorage ?? throw new ArgumentNullException(nameof(dataBusStorage));
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -21,7 +20,7 @@ namespace Rebus.DataBus
             // stashes the current implementation of IDataBusStorage in the context for DataBusAttachment to find
             context.Save(DataBusStorageKey, _dataBusStorage);
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

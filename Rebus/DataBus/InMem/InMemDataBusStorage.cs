@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Rebus.Time;
-
 #pragma warning disable 1998
 
 namespace Rebus.DataBus.InMem
@@ -14,15 +13,14 @@ namespace Rebus.DataBus.InMem
 
         public InMemDataBusStorage(InMemDataStore dataStore)
         {
-            if (dataStore == null) throw new ArgumentNullException(nameof(dataStore));
-            _dataStore = dataStore;
+            _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         }
 
         public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
             using (var destination = new MemoryStream())
             {
-                await source.CopyToAsync(destination);
+                await source.CopyToAsync(destination).ConfigureAwait(false);
                 var bytes = destination.ToArray();
 
                 var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
@@ -51,9 +49,6 @@ namespace Rebus.DataBus.InMem
             return source;
         }
 
-        public async Task<Dictionary<string, string>> ReadMetadata(string id)
-        {
-            return _dataStore.LoadMetadata(id);
-        }
+        public async Task<Dictionary<string, string>> ReadMetadata(string id) => _dataStore.LoadMetadata(id);
     }
 }

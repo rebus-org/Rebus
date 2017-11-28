@@ -24,9 +24,8 @@ namespace Rebus.Pipeline.Send
         /// </summary>
         public SendOutgoingMessageStep(ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            _transport = transport;
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _log = rebusLoggerFactory.GetLogger<SendOutgoingMessageStep>();
         }
 
@@ -47,20 +46,18 @@ namespace Rebus.Pipeline.Send
                 logicalMessage.Body ?? "<empty message>",
                 hasOneOrMoreDestinations ? string.Join(";", destinationAddressesList) : "<no destinations>");
 
-            await Send(destinationAddressesList, transportMessage, currentTransactionContext);
+            await Send(destinationAddressesList, transportMessage, currentTransactionContext).ConfigureAwait(false);
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
-        async Task Send(List<string> destinationAddressesList,
-            TransportMessage transportMessage,
-            ITransactionContext currentTransactionContext)
+        async Task Send(List<string> destinationAddressesList, TransportMessage transportMessage, ITransactionContext currentTransactionContext)
         {
             var sendTasks = destinationAddressesList
-                .Select(address => _transport.Send(address, transportMessage, currentTransactionContext))
+                .Select(async address => await _transport.Send(address, transportMessage, currentTransactionContext).ConfigureAwait(false))
                 .ToArray();
 
-            await Task.WhenAll(sendTasks);
+            await Task.WhenAll(sendTasks).ConfigureAwait(false);
         }
     }
 }

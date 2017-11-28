@@ -47,7 +47,7 @@ Headers already on the message will not be overwritten.")]
                 headers[autoHeader.Key] = autoHeader.Value;
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

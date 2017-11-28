@@ -8,6 +8,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Sagas;
 using Rebus.Transport;
+// ReSharper disable UnusedTypeParameter
 
 namespace Rebus.Pipeline.Receive
 {
@@ -84,7 +85,6 @@ namespace Rebus.Pipeline.Receive
     /// </summary>
     public class HandlerInvoker<TMessage> : HandlerInvoker
     {
-        readonly string _messageId;
         readonly Func<Task> _action;
         readonly object _handler;
         readonly ITransactionContext _transactionContext;
@@ -94,16 +94,11 @@ namespace Rebus.Pipeline.Receive
         /// <summary>
         /// Constructs the invoker
         /// </summary>
-        public HandlerInvoker(string messageId, Func<Task> action, object handler, ITransactionContext transactionContext)
+        public HandlerInvoker(Func<Task> action, object handler, ITransactionContext transactionContext)
         {
-            if (messageId == null) throw new ArgumentNullException(nameof(messageId));
-            if (action == null) throw new ArgumentNullException(nameof(action));
-            if (handler == null) throw new ArgumentNullException(nameof(handler));
-            if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
-            _messageId = messageId;
-            _action = action;
-            _handler = handler;
-            _transactionContext = transactionContext;
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+            _transactionContext = transactionContext ?? throw new ArgumentNullException(nameof(transactionContext));
         }
 
         /// <summary>
@@ -143,12 +138,11 @@ namespace Rebus.Pipeline.Receive
             {
                 _transactionContext.Items[CurrentHandlerInvokerItemsKey] = this;
 
-                await _action();
+                await _action().ConfigureAwait(false);
             }
             finally
             {
-                object temp;
-                _transactionContext.Items.TryRemove(CurrentHandlerInvokerItemsKey, out temp);
+                _transactionContext.Items.TryRemove(CurrentHandlerInvokerItemsKey, out _);
             }
         }
 
@@ -183,17 +177,11 @@ namespace Rebus.Pipeline.Receive
         /// Gets the saga data (if any) that was previously set with <see cref="SetSagaData"/>. Returns null
         /// if none has been set
         /// </summary>
-        public override ISagaData GetSagaData()
-        {
-            return _sagaData;
-        }
+        public override ISagaData GetSagaData() => _sagaData;
 
         /// <summary>
         /// Marks this handler invoker to skip its invocation, causing it to do nothin when <see cref="Invoke"/> is called
         /// </summary>
-        public override void SkipInvocation()
-        {
-            _invokeHandler = false;
-        }
+        public override void SkipInvocation() => _invokeHandler = false;
     }
 }

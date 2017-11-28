@@ -21,10 +21,7 @@ which is then detected by this wrapper step.")]
     {
         readonly IErrorTracker _errorTracker;
 
-        public FailedMessageWrapperStep(IErrorTracker errorTracker)
-        {
-            _errorTracker = errorTracker;
-        }
+        public FailedMessageWrapperStep(IErrorTracker errorTracker) => _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
@@ -42,7 +39,7 @@ which is then detected by this wrapper step.")]
                 context.Save(new Message(headers, wrappedBody));
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new ConcurrentDictionary<Type, MethodInfo>();

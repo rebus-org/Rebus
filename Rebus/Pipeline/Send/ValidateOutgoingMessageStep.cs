@@ -21,7 +21,7 @@ namespace Rebus.Pipeline.Send
 
             CheckDeferHeaders(headers);
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         static void CheckDeferHeaders(IReadOnlyDictionary<string, string> headers)
@@ -30,8 +30,7 @@ namespace Rebus.Pipeline.Send
             if (!headers.ContainsKey(Headers.DeferredUntil)) return;
 
             // recipient must have been set by now
-            string destinationAddress;
-            if (!headers.TryGetValue(Headers.DeferredRecipient, out destinationAddress)
+            if (!headers.TryGetValue(Headers.DeferredRecipient, out var destinationAddress)
                 || destinationAddress == null)
             {
                 throw new InvalidOperationException(

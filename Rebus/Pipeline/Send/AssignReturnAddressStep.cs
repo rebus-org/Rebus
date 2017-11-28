@@ -38,7 +38,7 @@ namespace Rebus.Pipeline.Send
                 headers[Headers.ReturnAddress] = _address;
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

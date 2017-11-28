@@ -76,9 +76,9 @@ If that is the case, message dispatch is skipped, but any messages stored as out
                         {
                             foreach (var destinationAddress in messageToResend.DestinationAddresses)
                             {
-                                await
-                                    _transport.Send(destinationAddress, messageToResend.TransportMessage,
-                                        transactionContext);
+                                var transportMessage = messageToResend.TransportMessage;
+
+                                await _transport.Send(destinationAddress, transportMessage, transactionContext).ConfigureAwait(false);
                             }
                         }
                     }
@@ -95,7 +95,7 @@ If that is the case, message dispatch is skipped, but any messages stored as out
                 }
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

@@ -42,10 +42,10 @@ namespace Rebus.Auditing.Messages
 
                 _auditingHelper.SetCommonHeaders(clone);
 
-                await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext);
+                await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext).ConfigureAwait(false);
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         static bool IsPublishedMessage(TransportMessage transportMessage)

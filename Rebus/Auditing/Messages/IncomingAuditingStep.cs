@@ -35,7 +35,7 @@ namespace Rebus.Auditing.Messages
         {
             var begin = RebusTime.Now;
 
-            await next();
+            await next().ConfigureAwait(false);
 
             var transactionContext = context.Load<ITransactionContext>();
             var transportMessage = context.Load<TransportMessage>();
@@ -46,7 +46,7 @@ namespace Rebus.Auditing.Messages
 
             clone.Headers[AuditHeaders.HandleTime] = begin.ToString("O");
 
-            await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext);
+            await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext).ConfigureAwait(false);
         }
     }
 }

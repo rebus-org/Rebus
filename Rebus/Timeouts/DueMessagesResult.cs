@@ -33,19 +33,12 @@ namespace Rebus.Timeouts
         /// <summary>
         /// Completes the result by running the clean-up action
         /// </summary>
-        public async Task Complete()
-        {
-            await CleanUp();
-        }
+        public async Task Complete() => await CleanUp().ConfigureAwait(false);
 
         /// <summary>
         /// Invokes the cleanup action
         /// </summary>
-        public void Dispose()
-        {
-            CleanUp().Wait();
-        }
-
+        public void Dispose() => CleanUp().Wait();
 
         /// <summary>
         /// Returns all due messages from this result
@@ -66,7 +59,7 @@ namespace Rebus.Timeouts
 
             try
             {
-                await _cleanupAction();
+                await _cleanupAction().ConfigureAwait(false);
             }
             finally
             {

@@ -29,8 +29,7 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public JsonFileSubscriptionStorage(string jsonFilePath, bool isCentralized = false)
         {
-            if (jsonFilePath == null) throw new ArgumentNullException(nameof(jsonFilePath));
-            _jsonFilePath = jsonFilePath;
+            _jsonFilePath = jsonFilePath ?? throw new ArgumentNullException(nameof(jsonFilePath));
             IsCentralized = isCentralized;
         }
 
@@ -44,9 +43,7 @@ namespace Rebus.Persistence.FileSystem
             {
                 var subscriptions = GetSubscriptions();
 
-                HashSet<string> subscribers;
-
-                return subscriptions.TryGetValue(topic, out subscribers)
+                return subscriptions.TryGetValue(topic, out var subscribers)
                     ? subscribers.ToArray()
                     : new string[0];
             }

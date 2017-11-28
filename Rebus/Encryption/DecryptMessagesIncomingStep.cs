@@ -22,8 +22,7 @@ namespace Rebus.Encryption
         /// </summary>
         public DecryptMessagesIncomingStep(IEncryptor encryptor)
         {
-            if (encryptor == null) throw new ArgumentNullException(nameof(encryptor));
-            _encryptor = encryptor;
+            _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         /// <summary>
@@ -33,8 +32,7 @@ namespace Rebus.Encryption
         {
             var transportMessage = context.Load<TransportMessage>();
 
-            string contentEncryptionValue;
-            if (transportMessage.Headers.TryGetValue(EncryptionHeaders.ContentEncryption, out contentEncryptionValue)
+            if (transportMessage.Headers.TryGetValue(EncryptionHeaders.ContentEncryption, out var contentEncryptionValue)
                 && contentEncryptionValue == _encryptor.ContentEncryptionValue)
             {
                 var headers = transportMessage.Headers.Clone();
@@ -46,14 +44,12 @@ namespace Rebus.Encryption
                 context.Save(new TransportMessage(headers, bodyBytes));
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         static byte[] GetIv(IDictionary<string, string> headers)
         {
-            string ivString;
-
-            if (!headers.TryGetValue(EncryptionHeaders.ContentInitializationVector, out ivString))
+            if (!headers.TryGetValue(EncryptionHeaders.ContentInitializationVector, out var ivString))
             {
                 throw new RebusApplicationException($"Message has the '{EncryptionHeaders.ContentEncryption}' header, but there was no '{EncryptionHeaders.ContentInitializationVector}' header with the IV!");
             }

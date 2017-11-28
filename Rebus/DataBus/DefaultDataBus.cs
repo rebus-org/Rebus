@@ -11,8 +11,7 @@ namespace Rebus.DataBus
 
         public DefaultDataBus(IDataBusStorage dataBusStorage)
         {
-            if (dataBusStorage == null) throw new ArgumentNullException(nameof(dataBusStorage));
-            _dataBusStorage = dataBusStorage;
+            _dataBusStorage = dataBusStorage ?? throw new ArgumentNullException(nameof(dataBusStorage));
         }
 
         public async Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null)
@@ -21,21 +20,15 @@ namespace Rebus.DataBus
 
             var id = Guid.NewGuid().ToString();
 
-            await _dataBusStorage.Save(id, source, optionalMetadata);
+            await _dataBusStorage.Save(id, source, optionalMetadata).ConfigureAwait(false);
 
             var attachment = new DataBusAttachment(id);
 
             return attachment;
         }
 
-        public async Task<Stream> OpenRead(string dataBusAttachmentId)
-        {
-            return await _dataBusStorage.Read(dataBusAttachmentId);
-        }
+        public async Task<Stream> OpenRead(string dataBusAttachmentId) => await _dataBusStorage.Read(dataBusAttachmentId).ConfigureAwait(false);
 
-        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId)
-        {
-            return await _dataBusStorage.ReadMetadata(dataBusAttachmentId);
-        }
+        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => await _dataBusStorage.ReadMetadata(dataBusAttachmentId).ConfigureAwait(false);
     }
 }

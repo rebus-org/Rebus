@@ -21,8 +21,7 @@ namespace Rebus.Compression
         /// </summary>
         public ZippingDataBusStorageDecorator(IDataBusStorage innerDataBusStorage, DataCompressionMode dataCompressionMode)
         {
-            if (innerDataBusStorage == null) throw new ArgumentNullException(nameof(innerDataBusStorage));
-            _innerDataBusStorage = innerDataBusStorage;
+            _innerDataBusStorage = innerDataBusStorage ?? throw new ArgumentNullException(nameof(innerDataBusStorage));
             _dataCompressionMode = dataCompressionMode;
         }
 
@@ -31,22 +30,20 @@ namespace Rebus.Compression
         /// </summary>
         public async Task<Stream> Read(string id)
         {
-            var metadata = await _innerDataBusStorage.ReadMetadata(id);
+            var metadata = await _innerDataBusStorage.ReadMetadata(id).ConfigureAwait(false);
 
-            string contentEncoding;
-
-            if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out contentEncoding))
+            if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out var contentEncoding))
             {
-                return await _innerDataBusStorage.Read(id);
+                return await _innerDataBusStorage.Read(id).ConfigureAwait(false);
             }
 
             if (!string.Equals(contentEncoding, "gzip", StringComparison.OrdinalIgnoreCase))
             {
                 // unknown content encoding - the user must know best how to decode this!
-                return await _innerDataBusStorage.Read(id);
+                return await _innerDataBusStorage.Read(id).ConfigureAwait(false);
             }
 
-            var sourceStream = await _innerDataBusStorage.Read(id);
+            var sourceStream = await _innerDataBusStorage.Read(id).ConfigureAwait(false);
 
             return new GZipStream(sourceStream, CompressionMode.Decompress);
         }
@@ -56,7 +53,7 @@ namespace Rebus.Compression
         /// </summary>
         public async Task<Dictionary<string, string>> ReadMetadata(string id)
         {
-            return await _innerDataBusStorage.ReadMetadata(id);
+            return await _innerDataBusStorage.ReadMetadata(id).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -68,18 +65,16 @@ namespace Rebus.Compression
 
             if (_dataCompressionMode == DataCompressionMode.Explicit)
             {
-                string contentEncoding;
-
-                if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out contentEncoding))
+                if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out var contentEncoding))
                 {
-                    await _innerDataBusStorage.Save(id, source, metadata);
+                    await _innerDataBusStorage.Save(id, source, metadata).ConfigureAwait(false);
                     return;
                 }
 
                 // who knows what the user did to the data? the user must know how to decode this data
                 if (!string.Equals(contentEncoding, "gzip", StringComparison.OrdinalIgnoreCase))
                 {
-                    await _innerDataBusStorage.Save(id, source, metadata);
+                    await _innerDataBusStorage.Save(id, source, metadata).ConfigureAwait(false);
                     return;
                 }
             }
@@ -90,12 +85,12 @@ namespace Rebus.Compression
             {
                 using (var gzipStream = new GZipStream(destination, CompressionLevel.Optimal, true))
                 {
-                    await source.CopyToAsync(gzipStream);
+                    await source.CopyToAsync(gzipStream).ConfigureAwait(false);
                 }
 
                 destination.Position = 0;
 
-                await _innerDataBusStorage.Save(id, destination, metadata);
+                await _innerDataBusStorage.Save(id, destination, metadata).ConfigureAwait(false);
             }
         }
     }

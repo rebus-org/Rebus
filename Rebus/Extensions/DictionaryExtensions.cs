@@ -43,10 +43,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static string GetValue(this Dictionary<string, string> dictionary, string key)
         {
-            string value;
-
-            if (dictionary.TryGetValue(key, out value))
-                return value;
+            if (dictionary.TryGetValue(key, out var value)) return value;
 
             throw new KeyNotFoundException($"Could not find the key '{key}' - have the following keys only: {string.Join(", ", dictionary.Keys.Select(k => $"'{k}'"))}");
         }
@@ -56,9 +53,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static string GetValueOrNull(this Dictionary<string, string> dictionary, string key)
         {
-            string value;
-
-            return dictionary.TryGetValue(key, out value)
+            return dictionary.TryGetValue(key, out var value)
                 ? value
                 : null;
         }
@@ -69,8 +64,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static TItem GetOrAdd<TItem, TBase>(this Dictionary<string, TBase> dictionary, string key, Func<TItem> newItemFactory) where TItem : TBase
         {
-            TBase item;
-            if (dictionary.TryGetValue(key, out item)) return (TItem)item;
+            if (dictionary.TryGetValue(key, out var item)) return (TItem)item;
 
             var newItem = newItemFactory();
             dictionary[key] = newItem;
@@ -82,10 +76,9 @@ namespace Rebus.Extensions
         /// </summary>
         public static async Task<TItem> GetOrAddAsync<TItem, TBase>(this Dictionary<string, TBase> dictionary, string key, Func<Task<TItem>> newItemFactory) where TItem : TBase
         {
-            TBase item;
-            if (dictionary.TryGetValue(key, out item)) return (TItem)item;
+            if (dictionary.TryGetValue(key, out var item)) return (TItem)item;
 
-            var newItem = await newItemFactory();
+            var newItem = await newItemFactory().ConfigureAwait(false);
             dictionary[key] = newItem;
             return newItem;
         }
@@ -104,9 +97,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static T GetOrThrow<T>(this IDictionary<string, object> dictionary, string key)
         {
-            object item;
-
-            if (!dictionary.TryGetValue(key, out item))
+            if (!dictionary.TryGetValue(key, out var item))
             {
                 throw new KeyNotFoundException($"Could not find an item with the key '{key}'");
             }
@@ -125,9 +116,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static T GetOrNull<T>(this Dictionary<string, object> dictionary, string key) where T : class
         {
-            object item;
-
-            if (!dictionary.TryGetValue(key, out item))
+            if (!dictionary.TryGetValue(key, out var item))
             {
                 return default(T);
             }

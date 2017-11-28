@@ -45,16 +45,13 @@ namespace Rebus.Bus
         {
             readonly RebusBus _rebusBus;
 
-            public TransportMessageApi(RebusBus rebusBus)
-            {
-                _rebusBus = rebusBus;
-            }
+            public TransportMessageApi(RebusBus rebusBus) => _rebusBus = rebusBus ?? throw new ArgumentNullException(nameof(rebusBus));
 
             public async Task Forward(string destinationAddress, Dictionary<string, string> optionalAdditionalHeaders = null)
             {
                 var transportMessage = GetCloneOfCurrentTransportMessage(optionalAdditionalHeaders);
 
-                await _rebusBus.SendTransportMessage(destinationAddress, transportMessage);
+                await _rebusBus.SendTransportMessage(destinationAddress, transportMessage).ConfigureAwait(false);
             }
 
             public async Task Defer(TimeSpan delay, Dictionary<string, string> optionalAdditionalHeaders = null)
@@ -64,7 +61,7 @@ namespace Rebus.Bus
 
                 transportMessage.SetDeferHeaders(RebusTime.Now + delay, _rebusBus._transport.Address);
 
-                await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage);
+                await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage).ConfigureAwait(false);
             }
 
             TransportMessage GetCloneOfCurrentTransportMessage(Dictionary<string, string> optionalAdditionalHeaders)

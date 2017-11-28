@@ -17,10 +17,7 @@ namespace Rebus.Pipeline.Send
         /// <summary>
         /// Constructs the step, using the specified serializer to do its thing
         /// </summary>
-        public SerializeOutgoingMessageStep(ISerializer serializer)
-        {
-            _serializer = serializer;
-        }
+        public SerializeOutgoingMessageStep(ISerializer serializer) => _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
 
         /// <summary>
         /// Serializes the outgoing message by invoking the currently configured <see cref="ISerializer"/> on the <see cref="Message"/> found in the context,
@@ -29,11 +26,11 @@ namespace Rebus.Pipeline.Send
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var logicalMessage = context.Load<Message>();
-            var transportMessage = await _serializer.Serialize(logicalMessage);
+            var transportMessage = await _serializer.Serialize(logicalMessage).ConfigureAwait(false);
             
             context.Save(transportMessage);
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

@@ -8,6 +8,7 @@ using Rebus.Auditing.Sagas;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Sagas;
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 
 namespace Rebus.Persistence.FileSystem
 {
@@ -24,10 +25,9 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public FileSystemSagaSnapshotStorage(string snapshotDirectory, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (snapshotDirectory == null) throw new ArgumentNullException(nameof(snapshotDirectory));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
-            _snapshotDirectory = snapshotDirectory;
+            _snapshotDirectory = snapshotDirectory ?? throw new ArgumentNullException(nameof(snapshotDirectory));
             _log = rebusLoggerFactory.GetLogger<FileSystemSagaSnapshotStorage>();
         }
 
@@ -91,7 +91,7 @@ namespace Rebus.Persistence.FileSystem
             {
                 using (var writer = new StreamWriter(file, Encoding.UTF8))
                 {
-                    await writer.WriteAsync(jsonText);
+                    await writer.WriteAsync(jsonText).ConfigureAwait(false);
                 }
             }
         }

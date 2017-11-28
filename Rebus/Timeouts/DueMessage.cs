@@ -20,11 +20,9 @@ namespace Rebus.Timeouts
         /// </summary>
         public DueMessage(Dictionary<string, string> headers, byte[] body, Func<Task> completeAction = null)
         {
-            if (headers == null) throw new ArgumentNullException(nameof(headers));
-            if (body == null) throw new ArgumentNullException(nameof(body));
             _completeAction = completeAction;
-            Headers = headers;
-            Body = body;
+            Headers = headers ?? throw new ArgumentNullException(nameof(headers));
+            Body = body ?? throw new ArgumentNullException(nameof(body));
         }
 
         /// <summary>
@@ -44,15 +42,12 @@ namespace Rebus.Timeouts
         {
             if (_completeAction == null) return;
 
-            await _completeAction();
+            await _completeAction().ConfigureAwait(false);
         }
 
         /// <summary>
         /// Returns the headers and the body of this due message in a <see cref="TransportMessage"/>
         /// </summary>
-        public TransportMessage ToTransportMessage()
-        {
-            return new TransportMessage(Headers, Body);
-        }
+        public TransportMessage ToTransportMessage() => new TransportMessage(Headers, Body);
     }
 }

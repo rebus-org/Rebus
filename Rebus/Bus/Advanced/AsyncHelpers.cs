@@ -62,7 +62,7 @@ namespace Rebus.Bus.Advanced
                 {
                     try
                     {
-                        await _task();
+                        await _task().ConfigureAwait(false);
                     }
                     catch (Exception exception)
                     {

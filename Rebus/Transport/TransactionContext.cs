@@ -20,35 +20,17 @@ namespace Rebus.Transport
 
         public ConcurrentDictionary<string, object> Items { get; } = new ConcurrentDictionary<string, object>();
 
-        public void OnCommitted(Func<Task> commitAction)
-        {
-            _onCommittedActions.Enqueue(commitAction);
-        }
+        public void OnCommitted(Func<Task> commitAction) => _onCommittedActions.Enqueue(commitAction);
 
-        public void OnCompleted(Func<Task> completedAction)
-        {
-            _onCompletedActions.Enqueue(completedAction);
-        }
+        public void OnCompleted(Func<Task> completedAction) => _onCompletedActions.Enqueue(completedAction);
 
-        public void OnAborted(Action abortedAction)
-        {
-            _onAbortedActions.Enqueue(abortedAction);
-        }
+        public void OnAborted(Action abortedAction) => _onAbortedActions.Enqueue(abortedAction);
 
-        public void OnDisposed(Action disposedAction)
-        {
-            _onDisposedActions.Enqueue(disposedAction);
-        }
+        public void OnDisposed(Action disposedAction) => _onDisposedActions.Enqueue(disposedAction);
 
-        public void Abort()
-        {
-            _mustAbort = true;
-        }
+        public void Abort() => _mustAbort = true;
 
-        public async Task Commit()
-        {
-            await Invoke(_onCommittedActions);
-        }
+        public async Task Commit() => await Invoke(_onCommittedActions).ConfigureAwait(false);
 
         public void Dispose()
         {
@@ -87,9 +69,9 @@ namespace Rebus.Transport
                 return;
             }
 
-            await RaiseCommitted();
+            await RaiseCommitted().ConfigureAwait(false);
 
-            await RaiseCompleted();
+            await RaiseCompleted().ConfigureAwait(false);
 
             Dispose();
         }
@@ -101,21 +83,17 @@ namespace Rebus.Transport
             _aborted = true;
         }
 
-        async Task RaiseCommitted()
-        {
-            await Invoke(_onCommittedActions);
-        }
+        async Task RaiseCommitted() => await Invoke(_onCommittedActions).ConfigureAwait(false);
 
         async Task RaiseCompleted()
         {
-            await Invoke(_onCompletedActions);
+            await Invoke(_onCompletedActions).ConfigureAwait(false);
             _completed = true;
         }
 
         static void Invoke(ConcurrentQueue<Action> actions)
         {
-            Action action;
-            while (actions.TryDequeue(out action))
+            while (actions.TryDequeue(out var action))
             {
                 action();
             }
@@ -123,10 +101,9 @@ namespace Rebus.Transport
 
         static async Task Invoke(ConcurrentQueue<Func<Task>> actions)
         {
-            Func<Task> action;
-            while (actions.TryDequeue(out action))
+            while (actions.TryDequeue(out var action))
             {
-                await action();
+                await action().ConfigureAwait(false);
             }
         }
     }

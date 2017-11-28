@@ -26,7 +26,7 @@ namespace Rebus.Pipeline.Send
                 headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

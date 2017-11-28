@@ -39,7 +39,7 @@ namespace Rebus.Pipeline.Send
                 outgoingMessage.Headers[Headers.CorrelationSequence] = correlationInfo.CorrelationSequence.ToString(CultureInfo.InvariantCulture);
             }
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         static CorrelationInfo GetCorrelationIdToAssign(IncomingStepContext incomingStepContext, Message outgoingMessage)

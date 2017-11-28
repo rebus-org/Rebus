@@ -53,7 +53,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             if (context.Load<bool>(AbortDispatchContextKey))
             {
                 _log.Debug("Skipping dispatch of message {messageType} {messageId}", messageType, messageId);
-                await next();
+                await next().ConfigureAwait(false);
                 return;
             }
 
@@ -61,7 +61,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
 
             foreach (var invoker in invokers)
             {
-                await invoker.Invoke();
+                await invoker.Invoke().ConfigureAwait(false);
                 handlersInvoked++;
 
                 // if dispatch was aborted at this point, bail out
@@ -83,7 +83,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             _log.Debug("Dispatching {messageType} {messageId} to {count} handlers took {elapsedMs:0} ms", 
                 messageType, messageId, handlersInvoked, stopwatch.Elapsed.TotalMilliseconds);
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

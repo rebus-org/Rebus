@@ -16,17 +16,14 @@ namespace Rebus.Threading
         /// Constructs the bottleneck, allowing for <paramref name="maxParallelOperationsToAllow"/> parallel operations
         /// to be performed
         /// </summary>
-        public AsyncBottleneck(int maxParallelOperationsToAllow)
-        {
-            _semaphore = new SemaphoreSlim(maxParallelOperationsToAllow);
-        }
+        public AsyncBottleneck(int maxParallelOperationsToAllow) => _semaphore = new SemaphoreSlim(maxParallelOperationsToAllow);
 
         /// <summary>
         /// Grabs the semaphore and releases an <see cref="IDisposable"/> that will release it again when disposed
         /// </summary>
         public async Task<IDisposable> Enter(CancellationToken cancellationToken) 
         {
-            await _semaphore.WaitAsync(cancellationToken);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             return new Releaser(_semaphore);
         }
@@ -35,15 +32,9 @@ namespace Rebus.Threading
         {
             readonly SemaphoreSlim _semaphore;
 
-            public Releaser(SemaphoreSlim semaphore)
-            {
-                _semaphore = semaphore;
-            }
+            public Releaser(SemaphoreSlim semaphore) => _semaphore = semaphore;
 
-            public void Dispose()
-            {
-                _semaphore.Release();
-            }
+            public void Dispose() => _semaphore.Release();
         }
     }
 }

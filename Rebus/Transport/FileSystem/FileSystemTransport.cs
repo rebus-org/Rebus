@@ -11,7 +11,6 @@ using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Time;
-
 #pragma warning disable 1998
 
 namespace Rebus.Transport.FileSystem
@@ -75,7 +74,7 @@ namespace Rebus.Transport.FileSystem
                 using (var stream = File.OpenWrite(fullPath))
                 using (var writer = new StreamWriter(stream, FavoriteEncoding))
                 {
-                    await writer.WriteAsync(serializedMessage);
+                    await writer.WriteAsync(serializedMessage).ConfigureAwait(false);
                 }
             });
         }
@@ -107,12 +106,10 @@ namespace Rebus.Transport.FileSystem
 
                 if (fullPath == null) return null;
 
-                var jsonText = await ReadAllText(fullPath);
+                var jsonText = await ReadAllText(fullPath).ConfigureAwait(false);
                 var receivedTransportMessage = Deserialize(jsonText);
 
-                string timeToBeReceived;
-
-                if (receivedTransportMessage.Headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceived))
+                if (receivedTransportMessage.Headers.TryGetValue(Headers.TimeToBeReceived, out var timeToBeReceived))
                 {
                     var maxAge = TimeSpan.Parse(timeToBeReceived);
 
@@ -130,8 +127,7 @@ namespace Rebus.Transport.FileSystem
                         }
                         finally
                         {
-                            object _;
-                            _messagesBeingHandled.TryRemove(fullPath, out _);
+                            _messagesBeingHandled.TryRemove(fullPath, out object _);
                         }
                     }
                 }
@@ -139,8 +135,7 @@ namespace Rebus.Transport.FileSystem
                 context.OnCompleted(async () => File.Delete(fullPath));
                 context.OnDisposed(() =>
                 {
-                    object _;
-                    _messagesBeingHandled.TryRemove(fullPath, out _);
+                    _messagesBeingHandled.TryRemove(fullPath, out object _);
                 });
 
                 return receivedTransportMessage;
@@ -149,8 +144,7 @@ namespace Rebus.Transport.FileSystem
             {
                 if (fullPath != null)
                 {
-                    object _;
-                    _messagesBeingHandled.TryRemove(fullPath, out _);
+                    _messagesBeingHandled.TryRemove(fullPath, out object _);
                 }
 
                 return null;
@@ -162,7 +156,7 @@ namespace Rebus.Transport.FileSystem
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream, FavoriteEncoding))
             {
-                return await reader.ReadToEndAsync();
+                return await reader.ReadToEndAsync().ConfigureAwait(false);
             }
         }
 

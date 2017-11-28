@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Rebus.Pipeline;
 using Rebus.Testing;
+// ReSharper disable UnusedMember.Local
 
 namespace Rebus.DataBus
 {
@@ -21,9 +22,7 @@ namespace Rebus.DataBus
         /// </summary>
         public DataBusAttachment(string id)
         {
-            if (id == null) throw new ArgumentNullException(nameof(id));
-
-            Id = id;
+            Id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
         /// <summary>
@@ -42,19 +41,13 @@ namespace Rebus.DataBus
         /// Opens the attachment for reading, using the data bus of the bus that is handling the current message to read it.
         /// Is only available for calling inside message handlers.
         /// </summary>
-        public async Task<Stream> OpenRead()
-        {
-            return await OpenRead(Id);
-        }
+        public async Task<Stream> OpenRead() => await OpenRead(Id).ConfigureAwait(false);
 
         /// <summary>
         /// Gets the metadata associated with the attachment, using the data bus of the bus that is handling the current message to read it.
         /// Is only available for calling inside message handlers.
         /// </summary>
-        public async Task<Dictionary<string, string>> GetMetadata()
-        {
-            return await GetMetadata(Id);
-        }
+        public async Task<Dictionary<string, string>> GetMetadata() => await GetMetadata(Id).ConfigureAwait(false);
 
         /// <summary>
         /// Opens the attachment for reading, using the data bus of the bus that is handling the current message to read it.
@@ -66,7 +59,7 @@ namespace Rebus.DataBus
 
             var storage = GetDataBusStorage();
 
-            return await storage.Read(id);
+            return await storage.Read(id).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -79,7 +72,7 @@ namespace Rebus.DataBus
 
             var storage = GetDataBusStorage();
 
-            return await storage.ReadMetadata(id);
+            return await storage.ReadMetadata(id).ConfigureAwait(false);
         }
 
         static IDataBusStorage GetDataBusStorage()

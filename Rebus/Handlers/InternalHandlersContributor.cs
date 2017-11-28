@@ -16,13 +16,13 @@ namespace Rebus.Handlers
     class InternalHandlersContributor : IHandlerActivator
     {
         readonly IHandlerActivator _innerHandlerActivator;
-        readonly Dictionary<Type, IEnumerable<IHandleMessages>> _internalHandlers;
+        readonly Dictionary<Type, IHandleMessages[]> _internalHandlers;
 
         public InternalHandlersContributor(IHandlerActivator innerHandlerActivator, ISubscriptionStorage subscriptionStorage)
         {
             _innerHandlerActivator = innerHandlerActivator;
 
-            _internalHandlers = new Dictionary<Type, IEnumerable<IHandleMessages>>
+            _internalHandlers = new Dictionary<Type, IHandleMessages[]>
             {
                 {typeof (SubscribeRequest), new IHandleMessages[] {new SubscribeRequestHandler(subscriptionStorage)}},
                 {typeof (UnsubscribeRequest), new IHandleMessages[] {new UnsubscribeRequestHandler(subscriptionStorage)}}
@@ -36,16 +36,14 @@ namespace Rebus.Handlers
         {
             var ownHandlers = GetOwnHandlersFor<TMessage>();
 
-            var handlers = await _innerHandlerActivator.GetHandlers(message, transactionContext);
+            var handlers = await _innerHandlerActivator.GetHandlers(message, transactionContext).ConfigureAwait(false);
 
             return handlers.Concat(ownHandlers);
         }
 
         IEnumerable<IHandleMessages<TMessage>> GetOwnHandlersFor<TMessage>()
         {
-            IEnumerable<IHandleMessages> ownHandlers;
-
-            return _internalHandlers.TryGetValue(typeof(TMessage), out ownHandlers)
+            return _internalHandlers.TryGetValue(typeof(TMessage), out var ownHandlers)
                 ? ownHandlers.OfType<IHandleMessages<TMessage>>()
                 : Enumerable.Empty<IHandleMessages<TMessage>>();
         }
@@ -61,7 +59,7 @@ namespace Rebus.Handlers
 
             public async Task Handle(SubscribeRequest message)
             {
-                await _subscriptionStorage.RegisterSubscriber(message.Topic, message.SubscriberAddress);
+                await _subscriptionStorage.RegisterSubscriber(message.Topic, message.SubscriberAddress).ConfigureAwait(false);
             }
         }
 
@@ -76,7 +74,7 @@ namespace Rebus.Handlers
 
             public async Task Handle(UnsubscribeRequest message)
             {
-                await _subscriptionStorage.UnregisterSubscriber(message.Topic, message.SubscriberAddress);
+                await _subscriptionStorage.UnregisterSubscriber(message.Topic, message.SubscriberAddress).ConfigureAwait(false);
             }
         }
     }

@@ -22,7 +22,7 @@ namespace Rebus.Pipeline.Send
 
             headers[Headers.SentTime] = RebusTime.Now.ToString("O");
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

@@ -41,19 +41,19 @@ namespace Rebus.Pipeline.Receive
             var methodToInvoke = _dispatchMethods
                 .GetOrAdd(messageType, type => GetDispatchMethod(messageType));
 
-            var handlerInvokers = await (Task<HandlerInvokers>)methodToInvoke.Invoke(this, new[] { messageId, body, transactionContext, message });
+            var handlerInvokers = await ((Task<HandlerInvokers>)methodToInvoke.Invoke(this, new[] { messageId, body, transactionContext, message })).ConfigureAwait(false);
 
             context.Save(handlerInvokers);
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         async Task<HandlerInvokers> GetHandlerInvokers<TMessage>(string messageId, TMessage message, ITransactionContext transactionContext, Message logicalMessage)
         {
-            var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
+            var handlers = await _handlerActivator.GetHandlers(message, transactionContext).ConfigureAwait(false);
 
             var listOfHandlerInvokers = handlers
-                .Select(handler => new HandlerInvoker<TMessage>(messageId, () => handler.Handle(message), handler, transactionContext))
+                .Select(handler => new HandlerInvoker<TMessage>(() => handler.Handle(message), handler, transactionContext))
                 .Cast<HandlerInvoker>()
                 .ToList();
 

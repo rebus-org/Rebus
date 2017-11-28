@@ -57,7 +57,7 @@ namespace Rebus.DataBus.FileSystem
 
             using (var destination = File.Create(filePath))
             {
-                await source.CopyToAsync(destination);
+                await source.CopyToAsync(destination).ConfigureAwait(false);
             }
 
             var metadataToSave = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
@@ -70,7 +70,7 @@ namespace Rebus.DataBus.FileSystem
             using (var writer = new StreamWriter(destination, Encoding.UTF8))
             {
                 var text = _dictionarySerializer.SerializeToString(metadataToSave);
-                await writer.WriteAsync(text);
+                await writer.WriteAsync(text).ConfigureAwait(false);
             }
         }
 
@@ -85,7 +85,7 @@ namespace Rebus.DataBus.FileSystem
             {
                 var fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                await UpdateLastReadTime(id);
+                await UpdateLastReadTime(id).ConfigureAwait(false);
 
                 return fileStream;
             }
@@ -109,10 +109,11 @@ namespace Rebus.DataBus.FileSystem
                 {
                     using (var reader = new StreamReader(fileStream, Encoding.UTF8))
                     {
-                        var jsonText = await reader.ReadToEndAsync();
+                        var jsonText = await reader.ReadToEndAsync().ConfigureAwait(false);
                         var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
 
                         var fileInfo = new FileInfo(filePath);
+
                         metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
 
                         return metadata;
@@ -135,7 +136,7 @@ namespace Rebus.DataBus.FileSystem
                 {
                     using (var reader = new StreamReader(file, Encoding.UTF8))
                     {
-                        var jsonText = await reader.ReadToEndAsync();
+                        var jsonText = await reader.ReadToEndAsync().ConfigureAwait(false);
                         var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
 
                         metadata[MetadataKeys.ReadTime] = RebusTime.Now.ToString("O");
@@ -146,7 +147,7 @@ namespace Rebus.DataBus.FileSystem
 
                         using (var writer = new StreamWriter(file, Encoding.UTF8))
                         {
-                            await writer.WriteAsync(newJsonText);
+                            await writer.WriteAsync(newJsonText).ConfigureAwait(false);
                         }
                     }
                 }

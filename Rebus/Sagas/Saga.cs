@@ -115,7 +115,7 @@ namespace Rebus.Sagas
 
         internal sealed override async Task InvokeConflictResolution(ISagaData otherSagaData)
         {
-            await ResolveConflict((TSagaData)otherSagaData);
+            await ResolveConflict((TSagaData)otherSagaData).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -141,32 +141,30 @@ namespace Rebus.Sagas
             {
                 var propertyName = Reflect.Path(sagaDataValueExpression);
 
-                Func<IMessageContext, object, object> neutralMessageValueExtractor = (context, message) =>
+                object NeutralMessageValueExtractor(IMessageContext context, object message)
                 {
                     try
                     {
-                        return messageValueExtractorFunction((TMessage)message);
+                        return messageValueExtractorFunction((TMessage) message);
                     }
                     catch (Exception exception)
                     {
                         throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}");
                     }
-                };
+                }
 
-                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
+                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), NeutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
             }
 
             public void CorrelateHeader<TMessage>(string headerKey, Expression<Func<TSagaData, object>> sagaDataValueExpression)
             {
                 var propertyName = Reflect.Path(sagaDataValueExpression);
 
-                Func<IMessageContext, object, object> neutralMessageValueExtractor = (context, message) =>
+                object NeutralMessageValueExtractor(IMessageContext context, object message)
                 {
                     try
                     {
-                        string headerValue;
-
-                        return context.Headers.TryGetValue(headerKey, out headerValue)
+                        return context.Headers.TryGetValue(headerKey, out var headerValue)
                             ? headerValue
                             : null;
                     }
@@ -174,16 +172,16 @@ namespace Rebus.Sagas
                     {
                         throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}'s header key '{headerKey}'");
                     }
-                };
+                }
 
-                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
+                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), NeutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
             }
 
             public void CorrelateContext<TMessage>(Func<IMessageContext, object> contextValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression)
             {
                 var propertyName = Reflect.Path(sagaDataValueExpression);
 
-                Func<IMessageContext, object, object> neutralMessageValueExtractor = (context, message) =>
+                object NeutralMessageValueExtractor(IMessageContext context, object message)
                 {
                     try
                     {
@@ -193,9 +191,9 @@ namespace Rebus.Sagas
                     {
                         throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof(TMessage)}'s message context");
                     }
-                };
+                }
 
-                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
+                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), NeutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
             }
 
             public IEnumerable<CorrelationProperty> GetCorrelationProperties()

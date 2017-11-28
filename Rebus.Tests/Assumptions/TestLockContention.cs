@@ -59,7 +59,7 @@ Elapsed: {elapsed.TotalSeconds:0.0}
 
             var handlerInvokers = new HandlerInvokers(message, new[]
             {
-                new HandlerInvoker<object>(messageId, async () => {}, new WhateverSaga(), transactionContext),
+                new HandlerInvoker<object>(async () => {}, new WhateverSaga(), transactionContext),
             });
             context.Save(handlerInvokers);
             return context;

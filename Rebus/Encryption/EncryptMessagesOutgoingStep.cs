@@ -19,8 +19,7 @@ namespace Rebus.Encryption
         /// </summary>
         public EncryptMessagesOutgoingStep(IEncryptor encryptor)
         {
-            if (encryptor == null) throw new ArgumentNullException(nameof(encryptor));
-            _encryptor = encryptor;
+            _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         /// <summary>
@@ -32,7 +31,7 @@ namespace Rebus.Encryption
 
             if (transportMessage.Headers.ContainsKey(EncryptionHeaders.DisableEncryptionHeader))
             {
-                await next();
+                await next().ConfigureAwait(false);
                 return;
             }
 
@@ -42,9 +41,10 @@ namespace Rebus.Encryption
 
             headers[EncryptionHeaders.ContentEncryption] = _encryptor.ContentEncryptionValue;
             headers[EncryptionHeaders.ContentInitializationVector] = Convert.ToBase64String(encryptedData.Iv);
+
             context.Save(new TransportMessage(headers, encryptedData.Bytes));
 
-            await next();
+            await next().ConfigureAwait(false);
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Rebus.Sagas.Exclusive
 
             if (!handlerInvokersForSagas.Any())
             {
-                await next();
+                await next().ConfigureAwait(false);
                 return;
             }
 
@@ -54,12 +54,12 @@ namespace Rebus.Sagas.Exclusive
 
             try
             {
-                await WaitForLocks(locksToObtain, message.GetMessageId());
-                await next();
+                await WaitForLocks(locksToObtain, message.GetMessageId()).ConfigureAwait(false);
+                await next().ConfigureAwait(false);
             }
             finally
             {
-                await ReleaseLocks(locksToObtain);
+                await ReleaseLocks(locksToObtain).ConfigureAwait(false);
             }
         }
 

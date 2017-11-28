@@ -17,10 +17,7 @@ namespace Rebus.Testing.Internals
     {
         readonly ConcurrentQueue<ManualResetEvent> _resetEvents = new ConcurrentQueue<ManualResetEvent>();
 
-        public void AddResetEvent(ManualResetEvent reserEvent)
-        {
-            _resetEvents.Enqueue(reserEvent);
-        }
+        public void AddResetEvent(ManualResetEvent reserEvent) => _resetEvents.Enqueue(reserEvent);
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
@@ -32,15 +29,14 @@ namespace Rebus.Testing.Internals
                     resetEvents.ForEach(resetEvent => resetEvent.Set());
                 });
 
-            await next();
+            await next().ConfigureAwait(false);
         }
 
         List<ManualResetEvent> DequeueResetEvents()
         {
             var list = new List<ManualResetEvent>();
 
-            ManualResetEvent resetEvent;
-            while (_resetEvents.TryDequeue(out resetEvent))
+            while (_resetEvents.TryDequeue(out var resetEvent))
             {
                 list.Add(resetEvent);
             }

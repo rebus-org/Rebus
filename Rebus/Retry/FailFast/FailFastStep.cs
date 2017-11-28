@@ -42,7 +42,7 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
         {
             try
             {
-                await next();
+                await next().ConfigureAwait(false);
             }
             catch (Exception exception)
             {

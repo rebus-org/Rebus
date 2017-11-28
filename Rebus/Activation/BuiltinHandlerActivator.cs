@@ -129,13 +129,13 @@ namespace Rebus.Activation
 
             public Handler(Func<IBus, TMessage, Task> handlerFunction, Func<IBus> getBus)
             {
-                _handlerFunction = handlerFunction;
-                _getBus = getBus; // store this function here because of Hen&Egg-Problem between handler activator and bus
+                _handlerFunction = handlerFunction ?? throw new ArgumentNullException(nameof(handlerFunction));
+                _getBus = getBus ?? throw new ArgumentNullException(nameof(getBus)); // store this function here because of Hen&Egg-Problem between handler activator and bus
             }
 
             public async Task Handle(TMessage message)
             {
-                await _handlerFunction(_getBus(), message);
+                await _handlerFunction(_getBus(), message).ConfigureAwait(false);
             }
         }
 

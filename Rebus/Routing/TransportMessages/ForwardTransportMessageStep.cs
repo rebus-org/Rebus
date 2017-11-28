@@ -45,7 +45,7 @@ namespace Rebus.Routing.TransportMessages
 
             try
             {
-                var routingResult = await _routingFunction(transportMessage) ?? ForwardAction.None;
+                var routingResult = await _routingFunction(transportMessage).ConfigureAwait(false) ?? ForwardAction.None;
                 var actionType = routingResult.ActionType;
 
                 switch (actionType)
@@ -56,10 +56,9 @@ namespace Rebus.Routing.TransportMessages
 
                         _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
 
-                        await Task.WhenAll(
-                            destinationAddresses
-                                .Select(address => _transport.Send(address, transportMessage, transactionContext))
-                        );
+                        await Task.WhenAll(destinationAddresses
+                                .Select(async address => await _transport.Send(address, transportMessage, transactionContext).ConfigureAwait(false)))
+                                .ConfigureAwait(false);
                         break;
 
                     case ActionType.None:
@@ -84,13 +83,13 @@ namespace Rebus.Routing.TransportMessages
                     try
                     {
                         var transactionContext = context.Load<ITransactionContext>();
-                        await _transport.Send(_errorQueueName, transportMessage, transactionContext);
+                        await _transport.Send(_errorQueueName, transportMessage, transactionContext).ConfigureAwait(false);
                         return;
                     }
                     catch (Exception exception)
                     {
                         _log.Error(exception, "Could not forward message {messageLabel} to {queueName} - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
-                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
                         context.Load<ITransactionContext>().Abort();
                     }
                 }
