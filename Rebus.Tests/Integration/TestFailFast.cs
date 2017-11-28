@@ -122,7 +122,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName, timeoutSeconds: 5000);
+            var failedMessage = await _network.WaitForNextMessageFrom(ErrorQueueName);
 
             Assert.That(attemptedDeliveries, Is.EqualTo(1));
             Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("1 unhandled exceptions"));

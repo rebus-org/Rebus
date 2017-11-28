@@ -20,28 +20,20 @@ namespace Rebus.Profiling
         /// </summary>
         public PipelineStepProfiler(IPipeline pipeline, PipelineStepProfilerStats profilerStats)
         {
-            if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
-            if (profilerStats == null) throw new ArgumentNullException(nameof(profilerStats));
-            _pipeline = pipeline;
-            _profilerStats = profilerStats;
+            _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+            _profilerStats = profilerStats ?? throw new ArgumentNullException(nameof(profilerStats));
         }
 
         /// <summary>
         /// Gets the original send pipeline
         /// </summary>
         /// <returns></returns>
-        public IOutgoingStep[] SendPipeline()
-        {
-            return _pipeline.SendPipeline();
-        }
+        public IOutgoingStep[] SendPipeline() => _pipeline.SendPipeline();
 
         /// <summary>
         /// Gets a pipeline with time-tracking steps interleaved
         /// </summary>
-        public IIncomingStep[] ReceivePipeline()
-        {
-            return ComposeReceivePipeline().ToArray();
-        }
+        public IIncomingStep[] ReceivePipeline() => ComposeReceivePipeline().ToArray();
 
         IEnumerable<IIncomingStep> ComposeReceivePipeline()
         {
@@ -59,10 +51,7 @@ namespace Rebus.Profiling
         {
             readonly PipelineStepProfilerStats _profilerStats;
 
-            public RegisterCollectedProfilerStatsStep(PipelineStepProfilerStats profilerStats)
-            {
-                _profilerStats = profilerStats;
-            }
+            public RegisterCollectedProfilerStatsStep(PipelineStepProfilerStats profilerStats) => _profilerStats = profilerStats;
 
             public async Task Process(IncomingStepContext context, Func<Task> next)
             {
@@ -82,10 +71,7 @@ namespace Rebus.Profiling
         {
             readonly IIncomingStep _nextStep;
 
-            public ProfilerStep(IIncomingStep nextStep)
-            {
-                _nextStep = nextStep;
-            }
+            public ProfilerStep(IIncomingStep nextStep) => _nextStep = nextStep;
 
             public async Task Process(IncomingStepContext context, Func<Task> next)
             {

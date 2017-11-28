@@ -21,18 +21,11 @@ namespace Rebus.Profiling
             _measurements.Push(measurement);
         }
 
-        TimeSpan Correct(TimeSpan elapsed)
-        {
-            Measurement previousMeasurement;
-            return _measurements.TryPeek(out previousMeasurement)
-                ? elapsed - previousMeasurement.Elapsed
-                : elapsed;
-        }
+        TimeSpan Correct(TimeSpan elapsed) => _measurements.TryPeek(out var previousMeasurement)
+            ? elapsed - previousMeasurement.Elapsed
+            : elapsed;
 
-        internal IDisposable Measure(IIncomingStep nextStep)
-        {
-            return new StatsContextDisposable(this, nextStep);
-        }
+        internal IDisposable Measure(IIncomingStep nextStep) => new StatsContextDisposable(this, nextStep);
 
         class StatsContextDisposable : IDisposable
         {
@@ -46,10 +39,7 @@ namespace Rebus.Profiling
                 _nextStep = nextStep;
             }
 
-            public void Dispose()
-            {
-                _statsContext.AddMeasurement(_nextStep, _stopwatch.Elapsed);
-            }
+            public void Dispose() => _statsContext.AddMeasurement(_nextStep, _stopwatch.Elapsed);
         }
 
         public class Measurement
@@ -63,10 +53,7 @@ namespace Rebus.Profiling
                 Elapsed = elapsed;
             }
 
-            public override string ToString()
-            {
-                return $"{StepType}: {Elapsed}";
-            }
+            public override string ToString() => $"{StepType}: {Elapsed}";
         }
 
         public IEnumerable<Measurement> GetMeasurements()

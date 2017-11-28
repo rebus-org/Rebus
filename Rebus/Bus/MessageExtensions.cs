@@ -72,6 +72,15 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Gets the message type from the message
+        /// </summary>
+        public static string GetMessageType(this TransportMessage message)
+        {
+            return message.Headers.GetValueOrNull(Headers.Type)
+                   ?? "<unknown>";
+        }
+
+        /// <summary>
         /// Gets the message ID from the message
         /// </summary>
         public static string GetMessageId(this Message message)
@@ -115,9 +124,7 @@ namespace Rebus.Bus
         {
             var id = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
 
-            string type;
-
-            if (headers.TryGetValue(Headers.Type, out type))
+            if (headers.TryGetValue(Headers.Type, out var type))
             {
                 var dotnetType = Type.GetType(type);
 

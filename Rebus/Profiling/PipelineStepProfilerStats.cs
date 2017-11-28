@@ -63,8 +63,7 @@ namespace Rebus.Profiling
         {
             internal StepStat(Type stepType, TimeSpan elapsed, double percentage)
             {
-                if (stepType == null) throw new ArgumentNullException(nameof(stepType));
-                StepType = stepType;
+                StepType = stepType ?? throw new ArgumentNullException(nameof(stepType));
                 Elapsed = elapsed;
                 Percentage = percentage;
             }
