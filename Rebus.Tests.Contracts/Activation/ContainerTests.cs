@@ -9,6 +9,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Handlers;
+using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
@@ -295,6 +296,35 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Test]
+        public async Task ResolvesHandlersPolymorphically_ConcreteCaseWithFailedMessage()
+        {
+            var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<SecondLevelDeliveryHandler>());
+
+            using (var scope = new RebusTransactionScope())
+            {
+                var headers = new Dictionary<string, string>();
+                var body = new FailedMessage();
+                var wrapper = new FailedMessageWrapper<FailedMessage>(headers, body, "bla bla", new Exception[0]);
+                var handlers = (await handlerActivator.GetHandlers(wrapper, scope.TransactionContext)).ToList();
+
+                const string message = @"Expected that a single SecondLevelDeliveryHandler instance would have been returned because it implements IHandleMessages<IFailed<FailedMessage>> and we resolved handlers for a FailedMessageWrapper<FailedMessage>";
+
+                Assert.That(handlers.Count, Is.EqualTo(1), message);
+                Assert.That(handlers[0], Is.TypeOf<SecondLevelDeliveryHandler>(), message);
+            }
+        }
+
+        class FailedMessage { }
+
+        class SecondLevelDeliveryHandler : IHandleMessages<IFailed<FailedMessage>>
+        {
+            public Task Handle(IFailed<FailedMessage> message)
             {
                 throw new NotImplementedException();
             }

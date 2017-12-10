@@ -34,22 +34,17 @@ namespace Rebus.Retry.Simple
         /// </summary>
         public FailedMessageWrapper(Dictionary<string, string> headers, TMessage message, string errorDescription, IEnumerable<Exception> exceptions)
         {
-            if (headers == null) throw new ArgumentNullException(nameof(headers));
             if (message == null) throw new ArgumentNullException(nameof(message));
-            if (errorDescription == null) throw new ArgumentNullException(nameof(errorDescription));
             if (exceptions == null) throw new ArgumentNullException(nameof(exceptions));
-            Headers = headers;
+            Headers = headers ?? throw new ArgumentNullException(nameof(headers));
             Message = message;
-            ErrorDescription = errorDescription;
+            ErrorDescription = errorDescription ?? throw new ArgumentNullException(nameof(errorDescription));
             Exceptions = exceptions.ToArray();
         }
 
         /// <summary>
         /// Returns a string that represents the current failed message
         /// </summary>
-        public override string ToString()
-        {
-            return $"FAILED: {Message}";
-        }
+        public override string ToString() => $"FAILED: {Message}";
     }
 }
