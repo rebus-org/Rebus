@@ -1210,6 +1210,10 @@
 * Make Rebus buildable on OS X - thanks [bartul]
 * Add ability to fail fast (i.e. immediately move the message to the error queue) either by throwing `FailFastException` or by configuring a custom `IFailFastChecker` to execute arbitrary logic - thanks [boyanio]
 
+## 4.2.1-b1
+
+* Fix build bug that caused the generated Rebus.dll to have version 1.0.0 and not the correct version
+
 ---
 
 
