@@ -1,5 +1,4 @@
 ﻿using System;
-using FluentAssertions;
 using NUnit.Framework;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts;
@@ -25,12 +24,11 @@ namespace Rebus.Tests.Extensions
 
 
             // assert
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -49,11 +47,11 @@ namespace Rebus.Tests.Extensions
 
 
             // assert
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -73,14 +71,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
                 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
-
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -100,13 +97,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -126,14 +123,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
-
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -153,13 +149,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -179,13 +175,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -205,13 +201,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
 
         [Test]
@@ -231,13 +227,13 @@ namespace Rebus.Tests.Extensions
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
 
             // assert   
-            actualTypeStringStatic.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstance.ShouldBeEquivalentTo(expectedTypeString);
-            actualTypeStringInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedTypeString);
+            Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstance, Is.EqualTo(expectedTypeString));
+            Assert.That(actualTypeStringInstanceRuntimeConstructed, Is.EqualTo(expectedTypeString));
 
-            actualTypeStatic.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstance.ShouldBeEquivalentTo(expectedType);
-            actualTypeInstanceRuntimeConstructed.ShouldBeEquivalentTo(expectedType);
+            Assert.That(actualTypeStatic, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstance, Is.EqualTo(expectedType));
+            Assert.That(actualTypeInstanceRuntimeConstructed, Is.EqualTo(expectedType));
         }
     }   
 
