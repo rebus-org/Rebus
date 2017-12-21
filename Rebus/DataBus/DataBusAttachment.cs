@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Rebus.Pipeline;
 using Rebus.Testing;
+
 // ReSharper disable UnusedMember.Local
 
 namespace Rebus.DataBus
@@ -83,7 +84,7 @@ namespace Rebus.DataBus
 
         static IDataBusStorage GetDataBusStorageForTesting()
         {
-            return FakeDataBus.TestDataBusStorage;
+            return TestBackdoor.TestDataBusStorage;
         }
 
         static IDataBusStorage GetDataBusStorageFromMessageContext()

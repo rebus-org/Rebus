@@ -29,3 +29,4 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 [assembly: InternalsVisibleTo("Rebus.Tests")]
 [assembly: InternalsVisibleTo("Rebus.Tests.Contracts")]
+[assembly: InternalsVisibleTo("Rebus.TestHelpers")]

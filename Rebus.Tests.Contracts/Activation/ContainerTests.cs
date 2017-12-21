@@ -69,11 +69,11 @@ namespace Rebus.Tests.Contracts.Activation
                 return;
             }
 
-            containerAdapter.SetBus(new Testing.FakeBus());
+            containerAdapter.SetBus(new FakeBus());
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
             {
-                containerAdapter.SetBus(new Testing.FakeBus());
+                containerAdapter.SetBus(new FakeBus());
             }, "Expected that the second call to SetBus on the container adapter with another bus instance would throw an exception");
 
             Console.WriteLine(exception);
