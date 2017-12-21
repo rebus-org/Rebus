@@ -32,8 +32,7 @@ namespace Rebus.Pipeline.Invokers
 
                     Task InvokeNext() => InvokerFunction(index + 1);
 
-                    return incomingSteps[index]
-                        .Process(context, InvokeNext);
+                    return incomingSteps[index].Process(context, InvokeNext);
                 }
 
                 return InvokerFunction(0);
@@ -49,8 +48,7 @@ namespace Rebus.Pipeline.Invokers
 
                     Task InvokeNext() => InvokerFunction(index + 1);
 
-                    return outgoingSteps[index]
-                        .Process(context, InvokeNext);
+                    return outgoingSteps[index].Process(context, InvokeNext);
                 }
 
                 return InvokerFunction(0);

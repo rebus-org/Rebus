@@ -103,7 +103,7 @@ Stats:
                 var serializer = new JsonSerializer();
                 var boy = new SomeMessage("hello there!");
 
-                numberOfMessages.Times(() =>
+                for(var counter = 0; counter < numberOfMessages; counter++)
                 {
                     var headers = new Dictionary<string, string> { { Headers.MessageId, Guid.NewGuid().ToString() } };
                     var message = new Message(headers, boy);
@@ -111,7 +111,7 @@ Stats:
                     var inMemTransportMessage = transportMessage.ToInMemTransportMessage();
 
                     network.Deliver("perftest", inMemTransportMessage);
-                });
+                };
 
                 var numberOfReceivedMessages = 0;
                 var gotAllMessages = new ManualResetEvent(false);

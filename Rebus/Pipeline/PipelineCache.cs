@@ -17,14 +17,8 @@ namespace Rebus.Pipeline
             _incomingSteps = pipeline.ReceivePipeline().ToArray();
         }
 
-        public IOutgoingStep[] SendPipeline()
-        {
-            return _outgoingSteps;
-        }
+        public IOutgoingStep[] SendPipeline() => _outgoingSteps;
 
-        public IIncomingStep[] ReceivePipeline()
-        {
-            return _incomingSteps;
-        }
+        public IIncomingStep[] ReceivePipeline() => _incomingSteps;
     }
 }
