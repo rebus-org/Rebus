@@ -37,8 +37,8 @@ namespace Rebus.Auditing.Messages
 
             await next().ConfigureAwait(false);
 
-            var transactionContext = context.Load<ITransactionContext>();
-            var transportMessage = context.Load<TransportMessage>();
+            var transactionContext = context.TransactionContext;
+            var transportMessage = context.TransportMessage;
 
             var clone = transportMessage.Clone();
             

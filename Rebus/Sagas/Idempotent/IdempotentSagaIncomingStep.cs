@@ -47,7 +47,7 @@ If that is the case, message dispatch is skipped, but any messages stored as out
             var message = context.Load<Message>();
             var messageId = message.GetMessageId();
 
-            var transactionContext = context.Load<ITransactionContext>();
+            var transactionContext = context.TransactionContext;
 
             foreach (var handlerInvoker in handlerInvokersForSagas)
             {

@@ -13,8 +13,7 @@ namespace Rebus.Pipeline
     {
         internal MessageContext(ITransactionContext transactionContext)
         {
-            if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
-            TransactionContext = transactionContext;
+            TransactionContext = transactionContext ?? throw new ArgumentNullException(nameof(transactionContext));
         }
 
         /// <summary>
@@ -31,7 +30,7 @@ namespace Rebus.Pipeline
         /// <summary>
         /// Gets the <see cref="IMessageContext.TransportMessage"/> model for the message currently being handled.
         /// </summary>
-        public TransportMessage TransportMessage => IncomingStepContext.Load<TransportMessage>();
+        public TransportMessage TransportMessage => IncomingStepContext.TransportMessage;
 
         /// <summary>
         /// Gets the <see cref="IMessageContext.Message"/> model for the message currently being handled.

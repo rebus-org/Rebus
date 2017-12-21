@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
-using Rebus.Transport;
 
 namespace Rebus.Sagas.Exclusive
 {
@@ -37,7 +36,7 @@ namespace Rebus.Sagas.Exclusive
             }
 
             var message = context.Load<Message>();
-            var transactionContext = context.Load<ITransactionContext>();
+            var transactionContext = context.TransactionContext;
             var messageContext = new MessageContext(transactionContext);
 
             var messageBody = message.Body;

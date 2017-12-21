@@ -179,7 +179,13 @@ namespace Rebus.Tests.Pipeline
 
             static List<string> GetActionList(StepContext context)
             {
-                return context.Load<List<string>>() ?? context.Save(new List<string>());
+                var actionList = context.Load<List<string>>();
+
+                if (actionList != null) return actionList;
+
+                var newActionList = new List<string>();
+                context.Save(newActionList);
+                return newActionList;
             }
         }
     }

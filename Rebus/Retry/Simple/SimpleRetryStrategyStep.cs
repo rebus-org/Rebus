@@ -46,8 +46,8 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.Load<TransportMessage>();
-            var transactionContext = context.Load<ITransactionContext>();
+            var transportMessage = context.TransportMessage;
+            var transactionContext = context.TransactionContext;
             var messageId = transportMessage.Headers.GetValueOrNull(Headers.MessageId);
 
             if (string.IsNullOrWhiteSpace(messageId))

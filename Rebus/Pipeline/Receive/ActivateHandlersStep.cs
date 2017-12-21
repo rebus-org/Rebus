@@ -33,7 +33,7 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transactionContext = context.Load<ITransactionContext>();
+            var transactionContext = context.TransactionContext;
             var message = context.Load<Message>();
             var messageId = message.Headers.GetValue(Headers.MessageId);
             var body = message.Body;

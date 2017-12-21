@@ -29,32 +29,32 @@ namespace Rebus.Logging
 
             public void Debug(string message, params object[] objs)
             {
-                Trace.TraceInformation(_type + ": " + _loggerFactory.RenderString(message, objs));
+                Trace.TraceInformation(string.Concat(_type, ": ", _loggerFactory.RenderString(message, objs)));
             }
 
             public void Info(string message, params object[] objs)
             {
-                Trace.TraceInformation(_type + ": " + _loggerFactory.RenderString(message, objs));
+                Trace.TraceInformation(string.Concat(_type, ": ", _loggerFactory.RenderString(message, objs)));
             }
 
             public void Warn(string message, params object[] objs)
             {
-                Trace.TraceWarning(_type + ": " + _loggerFactory.RenderString(message, objs));
+                Trace.TraceWarning(string.Concat(_type, ": ", _loggerFactory.RenderString(message, objs)));
             }
 
             public void Warn(Exception exception, string message, params object[] objs)
             {
-                Trace.TraceWarning(_type + ": " + _loggerFactory.RenderString(message, objs) + Environment.NewLine + exception);
+                Trace.TraceWarning(string.Concat(_type, ": ", _loggerFactory.RenderString(message, objs), Environment.NewLine, exception));
             }
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                Trace.TraceError(_type + ": " + _loggerFactory.RenderString(message, objs) + Environment.NewLine + exception);
+                Trace.TraceError(string.Concat(_type, ": ", _loggerFactory.RenderString(message, objs), Environment.NewLine, exception));
             }
 
             public void Error(string message, params object[] objs)
             {
-                Trace.TraceError(_type + ": " + _loggerFactory.RenderString(message, objs));
+                Trace.TraceError(string.Concat(_type, ": ", _loggerFactory.RenderString(message, objs)));
             }
         }
     }

@@ -23,17 +23,14 @@ namespace Rebus.Messages
         /// </summary>
         public HeaderAttribute(string key, string value)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            Key = key;
-            Value = value;
+            Key = key ?? throw new ArgumentNullException(nameof(key));
+            Value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
         /// Creates the header attribute with the given key and an empty value
         /// </summary>
-        public HeaderAttribute(string key)
-            : this(key, "")
+        public HeaderAttribute(string key) : this(key, "")
         {
         }
     }
