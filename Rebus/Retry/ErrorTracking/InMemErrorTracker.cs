@@ -53,16 +53,11 @@ namespace Rebus.Retry.ErrorTracking
                 id => new ErrorTracking(exception, final),
                 (id, tracking) => tracking.AddError(exception, final));
 
-            if (final)
-            {
-                _log.Warn(exception, "Unhandled exception {errorNumber} (FINAL) while handling message with ID {messageId}",
-                    errorTracking.Errors.Count(), messageId);
-            }
-            else
-            {
-                _log.Warn(exception, "Unhandled exception {errorNumber} while handling message with ID {messageId}",
-                    errorTracking.Errors.Count(), messageId);
-            }
+            var message = final
+                ? "Unhandled exception {errorNumber} (FINAL) while handling message with ID {messageId}"
+                : "Unhandled exception {errorNumber} while handling message with ID {messageId}";
+
+            _log.Warn(exception, message, errorTracking.Errors.Count(), messageId);
         }
 
         /// <summary>
@@ -85,9 +80,7 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public string GetShortErrorDescription(string messageId)
         {
-            ErrorTracking errorTracking;
-
-            return _trackedErrors.TryGetValue(messageId, out errorTracking)
+            return _trackedErrors.TryGetValue(messageId, out var errorTracking)
                 ? $"{errorTracking.Errors.Count()} unhandled exceptions"
                 : null;
         }
@@ -98,9 +91,7 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public string GetFullErrorDescription(string messageId)
         {
-            ErrorTracking errorTracking;
-
-            if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
+            if (!_trackedErrors.TryGetValue(messageId, out var errorTracking))
             {
                 return null;
             }
@@ -116,9 +107,7 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public IEnumerable<Exception> GetExceptions(string messageId)
         {
-            ErrorTracking errorTracking;
-
-            if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
+            if (!_trackedErrors.TryGetValue(messageId, out var errorTracking))
             {
                 return Enumerable.Empty<Exception>();
             }
@@ -158,13 +147,13 @@ namespace Rebus.Retry.ErrorTracking
             }
 
             public ErrorTracking(Exception exception, bool final)
-                : this(new[] {new CaughtException(exception)}, final)
+                : this(new[] { new CaughtException(exception) }, final)
             {
             }
 
             public int ErrorCount => _caughtExceptions.Length;
 
-            public bool Final { get;  }
+            public bool Final { get; }
 
             public IEnumerable<CaughtException> Errors => _caughtExceptions;
 
@@ -173,7 +162,7 @@ namespace Rebus.Retry.ErrorTracking
                 // don't change anymore if this one is already final
                 if (Final) return this;
 
-                return new ErrorTracking(_caughtExceptions.Concat(new[] {new CaughtException(caughtException)}), final);
+                return new ErrorTracking(_caughtExceptions.Concat(new[] { new CaughtException(caughtException) }), final);
             }
 
             public TimeSpan ElapsedSinceLastError
@@ -191,8 +180,7 @@ namespace Rebus.Retry.ErrorTracking
         {
             public CaughtException(Exception exception)
             {
-                if (exception == null) throw new ArgumentNullException(nameof(exception));
-                Exception = exception;
+                Exception = exception ?? throw new ArgumentNullException(nameof(exception));
                 Time = RebusTime.Now;
             }
 

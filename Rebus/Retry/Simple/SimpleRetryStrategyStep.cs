@@ -5,7 +5,6 @@ using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
-using Rebus.Retry.FailFast;
 using Rebus.Transport;
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable ArgumentsStyleOther

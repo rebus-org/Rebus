@@ -7,63 +7,48 @@ namespace Rebus.Logging
     /// </summary>
     public class ColorSetting
     {
-        ColorSetting(ConsoleColor foregroundColor)
+        ColorSetting(ConsoleColor foregroundColor, ConsoleColor? backgroundColor = null)
         {
             ForegroundColor = foregroundColor;
+            BackgroundColor = backgroundColor;
         }
 
         /// <summary>
         /// Gets the foreground color
         /// </summary>
         public ConsoleColor ForegroundColor { get; }
-        
+
         /// <summary>
         /// Gets the background color
         /// </summary>
-        public ConsoleColor? BackgroundColor { get; private set; }
+        public ConsoleColor? BackgroundColor { get; }
 
         /// <summary>
         /// Sets the foreground color to the specified color
         /// </summary>
-        public static ColorSetting Foreground(ConsoleColor foregroundColor)
-        {
-            return new ColorSetting(foregroundColor);
-        }
+        public static ColorSetting Foreground(ConsoleColor foregroundColor) => new ColorSetting(foregroundColor);
 
         /// <summary>
         /// Sets the background color to the specified color
         /// </summary>
-        public ColorSetting Background(ConsoleColor backgroundColor)
+        public ColorSetting Background(ConsoleColor backgroundColor) => new ColorSetting(ForegroundColor, backgroundColor);
+
+        /// <summary>
+        /// Sets the foreground (and possibly background too) colors of the console
+        /// </summary>
+        public void Apply()
         {
-            BackgroundColor = backgroundColor;
-            return this;
+            if (BackgroundColor.HasValue)
+            {
+                Console.BackgroundColor = BackgroundColor.Value;
+            }
+
+            Console.ForegroundColor = ForegroundColor;
         }
 
         /// <summary>
-        /// Sets the current console colors to those specified in this <see cref="ColorSetting"/>,
-        /// restoring them to the previous colors when disposing
+        /// Resets the console colors to their normal values
         /// </summary>
-        public IDisposable Enter()
-        {
-            return new ConsoleColorContext(this);
-        }
-
-        class ConsoleColorContext : IDisposable
-        {
-            public ConsoleColorContext(ColorSetting colorSetting)
-            {
-                if (colorSetting.BackgroundColor.HasValue)
-                {
-                    Console.BackgroundColor = colorSetting.BackgroundColor.Value;
-                }
-
-                Console.ForegroundColor = colorSetting.ForegroundColor;
-            }
-
-            public void Dispose()
-            {
-                Console.ResetColor();
-            }
-        }
+        public void Revert() => Console.ResetColor();
     }
 }

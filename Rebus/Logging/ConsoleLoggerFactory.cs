@@ -28,12 +28,12 @@ namespace Rebus.Logging
             /// The level of this log statement
             /// </summary>
             public LogLevel Level { get; }
-            
+
             /// <summary>
             /// The text (possibly inclusing formatting placeholders) of this log statement
             /// </summary>
             public string Text { get; }
-            
+
             /// <summary>
             /// The values to use for string interpolation
             /// </summary>
@@ -48,7 +48,7 @@ namespace Rebus.Logging
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
 
         readonly bool _colored;
-        readonly List<Func<LogStatement, bool>> _filters = new List<Func<LogStatement, bool>>(); 
+        readonly List<Func<LogStatement, bool>> _filters = new List<Func<LogStatement, bool>>();
 
         LoggingColors _colors = new LoggingColors();
         LogLevel _minLevel = LogLevel.Debug;
@@ -67,15 +67,8 @@ namespace Rebus.Logging
         /// </summary>
         public LoggingColors Colors
         {
-            get { return _colors; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new InvalidOperationException("Attempted to set logging colors to null");
-                }
-                _colors = value;
-            }
+            get => _colors;
+            set => _colors = value ?? throw new InvalidOperationException("Attempted to set logging colors to null");
         }
 
         /// <summary>
@@ -83,7 +76,7 @@ namespace Rebus.Logging
         /// </summary>
         public LogLevel MinLevel
         {
-            get { return _minLevel; }
+            get => _minLevel;
             set
             {
                 _minLevel = value;
@@ -95,17 +88,14 @@ namespace Rebus.Logging
         /// Gets the list of filters that each log statement will be passed through in order to evaluate whether
         /// the given log statement should be output to the console
         /// </summary>
-        public IList<Func<LogStatement, bool>> Filters
-        {
-            get { return _filters; }
-        }
+        public IList<Func<LogStatement, bool>> Filters => _filters;
 
         /// <summary>
         /// Gets/sets whether timestamps should be shown when logging
         /// </summary>
         public bool ShowTimestamps
         {
-            get { return _showTimestamps; }
+            get => _showTimestamps;
             set
             {
                 _showTimestamps = value;
@@ -116,17 +106,7 @@ namespace Rebus.Logging
         /// <summary>
         /// Gets a logger for logging stuff from within the specified type
         /// </summary>
-        protected override ILog GetLogger(Type type)
-        {
-            ILog logger;
-            
-            if (Loggers.TryGetValue(type, out logger)) return logger;
-            
-            logger = new ConsoleLogger(type, _colors, this, _showTimestamps);
-            Loggers.TryAdd(type, logger);
-            
-            return logger;
-        }
+        protected override ILog GetLogger(Type type) => Loggers.GetOrAdd(type, _ => new ConsoleLogger(type, _colors, this, _showTimestamps));
 
         class ConsoleLogger : ILog
         {
@@ -142,8 +122,8 @@ namespace Rebus.Logging
                 _factory = factory;
 
                 _logLineFormatString = showTimestamps
-                                          ? "{0} {1} {2} ({3}): {4}"
-                                          : "{1} {2} ({3}): {4}";
+                    ? "{0} {1} {2} ({3}): {4}"
+                    : "{1} {2} ({3}): {4}";
             }
 
             public void Debug(string message, params object[] objs)
@@ -163,12 +143,12 @@ namespace Rebus.Logging
 
             public void Warn(Exception exception, string message, params object[] objs)
             {
-                Log(LogLevel.Warn, _factory.RenderString(message, objs) + Environment.NewLine + exception, _loggingColors.Error);
+                Log(LogLevel.Warn, string.Concat(_factory.RenderString(message, objs), Environment.NewLine, exception), _loggingColors.Warn);
             }
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                Log(LogLevel.Error, _factory.RenderString(message, objs) + Environment.NewLine + exception, _loggingColors.Error);
+                Log(LogLevel.Error, string.Concat(_factory.RenderString(message, objs), Environment.NewLine, exception), _loggingColors.Error);
             }
 
             public void Error(string message, params object[] objs)
@@ -180,9 +160,14 @@ namespace Rebus.Logging
             {
                 if (_factory._colored)
                 {
-                    using (colorSetting.Enter())
+                    colorSetting.Apply();
+                    try
                     {
                         Write(level, message, objs);
+                    }
+                    finally
+                    {
+                        colorSetting.Revert();
                     }
                 }
                 else
@@ -193,7 +178,7 @@ namespace Rebus.Logging
 
             string LevelString(LogLevel level)
             {
-                switch(level)
+                switch (level)
                 {
                     case LogLevel.Debug:
                         return "DEBUG";
@@ -211,7 +196,7 @@ namespace Rebus.Logging
             void Write(LogLevel level, string message, object[] objs)
             {
                 if ((int)level < (int)_factory.MinLevel) return;
-                if (_factory.AbortedByFilter(new LogStatement(level, message, objs, _type))) return;
+                if (_factory.AbortedByFilter(level, message, objs, _type)) return;
 
                 var levelString = LevelString(level);
 
@@ -254,8 +239,12 @@ namespace Rebus.Logging
             }
         }
 
-        bool AbortedByFilter(LogStatement logStatement)
+        bool AbortedByFilter(LogLevel level, string text, object[] args, Type type)
         {
+            if (_filters.Count == 0) return false;
+
+            var logStatement = new LogStatement(level, text, args, type);
+
             return _filters.Any(f => !f(logStatement));
         }
     }
