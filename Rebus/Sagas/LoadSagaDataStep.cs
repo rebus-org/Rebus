@@ -72,7 +72,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
             var message = context.Load<Message>();
             var label = message.GetMessageLabel();
-            var transactionContext = context.TransactionContext;
+            var transactionContext = context.Load<ITransactionContext>();
 
             var body = message.Body;
 

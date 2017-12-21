@@ -47,7 +47,7 @@ namespace Rebus.Pipeline.Receive
 
         async Task HandleRoutingSlip(IncomingStepContext context, Message message)
         {
-            var transactionContext = context.TransactionContext;
+            var transactionContext = context.Load<ITransactionContext>();
             var transportMessage = await _serialier.Serialize(message).ConfigureAwait(false);
             var headers = transportMessage.Headers;
 

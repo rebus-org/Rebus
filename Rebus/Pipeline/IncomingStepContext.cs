@@ -14,19 +14,10 @@ namespace Rebus.Pipeline
         public IncomingStepContext(TransportMessage message, ITransactionContext transactionContext)
         {
             Save(message);
-            var originalTransportMessage = new OriginalTransportMessage(message);
-            Save(originalTransportMessage);
+            Save(new OriginalTransportMessage(message));
             Save(transactionContext);
             
             transactionContext.Items[StepContextKey] = this;
-
-            TransportMessage = message;
-            TransactionContext = transactionContext;
-            OriginalTransportMessage = originalTransportMessage;
         }
-
-        public TransportMessage TransportMessage { get; }
-        public OriginalTransportMessage OriginalTransportMessage { get; }
-        public ITransactionContext TransactionContext { get; }
     }
 }

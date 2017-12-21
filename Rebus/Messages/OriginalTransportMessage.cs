@@ -19,7 +19,8 @@ namespace Rebus.Messages
         /// </summary>
         public OriginalTransportMessage(TransportMessage transportMessage)
         {
-            TransportMessage = transportMessage ?? throw new ArgumentNullException(nameof(transportMessage));
+            if (transportMessage == null) throw new ArgumentNullException(nameof(transportMessage));
+            TransportMessage = transportMessage;
         }
     }
 }

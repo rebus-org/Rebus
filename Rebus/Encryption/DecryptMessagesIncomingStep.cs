@@ -30,7 +30,7 @@ namespace Rebus.Encryption
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.TransportMessage;
+            var transportMessage = context.Load<TransportMessage>();
 
             if (transportMessage.Headers.TryGetValue(EncryptionHeaders.ContentEncryption, out var contentEncryptionValue)
                 && contentEncryptionValue == _encryptor.ContentEncryptionValue)

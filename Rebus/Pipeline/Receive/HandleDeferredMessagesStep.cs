@@ -112,7 +112,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.TransportMessage;
+            var transportMessage = context.Load<TransportMessage>();
 
             var headers = transportMessage.Headers;
 
@@ -133,7 +133,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
                 if (UsingExternalTimeoutManager)
                 {
-                    var transactionContext = context.TransactionContext;
+                    var transactionContext = context.Load<ITransactionContext>();
 
                     await ForwardMessageToExternalTimeoutManager(transportMessage, transactionContext).ConfigureAwait(false);
                 }

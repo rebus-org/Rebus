@@ -39,7 +39,7 @@ namespace Rebus.Routing.TransportMessages
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.TransportMessage;
+            var transportMessage = context.Load<TransportMessage>();
 
             try
             {
@@ -50,7 +50,7 @@ namespace Rebus.Routing.TransportMessages
                 {
                     case ActionType.Forward:
                         var destinationAddresses = routingResult.DestinationAddresses;
-                        var transactionContext = context.TransactionContext;
+                        var transactionContext = context.Load<ITransactionContext>();
 
                         _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
 
@@ -80,7 +80,7 @@ namespace Rebus.Routing.TransportMessages
 
                     try
                     {
-                        var transactionContext = context.TransactionContext;
+                        var transactionContext = context.Load<ITransactionContext>();
                         await _transport.Send(_errorQueueName, transportMessage, transactionContext).ConfigureAwait(false);
                         return;
                     }
@@ -88,7 +88,7 @@ namespace Rebus.Routing.TransportMessages
                     {
                         _log.Error(exception, "Could not forward message {messageLabel} to {queueName} - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
                         await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
-                        context.TransactionContext.Abort();
+                        context.Load<ITransactionContext>().Abort();
                     }
                 }
 

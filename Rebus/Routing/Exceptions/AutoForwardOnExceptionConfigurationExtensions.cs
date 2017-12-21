@@ -93,8 +93,8 @@ namespace Rebus.Routing.Exceptions
 
                 if (!caughtException) return;
 
-                var transactionContext = context.TransactionContext;
-                var transportMessage = context.TransportMessage;
+                var transactionContext = context.Load<ITransactionContext>();
+                var transportMessage = context.Load<TransportMessage>();
 
                 var clone = transportMessage.Clone();
                 clone.Headers[Headers.ErrorDetails] = errorDetails;

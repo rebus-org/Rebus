@@ -28,7 +28,7 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.TransportMessage;
+            var transportMessage = context.Load<TransportMessage>();
             var message = await _serializer.Deserialize(transportMessage).ConfigureAwait(false);
             context.Save(message);
             await next().ConfigureAwait(false);

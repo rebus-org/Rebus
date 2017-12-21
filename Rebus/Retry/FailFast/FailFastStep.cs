@@ -42,7 +42,7 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
             }
             catch (Exception exception)
             {
-                var transportMessage = context.TransportMessage;
+                var transportMessage = context.Load<TransportMessage>();
                 var messageId = transportMessage.GetMessageId();
                 if (_failFastChecker.ShouldFailFast(messageId, exception))
                 {

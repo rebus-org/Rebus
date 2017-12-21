@@ -23,13 +23,16 @@ namespace Rebus.Sagas.Idempotent
         {
             var transactionContext = context.Load<ITransactionContext>();
 
-            if (transactionContext.Items.TryGetValue(HandlerInvoker.CurrentHandlerInvokerItemsKey, out var temp))
+            object temp;
+            if (transactionContext.Items.TryGetValue(HandlerInvoker.CurrentHandlerInvokerItemsKey, out temp))
             {
                 var handlerInvoker = (HandlerInvoker)temp;
 
                 if (handlerInvoker.HasSaga)
                 {
-                    if (handlerInvoker.GetSagaData() is IIdempotentSagaData idempotentSagaData)
+                    var idempotentSagaData = handlerInvoker.GetSagaData() as IIdempotentSagaData;
+
+                    if (idempotentSagaData != null)
                     {
                         var idempotencyData = idempotentSagaData.IdempotencyData;
 
