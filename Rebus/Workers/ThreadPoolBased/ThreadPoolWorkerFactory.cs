@@ -18,7 +18,6 @@ namespace Rebus.Workers.ThreadPoolBased
     {
         readonly ITransport _transport;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
-        readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly Options _options;
         readonly Func<RebusBus> _busGetter;
@@ -29,23 +28,15 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <summary>
         /// Creates the worker factory
         /// </summary>
-        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, ISyncBackoffStrategy backoffStrategy)
+        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, ISyncBackoffStrategy backoffStrategy)
         {
-            if (transport == null) throw new ArgumentNullException(nameof(transport));
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
-            if (pipelineInvoker == null) throw new ArgumentNullException(nameof(pipelineInvoker));
-            if (options == null) throw new ArgumentNullException(nameof(options));
-            if (busGetter == null) throw new ArgumentNullException(nameof(busGetter));
             if (busLifetimeEvents == null) throw new ArgumentNullException(nameof(busLifetimeEvents));
-            if (backoffStrategy == null) throw new ArgumentNullException(nameof(backoffStrategy));
-            _transport = transport;
-            _rebusLoggerFactory = rebusLoggerFactory;
-            _pipeline = pipeline;
-            _pipelineInvoker = pipelineInvoker;
-            _options = options;
-            _busGetter = busGetter;
-            _backoffStrategy = backoffStrategy;
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _rebusLoggerFactory = rebusLoggerFactory ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _pipelineInvoker = pipelineInvoker ?? throw new ArgumentNullException(nameof(pipelineInvoker));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _busGetter = busGetter ?? throw new ArgumentNullException(nameof(busGetter));
+            _backoffStrategy = backoffStrategy ?? throw new ArgumentNullException(nameof(backoffStrategy));
             _parallelOperationsManager = new ParallelOperationsManager(options.MaxParallelism);
             _log = _rebusLoggerFactory.GetLogger<ThreadPoolWorkerFactory>();
 
@@ -71,7 +62,16 @@ namespace Rebus.Workers.ThreadPoolBased
 
             var owningBus = _busGetter();
 
-            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipelineInvoker, _parallelOperationsManager, owningBus, _options, _backoffStrategy);
+            var worker = new ThreadPoolWorker(
+                workerName,
+                _transport,
+                _rebusLoggerFactory,
+                _pipelineInvoker,
+                _parallelOperationsManager,
+                owningBus,
+                _options,
+                _backoffStrategy
+            );
 
             return worker;
         }

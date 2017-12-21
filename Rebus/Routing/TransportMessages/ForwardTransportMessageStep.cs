@@ -26,11 +26,9 @@ namespace Rebus.Routing.TransportMessages
         /// </summary>
         public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, string errorQueueName, ErrorBehavior errorBehavior)
         {
-            if (routingFunction == null) throw new ArgumentNullException(nameof(routingFunction));
-            if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            _routingFunction = routingFunction;
-            _transport = transport;
+            _routingFunction = routingFunction ?? throw new ArgumentNullException(nameof(routingFunction));
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _errorQueueName = errorQueueName;
             _errorBehavior = errorBehavior;
             _log = rebusLoggerFactory.GetLogger<ForwardTransportMessageStep>();
@@ -57,7 +55,7 @@ namespace Rebus.Routing.TransportMessages
                         _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
 
                         await Task.WhenAll(destinationAddresses
-                                .Select(async address => await _transport.Send(address, transportMessage, transactionContext).ConfigureAwait(false)))
+                                .Select(address => _transport.Send(address, transportMessage, transactionContext)))
                                 .ConfigureAwait(false);
                         break;
 

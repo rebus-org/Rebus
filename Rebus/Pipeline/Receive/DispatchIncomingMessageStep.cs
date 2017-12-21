@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
-using Rebus.Messages;
+// ReSharper disable ForCanBeConvertedToForeach
 
 namespace Rebus.Pipeline.Receive
 {
@@ -59,8 +59,10 @@ If no invokers were found, a RebusApplicationException is thrown.")]
 
             var stopwatch = Stopwatch.StartNew();
 
-            foreach (var invoker in invokers)
+            for(var index = 0; index < invokers.Count; index++)
             {
+                var invoker = invokers[index];
+
                 await invoker.Invoke().ConfigureAwait(false);
                 handlersInvoked++;
 
@@ -81,7 +83,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             }
 
             _log.Debug("Dispatching {messageType} {messageId} to {count} handlers took {elapsedMs:0} ms", 
-                messageType, messageId, handlersInvoked, stopwatch.Elapsed.TotalMilliseconds);
+                messageType, messageId, handlersInvoked, stopwatch.ElapsedMilliseconds);
 
             await next().ConfigureAwait(false);
         }

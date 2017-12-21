@@ -210,7 +210,7 @@ namespace Rebus.Config
                 var options = c.Get<Options>();
                 var busLifetimeEvents = c.Get<BusLifetimeEvents>();
                 var backoffStrategy = c.Get<ISyncBackoffStrategy>();
-                return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
+                return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>

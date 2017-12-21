@@ -50,8 +50,7 @@ namespace Rebus.Tests.Workers
             });
 
             // act
-            await _bus.Send("something")
-                .ConfigureAwait(false);
+            await _bus.Send("something");
 
             startedHandle.WaitOne();
            
@@ -80,9 +79,8 @@ namespace Rebus.Tests.Workers
             });
 
             // act
-            await _bus.Send("something")
-                .ConfigureAwait(false);
-
+            await _bus.Send("something");
+                
             finishedHandle.WaitOne();
 
             var timer = Stopwatch.StartNew();
@@ -108,13 +106,11 @@ namespace Rebus.Tests.Workers
             {
                 startedHandle.Set();
 
-                await Task.Delay(taskTakingTime)
-                    .ConfigureAwait(false);
+                await Task.Delay(taskTakingTime);
             });
 
             // act
-            await _bus.Send("something")
-                .ConfigureAwait(false);
+            await _bus.Send("something");
 
             startedHandle.WaitOne();
 

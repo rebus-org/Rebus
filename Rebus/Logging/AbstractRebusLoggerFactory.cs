@@ -13,14 +13,13 @@ namespace Rebus.Logging
     {
         static readonly Regex PlaceholderRegex = new Regex(@"{\w*[\:(\w|\.|\d|\-)*]+}", RegexOptions.Compiled);
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Must get a logger instance for the given <paramref name="type"/>
+        /// </summary>
         protected abstract ILog GetLogger(Type type);
 
         /// <inheritdoc />
-        public ILog GetLogger<T>()
-        {
-            return GetLogger(typeof(T));
-        }
+        public ILog GetLogger<T>() => GetLogger(typeof(T));
 
         /// <summary>
         /// Renders the <paramref name="message"/> string by replacing placeholders on the form <code>{whatever}</code> with the

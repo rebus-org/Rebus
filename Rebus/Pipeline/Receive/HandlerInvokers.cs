@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Messages;
@@ -28,16 +27,20 @@ namespace Rebus.Pipeline.Receive
         public Message Message { get; }
 
         /// <summary>
+        /// Gets the number of handler invokers
+        /// </summary>
+        public int Count => _handlerInvokers.Count;
+
+        /// <summary>
+        /// Gets the handler invoker with the given <paramref name="index"/>
+        /// </summary>
+        public HandlerInvoker this[int index] => _handlerInvokers[index];
+
+        /// <summary>
         /// Gets all the <see cref="HandlerInvoker"/>s that this <see cref="HandlerInvokers"/> contains
         /// </summary>
-        public IEnumerator<HandlerInvoker> GetEnumerator()
-        {
-            return _handlerInvokers.GetEnumerator();
-        }
+        public IEnumerator<HandlerInvoker> GetEnumerator() => _handlerInvokers.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

@@ -40,7 +40,7 @@ namespace Rebus.Auditing.Messages
             headers[AuditHeaders.MachineName] = GetMachineName();
         }
 
-        private static string GetMachineName()
+        static string GetMachineName()
         {
 #if NETSTANDARD1_3
             return Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");

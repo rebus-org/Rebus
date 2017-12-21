@@ -16,9 +16,7 @@ namespace Rebus.Transport
         /// </summary>
         public static T GetOrNull<T>(this ITransactionContext context, string key) where T : class
         {
-            object item;
-
-            if (!context.Items.TryGetValue(key, out item))
+            if (!context.Items.TryGetValue(key, out var item))
             {
                 return default(T);
             }
@@ -38,9 +36,7 @@ namespace Rebus.Transport
         /// </summary>
         public static T GetOrThrow<T>(this ITransactionContext context, string key)
         {
-            object item;
-
-            if (!context.Items.TryGetValue(key, out item))
+            if (!context.Items.TryGetValue(key, out var item))
             {
                 throw new KeyNotFoundException($"Could not find an item with the key '{key}'");
             }

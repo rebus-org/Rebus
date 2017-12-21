@@ -50,8 +50,7 @@ namespace Rebus.Auditing.Messages
 
         static bool IsPublishedMessage(TransportMessage transportMessage)
         {
-            string intent;
-            return transportMessage.Headers.TryGetValue(Headers.Intent, out intent)
+            return transportMessage.Headers.TryGetValue(Headers.Intent, out var intent)
                    && intent == Headers.IntentOptions.PublishSubscribe;
         }
     }
