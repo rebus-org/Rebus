@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
-using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
-using Rebus.Transport;
-
 // ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Retry.FailFast
