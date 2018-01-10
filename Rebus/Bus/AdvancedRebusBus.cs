@@ -173,6 +173,17 @@ namespace Rebus.Bus
                 return _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
             }
 
+            public Task Defer(string destinationAddress, TimeSpan delay, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Defer, optionalHeaders);
+
+                logicalMessage.SetDeferHeaders(RebusTime.Now + delay, destinationAddress);
+
+                var timeoutManagerAddress = _rebusBus.GetTimeoutManagerAddress();
+
+                return _rebusBus.InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+            }
+
             public Task SendRoutingSlip(Itinerary itinerary, object message, Dictionary<string, string> optionalHeaders = null)
             {
                 var logicalMessage = CreateMessage(message, Operation.Send, optionalHeaders);

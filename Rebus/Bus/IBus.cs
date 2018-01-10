@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Bus.Advanced;
 using Rebus.Messages;
-using Rebus.Routing;
 
 namespace Rebus.Bus
 {
@@ -23,14 +22,14 @@ namespace Rebus.Bus
         Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// Defers the message delivery into the future, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
         /// in a header, the bus instance's own input queue address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
         Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
+        /// Defers the message delivery into the future, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
         /// in a header, the endpoint mapping corresponding to the sent message will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>

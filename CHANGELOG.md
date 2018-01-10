@@ -1219,6 +1219,7 @@
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
 * Add option to omit type information from serialized JSON text, thus saving lots of space and making the serialized JSON more pure at the expense of .NET object serialization power
+* Provide `Defer` method on `IRoutingApi` allowing for easily deferring explicitly routed messages
 
 ---
 
