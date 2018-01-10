@@ -25,6 +25,35 @@ namespace Rebus.Serialization.Json
         }
 
         /// <summary>
+        /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages, using appropriate <see cref="JsonSerializerSettings"/> 
+        /// depending on the given <paramref name="mode"/>. Message bodies are UTF8-encoded.
+        /// Passing <see cref="JsonInteroperabilityMode.FullTypeInformation"/> as the value for <paramref name="mode"/> is equivalent
+        /// to calling <see cref="UseNewtonsoftJson(StandardConfigurer{ISerializer})"/> which in turn
+        /// is equivalent to not explicitly configuring the serializer because it's the default serialization :)
+        /// </summary>
+        public static void UseNewtonsoftJson(this StandardConfigurer<ISerializer> configurer, JsonInteroperabilityMode mode)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+            TypeNameHandling GetTypeNameHandling()
+            {
+                switch (mode)
+                {
+                    case JsonInteroperabilityMode.FullTypeInformation:
+                        return TypeNameHandling.All;
+                    case JsonInteroperabilityMode.PureJson:
+                        return TypeNameHandling.None;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Unknown {typeof(JsonInteroperabilityMode).Name} value");
+                }
+            }
+
+            var settings = new JsonSerializerSettings {TypeNameHandling = GetTypeNameHandling()};
+
+            RegisterSerializer(configurer, settings, Encoding.UTF8);
+        }
+
+        /// <summary>
         /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages, using the specified <see cref="JsonSerializerSettings"/> and 
         /// This allows you to customize almost every aspect of how messages are actually serialized/deserialized.
         /// </summary>
@@ -40,9 +69,7 @@ namespace Rebus.Serialization.Json
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
-            encoding = encoding ?? Encoding.UTF8;
-
-            configurer.Register(c => new JsonSerializer(settings, encoding));
+            configurer.Register(c => new JsonSerializer(settings, encoding ?? Encoding.UTF8));
         }
     }
 }

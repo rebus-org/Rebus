@@ -24,7 +24,7 @@ namespace Rebus.Tests.Serialization
         [Test]
         public async Task WorksWithoutFullTypeNameHandlingToo()
         {
-            var simpleSerializer = new JsonSerializer(new JsonSerializerSettings());
+            var simpleSerializer = new JsonSerializer(new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
             var message = new RandomMessage("hei allihoppa");
             var transportMessage = await simpleSerializer.Serialize(new Message(new Dictionary<string, string>(), message));
             var roundtrippedMessage = (await simpleSerializer.Deserialize(transportMessage)).Body;
