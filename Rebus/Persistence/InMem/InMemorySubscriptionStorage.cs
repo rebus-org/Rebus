@@ -15,8 +15,7 @@ namespace Rebus.Persistence.InMem
 
         InMemorySubscriptionStorage(InMemorySubscriberStore subscriberStore, bool isCentralized)
         {
-            if (subscriberStore == null) throw new ArgumentNullException(nameof(subscriberStore));
-            _subscriberStore = subscriberStore;
+            _subscriberStore = subscriberStore ?? throw new ArgumentNullException(nameof(subscriberStore));
             IsCentralized = isCentralized;
         }
 
@@ -41,7 +40,7 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
+            if (topic == null) throw new ArgumentNullException(nameof(topic), "Please remember to specify a topic when getting subscribers for it");
             return _subscriberStore.GetSubscribers(topic);
         }
 
@@ -50,8 +49,8 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-            if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
+            if (topic == null) throw new ArgumentNullException(nameof(topic), "Please remember to specify a topic when subscribing");
+            if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress), "Please remember to specify a queue name as the subscriber address when subscribing");
             _subscriberStore.AddSubscriber(topic, subscriberAddress);
         }
 
@@ -60,8 +59,8 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-            if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
+            if (topic == null) throw new ArgumentNullException(nameof(topic), "Please remember to specify a topic when unsubscribing");
+            if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress), "Please remember to specify a queue name as the subscriber address when unsubscribing");
             _subscriberStore.RemoveSubscriber(topic, subscriberAddress);
         }
 
