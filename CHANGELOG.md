@@ -1222,6 +1222,7 @@
 * Provide `Defer` method on `IRoutingApi` allowing for easily deferring explicitly routed messages
 * Ability to "name the bus", allowing for using something more descriptive than the default "Rebus 1", "Rebus 2"S names
 * Change built-in console logging to use abbr. log lvls.
+* Deferred start capability - call `Create()` instead of `Start()`, and the returned `IBusStarter` can be used to start message processing when it is desired to do so
 
 ---
 
