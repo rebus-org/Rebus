@@ -1214,7 +1214,7 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b02
+## 5.0.0-b03
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
