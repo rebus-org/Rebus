@@ -25,6 +25,7 @@ namespace Rebus.Tests.Integration
             _activator = Using(new BuiltinHandlerActivator());
 
             _bus = Configure.With(_activator)
+                .Logging(l => l.Console())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "headers"))
                 .Start();
         }

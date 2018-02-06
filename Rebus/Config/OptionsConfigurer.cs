@@ -116,17 +116,17 @@ namespace Rebus.Config
                     var receivePipeline = pipeline.ReceivePipeline();
                     var sendPipeline = pipeline.SendPipeline();
 
-                    logger.Info(@"
+                    logger.Info($@"
 ------------------------------------------------------------------------------
 Message pipelines
 ------------------------------------------------------------------------------
 Send pipeline:
-{sendPipeline}
+{Format(sendPipeline, verbose)}
 
 Receive pipeline:
-{receivePipeline}
+{Format(receivePipeline, verbose)}
 ------------------------------------------------------------------------------
-", Format(sendPipeline, verbose), Format(receivePipeline, verbose));
+");
 
 
                     return pipeline;

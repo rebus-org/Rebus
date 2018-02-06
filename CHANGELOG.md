@@ -1221,6 +1221,7 @@
 * Add option to omit type information from serialized JSON text, thus saving lots of space and making the serialized JSON more pure at the expense of .NET object serialization power
 * Provide `Defer` method on `IRoutingApi` allowing for easily deferring explicitly routed messages
 * Ability to "name the bus", allowing for using something more descriptive than the default "Rebus 1", "Rebus 2"S names
+* Change built-in console logging to use abbr. log lvls.
 
 ---
 

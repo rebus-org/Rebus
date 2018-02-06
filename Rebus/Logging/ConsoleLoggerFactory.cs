@@ -122,8 +122,8 @@ namespace Rebus.Logging
                 _factory = factory;
 
                 _logLineFormatString = showTimestamps
-                    ? "{0} {1} {2} ({3}): {4}"
-                    : "{1} {2} ({3}): {4}";
+                    ? "[{2}] {0} {1} ({3}): {4}"
+                    : "[{2}] {1} ({3}): {4}";
             }
 
             public void Debug(string message, params object[] objs)
@@ -181,13 +181,13 @@ namespace Rebus.Logging
                 switch (level)
                 {
                     case LogLevel.Debug:
-                        return "DEBUG";
+                        return "DBG";
                     case LogLevel.Info:
-                        return "INFO";
+                        return "INF";
                     case LogLevel.Warn:
-                        return "WARN";
+                        return "WRN";
                     case LogLevel.Error:
-                        return "ERROR";
+                        return "ERR";
                     default:
                         throw new ArgumentOutOfRangeException(nameof(level));
                 }
