@@ -29,10 +29,7 @@ namespace Rebus.Bus
     {
         static int _busIdCounter;
 
-        readonly int _busId = Interlocked.Increment(ref _busIdCounter);
-
         readonly List<IWorker> _workers = new List<IWorker>();
-
         readonly BusLifetimeEvents _busLifetimeEvents;
         readonly IDataBus _dataBus;
         readonly IWorkerFactory _workerFactory;
@@ -42,6 +39,7 @@ namespace Rebus.Bus
         readonly ISubscriptionStorage _subscriptionStorage;
         readonly Options _options;
         readonly ILog _log;
+        readonly string _busName;
 
         /// <summary>
         /// Constructs the bus.
@@ -57,6 +55,10 @@ namespace Rebus.Bus
             _busLifetimeEvents = busLifetimeEvents;
             _dataBus = dataBus;
             _log = rebusLoggerFactory.GetLogger<RebusBus>();
+            
+            var defaultBusName = $"Rebus {Interlocked.Increment(ref _busIdCounter)}";
+            
+            _busName = options.OptionalBusName ?? defaultBusName;
         }
 
         /// <summary>
@@ -64,7 +66,7 @@ namespace Rebus.Bus
         /// </summary>
         public void Start(int numberOfWorkers)
         {
-            _log.Info("Starting bus {busId}", _busId);
+            _log.Info("Starting bus {busName}", _busName);
 
             _busLifetimeEvents.RaiseBusStarting();
 
@@ -536,7 +538,7 @@ namespace Rebus.Bus
         {
             lock (_workers)
             {
-                var workerName = $"Rebus {_busId} worker {_workers.Count + 1}";
+                var workerName = $"{_busName} worker {_workers.Count + 1}";
 
                 _log.Debug("Adding worker {workerName}", workerName);
 
@@ -600,10 +602,8 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Gets a label for this bus instance - e.g. "RebusBus 2" if this is the 2nd instance created, ever, in the current process
+        /// (or the name used when configuring it, if the name has been customized)
         /// </summary>
-        public override string ToString()
-        {
-            return $"RebusBus {_busId}";
-        }
+        public override string ToString() => $"RebusBus {_busName}";
     }
 }

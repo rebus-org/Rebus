@@ -65,5 +65,10 @@ namespace Rebus.Config
         /// Gets/sets the maximum timeout for workers to finish running active handlers after being signaled to stop.
         /// </summary>
         public TimeSpan WorkerShutdownTimeout { get; set; }
+
+        /// <summary>
+        /// Gets/sets the name of the bus. If this is left unset, bus instances will be named with numbers.
+        /// </summary>
+        public string OptionalBusName { get; set; }
     }
 }
