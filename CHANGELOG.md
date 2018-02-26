@@ -1214,7 +1214,7 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b04
+## 5.0.0-b05
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
@@ -1223,7 +1223,7 @@
 * Ability to "name the bus", allowing for using something more descriptive than the default "Rebus 1", "Rebus 2"S names
 * Change built-in console logging to use abbr. log lvls.
 * Deferred start capability - call `Create()` instead of `Start()`, and the returned `IBusStarter` can be used to start message processing when it is desired to do so
-* Make in-mem error tracker cleanup interval configurable (defaults to 300 seconds)
+* Make in-mem error tracking max age configurable (defaults to 10 minutes)
 
 ---
 

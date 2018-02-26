@@ -19,9 +19,9 @@ namespace Rebus.Retry.Simple
         public const int DefaultNumberOfDeliveryAttempts = 5;
 
         /// <summary>
-        /// Default delay in seconds between purging the in-mem error tracker, which will be used unless <see cref="ErrorTrackerCleanupIntervalSeconds"/> is set to something else.
+        /// Default age in minutes of an in-mem error tracking, which will be used unless <see cref="ErrorTrackingMaxAgeMinutes"/> is set to something else.
         /// </summary>
-        public const int DefaultErrorTrackerCleanupIntervalSeconds = 300;
+        public const int DefaultErrorTrackingMaxAgeMinutes = 10;
 
         /// <summary>
         /// Creates the settings with the given error queue address and number of delivery attempts, defaulting to <see cref="DefaultErrorQueueName"/> and <see cref="DefaultNumberOfDeliveryAttempts"/> 
@@ -32,7 +32,7 @@ namespace Rebus.Retry.Simple
             int maxDeliveryAttempts = DefaultNumberOfDeliveryAttempts,
             bool secondLevelRetriesEnabled = false,
             int errorDetailsHeaderMaxLength = int.MaxValue,
-            int errorTrackerCleanupIntervalSeconds = DefaultErrorTrackerCleanupIntervalSeconds
+            int errorTrackingMaxAgeMinutes = DefaultErrorTrackingMaxAgeMinutes
         )
         {
             if (errorDetailsHeaderMaxLength < 0)
@@ -43,15 +43,16 @@ namespace Rebus.Retry.Simple
             {
                 throw new ArgumentOutOfRangeException(nameof(maxDeliveryAttempts), maxDeliveryAttempts, "Please specify a non-negative number as the number of delivery attempts");
             }
-            if (errorTrackerCleanupIntervalSeconds <= 0)
+            if (errorTrackingMaxAgeMinutes <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(errorTrackerCleanupIntervalSeconds), errorTrackerCleanupIntervalSeconds, "Please specify an interval >= 1 seconds between purging the in-mem cache of tracked messages");
+                throw new ArgumentOutOfRangeException(nameof(errorTrackingMaxAgeMinutes), errorTrackingMaxAgeMinutes, 
+                    "Please specify the max age in minutes of an in-mem error tracking before it gets purged (must be >= 1)");
             }
             ErrorQueueAddress = errorQueueAddress ?? throw new ArgumentException("Error queue address cannot be NULL");
             MaxDeliveryAttempts = maxDeliveryAttempts;
             SecondLevelRetriesEnabled = secondLevelRetriesEnabled;
             ErrorDetailsHeaderMaxLength = errorDetailsHeaderMaxLength;
-            ErrorTrackerCleanupIntervalSeconds = errorTrackerCleanupIntervalSeconds;
+            ErrorTrackingMaxAgeMinutes = errorTrackingMaxAgeMinutes;
         }
 
         /// <summary>
@@ -76,10 +77,10 @@ namespace Rebus.Retry.Simple
         public int ErrorDetailsHeaderMaxLength { get; set; }
 
         /// <summary>
-        /// Configures the interval in seconds between purging tracked messages in the in-mem error tracker.
+        /// Configures the maximum age in minutes of an in-mem error tracking.
         /// This is a safety precaution, because the in-mem error tracker can end up tracking messages that it never sees
         /// again if multiple bus instances are consuming messages from the same queue.
         /// </summary>
-        public int ErrorTrackerCleanupIntervalSeconds { get; set; }
+        public int ErrorTrackingMaxAgeMinutes { get; set; }
     }
 }

@@ -10,6 +10,7 @@ using Rebus.Retry.Simple;
 using Rebus.Threading;
 using Rebus.Time;
 using Rebus.Transport;
+// ReSharper disable RedundantArgumentDefaultValue
 
 #pragma warning disable 1998
 
@@ -46,7 +47,7 @@ namespace Rebus.Retry.ErrorTracking
             _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(
                 BackgroundTaskName,
                 CleanupOldTrackedErrors,
-                intervalSeconds: _simpleRetryStrategySettings.ErrorTrackerCleanupIntervalSeconds
+                intervalSeconds: 10
             );
         }
 
@@ -145,12 +146,12 @@ namespace Rebus.Retry.ErrorTracking
 
         async Task CleanupOldTrackedErrors()
         {
-            ErrorTracking _;
+            var maxAge = TimeSpan.FromMinutes(_simpleRetryStrategySettings.ErrorTrackingMaxAgeMinutes);
 
             _trackedErrors
                 .ToList()
-                .Where(e => e.Value.ElapsedSinceLastError > TimeSpan.FromMinutes(10))
-                .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out _));
+                .Where(e => e.Value.ElapsedSinceLastError > maxAge)
+                .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out var _));
         }
 
         class ErrorTracking

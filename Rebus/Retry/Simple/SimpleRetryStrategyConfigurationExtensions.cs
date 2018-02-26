@@ -26,7 +26,7 @@ namespace Rebus.Retry.Simple
             int maxDeliveryAttempts = SimpleRetryStrategySettings.DefaultNumberOfDeliveryAttempts,
             bool secondLevelRetriesEnabled = false,
             int errorDetailsHeaderMaxLength = int.MaxValue,
-            int errorTrackerCleanupIntervalSeconds = SimpleRetryStrategySettings.DefaultErrorTrackerCleanupIntervalSeconds
+            int errorTrackerCleanupIntervalSeconds = SimpleRetryStrategySettings.DefaultErrorTrackingMaxAgeMinutes
         )
         {
             if (optionsConfigurer == null) throw new ArgumentNullException(nameof(optionsConfigurer));
