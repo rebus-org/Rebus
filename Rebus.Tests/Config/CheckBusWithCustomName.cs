@@ -33,10 +33,10 @@ namespace Rebus.Tests.Config
 
             Console.WriteLine(string.Join(Environment.NewLine, lines));
 
-            var startLine = lines.FirstOrDefault(line => line.ToString().Contains("Starting bus"))
-                ?? throw new AssertionException("Could not find log line containg the test 'Starting bus'");
+            var startLine = lines.FirstOrDefault(line => line.ToString().Contains(@"Bus ""DefaultBus"" started"))
+                ?? throw new AssertionException(@"Could not find log line containg the text 'Bus ""DefaultBus"" started'");
 
-            Assert.That(startLine.ToString(), Contains.Substring(@"Starting bus ""DefaultBus"""));
+            Assert.That(startLine.ToString(), Contains.Substring(@"Bus ""DefaultBus"" started"));
         }
     }
 }
