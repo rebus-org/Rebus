@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
+using Rebus.Retry.Simple;
 using Rebus.Threading;
 using Rebus.Time;
+using Rebus.Transport;
 
 #pragma warning disable 1998
 
@@ -21,7 +23,8 @@ namespace Rebus.Retry.ErrorTracking
         const string BackgroundTaskName = "CleanupTrackedErrors";
 
         readonly ILog _log;
-        readonly int _maxDeliveryAttempts;
+        readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
+        readonly ITransport _transport;
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly IAsyncTask _cleanupOldTrackedErrorsTask;
 
@@ -30,19 +33,33 @@ namespace Rebus.Retry.ErrorTracking
         /// <summary>
         /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
         /// </summary>
-        public InMemErrorTracker(int maxDeliveryAttempts, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
+        public InMemErrorTracker(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, ITransport transport)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
-            _maxDeliveryAttempts = maxDeliveryAttempts;
+            
+            _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            
             _log = rebusLoggerFactory.GetLogger<InMemErrorTracker>();
-            _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(BackgroundTaskName, CleanupOldTrackedErrors, intervalSeconds: 60);
+            
+            _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(
+                BackgroundTaskName,
+                CleanupOldTrackedErrors,
+                intervalSeconds: _simpleRetryStrategySettings.ErrorTrackerCleanupIntervalSeconds
+            );
         }
 
         /// <summary>
         /// Initializes the in-mem error tracker - starts a background task that periodically cleans up tracked errors that haven't had any activity for 10 minutes or more
         /// </summary>
-        public void Initialize() => _cleanupOldTrackedErrorsTask.Start();
+        public void Initialize()
+        {
+            // if it's a one-way client, then there's no reason to start the task
+            if (string.IsNullOrWhiteSpace(_transport.Address)) return;
+
+            _cleanupOldTrackedErrorsTask.Start();
+        }
 
         /// <summary>
         /// Registers the given <paramref name="exception"/> under the supplied <paramref name="messageId"/>
@@ -69,7 +86,7 @@ namespace Rebus.Retry.ErrorTracking
             if (!hasTrackingForThisMessage) return false;
 
             var hasFailedTooManyTimes = existingTracking.Final
-                                        || existingTracking.ErrorCount >= _maxDeliveryAttempts;
+                                        || existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
 
             return hasFailedTooManyTimes;
         }

@@ -217,10 +217,11 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
             {
+                var transport = c.Get<ITransport>();
                 var settings = c.Get<SimpleRetryStrategySettings>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                return new InMemErrorTracker(settings.MaxDeliveryAttempts, rebusLoggerFactory, asyncTaskFactory);
+                return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, transport);
             });
 
             PossiblyRegisterDefault<IErrorHandler>(c =>

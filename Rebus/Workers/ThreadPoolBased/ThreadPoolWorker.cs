@@ -108,10 +108,6 @@ namespace Rebus.Workers.ThreadPoolBased
                     await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }
             }
-            catch (TaskCanceledException)
-            {
-                // it's fine - just a sign that we are shutting down
-            }
             catch (OperationCanceledException)
             {
                 // it's fine - just a sign that we are shutting down
@@ -127,11 +123,6 @@ namespace Rebus.Workers.ThreadPoolBased
             try
             {
                 return await _transport.Receive(context, token).ConfigureAwait(false);
-            }
-            catch (TaskCanceledException)
-            {
-                // it's fine - just a sign that we are shutting down
-                throw;
             }
             catch (OperationCanceledException)
             {

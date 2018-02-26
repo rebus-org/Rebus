@@ -20,15 +20,29 @@ namespace Rebus.Retry.Simple
         /// <param name="maxDeliveryAttempts">Specifies how many delivery attempts should be made before forwarding a failed message to the error queue</param>
         /// <param name="secondLevelRetriesEnabled">Specifies whether second level retries should be enabled - when enabled, the message will be dispatched wrapped in an <see cref="IFailed{TMessage}"/> after the first <paramref name="maxDeliveryAttempts"/> delivery attempts, allowing a different handler to handle the message. Dispatch of the <see cref="IFailed{TMessage}"/> is subject to the same <paramref name="maxDeliveryAttempts"/> delivery attempts</param>
         /// <param name="errorDetailsHeaderMaxLength">Specifies a MAX length of the error details to be enclosed as the <see cref="Headers.ErrorDetails"/> header. As the enclosed error details can sometimes become very long (especially when using many delivery attempts), depending on the transport's capabilities it might sometimes be necessary to truncate the error details</param>
+        /// <param name="errorTrackerCleanupIntervalSeconds">Specifies the interval between purging the in-mem error tracker for tracked messages that have not had any activity registered on them.</param>
         public static void SimpleRetryStrategy(this OptionsConfigurer optionsConfigurer,
             string errorQueueAddress = SimpleRetryStrategySettings.DefaultErrorQueueName,
             int maxDeliveryAttempts = SimpleRetryStrategySettings.DefaultNumberOfDeliveryAttempts,
             bool secondLevelRetriesEnabled = false,
-            int errorDetailsHeaderMaxLength = int.MaxValue)
+            int errorDetailsHeaderMaxLength = int.MaxValue,
+            int errorTrackerCleanupIntervalSeconds = SimpleRetryStrategySettings.DefaultErrorTrackerCleanupIntervalSeconds
+        )
         {
             if (optionsConfigurer == null) throw new ArgumentNullException(nameof(optionsConfigurer));
 
-            optionsConfigurer.Register(c => new SimpleRetryStrategySettings(errorQueueAddress, maxDeliveryAttempts, secondLevelRetriesEnabled, errorDetailsHeaderMaxLength));
+            optionsConfigurer.Register(c =>
+            {
+                var settings = new SimpleRetryStrategySettings(
+                    errorQueueAddress,
+                    maxDeliveryAttempts,
+                    secondLevelRetriesEnabled,
+                    errorDetailsHeaderMaxLength,
+                    errorTrackerCleanupIntervalSeconds
+                );
+
+                return settings;
+            });
 
             if (secondLevelRetriesEnabled)
             {

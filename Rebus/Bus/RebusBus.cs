@@ -66,15 +66,13 @@ namespace Rebus.Bus
         /// </summary>
         public void Start(int numberOfWorkers)
         {
-            _log.Info("Starting bus {busName}", _busName);
-
             _busLifetimeEvents.RaiseBusStarting();
 
             SetNumberOfWorkers(numberOfWorkers);
 
             _busLifetimeEvents.RaiseBusStarted();
 
-            _log.Info("Started");
+            _log.Info("Bus {busName} started", _busName);
         }
 
         /// <summary>
@@ -478,6 +476,8 @@ namespace Rebus.Bus
                 _disposed = true;
 
                 _busLifetimeEvents.RaiseBusDisposed();
+
+                _log.Info("Bus {busName} stopped", _busName);
             }
         }
 

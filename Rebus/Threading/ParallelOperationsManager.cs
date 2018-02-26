@@ -36,7 +36,6 @@ namespace Rebus.Threading
             return new ParallelOperation(canContinue, this);
         }
 
-
         void OperationFinished()
         {
             _semaphore.Release(1);

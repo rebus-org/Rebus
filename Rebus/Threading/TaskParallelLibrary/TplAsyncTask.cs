@@ -45,13 +45,10 @@ namespace Rebus.Threading.TaskParallelLibrary
         /// </summary>
         public TimeSpan Interval
         {
-            get { return _interval; }
-            set
-            {
-                _interval = value < TimeSpan.FromMilliseconds(100)
-                    ? TimeSpan.FromMilliseconds(100)
-                    : value;
-            }
+            get => _interval;
+            set => _interval = value < TimeSpan.FromMilliseconds(100)
+                ? TimeSpan.FromMilliseconds(100)
+                : value;
         }
 
         /// <summary>
@@ -84,17 +81,21 @@ namespace Rebus.Threading.TaskParallelLibrary
                         {
                             await _action().ConfigureAwait(false);
                         }
-                        catch (TaskCanceledException)
+                        catch (OperationCanceledException)
                         {
                             throw;
                         }
                         catch (Exception exception)
                         {
-                            _log.Warn("Exception in periodic task {taskDescription}: {exception}", _description, exception);
+                            _log.Warn("Exception in periodic task {taskDescription}: {exception}", _description,
+                                exception);
                         }
                     }
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
+                {
+                }
+                finally
                 {
                     _finished.Set();
                 }
