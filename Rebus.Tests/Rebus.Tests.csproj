@@ -46,7 +46,7 @@
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
     <PackageReference Include="FluentAssertions" Version="4.19.2" />
     <PackageReference Include="NUnit" Version="3.7.1" />
   </ItemGroup>
