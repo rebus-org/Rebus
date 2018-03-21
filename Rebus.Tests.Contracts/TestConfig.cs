@@ -15,6 +15,8 @@ namespace Rebus.Tests.Contracts
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test");
 #elif NETSTANDARD1_3
         return Path.Combine(AppContext.BaseDirectory, "test");
+#elif NETSTANDARD2_0
+        return Path.Combine(AppContext.BaseDirectory, "test");
 #endif
 
         }
