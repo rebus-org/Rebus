@@ -73,11 +73,8 @@ namespace Rebus.Serialization.Json
             var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
             var bytes = _encoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
-#if NET45
+
             headers[Headers.ContentType] = _encodingHeaderValue;
-#elif NETSTANDARD1_3
-            headers[Headers.ContentType] = _encodingHeaderValue;
-#endif
 
             if (!headers.ContainsKey(Headers.Type))
             {
