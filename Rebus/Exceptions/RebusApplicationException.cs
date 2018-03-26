@@ -1,6 +1,8 @@
 ﻿using System;
 #if NET45
 using System.Runtime.Serialization;
+#elif NETSTANDARD2_0
+using System.Runtime.Serialization;
 #endif
 
 namespace Rebus.Exceptions
@@ -9,6 +11,8 @@ namespace Rebus.Exceptions
     /// Generic application exception to use when something bad happens that is pretty unexpected and should be taken seriously
     /// </summary>
 #if NET45
+    [Serializable]
+#elif NETSTANDARD2_0
     [Serializable]
 #endif
     public class RebusApplicationException : Exception
@@ -30,6 +34,14 @@ namespace Rebus.Exceptions
         }
 
 #if NET45
+        /// <summary>
+        /// Happy cross-domain serialization!
+        /// </summary>
+        public RebusApplicationException(SerializationInfo info, StreamingContext context)
+            :base(info, context)
+        {
+        }
+#elif NETSTANDARD2_0
         /// <summary>
         /// Happy cross-domain serialization!
         /// </summary>

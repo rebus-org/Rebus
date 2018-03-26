@@ -15,6 +15,8 @@ namespace Rebus.DataBus
     /// </summary>
 #if NET45
     [Serializable]
+#elif NETSTANDARD2_0
+    [Serializable]
 #endif
     public class DataBusAttachment
     {
