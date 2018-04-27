@@ -16,6 +16,7 @@ using Rebus.Pipeline.Send;
 using Rebus.Routing;
 using Rebus.Subscriptions;
 using Rebus.Time;
+using Rebus.Topic;
 using Rebus.Transport;
 using Rebus.Workers;
 // ReSharper disable ArgumentsStyleLiteral
@@ -40,11 +41,12 @@ namespace Rebus.Bus
         readonly Options _options;
         readonly ILog _log;
         readonly string _busName;
+        readonly ITopicNameConvention _topicNameConvention;
 
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus, ITopicNameConvention topicNameConvention)
         {
             _workerFactory = workerFactory;
             _router = router;
@@ -55,6 +57,7 @@ namespace Rebus.Bus
             _busLifetimeEvents = busLifetimeEvents;
             _dataBus = dataBus;
             _log = rebusLoggerFactory.GetLogger<RebusBus>();
+            _topicNameConvention = topicNameConvention;
             
             var defaultBusName = $"Rebus {Interlocked.Increment(ref _busIdCounter)}";
             
@@ -195,7 +198,7 @@ namespace Rebus.Bus
         /// </summary>
         public Task Subscribe(Type eventType)
         {
-            var topic = eventType.GetSimpleAssemblyQualifiedName();
+            var topic = _topicNameConvention.GetTopic(eventType);
 
             return InnerSubscribe(topic);
         }
@@ -213,7 +216,7 @@ namespace Rebus.Bus
         /// </summary>
         public Task Unsubscribe(Type eventType)
         {
-            var topic = eventType.GetSimpleAssemblyQualifiedName();
+            var topic = _topicNameConvention.GetTopic(eventType);
 
             return InnerUnsubscribe(topic);
         }
@@ -236,7 +239,7 @@ namespace Rebus.Bus
             if (eventMessage == null) throw new ArgumentNullException(nameof(eventMessage));
 
             var messageType = eventMessage.GetType();
-            var topic = messageType.GetSimpleAssemblyQualifiedName();
+            var topic = _topicNameConvention.GetTopic(messageType);
 
             return InnerPublish(topic, eventMessage, optionalHeaders);
         }
