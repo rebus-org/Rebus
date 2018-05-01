@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using JsonSerializer = Rebus.Serialization.Json.JsonSerializer;
+#pragma warning disable 4014
 
 namespace Rebus.Tests.Serialization
 {
@@ -19,6 +21,50 @@ namespace Rebus.Tests.Serialization
         protected override void SetUp()
         {
             _serializer = new JsonSerializer();
+        }
+
+        /*
+         Initial:
+Made 23133 iterations in 5s
+Made 81106 iterations in 5s
+Made 104869 iterations in 5s
+Made 111535 iterations in 5s
+Made 104705 iterations in 5s
+
+        With type cache:
+Made 44492 iterations in 5s
+Made 284389 iterations in 5s
+Made 286152 iterations in 5s
+Made 276416 iterations in 5s
+Made 274822 iterations in 5s
+
+*/
+        [Test]
+        [Repeat(5)]
+        public async Task MeasureRate()
+        {
+            var iterations = 0L;
+            var keepRunning = true;
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
+                Volatile.Write(ref keepRunning, false);
+            });
+
+            var headers = new Dictionary<string, string>{};
+            var message = new Message(headers, new RandomMessage("hello thereø how's it goin?"));
+            var transportMessage = await _serializer.Serialize(message);
+
+            while (Volatile.Read(ref keepRunning))
+            {
+                await _serializer.Deserialize(transportMessage);
+
+                iterations++;
+            }
+
+            Console.WriteLine($"Made {iterations} iterations in 5s");
         }
 
         [Test]

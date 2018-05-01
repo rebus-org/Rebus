@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -140,15 +141,15 @@ namespace Rebus.Serialization.Json
             return new Message(headers, bodyObject);
         }
 
+        static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>();
+
         static Type GetTypeOrNull(TransportMessage transportMessage)
         {
             if (!transportMessage.Headers.TryGetValue(Headers.Type, out var typeName)) return null;
 
             try
             {
-                var type = Type.GetType(typeName);
-
-                return type;
+                return TypeCache.GetOrAdd(typeName, Type.GetType);
             }
             catch (Exception exception)
             {

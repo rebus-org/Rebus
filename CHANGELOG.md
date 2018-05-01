@@ -1227,6 +1227,7 @@
 * Update JSON.NET dep to 11.0.1
 * Introduce extensibility point `ITopicNameConvention` for defining how types are mapped to topics - thanks [heberop]
 * Factor 40 improvement of "simple assembly-qualified type name" lookup
+* Factor 2.5 improvement of type lookup in JSON serializer
 
 ---
 
