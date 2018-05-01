@@ -1214,7 +1214,7 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b09
+## 5.0.0-b10
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
@@ -1226,6 +1226,7 @@
 * Make in-mem error tracking max age configurable (defaults to 10 minutes)
 * Update JSON.NET dep to 11.0.1
 * Introduce extensibility point `ITopicNameConvention` for defining how types are mapped to topics - thanks [heberop]
+* Factor 40 improvement of "simple assembly-qualified type name" lookup
 
 ---
 
