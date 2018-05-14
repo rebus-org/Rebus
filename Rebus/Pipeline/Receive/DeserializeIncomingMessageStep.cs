@@ -19,7 +19,7 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public DeserializeIncomingMessageStep(ISerializer serializer)
         {
-            _serializer = serializer;
+            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
 
         /// <summary>

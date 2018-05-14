@@ -76,6 +76,8 @@ namespace Rebus.Persistence.FileSystem
             {
 #if NET45
                 _fileStream.Unlock(0, 1);
+#elif NETSTANDARD2_0
+                _fileStream.Unlock(0, 1);
 #endif
                 _fileStream.Dispose();
             }

@@ -32,6 +32,8 @@ using Rebus.Transport;
 using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
+using Rebus.Topic;
+
 // ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.Config
@@ -285,6 +287,8 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IDataBus>(c => new DisabledDataBus());
 
+            PossiblyRegisterDefault<ITopicNameConvention>(c => new DefaultTopicNameConvention());
+
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
             Action startAction = null;
 
@@ -297,7 +301,8 @@ namespace Rebus.Config
                 _options,
                 c.Get<IRebusLoggerFactory>(),
                 c.Get<BusLifetimeEvents>(),
-                c.Get<IDataBus>()));
+                c.Get<IDataBus>(),
+                c.Get<ITopicNameConvention>()));
 
             // since an error during resolution does not give access to disposable instances, we need to do this
             var disposableInstancesTrackedFromInitialResolution = new ConcurrentStack<IDisposable>();

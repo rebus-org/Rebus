@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using Rebus.Internals;
 
 namespace Rebus.Extensions
 {
@@ -10,6 +12,8 @@ namespace Rebus.Extensions
     /// </summary>
     public static class TypeExtensions
     {
+        static readonly ConcurrentDictionary<Type, string> SimpleAssemblyQualifiedTypeNameCache = new ConcurrentDictionary<Type, string>();
+
         /// <summary>
         /// Gets the type's base types (i.e. the <see cref="Type"/> for each implemented interface and for each class inherited from, all the way up to <see cref="Object"/>)
         /// </summary>
@@ -34,69 +38,9 @@ namespace Rebus.Extensions
         public static string GetSimpleAssemblyQualifiedName(this Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            return BuildSimpleAssemblyQualifiedName(type, new StringBuilder()).ToString();
-        }
 
-        static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
-        {
-#if NETSTANDARD1_3
-            var typeInfo = type.GetTypeInfo();
-            if (!typeInfo.IsGenericType)
-            {
-                sb.Append($"{type.FullName}, {typeInfo.Assembly.GetName().Name}");
-                return sb;
-            }
-
-            if (!type.IsConstructedGenericType)
-            {
-                return sb;
-            }
-
-            var fullName = type.FullName;
-            var requiredPosition = fullName.IndexOf("[", StringComparison.Ordinal);
-            var name = fullName.Substring(0, requiredPosition);
-            sb.Append($"{name}[");
-
-            var arguments = type.GetGenericArguments();
-            for (var i = 0; i < arguments.Length; i++)
-            {
-                sb.Append(i == 0 ? "[" : ", [");
-                BuildSimpleAssemblyQualifiedName(arguments[i], sb);
-                sb.Append("]");
-            }
-
-            sb.Append($"], {typeInfo.Assembly.GetName().Name}");
-
-            return sb;
-#else
-            if (!type.IsGenericType)
-            {
-                sb.Append($"{type.FullName}, {type.Assembly.GetName().Name}");
-                return sb;
-            }
-
-            if (!type.IsConstructedGenericType)
-            {
-                return sb;
-            }
-
-            var fullName = type.FullName;
-            var requiredPosition = fullName.IndexOf("[", StringComparison.Ordinal);
-            var name = fullName.Substring(0, requiredPosition);     
-            sb.Append($"{name}[");
-
-            var arguments = type.GetGenericArguments();
-            for (var i = 0; i < arguments.Length; i++)
-            {
-                sb.Append(i == 0 ? "[" : ", [");
-                BuildSimpleAssemblyQualifiedName(arguments[i], sb);
-                sb.Append("]");
-            }
-
-            sb.Append($"], {type.Assembly.GetName().Name}");
-
-            return sb;
-#endif
+            return SimpleAssemblyQualifiedTypeNameCache.GetOrAdd(type,
+                t => Shims.BuildSimpleAssemblyQualifiedName(t, new StringBuilder()).ToString());
         }
     }
 }

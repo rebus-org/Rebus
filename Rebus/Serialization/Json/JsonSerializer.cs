@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -73,11 +74,8 @@ namespace Rebus.Serialization.Json
             var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
             var bytes = _encoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
-#if NET45
+
             headers[Headers.ContentType] = _encodingHeaderValue;
-#elif NETSTANDARD1_3
-            headers[Headers.ContentType] = _encodingHeaderValue;
-#endif
 
             if (!headers.ContainsKey(Headers.Type))
             {
@@ -143,15 +141,15 @@ namespace Rebus.Serialization.Json
             return new Message(headers, bodyObject);
         }
 
+        static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>();
+
         static Type GetTypeOrNull(TransportMessage transportMessage)
         {
             if (!transportMessage.Headers.TryGetValue(Headers.Type, out var typeName)) return null;
 
             try
             {
-                var type = Type.GetType(typeName);
-
-                return type;
+                return TypeCache.GetOrAdd(typeName, Type.GetType);
             }
             catch (Exception exception)
             {
