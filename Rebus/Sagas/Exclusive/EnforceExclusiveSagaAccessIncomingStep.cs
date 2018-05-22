@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,8 +13,13 @@ namespace Rebus.Sagas.Exclusive
 {
     class EnforceExclusiveSagaAccessIncomingStep : IIncomingStep
     {
-        readonly ConcurrentDictionary<string, string> _locks = new ConcurrentDictionary<string, string>();
+        private IHandleSagaExlusiveLock _lockHandler;
         readonly SagaHelper _sagaHelper = new SagaHelper();
+
+        public EnforceExclusiveSagaAccessIncomingStep(IHandleSagaExlusiveLock lockHandler)
+        {
+            _lockHandler = lockHandler;
+        }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
@@ -67,10 +71,11 @@ namespace Rebus.Sagas.Exclusive
         {
             foreach (var id in lockIds)
             {
-                while (!_locks.TryAdd(id, messageId))
+                while (!await _lockHandler.AquireLockAsync(id))
                 {
                     await Task.Yield();
                 }
+                 
             }
         }
 
@@ -78,7 +83,7 @@ namespace Rebus.Sagas.Exclusive
         {
             foreach (var lockId in lockIds)
             {
-                _locks.TryRemove(lockId, out var dummy);
+                await _lockHandler.ReleaseLockAsync(lockId);
             }
         }
 
