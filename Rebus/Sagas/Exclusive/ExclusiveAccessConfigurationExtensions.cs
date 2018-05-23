@@ -22,7 +22,6 @@ namespace Rebus.Sagas.Exclusive
                 .Decorate(c =>
                 {
                     var pipeline = c.Get<IPipeline>();
-                    //var step = new EnforceExclusiveSagaAccessIncomingStep();
                     var cancellationToken = c.Get<CancellationToken>();
                     var step = new NewEnforceExclusiveSagaAccessIncomingStep(1000, cancellationToken);
 
@@ -32,9 +31,9 @@ namespace Rebus.Sagas.Exclusive
         }
 
         /// <summary>
-        /// Forces exclusive using a lockhandler defined by <see cref="IHandleSagaExlusiveLock"/>
+        /// Forces exclusive using a lockhandler defined by <see cref="IExclusiveSagaAccessLock"/>
         /// </summary>
-        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer, IHandleSagaExlusiveLock locker)
+        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer, IExclusiveSagaAccessLock locker)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
@@ -43,9 +42,8 @@ namespace Rebus.Sagas.Exclusive
                 .Decorate(c =>
                 {
                     var pipeline = c.Get<IPipeline>();
-                    //var step = new EnforceExclusiveSagaAccessIncomingStep();
                     var cancellationToken = c.Get<CancellationToken>();
-                    var step = new EnforceExclusiveSagaAccessIncomingStep(locker);
+                    var step = new EnforceExclusiveSagaAccessIncomingStep(locker, cancellationToken);
 
                     return new PipelineStepInjector(pipeline)
                         .OnReceive(step, PipelineRelativePosition.Before, typeof(LoadSagaDataStep));

@@ -1,24 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Transport;
+// ReSharper disable ForCanBeConvertedToForeach
 #pragma warning disable 1998
 
 namespace Rebus.Sagas.Exclusive
 {
+    [StepDocumentation("Enforces exclusive access to saga data in the rest of the pipeline by acquiring locks for the relevant correlation properties.")]
     class EnforceExclusiveSagaAccessIncomingStep : IIncomingStep
     {
-        private IHandleSagaExlusiveLock _lockHandler;
+        readonly IExclusiveSagaAccessLock _lockHandler;
+        readonly CancellationToken _cancellationToken;
         readonly SagaHelper _sagaHelper = new SagaHelper();
 
-        public EnforceExclusiveSagaAccessIncomingStep(IHandleSagaExlusiveLock lockHandler)
+        public EnforceExclusiveSagaAccessIncomingStep(IExclusiveSagaAccessLock lockHandler, CancellationToken cancellationToken)
         {
             _lockHandler = lockHandler;
+            _cancellationToken = cancellationToken;
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -42,7 +45,7 @@ namespace Rebus.Sagas.Exclusive
             var correlationProperties = handlerInvokersForSagas
                 .Select(h => h.Saga)
                 .SelectMany(saga => _sagaHelper.GetCorrelationProperties(messageBody, saga).ForMessage(messageBody)
-                    .Select(correlationProperty => new {saga, correlationProperty}))
+                    .Select(correlationProperty => new { saga, correlationProperty }))
                     .ToList();
 
             var locksToObtain = correlationProperties
@@ -54,11 +57,11 @@ namespace Rebus.Sagas.Exclusive
                 })
                 .Select(a => a.ToString())
                 .OrderBy(str => str) // enforce consistent ordering to avoid deadlocks
-                .ToList();
+                .ToArray();
 
             try
             {
-                await WaitForLocks(locksToObtain, message.GetMessageId()).ConfigureAwait(false);
+                await WaitForLocks(locksToObtain).ConfigureAwait(false);
                 await next().ConfigureAwait(false);
             }
             finally
@@ -67,23 +70,22 @@ namespace Rebus.Sagas.Exclusive
             }
         }
 
-        async Task WaitForLocks(List<string> lockIds, string messageId)
+        async Task WaitForLocks(string[] lockIds)
         {
-            foreach (var id in lockIds)
+            for (var index = 0; index < lockIds.Length; index++)
             {
-                while (!await _lockHandler.AquireLockAsync(id))
+                while (!await _lockHandler.AquireLockAsync(lockIds[index], _cancellationToken))
                 {
                     await Task.Yield();
                 }
-                 
             }
         }
 
-        async Task ReleaseLocks(List<string> lockIds)
+        async Task ReleaseLocks(string[] lockIds)
         {
-            foreach (var lockId in lockIds)
+            for (var index = 0; index < lockIds.Length; index++)
             {
-                await _lockHandler.ReleaseLockAsync(lockId);
+                await _lockHandler.ReleaseLockAsync(lockIds[index]);
             }
         }
 

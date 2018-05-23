@@ -1214,7 +1214,7 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b10
+## 5.0.0-b11
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
@@ -1228,6 +1228,7 @@
 * Introduce extensibility point `ITopicNameConvention` for defining how types are mapped to topics - thanks [heberop]
 * Factor 40 improvement of "simple assembly-qualified type name" lookup
 * Factor 2.5 improvement of type lookup in JSON serializer
+* Introduce interface for locking saga data based on correlation properties, enabling the use of distributed locks - thanks [torangel]
 
 ---
 
