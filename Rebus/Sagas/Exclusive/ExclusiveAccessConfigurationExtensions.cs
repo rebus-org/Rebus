@@ -30,5 +30,26 @@ namespace Rebus.Sagas.Exclusive
                         .OnReceive(step, PipelineRelativePosition.Before, typeof(LoadSagaDataStep));
                 });
         }
+
+        /// <summary>
+        /// Forces exclusive using a lockhandler defined by <see cref="IHandleSagaExlusiveLock"/>
+        /// </summary>
+        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer, IHandleSagaExlusiveLock locker)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+            configurer
+                .OtherService<IPipeline>()
+                .Decorate(c =>
+                {
+                    var pipeline = c.Get<IPipeline>();
+                    //var step = new EnforceExclusiveSagaAccessIncomingStep();
+                    var cancellationToken = c.Get<CancellationToken>();
+                    var step = new EnforceExclusiveSagaAccessIncomingStep(locker);
+
+                    return new PipelineStepInjector(pipeline)
+                        .OnReceive(step, PipelineRelativePosition.Before, typeof(LoadSagaDataStep));
+                });
+        }
     }
 }
