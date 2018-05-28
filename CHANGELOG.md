@@ -1229,6 +1229,7 @@
 * Factor 40 improvement of "simple assembly-qualified type name" lookup
 * Factor 2.5 improvement of type lookup in JSON serializer
 * Introduce interface for locking saga data based on correlation properties, enabling the use of distributed locks - thanks [torangel]
+* Fail fast when message cannot be delivered to any handlers, basically assuming that the situation will not correct itself anyway
 
 ---
 
