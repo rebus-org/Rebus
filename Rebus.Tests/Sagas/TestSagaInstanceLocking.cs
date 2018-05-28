@@ -60,10 +60,10 @@ namespace Rebus.Tests.Sagas
             _bus = _activator.Bus;
         }
 
-        //[TestCase(10)]
+        [TestCase(10)]
         //[TestCase(100)]
         //[TestCase(1000)]
-        [TestCase(100)]
+        //[TestCase(100)]
         public async Task NotASingleConcurrencyExceptionPlease(int messageCount)
         {
             const string caseNumber = "case-123";
@@ -87,12 +87,19 @@ namespace Rebus.Tests.Sagas
             await Task.WhenAll(replyIdsToWaitFor
                 .Select(replyId => _bus.SendLocal(new SimulateReply(caseNumber, replyId))));
 
-            // wait until saga is completed
-            sagaWasMarkedAsComplete.WaitOrDie(TimeSpan.FromSeconds(100*messageCount / (double)10 + 5),
-                @"The saga was not completed within timeout. 
+            try
+            {
+                // wait until saga is completed
+                sagaWasMarkedAsComplete.WaitOrDie(TimeSpan.FromSeconds(10 * messageCount + 5),
+                    @"The saga was not completed within timeout. 
 
 This is most likely a sign that too many ConcurrencyExceptions 
 forced one or more messages into the error queue");
+            }
+            catch (Exception exception)
+            {
+                throw new AssertionException($@"The error queue has {_network.GetCount("error")} messages", exception);
+            }
 
             // check log for errors
             var errors = _listLoggerFactory.Where(l => l.Level == LogLevel.Error).ToList();
