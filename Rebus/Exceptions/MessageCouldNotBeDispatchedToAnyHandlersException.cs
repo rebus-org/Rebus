@@ -15,21 +15,12 @@ namespace Rebus.Exceptions
 #elif NETSTANDARD2_0
     [Serializable]
 #endif
-    public class FailFastException : Exception, IFailFastException
+    public class MessageCouldNotBeDispatchedToAnyHandlersException : RebusApplicationException, IFailFastException
     {
         /// <summary>
         /// Constructs the exception with the given message
         /// </summary>
-        public FailFastException(string message)
-            : base(message)
-        {
-        }
-
-        /// <summary>
-        /// Constructs the exception with the given message and inner exception
-        /// </summary>
-        public FailFastException(Exception innerException, string message)
-            : base(message, innerException)
+        public MessageCouldNotBeDispatchedToAnyHandlersException(string message) : base(message)
         {
         }
 
@@ -37,15 +28,15 @@ namespace Rebus.Exceptions
         /// <summary>
         /// Happy cross-domain serialization!
         /// </summary>
-        public FailFastException(SerializationInfo info, StreamingContext context)
-            :base(info, context)
+        public MessageCouldNotBeDispatchedToAnyHandlersException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
 #elif NETSTANDARD2_0
-        /// <summary>
-        /// Happy cross-domain serialization!
-        /// </summary>
-        public FailFastException(SerializationInfo info, StreamingContext context)
+/// <summary>
+/// Happy cross-domain serialization!
+/// </summary>
+        public MessageCouldNotBeDispatchedToAnyHandlersException(SerializationInfo info, StreamingContext context)
             :base(info, context)
         {
         }

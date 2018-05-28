@@ -13,9 +13,6 @@ namespace Rebus.Retry.FailFast
         /// <summary>
         /// Checks if a message with exception should fail fast
         /// </summary>
-        public virtual bool ShouldFailFast(string messageId, Exception exception)
-        {
-            return exception is FailFastException;
-        }
+        public virtual bool ShouldFailFast(string messageId, Exception exception) => exception is IFailFastException;
     }
 }

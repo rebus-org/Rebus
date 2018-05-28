@@ -11,6 +11,7 @@ using Rebus.Threading;
 using Rebus.Time;
 using Rebus.Transport;
 // ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable ArgumentsStyleLiteral
 
 #pragma warning disable 1998
 
@@ -38,12 +39,12 @@ namespace Rebus.Retry.ErrorTracking
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
-            
+
             _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
-            
+
             _log = rebusLoggerFactory.GetLogger<InMemErrorTracker>();
-            
+
             _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(
                 BackgroundTaskName,
                 CleanupOldTrackedErrors,
@@ -63,15 +64,25 @@ namespace Rebus.Retry.ErrorTracking
         }
 
         /// <summary>
+        /// Marks the given <paramref name="messageId"/> as "FINAL", meaning that it should be considered as "having failed too many times now"
+        /// </summary>
+        public void MarkAsFinal(string messageId)
+        {
+            _trackedErrors.AddOrUpdate(messageId,
+                id => new ErrorTracking(final: true),
+                (id, tracking) => tracking.MarkAsFinal());
+        }
+
+        /// <summary>
         /// Registers the given <paramref name="exception"/> under the supplied <paramref name="messageId"/>
         /// </summary>
-        public void RegisterError(string messageId, Exception exception, bool final = false)
+        public void RegisterError(string messageId, Exception exception)
         {
             var errorTracking = _trackedErrors.AddOrUpdate(messageId,
-                id => new ErrorTracking(exception, final),
-                (id, tracking) => tracking.AddError(exception, final));
+                id => new ErrorTracking(exception),
+                (id, tracking) => tracking.AddError(exception, tracking.Final));
 
-            var message = final
+            var message = errorTracking.Final
                 ? "Unhandled exception {errorNumber} (FINAL) while handling message with ID {messageId}"
                 : "Unhandled exception {errorNumber} while handling message with ID {messageId}";
 
@@ -158,14 +169,14 @@ namespace Rebus.Retry.ErrorTracking
         {
             readonly CaughtException[] _caughtExceptions;
 
-            ErrorTracking(IEnumerable<CaughtException> caughtExceptions, bool final)
+            ErrorTracking(IEnumerable<CaughtException> caughtExceptions, bool final = false)
             {
                 Final = final;
                 _caughtExceptions = caughtExceptions.ToArray();
             }
 
-            public ErrorTracking(Exception exception, bool final)
-                : this(new[] { new CaughtException(exception) }, final)
+            public ErrorTracking(Exception exception = null, bool final = false)
+                : this(exception != null ? new[] { new CaughtException(exception) } : new CaughtException[0], final)
             {
             }
 
@@ -177,8 +188,8 @@ namespace Rebus.Retry.ErrorTracking
 
             public ErrorTracking AddError(Exception caughtException, bool final)
             {
-                // don't change anymore if this one is already final
-                if (Final) return this;
+                //// don't change anymore if this one is already final
+                //if (Final) return this;
 
                 return new ErrorTracking(_caughtExceptions.Concat(new[] { new CaughtException(caughtException) }), final);
             }
@@ -191,6 +202,11 @@ namespace Rebus.Retry.ErrorTracking
                     var elapsedSinceLastError = timeOfMostRecentError.ElapsedUntilNow();
                     return elapsedSinceLastError;
                 }
+            }
+
+            public ErrorTracking MarkAsFinal()
+            {
+                return new ErrorTracking(_caughtExceptions, final: true);
             }
         }
 

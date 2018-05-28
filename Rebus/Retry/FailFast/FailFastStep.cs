@@ -46,7 +46,7 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
                 var messageId = transportMessage.GetMessageId();
                 if (_failFastChecker.ShouldFailFast(messageId, exception))
                 {
-                    _errorTracker.RegisterError(messageId, exception, final: true);
+                    _errorTracker.MarkAsFinal(messageId);
                 }
                 throw;
             }
