@@ -7,7 +7,7 @@ namespace Rebus.Pipeline
 {
     /// <summary>
     /// Decorator of <see cref="IPipeline"/> that can inject one or more steps into either pipeline,
-    /// positionint the injected steps relatively to another step by its type.
+    /// position in the injected steps relatively to another step by its type.
     /// Could probably be extended with more ways of detecting "the other step" than by its concrete type.
     /// </summary>
     public class PipelineStepInjector : IPipeline
