@@ -178,12 +178,16 @@ namespace Rebus.Tests.Contracts.Transports
 
             if (commitAndExpectTheMessagesToBeSent)
             {
-                Assert.That(allMessages.Count, Is.EqualTo(2));
-                Assert.That(allMessages.OrderBy(s => s), Is.EqualTo(new[] { "hej1", "hej2" }));
+                var receivedMessages = allMessages.OrderBy(s => s).ToArray();
+                
+                Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
+                
+                Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }), 
+                    $@"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
             }
             else
             {
-                Assert.That(allMessages.Count, Is.EqualTo(0));
+                Assert.That(allMessages.Count, Is.EqualTo(0), "The transaction was not completed, so we didn't expect any messages to have been sent");
             }
         }
 
