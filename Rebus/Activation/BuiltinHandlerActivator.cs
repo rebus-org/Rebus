@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+// ReSharper disable ForCanBeConvertedToForeach
 #pragma warning disable 1998
 
 namespace Rebus.Activation
@@ -22,6 +24,9 @@ namespace Rebus.Activation
         readonly List<Delegate> _handlerFactoriesMessageContextArgument = new List<Delegate>();
         readonly List<Delegate> _handlerFactoriesBusAndMessageContextArguments = new List<Delegate>();
 
+        readonly ConcurrentDictionary<Type, Func<IMessageContext, IHandleMessages>[]> _cachedHandlerFactories = new ConcurrentDictionary<Type, Func<IMessageContext, IHandleMessages>[]>();
+        readonly ConcurrentDictionary<Type, IHandleMessages[]> _cachedHandlers = new ConcurrentDictionary<Type, IHandleMessages[]>();
+
         /// <summary>
         /// Returns all relevant handler instances for the given message by looking up compatible registered functions and instance factory methods.
         /// </summary>
@@ -30,47 +35,54 @@ namespace Rebus.Activation
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
 
-            var instancesFromNoArgumentFactories = _handlerFactoriesNoArguments
-                .OfType<Func<IHandleMessages<TMessage>>>().Select(factory => factory());
+            var messageContext = MessageContext.Current;
+            if (messageContext == null)
+            {
+                throw new InvalidOperationException("Attempted to resolve handler with message context, but no current context could be found on MessageContext.Current");
+            }
 
-            var instancesFromMessageContextArgumentFactories = _handlerFactoriesMessageContextArgument
-                .OfType<Func<IMessageContext, IHandleMessages<TMessage>>>().Select(factory =>
-                {
-                    var messageContext = MessageContext.Current;
-                    if (messageContext == null)
-                    {
-                        throw new InvalidOperationException("Attempted to resolve handler with message context, but no current context could be found on MessageContext.Current");
-                    }
-                    return factory(messageContext);
-                });
+            var handlerFactories = _cachedHandlerFactories.GetOrAdd(typeof(TMessage), type =>
+            {
+                var noArgumentsInvokers = _handlerFactoriesNoArguments
+                    .OfType<Func<IHandleMessages<TMessage>>>()
+                    .Select(factory => (Func<IMessageContext, IHandleMessages>)(context => factory()));
 
-            var instancesFromBusAndMessageContextArgumentFactories = _handlerFactoriesBusAndMessageContextArguments
-                .OfType<Func<IBus, IMessageContext, IHandleMessages<TMessage>>>().Select(factory =>
-                {
-                    var messageContext = MessageContext.Current;
-                    if (messageContext == null)
-                    {
-                        throw new InvalidOperationException("Attempted to resolve handler with message context, but no current context could be found on MessageContext.Current");
-                    }
-                    return factory(Bus, messageContext);
-                });
+                var contextArgumentInvokers = _handlerFactoriesMessageContextArgument
+                    .OfType<Func<IMessageContext, IHandleMessages<TMessage>>>()
+                    .Select(factory => (Func<IMessageContext, IHandleMessages>)(factory));
 
-            var instancesJustInstances = _handlerInstances.OfType<IHandleMessages<TMessage>>();
+                var busAndContextInvokers = _handlerFactoriesBusAndMessageContextArguments
+                    .OfType<Func<IBus, IMessageContext, IHandleMessages<TMessage>>>()
+                    .Select(factory => (Func<IMessageContext, IHandleMessages>)(context => factory(Bus, context)));
 
-            var handlerInstances = instancesJustInstances
-                .Concat(instancesFromNoArgumentFactories)
-                .Concat(instancesFromMessageContextArgumentFactories)
-                .Concat(instancesFromBusAndMessageContextArgumentFactories)
-                .ToList();
+                return noArgumentsInvokers.Concat(contextArgumentInvokers).Concat(busAndContextInvokers).ToArray();
+            });
+
+            // ReSharper disable once CoVariantArrayConversion
+            var instances = (IHandleMessages<TMessage>[])_cachedHandlers.GetOrAdd(typeof(TMessage), type => _handlerInstances
+                .OfType<IHandleMessages<TMessage>>().ToArray());
+
+            var result = new IHandleMessages<TMessage>[handlerFactories.Length + instances.Length];
+
+            for (var index = 0; index < handlerFactories.Length; index++)
+            {
+                result[index] = (IHandleMessages<TMessage>)handlerFactories[index](messageContext);
+            }
 
             transactionContext.OnDisposed(() =>
             {
-                handlerInstances
-                    .OfType<IDisposable>()
-                    .ForEach(i => i.Dispose());
+                for (var index = 0; index < handlerFactories.Length; index++)
+                {
+                    if (result[index] is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                }
             });
 
-            return handlerInstances;
+            Array.Copy(instances, 0, result, handlerFactories.Length, instances.Length);
+
+            return result;
         }
 
         /// <summary>
