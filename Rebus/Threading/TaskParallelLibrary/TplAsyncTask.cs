@@ -69,31 +69,29 @@ namespace Rebus.Threading.TaskParallelLibrary
             {
                 try
                 {
-                    while (true)
+                    while (!token.IsCancellationRequested)
                     {
                         var intervalAboveZero = Interval;
 
                         await Task.Delay(intervalAboveZero, token).ConfigureAwait(false);
 
-                        token.ThrowIfCancellationRequested();
-
                         try
                         {
                             await _action().ConfigureAwait(false);
                         }
-                        catch (OperationCanceledException)
+                        catch (OperationCanceledException) when (token.IsCancellationRequested)
                         {
-                            throw;
+                            // it's fine, we're shutting down
                         }
                         catch (Exception exception)
                         {
-                            _log.Warn("Exception in periodic task {taskDescription}: {exception}", _description,
-                                exception);
+                            _log.Warn("Exception in periodic task {taskDescription}: {exception}", _description, exception);
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
                 {
+                    // it's fine, we're shutting down
                 }
                 finally
                 {
@@ -128,7 +126,6 @@ namespace Rebus.Threading.TaskParallelLibrary
                 _disposed = true;
             }
         }
-
 
         void LogStartStop(string message, params object[] objs)
         {

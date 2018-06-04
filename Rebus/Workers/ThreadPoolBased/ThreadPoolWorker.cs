@@ -96,6 +96,9 @@ namespace Rebus.Workers.ThreadPoolBased
                     {
                         context.Dispose();
 
+                        // get out quickly if we're shutting down
+                        if (token.IsCancellationRequested) return;
+
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
@@ -108,7 +111,7 @@ namespace Rebus.Workers.ThreadPoolBased
                     await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 // it's fine - just a sign that we are shutting down
             }
@@ -124,10 +127,10 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 return await _transport.Receive(context, token).ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 // it's fine - just a sign that we are shutting down
-                throw;
+                return null;
             }
             catch (Exception exception)
             {
