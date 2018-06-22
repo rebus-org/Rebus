@@ -21,11 +21,11 @@ namespace Rebus.Sagas.Idempotent
         /// <summary>
         /// Gets the addresses for which this <see cref="Messages.TransportMessage"/> is supposed to be sent
         /// </summary>
-        public IEnumerable<string> DestinationAddresses { get; private set; }
+        public IEnumerable<string> DestinationAddresses { get; }
         
         /// <summary>
         /// Gets the transport message
         /// </summary>
-        public TransportMessage TransportMessage { get; private set; }
+        public TransportMessage TransportMessage { get; }
     }
 }

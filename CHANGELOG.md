@@ -1214,7 +1214,7 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b13
+## 5.0.0-b14
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
@@ -1230,7 +1230,7 @@
 * Factor 2.5 improvement of type lookup in JSON serializer
 * Introduce interface for locking saga data based on correlation properties, enabling the use of distributed locks - thanks [torangel]
 * Fail fast when message cannot be delivered to any handlers, basically assuming that the situation will not correct itself anyway
-* Change accessibility of getters of `IdempotencyData` to accomodate certain stubborn serializers
+* Add appropriate constructors to `IdempotencyData` to accomodate certain stubborn serializers
 
 ---
 

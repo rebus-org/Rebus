@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Messages;
@@ -10,14 +11,33 @@ namespace Rebus.Sagas.Idempotent
     public class IdempotencyData
     {
         /// <summary>
+        /// Creates the idempotency data object, initializing it with the given list of outgoing message lists and record of handled message IDs
+        /// </summary>
+        public IdempotencyData(IEnumerable<OutgoingMessages> outgoingMessages = null, IEnumerable<string> handledMessageIds = null)
+        {
+            if (outgoingMessages != null)
+            {
+                OutgoingMessages.AddRange(outgoingMessages);
+            }
+
+            if (handledMessageIds != null)
+            {
+                foreach (var id in handledMessageIds)
+                {
+                    HandledMessageIds.Add(id);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the outgoing messages
         /// </summary>
-        public List<OutgoingMessages> OutgoingMessages { get; protected set; } = new List<OutgoingMessages>();
+        public List<OutgoingMessages> OutgoingMessages { get; } = new List<OutgoingMessages>();
 
         /// <summary>
         /// Getst the IDs of all messages that have been handled
         /// </summary>
-        public HashSet<string> HandledMessageIds { get; protected set; } = new HashSet<string>();
+        public HashSet<string> HandledMessageIds { get; } = new HashSet<string>();
 
         /// <summary>
         /// Gets whether the message with the given ID has already been handled
