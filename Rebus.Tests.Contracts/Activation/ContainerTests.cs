@@ -61,9 +61,8 @@ namespace Rebus.Tests.Contracts.Activation
         public void MultipleRegistrationsException()
         {
             var handlerActivator = _activationCtx.CreateActivator();
-            var containerAdapter = handlerActivator as IContainerAdapter;
 
-            if (containerAdapter == null)
+            if (!(handlerActivator is IContainerAdapter containerAdapter))
             {
                 Console.WriteLine($"Skipping this test because {handlerActivator} is not an IContainerAdapter");
                 return;

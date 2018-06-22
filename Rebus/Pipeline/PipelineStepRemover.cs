@@ -97,8 +97,7 @@ namespace Rebus.Pipeline
 
         void PossiblyDispose(IStep step)
         {
-            var disposable = step as IDisposable;
-            if (disposable == null) return;
+            if (!(step is IDisposable disposable)) return;
 
             if (_alreadyDisposedSteps.Contains(disposable)) return;
 

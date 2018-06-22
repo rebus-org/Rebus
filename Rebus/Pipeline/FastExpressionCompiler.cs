@@ -76,7 +76,7 @@ namespace FastExpressionCompiler
             return paramTypes;
         }
 
-        /// <summary>Compiles expression to delegate by emitting the IL. 
+        /// <summary>Compiles expression to delegate by emitting the IL.
         /// If sub-expressions are not supported by emitter, then the method returns null.
         /// The usage should be calling the method, if result is null then calling the Expression.Compile.</summary>
         /// <param name="bodyExpr">Lambda body.</param>
@@ -955,8 +955,7 @@ namespace FastExpressionCompiler
                     ok = TryEmit(((MemberAssignment)binding).Expression, ps, il, closure);
                     if (!ok) return false;
 
-                    var prop = binding.Member as PropertyInfo;
-                    if (prop != null)
+                    if (binding.Member is PropertyInfo prop)
                     {
                         var setMethod = prop.SetMethod;
                         if (setMethod == null)
@@ -965,8 +964,7 @@ namespace FastExpressionCompiler
                     }
                     else
                     {
-                        var field = binding.Member as FieldInfo;
-                        if (field == null)
+                        if (!(binding.Member is FieldInfo field))
                             return false;
                         il.Emit(OpCodes.Stfld, field);
                     }
@@ -999,15 +997,13 @@ namespace FastExpressionCompiler
                     if (!ok) return false;
                 }
 
-                var field = m.Member as FieldInfo;
-                if (field != null)
+                if (m.Member is FieldInfo field)
                 {
                     il.Emit(field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field);
                     return true;
                 }
 
-                var property = m.Member as PropertyInfo;
-                if (property != null)
+                if (m.Member is PropertyInfo property)
                 {
                     var getMethod = property.GetMethod;
                     if (getMethod == null)
@@ -1041,7 +1037,7 @@ namespace FastExpressionCompiler
                     lambdaClosure.UsedParamExpressions == null)
                     return true;
 
-                // sets closure param placeholder fields to the param values 
+                // sets closure param placeholder fields to the param values
                 var closedParamExprs = lambdaClosure.UsedParamExpressions;
                 for (var i = 0; i < closedParamExprs.Count; i++)
                 {
