@@ -9,39 +9,27 @@ namespace Rebus.Sagas.Idempotent
     /// </summary>
     public class IdempotencyData
     {
-        readonly List<OutgoingMessages> _outgoingMessages = new List<OutgoingMessages>();
-        readonly HashSet<string> _handledMessageIds = new HashSet<string>();
-
         /// <summary>
         /// Gets the outgoing messages
         /// </summary>
-        public List<OutgoingMessages> OutgoingMessages
-        {
-            get { return _outgoingMessages; }
-        }
+        public List<OutgoingMessages> OutgoingMessages { get; protected set; } = new List<OutgoingMessages>();
 
         /// <summary>
         /// Getst the IDs of all messages that have been handled
         /// </summary>
-        public HashSet<string> HandledMessageIds
-        {
-            get { return _handledMessageIds; }
-        }
+        public HashSet<string> HandledMessageIds { get; protected set; } = new HashSet<string>();
 
         /// <summary>
         /// Gets whether the message with the given ID has already been handled
         /// </summary>
-        public bool HasAlreadyHandled(string messageId)
-        {
-            return _handledMessageIds.Contains(messageId);
-        }
+        public bool HasAlreadyHandled(string messageId) => HandledMessageIds.Contains(messageId);
 
         /// <summary>
         /// Gets the outgoing messages for the incoming message with the given ID
         /// </summary>
         public IEnumerable<OutgoingMessage> GetOutgoingMessages(string messageId)
         {
-            var outgoingMessages = _outgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
+            var outgoingMessages = OutgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
 
             return outgoingMessages != null
                 ? outgoingMessages.MessagesToSend
@@ -51,10 +39,7 @@ namespace Rebus.Sagas.Idempotent
         /// <summary>
         /// Marks the message with the given ID as handled
         /// </summary>
-        public void MarkMessageAsHandled(string messageId)
-        {
-            _handledMessageIds.Add(messageId);
-        }
+        public void MarkMessageAsHandled(string messageId) => HandledMessageIds.Add(messageId);
 
         /// <summary>
         /// Adds the <see cref="TransportMessage"/> as an outgoing message destined for the addresses specified by <paramref name="destinationAddresses"/>
@@ -69,14 +54,14 @@ namespace Rebus.Sagas.Idempotent
 
         OutgoingMessages GetOrCreate(string messageId)
         {
-            _handledMessageIds.Add(messageId);
+            HandledMessageIds.Add(messageId);
 
-            var outgoingMessages = _outgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
+            var outgoingMessages = OutgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
 
             if (outgoingMessages != null) return outgoingMessages;
 
             outgoingMessages = new OutgoingMessages(messageId, new List<OutgoingMessage>());
-            _outgoingMessages.Add(outgoingMessages);
+            OutgoingMessages.Add(outgoingMessages);
 
             return outgoingMessages;
         }

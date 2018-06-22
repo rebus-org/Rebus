@@ -29,15 +29,17 @@ namespace Rebus.Sagas.Idempotent
         /// </summary>
         public IEnumerable<OutgoingMessage> MessagesToSend
         {
-            get { return _messagesToSend; }
+            get => _messagesToSend;
+            protected set
+            {
+                _messagesToSend.Clear();
+                _messagesToSend.AddRange(value);
+            }
         }
 
         /// <summary>
         /// Adds another <see cref="OutgoingMessage"/> as a side-effect of handling the message with the ID <see cref="MessageId"/>
         /// </summary>
-        public void Add(OutgoingMessage outgoingMessage)
-        {
-            _messagesToSend.Add(outgoingMessage);
-        }
+        public void Add(OutgoingMessage outgoingMessage) => _messagesToSend.Add(outgoingMessage);
     }
 }
