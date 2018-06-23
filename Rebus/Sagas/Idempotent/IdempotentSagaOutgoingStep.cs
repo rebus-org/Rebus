@@ -30,9 +30,8 @@ namespace Rebus.Sagas.Idempotent
 
                 if (handlerInvoker.HasSaga)
                 {
-                    var idempotentSagaData = handlerInvoker.GetSagaData() as IIdempotentSagaData;
 
-                    if (idempotentSagaData != null)
+                    if (handlerInvoker.GetSagaData() is IIdempotentSagaData idempotentSagaData)
                     {
                         var idempotencyData = idempotentSagaData.IdempotencyData;
 
