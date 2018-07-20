@@ -78,6 +78,11 @@ namespace Rebus.Pipeline.Receive
         /// not depend on it!)
         /// </summary>
         public abstract object Handler { get; }
+
+		/// <summary>
+		/// <c>true</c> if the handler will be invoked, as per normal, <c>false</c> if <see cref="SkipInvocation"/> has been called or the invoke will otherwise be skipped
+		/// </summary>
+		public abstract bool WillBeInvoked { get; }
     }
 
     /// <summary>
@@ -106,7 +111,11 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public override object Handler => _handler;
 
-        /// <summary>
+
+	    /// <inheritdoc />
+	    public override bool WillBeInvoked => _invokeHandler;
+
+	    /// <summary>
         /// Gets whther the contained handler object has a saga
         /// </summary>
         public override bool HasSaga => _handler is Saga;
