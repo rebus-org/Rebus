@@ -1,4 +1,6 @@
-﻿using Rebus.Bus;
+﻿using System;
+using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Transport;
 
@@ -23,10 +25,21 @@ namespace Rebus.Config
 
             configurer.OtherService<IBus>().Decorate(c =>
             {
-                configurer.Options.NumberOfWorkers = 0;
+                var transport = c.Get<ITransport>();
+
+                if (transport.Address != null)
+                {
+                    throw new InvalidOperationException($"Cannot configure thus but to be a one-way client, because the transport is configured with '{transport.Address}' as its input queue. One-way clients must have a NULL input queue, otherwise the transport could be fooled into believing it was supposed to receive messages");
+                }
+
+                var options = c.Get<Options>();
+                options.NumberOfWorkers = 0;
+
                 var realBus = c.Get<IBus>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new OneWayClientBusDecorator(realBus, rebusLoggerFactory);
+                var busDecorator = new OneWayClientBusDecorator(realBus, rebusLoggerFactory);
+
+                return busDecorator;
             }, description: OneWayDecoratorDescription);
         } 
     }
