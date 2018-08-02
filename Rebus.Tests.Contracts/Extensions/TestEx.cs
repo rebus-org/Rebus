@@ -39,8 +39,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
         {
-            TValue value;
-            return dictionary.TryGetValue(key, out value)
+            return dictionary.TryGetValue(key, out var value)
                 ? value
                 : default(TValue);
         }
@@ -61,20 +60,22 @@ namespace Rebus.Tests.Contracts.Extensions
             {
                 using (var scope = new RebusTransactionScope())
                 {
-                    var nextMessage = await transport.Receive(scope.TransactionContext, new CancellationToken());
+                    var nextMessage = await transport.Receive(scope.TransactionContext, CancellationToken.None);
+
+                    await scope.CompleteAsync();
 
                     if (nextMessage != null)
                     {
                         return nextMessage;
                     }
-
-                    await scope.CompleteAsync();
                 }
 
                 await Task.Delay(100);
 
                 if (stopwatch.Elapsed < TimeSpan.FromSeconds(timeoutSeconds))
+                {
                     continue;
+                }
 
                 throw new TimeoutException($"Did not receive message from transport with address '{transport.Address}' within {timeoutSeconds} s timeout");
             }
@@ -195,9 +196,7 @@ namespace Rebus.Tests.Contracts.Extensions
 
         public static T GetNextOrThrow<T>(this ConcurrentQueue<T> queue)
         {
-            T next;
-
-            if (!queue.TryDequeue(out next))
+            if (!queue.TryDequeue(out var next))
             {
                 throw new RebusApplicationException("Could not dequeue next item!");
             }
