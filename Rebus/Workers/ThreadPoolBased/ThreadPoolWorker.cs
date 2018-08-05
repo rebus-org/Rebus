@@ -80,10 +80,20 @@ namespace Rebus.Workers.ThreadPoolBased
                 return;
             }
 
-            TryAsyncReceive(token, parallelOperation);
+            TryAsyncReceive(token, parallelOperation)
+                .ContinueWith(LogException, token);
         }
 
-        async void TryAsyncReceive(CancellationToken token, IDisposable parallelOperation)
+        void LogException(Task task)
+        {
+            var exception = task.Exception;
+
+            if (exception == null) return;
+
+            _log.Error(exception, "Unhandled exception in thread worker");
+        }
+
+        async Task TryAsyncReceive(CancellationToken token, IDisposable parallelOperation)
         {
             try
             {
