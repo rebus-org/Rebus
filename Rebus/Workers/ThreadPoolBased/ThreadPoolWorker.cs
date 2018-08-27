@@ -144,7 +144,7 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 _log.Warn("An error occurred when attempting to receive the next message: {exception}", exception);
 
-                _backoffStrategy.WaitError();
+                await _backoffStrategy.WaitError();
 
                 return null;
             }

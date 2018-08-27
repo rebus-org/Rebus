@@ -28,15 +28,15 @@ namespace Rebus.Workers.ThreadPoolBased
         }
 
         /// <inheritdoc />
-        public Task Wait()
+        public void Wait()
         {
-            return InnerWait();
+            InnerWait();
         }
 
         /// <inheritdoc />
         public Task WaitNoMessage()
         {
-            return InnerWait();
+            return InnerWaitAsync();
         }
 
         /// <inheritdoc />
@@ -52,7 +52,21 @@ namespace Rebus.Workers.ThreadPoolBased
 	        return Task.FromResult(0);
         }
 
-        async Task InnerWait()
+        async Task InnerWaitAsync()
+        {
+            var backoffTime = GetNextBackoffTime();
+
+            await Task.Delay(backoffTime);
+        }
+
+        void InnerWait()
+        {
+            var backoffTime = GetNextBackoffTime();
+
+            Thread.Sleep(backoffTime);
+        }
+
+        TimeSpan GetNextBackoffTime()
         {
             var waitedSinceTicks = Interlocked.Read(ref _waitTimeTicks);
 
@@ -67,8 +81,7 @@ namespace Rebus.Workers.ThreadPoolBased
             var waitTimeIndex = Math.Max(0, Math.Min(totalSecondsIdle, _backoffTimes.Length - 1));
 
             var backoffTime = _backoffTimes[waitTimeIndex];
-
-            await Task.Delay(backoffTime);
+            return backoffTime;
         }
     }
 }

@@ -127,10 +127,10 @@ namespace Rebus.Tests.Backoff
                 return AsyncBackoffStrategy.WaitNoMessage();
             }
 
-            public Task Wait()
+            public void Wait()
             {
                 _waitTimes.Enqueue(DateTime.UtcNow);
-                return AsyncBackoffStrategy.Wait();
+                AsyncBackoffStrategy.Wait();
             }
 
             public Task WaitError()

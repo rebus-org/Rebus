@@ -12,7 +12,7 @@ namespace Rebus.Workers.ThreadPoolBased
         /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
         /// This function is called each time a worker thread cannot continue because no more parallel operations are allowed to happen.
         /// </summary>
-        Task Wait();
+        void Wait();
 
         /// <summary>
         /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.

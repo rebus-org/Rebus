@@ -27,7 +27,7 @@ namespace Rebus.Tests.Workers
 
             while (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
             {
-                await backoffStrategy.Wait();
+                backoffStrategy.Wait();
 
                 var waitTime = stopwatch.Elapsed - previousElapsed;
                 Printt($"Waited {waitTime}");
