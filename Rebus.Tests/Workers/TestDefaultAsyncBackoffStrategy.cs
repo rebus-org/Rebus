@@ -7,12 +7,12 @@ using Rebus.Workers.ThreadPoolBased;
 namespace Rebus.Tests.Workers
 {
     [TestFixture]
-    public class TestDefaultSyncBackoffStrategy : FixtureBase
+    public class TestDefaultAsyncBackoffStrategy : FixtureBase
     {
         [Test]
         public void BacksOffAsItShould()
         {
-            var backoffStrategy = new DefaultSyncBackoffStrategy(new[]
+            var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
             {
                 TimeSpan.FromMilliseconds(100), 
                 TimeSpan.FromMilliseconds(500), 

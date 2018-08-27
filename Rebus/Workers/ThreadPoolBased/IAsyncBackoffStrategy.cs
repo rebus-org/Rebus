@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 namespace Rebus.Workers.ThreadPoolBased
 {
     /// <summary>
-    /// Implements a strategy with which workers will back off in idle periods. Please note that the <see cref="ISyncBackoffStrategy"/>
+    /// Implements a strategy with which workers will back off in idle periods. Please note that the <see cref="IAsyncBackoffStrategy"/>
     /// implementations must be reentrant!
     /// </summary>
-    public interface ISyncBackoffStrategy
+    public interface IAsyncBackoffStrategy
     {
         /// <summary>
         /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
