@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rebus.Workers.ThreadPoolBased
 {
@@ -27,30 +28,31 @@ namespace Rebus.Workers.ThreadPoolBased
         }
 
         /// <inheritdoc />
-        public void Wait()
+        public Task Wait()
         {
-            InnerWait();
+            return InnerWait();
         }
 
         /// <inheritdoc />
-        public void WaitNoMessage()
+        public Task WaitNoMessage()
         {
-            InnerWait();
+            return InnerWait();
         }
 
         /// <inheritdoc />
-        public void WaitError()
+        public async Task WaitError()
         {
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(5));
         }
 
         /// <inheritdoc />
-        public void Reset()
+        public Task Reset()
         {
             Interlocked.Exchange(ref _waitTimeTicks, 0);
+	        return Task.FromResult(0);
         }
 
-        void InnerWait()
+        async Task InnerWait()
         {
             var waitedSinceTicks = Interlocked.Read(ref _waitTimeTicks);
 
@@ -66,7 +68,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
             var backoffTime = _backoffTimes[waitTimeIndex];
 
-            Thread.Sleep(backoffTime);
+            await Task.Delay(backoffTime);
         }
     }
 }

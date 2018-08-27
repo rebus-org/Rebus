@@ -110,11 +110,11 @@ namespace Rebus.Workers.ThreadPoolBased
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
-                        _backoffStrategy.WaitNoMessage();
+                        await _backoffStrategy.WaitNoMessage();
                         return;
                     }
 
-                    _backoffStrategy.Reset();
+	                await _backoffStrategy.Reset();
 
                     await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }

@@ -116,26 +116,26 @@ namespace Rebus.Tests.Backoff
             public IEnumerable<DateTime> WaitTimes => _waitTimes;
             public IEnumerable<DateTime> WaitNoMessageTimes => _waitNoMessageTimes;
 
-            public void Reset()
+            public Task Reset()
             {
-                SyncBackoffStrategy.Reset();
+                return SyncBackoffStrategy.Reset();
             }
 
-            public void WaitNoMessage()
+            public Task WaitNoMessage()
             {
                 _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
-                SyncBackoffStrategy.WaitNoMessage();
+                return SyncBackoffStrategy.WaitNoMessage();
             }
 
-            public void Wait()
+            public Task Wait()
             {
                 _waitTimes.Enqueue(DateTime.UtcNow);
-                SyncBackoffStrategy.Wait();
+                return SyncBackoffStrategy.Wait();
             }
 
-            public void WaitError()
+            public Task WaitError()
             {
-                SyncBackoffStrategy.WaitError();
+                return SyncBackoffStrategy.WaitError();
             }
         }
     }
