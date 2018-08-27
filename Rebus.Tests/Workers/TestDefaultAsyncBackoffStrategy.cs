@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts;
 using Rebus.Workers.ThreadPoolBased;
@@ -7,12 +8,12 @@ using Rebus.Workers.ThreadPoolBased;
 namespace Rebus.Tests.Workers
 {
     [TestFixture]
-    public class TestDefaultSyncBackoffStrategy : FixtureBase
+    public class TestDefaultAsyncBackoffStrategy : FixtureBase
     {
         [Test]
-        public void BacksOffAsItShould()
+        public async Task BacksOffAsItShould()
         {
-            var backoffStrategy = new DefaultSyncBackoffStrategy(new[]
+            var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
             {
                 TimeSpan.FromMilliseconds(100), 
                 TimeSpan.FromMilliseconds(500), 
@@ -26,7 +27,7 @@ namespace Rebus.Tests.Workers
 
             while (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
             {
-                backoffStrategy.Wait();
+                await backoffStrategy.Wait();
 
                 var waitTime = stopwatch.Elapsed - previousElapsed;
                 Printt($"Waited {waitTime}");

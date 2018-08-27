@@ -21,11 +21,11 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly RebusBus _owningBus;
         readonly Options _options;
-        readonly ISyncBackoffStrategy _backoffStrategy;
+        readonly IAsyncBackoffStrategy _backoffStrategy;
         readonly Thread _workerThread;
         readonly ILog _log;
 
-        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, ISyncBackoffStrategy backoffStrategy)
+        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, IAsyncBackoffStrategy backoffStrategy)
         {
             Name = name;
             _log = rebusLoggerFactory.GetLogger<ThreadPoolWorker>();
@@ -110,11 +110,11 @@ namespace Rebus.Workers.ThreadPoolBased
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
-                        _backoffStrategy.WaitNoMessage();
+                        await _backoffStrategy.WaitNoMessage();
                         return;
                     }
 
-                    _backoffStrategy.Reset();
+	                await _backoffStrategy.Reset();
 
                     await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }

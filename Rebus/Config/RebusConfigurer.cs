@@ -192,7 +192,7 @@ namespace Rebus.Config
                 return new DefaultPipelineInvokerNew(pipeline);
             });
 
-            PossiblyRegisterDefault<ISyncBackoffStrategy>(c =>
+            PossiblyRegisterDefault<IAsyncBackoffStrategy>(c =>
             {
                 var backoffTimes = new[]
                 {
@@ -203,7 +203,7 @@ namespace Rebus.Config
                     Enumerable.Repeat(TimeSpan.FromMilliseconds(250), 1)
                 };
 
-                return new DefaultSyncBackoffStrategy(backoffTimes.SelectMany(e => e));
+                return new DefaultAsyncBackoffStrategy(backoffTimes.SelectMany(e => e));
             });
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
@@ -213,7 +213,7 @@ namespace Rebus.Config
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
                 var options = c.Get<Options>();
                 var busLifetimeEvents = c.Get<BusLifetimeEvents>();
-                var backoffStrategy = c.Get<ISyncBackoffStrategy>();
+                var backoffStrategy = c.Get<IAsyncBackoffStrategy>();
                 return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
             });
 
