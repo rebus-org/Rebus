@@ -45,8 +45,8 @@ namespace Rebus.Tests.Backoff
                     // install the snitch
                     o.Decorate<IAsyncBackoffStrategy>(c =>
                     {
-                        var syncBackoffStrategy = c.Get<IAsyncBackoffStrategy>();
-                        _snitch.AsyncBackoffStrategy = syncBackoffStrategy;
+                        var backoffStrategy = c.Get<IAsyncBackoffStrategy>();
+                        _snitch.AsyncBackoffStrategy = backoffStrategy;
                         return _snitch;
                     });
 
