@@ -10,8 +10,44 @@ namespace Rebus.Tests.Workers
     [TestFixture]
     public class TestDefaultAsyncBackoffStrategy : FixtureBase
     {
-        [Test]
-        public async Task BacksOffAsItShould()
+	    [Test]
+	    public void WaitDoesPerformDoesPause()
+	    {
+			// Arrange
+		    var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
+		    {
+			    TimeSpan.FromMilliseconds(500)
+		    });
+
+			// Act
+		    var stopwatch = Stopwatch.StartNew();
+		    backoffStrategy.Wait();
+		    stopwatch.Stop();
+
+			// Assert
+			Assert.GreaterOrEqual(stopwatch.Elapsed, TimeSpan.FromMilliseconds(500));
+	    }
+
+	    [Test]
+	    public async Task WaitAsyncDoesPause()
+	    {
+		    // Arrange
+		    var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
+		    {
+			    TimeSpan.FromMilliseconds(500)
+		    });
+
+		    // Act
+		    var stopwatch = Stopwatch.StartNew();
+		    await backoffStrategy.WaitAsync();
+		    stopwatch.Stop();
+
+		    // Assert
+		    Assert.GreaterOrEqual(stopwatch.Elapsed, TimeSpan.FromMilliseconds(500));
+	    }
+
+		[Test]
+        public void BacksOffAsItShould()
         {
             var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
             {
