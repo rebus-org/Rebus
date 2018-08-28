@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Workers.ThreadPoolBased
 {
-    class DefaultAsyncBackoffStrategy : IAsyncBackoffStrategy
+    class DefaultBackoffStrategy : IBackoffStrategy
     {
         readonly TimeSpan[] _backoffTimes;
 
@@ -15,7 +15,7 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <summary>
         /// Constructs the backoff strategy with the given waiting times
         /// </summary>
-        public DefaultAsyncBackoffStrategy(IEnumerable<TimeSpan> backoffTimes)
+        public DefaultBackoffStrategy(IEnumerable<TimeSpan> backoffTimes)
         {
             if (backoffTimes == null) throw new ArgumentNullException(nameof(backoffTimes));
 

@@ -8,13 +8,13 @@ using Rebus.Workers.ThreadPoolBased;
 namespace Rebus.Tests.Workers
 {
     [TestFixture]
-    public class TestDefaultAsyncBackoffStrategy : FixtureBase
+    public class TestDefaultBackoffStrategy : FixtureBase
     {
 	    [Test]
 	    public void WaitDoesPerformDoesPause()
 	    {
 			// Arrange
-		    var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
+		    var backoffStrategy = new DefaultBackoffStrategy(new[]
 		    {
 			    TimeSpan.FromMilliseconds(500)
 		    });
@@ -32,7 +32,7 @@ namespace Rebus.Tests.Workers
 	    public async Task WaitAsyncDoesPause()
 	    {
 		    // Arrange
-		    var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
+		    var backoffStrategy = new DefaultBackoffStrategy(new[]
 		    {
 			    TimeSpan.FromMilliseconds(500)
 		    });
@@ -49,7 +49,7 @@ namespace Rebus.Tests.Workers
 		[Test]
         public void BacksOffAsItShould()
         {
-            var backoffStrategy = new DefaultAsyncBackoffStrategy(new[]
+            var backoffStrategy = new DefaultBackoffStrategy(new[]
             {
                 TimeSpan.FromMilliseconds(100), 
                 TimeSpan.FromMilliseconds(500), 

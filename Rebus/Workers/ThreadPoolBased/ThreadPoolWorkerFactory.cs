@@ -21,14 +21,14 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly IPipelineInvoker _pipelineInvoker;
         readonly Options _options;
         readonly Func<RebusBus> _busGetter;
-        readonly IAsyncBackoffStrategy _backoffStrategy;
+        readonly IBackoffStrategy _backoffStrategy;
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ILog _log;
 
         /// <summary>
         /// Creates the worker factory
         /// </summary>
-        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, IAsyncBackoffStrategy backoffStrategy)
+        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, IBackoffStrategy backoffStrategy)
         {
             if (busLifetimeEvents == null) throw new ArgumentNullException(nameof(busLifetimeEvents));
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
