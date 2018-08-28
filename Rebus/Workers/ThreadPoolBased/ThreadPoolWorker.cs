@@ -110,11 +110,11 @@ namespace Rebus.Workers.ThreadPoolBased
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
-                        await _backoffStrategy.WaitNoMessage();
+                        await _backoffStrategy.WaitNoMessageAsync();
                         return;
                     }
 
-	                await _backoffStrategy.Reset();
+	                _backoffStrategy.Reset();
 
                     await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }
@@ -144,7 +144,7 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 _log.Warn("An error occurred when attempting to receive the next message: {exception}", exception);
 
-                await _backoffStrategy.WaitError();
+                await _backoffStrategy.WaitErrorAsync();
 
                 return null;
             }

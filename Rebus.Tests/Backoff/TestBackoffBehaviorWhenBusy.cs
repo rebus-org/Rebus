@@ -116,27 +116,44 @@ namespace Rebus.Tests.Backoff
             public IEnumerable<DateTime> WaitTimes => _waitTimes;
             public IEnumerable<DateTime> WaitNoMessageTimes => _waitNoMessageTimes;
 
-            public Task Reset()
+            public void Reset()
             {
-                return AsyncBackoffStrategy.Reset();
+                AsyncBackoffStrategy.Reset();
             }
 
-            public Task WaitNoMessage()
+            public void WaitNoMessage()
             {
                 _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
-                return AsyncBackoffStrategy.WaitNoMessage();
+                AsyncBackoffStrategy.WaitNoMessage();
             }
 
-            public void Wait()
+	        public Task WaitNoMessageAsync()
+	        {
+		        _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
+		        return AsyncBackoffStrategy.WaitNoMessageAsync();
+	        }
+
+			public void Wait()
+			{
+				_waitTimes.Enqueue(DateTime.UtcNow);
+				AsyncBackoffStrategy.Wait();
+			}
+
+	        public Task WaitAsync()
+	        {
+		        _waitTimes.Enqueue(DateTime.UtcNow);
+		        return AsyncBackoffStrategy.WaitAsync();
+	        }
+
+			public void WaitError()
             {
-                _waitTimes.Enqueue(DateTime.UtcNow);
-                AsyncBackoffStrategy.Wait();
+                AsyncBackoffStrategy.WaitError();
             }
 
-            public Task WaitError()
-            {
-                return AsyncBackoffStrategy.WaitError();
-            }
+	        public Task WaitErrorAsync()
+	        {
+		        return AsyncBackoffStrategy.WaitErrorAsync();
+	        }
         }
-    }
+	}
 }

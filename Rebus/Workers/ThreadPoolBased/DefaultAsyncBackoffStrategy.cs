@@ -33,23 +33,40 @@ namespace Rebus.Workers.ThreadPoolBased
             InnerWait();
         }
 
-        /// <inheritdoc />
-        public Task WaitNoMessage()
+	    /// <inheritdoc />
+	    public Task WaitAsync()
+	    {
+		    return InnerWaitAsync();
+	    }
+
+		/// <inheritdoc />
+		public void WaitNoMessage()
+	    {
+		    InnerWait();
+	    }
+
+		/// <inheritdoc />
+		public Task WaitNoMessageAsync()
         {
             return InnerWaitAsync();
         }
 
-        /// <inheritdoc />
-        public async Task WaitError()
-        {
-            await Task.Delay(TimeSpan.FromSeconds(5));
-        }
+	    /// <inheritdoc />
+	    public void WaitError()
+	    {
+			Thread.Sleep(TimeSpan.FromSeconds(5));
+	    }
+
+		/// <inheritdoc />
+		public async Task WaitErrorAsync()
+	    {
+		    await Task.Delay(TimeSpan.FromSeconds(5));
+	    }
 
         /// <inheritdoc />
-        public Task Reset()
+        public void Reset()
         {
             Interlocked.Exchange(ref _waitTimeTicks, 0);
-	        return Task.FromResult(0);
         }
 
         async Task InnerWaitAsync()
