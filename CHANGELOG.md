@@ -1214,10 +1214,10 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b16
+## 5.0.0-b17
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
-* Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
+* Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an `IInitializable` fails during startup
 * Add option to omit type information from serialized JSON text, thus saving lots of space and making the serialized JSON more pure at the expense of .NET object serialization power
 * Provide `Defer` method on `IRoutingApi` allowing for easily deferring explicitly routed messages
 * Ability to "name the bus", allowing for using something more descriptive than the default "Rebus 1", "Rebus 2"S names
