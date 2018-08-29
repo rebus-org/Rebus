@@ -43,10 +43,10 @@ namespace Rebus.Tests.Backoff
                     o.SetBackoffTimes(TimeSpan.FromSeconds(0.2));
 
                     // install the snitch
-                    o.Decorate<IAsyncBackoffStrategy>(c =>
+                    o.Decorate<IBackoffStrategy>(c =>
                     {
-                        var backoffStrategy = c.Get<IAsyncBackoffStrategy>();
-                        _snitch.AsyncBackoffStrategy = backoffStrategy;
+                        var backoffStrategy = c.Get<IBackoffStrategy>();
+                        _snitch.BackoffStrategy = backoffStrategy;
                         return _snitch;
                     });
 
@@ -106,37 +106,54 @@ namespace Rebus.Tests.Backoff
                 seconds.Select(time => $"{time}: {new string('.', waitsPerSecond.GetValueOrDefault(time))}{new string('*', waitNoMessagesPerSecond.GetValueOrDefault(time))}")));
         }
 
-        class BackoffSnitch : IAsyncBackoffStrategy
+        class BackoffSnitch : IBackoffStrategy
         {
             readonly ConcurrentQueue<DateTime> _waitTimes = new ConcurrentQueue<DateTime>();
             readonly ConcurrentQueue<DateTime> _waitNoMessageTimes = new ConcurrentQueue<DateTime>();
 
-            public IAsyncBackoffStrategy AsyncBackoffStrategy { get; set; }
+            public IBackoffStrategy BackoffStrategy { get; set; }
 
             public IEnumerable<DateTime> WaitTimes => _waitTimes;
             public IEnumerable<DateTime> WaitNoMessageTimes => _waitNoMessageTimes;
 
-            public Task Reset()
+            public void Reset()
             {
-                return AsyncBackoffStrategy.Reset();
+                BackoffStrategy.Reset();
             }
 
-            public Task WaitNoMessage()
+            public void WaitNoMessage()
             {
                 _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
-                return AsyncBackoffStrategy.WaitNoMessage();
+                BackoffStrategy.WaitNoMessage();
             }
 
-            public void Wait()
+	        public Task WaitNoMessageAsync()
+	        {
+		        _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
+		        return BackoffStrategy.WaitNoMessageAsync();
+	        }
+
+			public void Wait()
+			{
+				_waitTimes.Enqueue(DateTime.UtcNow);
+				BackoffStrategy.Wait();
+			}
+
+	        public Task WaitAsync()
+	        {
+		        _waitTimes.Enqueue(DateTime.UtcNow);
+		        return BackoffStrategy.WaitAsync();
+	        }
+
+			public void WaitError()
             {
-                _waitTimes.Enqueue(DateTime.UtcNow);
-                AsyncBackoffStrategy.Wait();
+                BackoffStrategy.WaitError();
             }
 
-            public Task WaitError()
-            {
-                return AsyncBackoffStrategy.WaitError();
-            }
+	        public Task WaitErrorAsync()
+	        {
+		        return BackoffStrategy.WaitErrorAsync();
+	        }
         }
-    }
+	}
 }

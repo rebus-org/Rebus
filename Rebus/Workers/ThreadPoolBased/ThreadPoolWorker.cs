@@ -21,11 +21,11 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly RebusBus _owningBus;
         readonly Options _options;
-        readonly IAsyncBackoffStrategy _backoffStrategy;
+        readonly IBackoffStrategy _backoffStrategy;
         readonly Thread _workerThread;
         readonly ILog _log;
 
-        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, IAsyncBackoffStrategy backoffStrategy)
+        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, IBackoffStrategy backoffStrategy)
         {
             Name = name;
             _log = rebusLoggerFactory.GetLogger<ThreadPoolWorker>();
@@ -110,11 +110,11 @@ namespace Rebus.Workers.ThreadPoolBased
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
-                        await _backoffStrategy.WaitNoMessage();
+                        await _backoffStrategy.WaitNoMessageAsync();
                         return;
                     }
 
-	                await _backoffStrategy.Reset();
+	                _backoffStrategy.Reset();
 
                     await ProcessMessage(context, transportMessage).ConfigureAwait(false);
                 }
@@ -144,7 +144,7 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 _log.Warn("An error occurred when attempting to receive the next message: {exception}", exception);
 
-                await _backoffStrategy.WaitError();
+                await _backoffStrategy.WaitErrorAsync();
 
                 return null;
             }

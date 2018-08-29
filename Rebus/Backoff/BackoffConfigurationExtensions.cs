@@ -41,7 +41,7 @@ namespace Rebus.Backoff
                 throw new ArgumentException("Please specify at least one TimeSpan when you customize the backoff times! You could for example specify new[] { TimeSpan.FromSeconds(0.5), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5) } in order to wait 0.5s and 1s during the first two seconds of inactivity, and then 5 seconds poll interval forever thereafter");
             }
 
-            configurer.Register<IAsyncBackoffStrategy>(c => new DefaultAsyncBackoffStrategy(list));
+            configurer.Register<IBackoffStrategy>(c => new DefaultBackoffStrategy(list));
         }
     }
 }
