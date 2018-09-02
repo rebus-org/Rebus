@@ -1214,7 +1214,7 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
-## 5.0.0-b16
+## 5.0.0-b17
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
 * Ensure disposal of all `IDisposable` instances tracked by Injectionist in the event that an ´IInitializable´ fails during startup
@@ -1232,6 +1232,7 @@
 * Fail fast when message cannot be delivered to any handlers, basically assuming that the situation will not correct itself anyway
 * Add appropriate constructors to `IdempotencyData` to accomodate certain stubborn serializers
 * Change signature of several methods of the backoff strategy to be async to avoid accidentally blocking thread pool threads - thanks [Plasma]
+* Include symbol packages in the nuggie - thanks [poizan42]
 
 ---
 
@@ -1274,6 +1275,7 @@
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pheiberg]: https://github.com/pheiberg
 [Plasma]: https://github.com/Plasma
+[poizan42]: https://github.com/poizan42
 [pruiz]: https://github.com/pruiz
 [puzsol]: https://github.com/puzsol
 [runes83]: https://github.com/runes83
