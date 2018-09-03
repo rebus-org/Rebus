@@ -10,6 +10,6 @@ before_build:
   - appveyor-retry dotnet restore -v Minimal
 
 build_script:
-  - dotnet build Rebus                  -c Release 
-  - dotnet build Rebus.Tests.Contracts  -c Release /p:WarningLevel=3
-  - dotnet build Rebus.Tests            -c Release /p:WarningLevel=3
+  - dotnet build Rebus                  -c Release /p:EnableSourceLink=false
+  - dotnet build Rebus.Tests.Contracts  -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
+  - dotnet build Rebus.Tests            -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
