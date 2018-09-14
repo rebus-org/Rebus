@@ -76,7 +76,7 @@ namespace Rebus.Pipeline.Send
             }
         }
 
-        class CorrelationInfo
+        struct CorrelationInfo
         {
             public CorrelationInfo(string correlationId, int correlationSequence)
             {
