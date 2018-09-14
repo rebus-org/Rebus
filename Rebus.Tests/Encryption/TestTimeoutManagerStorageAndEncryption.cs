@@ -39,9 +39,10 @@ namespace Rebus.Tests.Encryption
         [Test]
         public async Task EncryptedMessageIsEncryptedInTimeoutStorage()
         {
+            const string knownMessage = "HEJ MED DIG DIN FRÆKKE DRENG";
             var longEnoughToNotCare = TimeSpan.FromSeconds(1000);
 
-            await _bus.DeferLocal(longEnoughToNotCare, "HEJ MED DIG DIN FRÆKKE DRENG");
+            await _bus.DeferLocal(longEnoughToNotCare, knownMessage);
 
             // wait for deferred message to be received and put into storage
             while (!_timeoutManager.Any()) await Task.Delay(10);
@@ -49,7 +50,17 @@ namespace Rebus.Tests.Encryption
             var deferredMessage = _timeoutManager.First();
             var messageBodyString = Encoding.UTF8.GetString(deferredMessage.Body);
 
-            Assert.That(messageBodyString, !Contains.Substring("HEJ MED DIG DIN FRÆKKE DRENG"));
+            Console.WriteLine($@"Here's the message contents as it looks to those who happen to be able to look into the timeout storage:
+
+{messageBodyString}
+
+Hopefully, it does NOT look anything like this:
+
+{knownMessage}
+
+");
+
+            Assert.That(messageBodyString, !Contains.Substring(knownMessage));
         }
     }
 }
