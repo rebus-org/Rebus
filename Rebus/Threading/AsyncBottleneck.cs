@@ -23,7 +23,7 @@ namespace Rebus.Threading
         /// </summary>
         public async Task<IDisposable> Enter(CancellationToken cancellationToken) 
         {
-            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _semaphore.WaitAsync(cancellationToken);
 
             return new Releaser(_semaphore);
         }

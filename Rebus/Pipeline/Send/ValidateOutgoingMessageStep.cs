@@ -21,7 +21,7 @@ namespace Rebus.Pipeline.Send
 
             CheckDeferHeaders(headers);
 
-            await next().ConfigureAwait(false);
+            await next();
         }
 
         static void CheckDeferHeaders(IReadOnlyDictionary<string, string> headers)

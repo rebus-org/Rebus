@@ -39,7 +39,7 @@ which is then detected by this wrapper step.")]
                 context.Save(new Message(headers, wrappedBody));
             }
 
-            await next().ConfigureAwait(false);
+            await next();
         }
 
         static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new ConcurrentDictionary<Type, MethodInfo>();

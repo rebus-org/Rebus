@@ -77,7 +77,7 @@ namespace Rebus.Threading.SystemThreadingTimer
 
             try
             {
-                await _action().ConfigureAwait(false);
+                await _action();
             }
             catch (Exception exception)
             {

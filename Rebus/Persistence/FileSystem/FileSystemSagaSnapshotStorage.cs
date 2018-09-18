@@ -91,7 +91,7 @@ namespace Rebus.Persistence.FileSystem
             {
                 using (var writer = new StreamWriter(file, Encoding.UTF8))
                 {
-                    await writer.WriteAsync(jsonText).ConfigureAwait(false);
+                    await writer.WriteAsync(jsonText);
                 }
             }
         }

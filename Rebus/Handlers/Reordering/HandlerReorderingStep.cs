@@ -32,7 +32,7 @@ namespace Rebus.Handlers.Reordering
             
             context.Save(newHandlerInvokers);
             
-            await next().ConfigureAwait(false);
+            await next();
         }
     }
 }

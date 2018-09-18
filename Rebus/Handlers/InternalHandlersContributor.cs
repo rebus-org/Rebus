@@ -36,7 +36,7 @@ namespace Rebus.Handlers
         {
             var ownHandlers = GetOwnHandlersFor<TMessage>();
 
-            var handlers = await _innerHandlerActivator.GetHandlers(message, transactionContext).ConfigureAwait(false);
+            var handlers = await _innerHandlerActivator.GetHandlers(message, transactionContext);
 
             return handlers.Concat(ownHandlers);
         }
@@ -59,7 +59,7 @@ namespace Rebus.Handlers
 
             public async Task Handle(SubscribeRequest message)
             {
-                await _subscriptionStorage.RegisterSubscriber(message.Topic, message.SubscriberAddress).ConfigureAwait(false);
+                await _subscriptionStorage.RegisterSubscriber(message.Topic, message.SubscriberAddress);
             }
         }
 
@@ -74,7 +74,7 @@ namespace Rebus.Handlers
 
             public async Task Handle(UnsubscribeRequest message)
             {
-                await _subscriptionStorage.UnregisterSubscriber(message.Topic, message.SubscriberAddress).ConfigureAwait(false);
+                await _subscriptionStorage.UnregisterSubscriber(message.Topic, message.SubscriberAddress);
             }
         }
     }

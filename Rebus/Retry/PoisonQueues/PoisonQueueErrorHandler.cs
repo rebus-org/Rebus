@@ -61,7 +61,7 @@ namespace Rebus.Retry.PoisonQueues
             {
                 _log.Error(exception, "Moving message with ID {messageId} to error queue {queueName}", messageId, errorQueueAddress);
 
-                await _transport.Send(errorQueueAddress, transportMessage, transactionContext).ConfigureAwait(false);
+                await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
             }
             catch (Exception forwardException)
             {
@@ -69,7 +69,7 @@ namespace Rebus.Retry.PoisonQueues
                     messageId, errorQueueAddress, MoveToErrorQueueFailedPause);
 
                 // if we can't move to error queue, we need to avoid thrashing over and over
-                await Task.Delay(MoveToErrorQueueFailedPause).ConfigureAwait(false);
+                await Task.Delay(MoveToErrorQueueFailedPause);
             }
         }
 

@@ -20,15 +20,15 @@ namespace Rebus.DataBus
 
             var id = Guid.NewGuid().ToString();
 
-            await _dataBusStorage.Save(id, source, optionalMetadata).ConfigureAwait(false);
+            await _dataBusStorage.Save(id, source, optionalMetadata);
 
             var attachment = new DataBusAttachment(id);
 
             return attachment;
         }
 
-        public async Task<Stream> OpenRead(string dataBusAttachmentId) => await _dataBusStorage.Read(dataBusAttachmentId).ConfigureAwait(false);
+        public async Task<Stream> OpenRead(string dataBusAttachmentId) => await _dataBusStorage.Read(dataBusAttachmentId);
 
-        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => await _dataBusStorage.ReadMetadata(dataBusAttachmentId).ConfigureAwait(false);
+        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => await _dataBusStorage.ReadMetadata(dataBusAttachmentId);
     }
 }

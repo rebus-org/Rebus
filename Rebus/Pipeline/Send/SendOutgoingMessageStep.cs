@@ -46,18 +46,18 @@ namespace Rebus.Pipeline.Send
                 logicalMessage.Body ?? "<empty message>",
                 hasOneOrMoreDestinations ? string.Join(";", destinationAddressesList) : "<no destinations>");
 
-            await Send(destinationAddressesList, transportMessage, currentTransactionContext).ConfigureAwait(false);
+            await Send(destinationAddressesList, transportMessage, currentTransactionContext);
 
-            await next().ConfigureAwait(false);
+            await next();
         }
 
         async Task Send(List<string> destinationAddressesList, TransportMessage transportMessage, ITransactionContext currentTransactionContext)
         {
             var sendTasks = destinationAddressesList
-                .Select(async address => await _transport.Send(address, transportMessage, currentTransactionContext).ConfigureAwait(false))
+                .Select(async address => await _transport.Send(address, transportMessage, currentTransactionContext))
                 .ToArray();
 
-            await Task.WhenAll(sendTasks).ConfigureAwait(false);
+            await Task.WhenAll(sendTasks);
         }
     }
 }

@@ -37,18 +37,18 @@ namespace Rebus.Pipeline.Receive
 
             var isRoutingSlip = headers.ContainsKey(Headers.RoutingSlipItinerary);
 
-            await next().ConfigureAwait(false);
+            await next();
 
             if (isRoutingSlip)
             {
-                await HandleRoutingSlip(context, message).ConfigureAwait(false);
+                await HandleRoutingSlip(context, message);
             }
         }
 
         async Task HandleRoutingSlip(IncomingStepContext context, Message message)
         {
             var transactionContext = context.Load<ITransactionContext>();
-            var transportMessage = await _serialier.Serialize(message).ConfigureAwait(false);
+            var transportMessage = await _serialier.Serialize(message);
             var headers = transportMessage.Headers;
 
             var itinerary = GetDestinations(headers, Headers.RoutingSlipItinerary);
@@ -70,7 +70,7 @@ namespace Rebus.Pipeline.Receive
             transportMessage.Headers[Headers.RoutingSlipTravelogue] = string.Join(";", travelogue);
             transportMessage.Headers[Headers.CorrelationSequence] = GetNextSequenceNumber(transportMessage.Headers);
 
-            await _transport.Send(nextDestination, transportMessage, transactionContext).ConfigureAwait(false);
+            await _transport.Send(nextDestination, transportMessage, transactionContext);
         }
 
         static string GetNextSequenceNumber(IReadOnlyDictionary<string, string> headers) =>

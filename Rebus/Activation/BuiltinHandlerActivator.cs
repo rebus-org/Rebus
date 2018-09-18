@@ -135,7 +135,7 @@ namespace Rebus.Activation
 
             public async Task Handle(TMessage message)
             {
-                await _handlerFunction(_getBus(), message).ConfigureAwait(false);
+                await _handlerFunction(_getBus(), message);
             }
         }
 
