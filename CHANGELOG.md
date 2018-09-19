@@ -1214,6 +1214,10 @@
 
 * Re-publish 4.2.0 because the Rebus.dll generated in 4.2.0 had version 1.0.0 and not the correct version
 
+## 4.2.2
+
+* Remove `.ConfigureAwait(false)` throughout, because it messes up the ability to carry ambient contexts into callbacks, which (via decorators) is one of Rebus' most important extensibility points - thanks [oliverhanappi]
+
 ---
 
 
@@ -1252,6 +1256,7 @@
 [mvandevy]: https://github.com/mvandevy
 [NKnusperer]: https://github.com/NKnusperer
 [oguzhaneren]: https://github.com/oguzhaneren
+[oliverhanappi]: https://github.com/oliverhanappi
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pheiberg]: https://github.com/pheiberg
 [pruiz]: https://github.com/pruiz
