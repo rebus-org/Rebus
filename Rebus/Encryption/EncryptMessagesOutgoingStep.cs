@@ -31,7 +31,7 @@ namespace Rebus.Encryption
 
             if (transportMessage.Headers.ContainsKey(EncryptionHeaders.DisableEncryptionHeader))
             {
-                await next().ConfigureAwait(false);
+                await next();
                 return;
             }
 
@@ -44,7 +44,7 @@ namespace Rebus.Encryption
 
             context.Save(new TransportMessage(headers, encryptedData.Bytes));
 
-            await next().ConfigureAwait(false);
+            await next();
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Rebus.Bus
             {
                 var transportMessage = GetCloneOfCurrentTransportMessage(optionalAdditionalHeaders);
 
-                await _rebusBus.SendTransportMessage(destinationAddress, transportMessage).ConfigureAwait(false);
+                await _rebusBus.SendTransportMessage(destinationAddress, transportMessage);
             }
 
             public async Task Defer(TimeSpan delay, Dictionary<string, string> optionalAdditionalHeaders = null)
@@ -61,7 +61,7 @@ namespace Rebus.Bus
 
                 transportMessage.SetDeferHeaders(RebusTime.Now + delay, _rebusBus._transport.Address);
 
-                await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage).ConfigureAwait(false);
+                await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage);
             }
 
             TransportMessage GetCloneOfCurrentTransportMessage(Dictionary<string, string> optionalAdditionalHeaders)

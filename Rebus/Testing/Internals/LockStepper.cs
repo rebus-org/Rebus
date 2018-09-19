@@ -29,7 +29,7 @@ namespace Rebus.Testing.Internals
                     resetEvents.ForEach(resetEvent => resetEvent.Set());
                 });
 
-            await next().ConfigureAwait(false);
+            await next();
         }
 
         List<ManualResetEvent> DequeueResetEvents()

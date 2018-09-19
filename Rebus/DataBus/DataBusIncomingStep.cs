@@ -20,7 +20,7 @@ namespace Rebus.DataBus
             // stashes the current implementation of IDataBusStorage in the context for DataBusAttachment to find
             context.Save(DataBusStorageKey, _dataBusStorage);
 
-            await next().ConfigureAwait(false);
+            await next();
         }
     }
 }

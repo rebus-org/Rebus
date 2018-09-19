@@ -24,7 +24,7 @@ namespace Rebus.Compression
         {
             if (!transportMessage.Headers.TryGetValue(Headers.ContentEncoding, out var contentEncoding))
             {
-                return await _serializer.Deserialize(transportMessage).ConfigureAwait(false);
+                return await _serializer.Deserialize(transportMessage);
             }
 
             if (contentEncoding != GzipEncodingHeader)
@@ -44,7 +44,7 @@ namespace Rebus.Compression
             var uncompressedBody = _zipper.Unzip(compressedBody);
             var uncompressedTransportMessage = new TransportMessage(headers, uncompressedBody);
 
-            return await _serializer.Deserialize(uncompressedTransportMessage).ConfigureAwait(false);
+            return await _serializer.Deserialize(uncompressedTransportMessage);
         }
     }
 }

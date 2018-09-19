@@ -59,7 +59,7 @@ namespace Rebus.Testing
         {
             var id = Guid.NewGuid().ToString();
 
-            await _dataBusStorage.Save(id, source, optionalMetadata).ConfigureAwait(false);
+            await _dataBusStorage.Save(id, source, optionalMetadata);
 
             return new DataBusAttachment(id);
         }
@@ -67,13 +67,13 @@ namespace Rebus.Testing
         /// <inheritdoc />
         public async Task<Stream> OpenRead(string dataBusAttachmentId)
         {
-            return await _dataBusStorage.Read(dataBusAttachmentId).ConfigureAwait(false);
+            return await _dataBusStorage.Read(dataBusAttachmentId);
         }
 
         /// <inheritdoc />
         public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId)
         {
-            return await _dataBusStorage.ReadMetadata(dataBusAttachmentId).ConfigureAwait(false);
+            return await _dataBusStorage.ReadMetadata(dataBusAttachmentId);
         }
 
         class CleanUp : IDisposable

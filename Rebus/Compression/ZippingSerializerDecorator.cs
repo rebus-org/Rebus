@@ -22,7 +22,7 @@ namespace Rebus.Compression
 
         public async Task<TransportMessage> Serialize(Message message)
         {
-            var transportMessage = await _serializer.Serialize(message).ConfigureAwait(false);
+            var transportMessage = await _serializer.Serialize(message);
             var body = transportMessage.Body;
 
             if (body.Length < _bodySizeThresholdBytes)
@@ -40,6 +40,6 @@ namespace Rebus.Compression
             return compressedTransportMessage;
         }
 
-        public async Task<Message> Deserialize(TransportMessage transportMessage) => await _serializer.Deserialize(transportMessage).ConfigureAwait(false);
+        public async Task<Message> Deserialize(TransportMessage transportMessage) => await _serializer.Deserialize(transportMessage);
     }
 }

@@ -45,13 +45,11 @@ namespace Rebus.Tests.Workers
             {
                 startedHandle.Set();
 
-                await Task.Delay(TimeSpan.FromSeconds(10))
-                    .ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(10));
             });
 
             // act
-            await _bus.Send("something")
-                .ConfigureAwait(false);
+            await _bus.Send("something");
 
             startedHandle.WaitOne();
            
@@ -80,8 +78,7 @@ namespace Rebus.Tests.Workers
             });
 
             // act
-            await _bus.Send("something")
-                .ConfigureAwait(false);
+            await _bus.Send("something");
 
             finishedHandle.WaitOne();
 
@@ -108,13 +105,11 @@ namespace Rebus.Tests.Workers
             {
                 startedHandle.Set();
 
-                await Task.Delay(taskTakingTime)
-                    .ConfigureAwait(false);
+                await Task.Delay(taskTakingTime);
             });
 
             // act
-            await _bus.Send("something")
-                .ConfigureAwait(false);
+            await _bus.Send("something");
 
             startedHandle.WaitOne();
 

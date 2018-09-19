@@ -26,7 +26,7 @@ namespace Rebus.Retry.Simple
                 }
             }
 
-            await next().ConfigureAwait(false);
+            await next();
         }
     }
 }

@@ -74,7 +74,7 @@ namespace Rebus.Transport.FileSystem
                 using (var stream = File.OpenWrite(fullPath))
                 using (var writer = new StreamWriter(stream, FavoriteEncoding))
                 {
-                    await writer.WriteAsync(serializedMessage).ConfigureAwait(false);
+                    await writer.WriteAsync(serializedMessage);
                 }
             });
         }
@@ -106,7 +106,7 @@ namespace Rebus.Transport.FileSystem
 
                 if (fullPath == null) return null;
 
-                var jsonText = await ReadAllText(fullPath).ConfigureAwait(false);
+                var jsonText = await ReadAllText(fullPath);
                 var receivedTransportMessage = Deserialize(jsonText);
 
                 if (receivedTransportMessage.Headers.TryGetValue(Headers.TimeToBeReceived, out var timeToBeReceived))
@@ -156,7 +156,7 @@ namespace Rebus.Transport.FileSystem
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream, FavoriteEncoding))
             {
-                return await reader.ReadToEndAsync().ConfigureAwait(false);
+                return await reader.ReadToEndAsync();
             }
         }
 

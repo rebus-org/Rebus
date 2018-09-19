@@ -81,7 +81,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
         async Task TimerElapsed()
         {
-            using (var result = await _timeoutManager.GetDueMessages().ConfigureAwait(false))
+            using (var result = await _timeoutManager.GetDueMessages())
             {
                 foreach (var dueMessage in result)
                 {
@@ -94,15 +94,15 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
                     using (var context = new TransactionContext())
                     {
-                        await _transport.Send(returnAddress, transportMessage, context).ConfigureAwait(false);
+                        await _transport.Send(returnAddress, transportMessage, context);
 
-                        await context.Complete().ConfigureAwait(false);
+                        await context.Complete();
                     }
 
-                    await dueMessage.MarkAsCompleted().ConfigureAwait(false);
+                    await dueMessage.MarkAsCompleted();
                 }
 
-                await result.Complete().ConfigureAwait(false);
+                await result.Complete();
             }
         }
 
@@ -118,7 +118,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
             if (!headers.TryGetValue(Headers.DeferredUntil, out var deferredUntil))
             {
-                await next().ConfigureAwait(false);
+                await next();
                 //return;don't return here! for some reason it is faster to have an "else"
             }
             else
@@ -135,11 +135,11 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                 {
                     var transactionContext = context.Load<ITransactionContext>();
 
-                    await ForwardMessageToExternalTimeoutManager(transportMessage, transactionContext).ConfigureAwait(false);
+                    await ForwardMessageToExternalTimeoutManager(transportMessage, transactionContext);
                 }
                 else
                 {
-                    await StoreMessageUntilDue(deferredUntil, headers, transportMessage).ConfigureAwait(false);
+                    await StoreMessageUntilDue(deferredUntil, headers, transportMessage);
                 }
             }
         }
@@ -151,7 +151,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             _log.Debug("Forwarding deferred message {messageLabel} to external timeout manager '{queueName}'",
                 transportMessage.GetMessageLabel(), timeoutManagerAddress);
 
-            await _transport.Send(timeoutManagerAddress, transportMessage, transactionContext).ConfigureAwait(false);
+            await _transport.Send(timeoutManagerAddress, transportMessage, transactionContext);
         }
 
         async Task StoreMessageUntilDue(string deferredUntil, Dictionary<string, string> headers, TransportMessage transportMessage)
@@ -162,7 +162,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
             headers.Remove(Headers.DeferredUntil);
 
-            await _timeoutManager.Defer(approximateDueTime, headers, transportMessage.Body).ConfigureAwait(false);
+            await _timeoutManager.Defer(approximateDueTime, headers, transportMessage.Body);
         }
 
         static DateTimeOffset GetTimeToBeDelivered(string deferredUntil)

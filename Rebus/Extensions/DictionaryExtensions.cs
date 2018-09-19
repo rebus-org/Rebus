@@ -78,7 +78,7 @@ namespace Rebus.Extensions
         {
             if (dictionary.TryGetValue(key, out var item)) return (TItem)item;
 
-            var newItem = await newItemFactory().ConfigureAwait(false);
+            var newItem = await newItemFactory();
             dictionary[key] = newItem;
             return newItem;
         }

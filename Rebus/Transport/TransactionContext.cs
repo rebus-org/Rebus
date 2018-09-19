@@ -30,7 +30,7 @@ namespace Rebus.Transport
 
         public void Abort() => _mustAbort = true;
 
-        public async Task Commit() => await Invoke(_onCommittedActions).ConfigureAwait(false);
+        public async Task Commit() => await Invoke(_onCommittedActions);
 
         public void Dispose()
         {
@@ -69,9 +69,9 @@ namespace Rebus.Transport
                 return;
             }
 
-            await RaiseCommitted().ConfigureAwait(false);
+            await RaiseCommitted();
 
-            await RaiseCompleted().ConfigureAwait(false);
+            await RaiseCompleted();
 
             Dispose();
         }
@@ -83,11 +83,11 @@ namespace Rebus.Transport
             _aborted = true;
         }
 
-        async Task RaiseCommitted() => await Invoke(_onCommittedActions).ConfigureAwait(false);
+        async Task RaiseCommitted() => await Invoke(_onCommittedActions);
 
         async Task RaiseCompleted()
         {
-            await Invoke(_onCompletedActions).ConfigureAwait(false);
+            await Invoke(_onCompletedActions);
             _completed = true;
         }
 
@@ -103,7 +103,7 @@ namespace Rebus.Transport
         {
             while (actions.TryDequeue(out var action))
             {
-                await action().ConfigureAwait(false);
+                await action();
             }
         }
     }

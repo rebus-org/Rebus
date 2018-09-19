@@ -42,7 +42,7 @@ namespace Rebus.Timeouts
         {
             if (_completeAction == null) return;
 
-            await _completeAction().ConfigureAwait(false);
+            await _completeAction();
         }
 
         /// <summary>

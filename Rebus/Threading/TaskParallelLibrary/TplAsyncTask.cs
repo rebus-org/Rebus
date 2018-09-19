@@ -76,13 +76,13 @@ namespace Rebus.Threading.TaskParallelLibrary
                     {
                         var intervalAboveZero = Interval;
 
-                        await Task.Delay(intervalAboveZero, token).ConfigureAwait(false);
+                        await Task.Delay(intervalAboveZero, token);
 
                         token.ThrowIfCancellationRequested();
 
                         try
                         {
-                            await _action().ConfigureAwait(false);
+                            await _action();
                         }
                         catch (TaskCanceledException)
                         {

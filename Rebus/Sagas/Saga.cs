@@ -115,7 +115,7 @@ namespace Rebus.Sagas
 
         internal sealed override async Task InvokeConflictResolution(ISagaData otherSagaData)
         {
-            await ResolveConflict((TSagaData)otherSagaData).ConfigureAwait(false);
+            await ResolveConflict((TSagaData)otherSagaData);
         }
 
         /// <summary>

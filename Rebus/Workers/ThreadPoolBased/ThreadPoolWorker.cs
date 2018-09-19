@@ -90,7 +90,7 @@ namespace Rebus.Workers.ThreadPoolBased
                 using (parallelOperation)
                 using (var context = new TransactionContext())
                 {
-                    var transportMessage = await ReceiveTransportMessage(token, context).ConfigureAwait(false);
+                    var transportMessage = await ReceiveTransportMessage(token, context);
 
                     if (transportMessage == null)
                     {
@@ -105,7 +105,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
                     _backoffStrategy.Reset();
 
-                    await ProcessMessage(context, transportMessage).ConfigureAwait(false);
+                    await ProcessMessage(context, transportMessage);
                 }
             }
             catch (TaskCanceledException)
@@ -126,7 +126,7 @@ namespace Rebus.Workers.ThreadPoolBased
         {
             try
             {
-                return await _transport.Receive(context, token).ConfigureAwait(false);
+                return await _transport.Receive(context, token);
             }
             catch (TaskCanceledException)
             {
@@ -157,11 +157,11 @@ namespace Rebus.Workers.ThreadPoolBased
                 AmbientTransactionContext.SetCurrent(context);
 
                 var stepContext = new IncomingStepContext(transportMessage, context);
-                await _pipelineInvoker.Invoke(stepContext).ConfigureAwait(false);
+                await _pipelineInvoker.Invoke(stepContext);
 
                 try
                 {
-                    await context.Complete().ConfigureAwait(false);
+                    await context.Complete();
                 }
                 catch (Exception exception)
                 {

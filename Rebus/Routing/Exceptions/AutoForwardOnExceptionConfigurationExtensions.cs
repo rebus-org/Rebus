@@ -73,7 +73,7 @@ namespace Rebus.Routing.Exceptions
 
                 try
                 {
-                    await next().ConfigureAwait(false);
+                    await next();
                 }
                 catch (Exception exception)
                 {
@@ -120,7 +120,7 @@ namespace Rebus.Routing.Exceptions
                         throw new ArgumentOutOfRangeException($"Unknown log level: {_logLevel}");
                 }
 
-                await _transport.Send(_destinationQueue, clone, transactionContext).ConfigureAwait(false);
+                await _transport.Send(_destinationQueue, clone, transactionContext);
             }
         }
     }
