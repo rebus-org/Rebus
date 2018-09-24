@@ -20,7 +20,7 @@ namespace Rebus.DataBus.InMem
         {
             using (var destination = new MemoryStream())
             {
-                await source.CopyToAsync(destination).ConfigureAwait(false);
+                await source.CopyToAsync(destination);
                 var bytes = destination.ToArray();
 
                 var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())

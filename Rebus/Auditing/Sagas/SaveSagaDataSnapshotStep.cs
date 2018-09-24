@@ -27,7 +27,7 @@ namespace Rebus.Auditing.Sagas
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            await next().ConfigureAwait(false);
+            await next();
 
             var message = context.Load<Message>();
             var handlerInvokers = context.Load<HandlerInvokers>();
@@ -50,7 +50,7 @@ namespace Rebus.Auditing.Sagas
                     return _sagaSnapshotStorage.Save(sagaData.SagaData, metadata);
                 });
 
-            await Task.WhenAll(saveTasks).ConfigureAwait(false);
+            await Task.WhenAll(saveTasks);
         }
 
         Dictionary<string, string> GetMetadata(ISagaData sagaData, object handler, Message message)

@@ -66,7 +66,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             // maybe short-circuit? this makes it slightly faster
             if (!handlerInvokersForSagas.Any())
             {
-                await next().ConfigureAwait(false);
+                await next();
                 return;
             }
 
@@ -83,11 +83,11 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             // and then we process them
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
-                await TryMountSagaDataOnInvoker(sagaInvoker, body, label, loadedSagaData, newlyCreatedSagaData, transactionContext).ConfigureAwait(false);
+                await TryMountSagaDataOnInvoker(sagaInvoker, body, label, loadedSagaData, newlyCreatedSagaData, transactionContext);
             }
 
             // invoke the rest of the pipeline (most likely also dispatching the incoming message to the now-ready saga handlers)
-            await next().ConfigureAwait(false);
+            await next();
 
             // everything went well - let's divide saga data instances into those to insert, update, and delete
             var newlyCreatedSagaDataToSave = newlyCreatedSagaData.Where(s => !s.Saga.WasMarkedAsComplete && !s.Saga.WasMarkedAsUnchanged);
@@ -96,17 +96,17 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
             foreach (var sagaDataToInsert in newlyCreatedSagaDataToSave)
             {
-                await SaveSagaData(sagaDataToInsert, insert: true).ConfigureAwait(false);
+                await SaveSagaData(sagaDataToInsert, insert: true);
             }
 
             foreach (var sagaDataToUpdate in loadedSagaDataToUpdate)
             {
-                await SaveSagaData(sagaDataToUpdate, insert: false).ConfigureAwait(false);
+                await SaveSagaData(sagaDataToUpdate, insert: false);
             }
 
             foreach (var sagaDataToUpdate in loadedSagaDataToDelete)
             {
-                await _sagaStorage.Delete(sagaDataToUpdate.SagaData).ConfigureAwait(false);
+                await _sagaStorage.Delete(sagaDataToUpdate.SagaData);
             }
         }
 
@@ -120,7 +120,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
             {
                 var valueFromMessage = correlationProperty.ValueFromMessage(new MessageContext(transactionContext), body);
-                var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage).ConfigureAwait(false);
+                var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
 
                 if (sagaData == null) continue;
 
@@ -197,11 +197,11 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                     if (insert)
                     {
-                        await _sagaStorage.Insert(sagaData, sagaDataToUpdate.CorrelationProperties).ConfigureAwait(false);
+                        await _sagaStorage.Insert(sagaData, sagaDataToUpdate.CorrelationProperties);
                     }
                     else
                     {
-                        await _sagaStorage.Update(sagaData, sagaDataToUpdate.CorrelationProperties).ConfigureAwait(false);
+                        await _sagaStorage.Update(sagaData, sagaDataToUpdate.CorrelationProperties);
                     }
 
                     return;
@@ -220,14 +220,14 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                         throw;
                     }
 
-                    var freshSagaData = await _sagaStorage.Find(sagaDataType, "Id", sagaData.Id).ConfigureAwait(false);
+                    var freshSagaData = await _sagaStorage.Find(sagaDataType, "Id", sagaData.Id);
 
                     if (freshSagaData == null)
                     {
                         throw new RebusApplicationException($"Could not find {sagaDataType} saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
                     }
 
-                    await saga.InvokeConflictResolution(freshSagaData).ConfigureAwait(false);
+                    await saga.InvokeConflictResolution(freshSagaData);
 
                     sagaData.Revision = freshSagaData.Revision;
                 }

@@ -26,11 +26,11 @@ namespace Rebus.Pipeline.Send
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var logicalMessage = context.Load<Message>();
-            var transportMessage = await _serializer.Serialize(logicalMessage).ConfigureAwait(false);
+            var transportMessage = await _serializer.Serialize(logicalMessage);
             
             context.Save(transportMessage);
 
-            await next().ConfigureAwait(false);
+            await next();
         }
     }
 }

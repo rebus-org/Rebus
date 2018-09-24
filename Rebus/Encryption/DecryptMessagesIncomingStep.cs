@@ -44,7 +44,7 @@ namespace Rebus.Encryption
                 context.Save(new TransportMessage(headers, bodyBytes));
             }
 
-            await next().ConfigureAwait(false);
+            await next();
         }
 
         static byte[] GetIv(IDictionary<string, string> headers)

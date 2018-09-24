@@ -45,8 +45,7 @@ namespace Rebus.Tests.Workers
             {
                 startedHandle.Set();
 
-                await Task.Delay(TimeSpan.FromSeconds(10))
-                    .ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(10));
             });
 
             // act
@@ -80,6 +79,8 @@ namespace Rebus.Tests.Workers
 
             // act
             await _bus.Send("something");
+
+
                 
             finishedHandle.WaitOne();
 

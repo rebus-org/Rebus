@@ -56,8 +56,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                     new RebusApplicationException($"Received message with empty or absent '{Headers.MessageId}' header! All messages must be" +
                                                   " supplied with an ID . If no ID is present, the message cannot be tracked" +
                                                   " between delivery attempts, and other stuff would also be much harder to" +
-                                                  " do - therefore, it is a requirement that messages be supplied with an ID."))
-                    .ConfigureAwait(false);
+                                                  " do - therefore, it is a requirement that messages be supplied with an ID."));
 
                 return;
             }
@@ -68,7 +67,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
                 {
                     var aggregateException = GetAggregateException(messageId);
-                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException).ConfigureAwait(false);
+                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException);
                     _errorTracker.CleanUp(messageId);
                     return;
                 }
@@ -79,7 +78,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
                 {
                     var aggregateException = GetAggregateException(messageId, secondLevelMessageId);
-                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException).ConfigureAwait(false);
+                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException);
                     _errorTracker.CleanUp(messageId);
                     _errorTracker.CleanUp(secondLevelMessageId);
                     return;
@@ -87,11 +86,11 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 context.Save(DispatchAsFailedMessageKey, true);
 
-                await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext, messageId, secondLevelMessageId).ConfigureAwait(false);
+                await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext, messageId, secondLevelMessageId);
                 return;
             }
 
-            await DispatchWithTrackerIdentifier(next, messageId, transactionContext, messageId).ConfigureAwait(false);
+            await DispatchWithTrackerIdentifier(next, messageId, transactionContext, messageId);
         }
 
         AggregateException GetAggregateException(params string[] ids)
@@ -110,9 +109,9 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         {
             try
             {
-                await next().ConfigureAwait(false);
+                await next();
 
-                await transactionContext.Commit().ConfigureAwait(false);
+                await transactionContext.Commit();
 
                 _errorTracker.CleanUp(messageId);
 
@@ -133,7 +132,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         {
             var transportMessage = originalTransportMessage.TransportMessage;
 
-            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception).ConfigureAwait(false);
+            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
         }
     }
 }

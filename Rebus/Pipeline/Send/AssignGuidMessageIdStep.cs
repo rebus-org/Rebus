@@ -23,7 +23,7 @@ namespace Rebus.Pipeline.Send
                 headers[Headers.MessageId] = Guid.NewGuid().ToString();
             }
 
-            await next().ConfigureAwait(false);
+            await next();
         }
     }
 }

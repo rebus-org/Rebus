@@ -147,7 +147,7 @@ namespace Rebus.Pipeline.Receive
             {
                 _transactionContext.Items[CurrentHandlerInvokerItemsKey] = this;
 
-                await _action().ConfigureAwait(false);
+                await _action();
             }
             finally
             {

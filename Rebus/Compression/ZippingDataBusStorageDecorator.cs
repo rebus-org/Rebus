@@ -30,20 +30,20 @@ namespace Rebus.Compression
         /// </summary>
         public async Task<Stream> Read(string id)
         {
-            var metadata = await _innerDataBusStorage.ReadMetadata(id).ConfigureAwait(false);
+            var metadata = await _innerDataBusStorage.ReadMetadata(id);
 
             if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out var contentEncoding))
             {
-                return await _innerDataBusStorage.Read(id).ConfigureAwait(false);
+                return await _innerDataBusStorage.Read(id);
             }
 
             if (!string.Equals(contentEncoding, "gzip", StringComparison.OrdinalIgnoreCase))
             {
                 // unknown content encoding - the user must know best how to decode this!
-                return await _innerDataBusStorage.Read(id).ConfigureAwait(false);
+                return await _innerDataBusStorage.Read(id);
             }
 
-            var sourceStream = await _innerDataBusStorage.Read(id).ConfigureAwait(false);
+            var sourceStream = await _innerDataBusStorage.Read(id);
 
             return new GZipStream(sourceStream, CompressionMode.Decompress);
         }
@@ -53,7 +53,7 @@ namespace Rebus.Compression
         /// </summary>
         public async Task<Dictionary<string, string>> ReadMetadata(string id)
         {
-            return await _innerDataBusStorage.ReadMetadata(id).ConfigureAwait(false);
+            return await _innerDataBusStorage.ReadMetadata(id);
         }
 
         /// <summary>
@@ -67,14 +67,14 @@ namespace Rebus.Compression
             {
                 if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out var contentEncoding))
                 {
-                    await _innerDataBusStorage.Save(id, source, metadata).ConfigureAwait(false);
+                    await _innerDataBusStorage.Save(id, source, metadata);
                     return;
                 }
 
                 // who knows what the user did to the data? the user must know how to decode this data
                 if (!string.Equals(contentEncoding, "gzip", StringComparison.OrdinalIgnoreCase))
                 {
-                    await _innerDataBusStorage.Save(id, source, metadata).ConfigureAwait(false);
+                    await _innerDataBusStorage.Save(id, source, metadata);
                     return;
                 }
             }
@@ -85,12 +85,12 @@ namespace Rebus.Compression
             {
                 using (var gzipStream = new GZipStream(destination, CompressionLevel.Optimal, true))
                 {
-                    await source.CopyToAsync(gzipStream).ConfigureAwait(false);
+                    await source.CopyToAsync(gzipStream);
                 }
 
                 destination.Position = 0;
 
-                await _innerDataBusStorage.Save(id, destination, metadata).ConfigureAwait(false);
+                await _innerDataBusStorage.Save(id, destination, metadata);
             }
         }
     }
