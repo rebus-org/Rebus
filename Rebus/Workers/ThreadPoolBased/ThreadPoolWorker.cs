@@ -196,7 +196,8 @@ namespace Rebus.Workers.ThreadPoolBased
 
             if (!_workerShutDown.WaitOne(_options.WorkerShutdownTimeout))
             {
-                _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!", _options.WorkerShutdownTimeout.TotalSeconds);
+                _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!",
+                    Name, _options.WorkerShutdownTimeout.TotalSeconds);
             }
         }
     }
