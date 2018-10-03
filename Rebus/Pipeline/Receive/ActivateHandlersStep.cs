@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Extensions;
+using Rebus.Handlers;
 using Rebus.Messages;
 using Rebus.Transport;
 // ReSharper disable UnusedMethodReturnValue.Local
@@ -52,11 +53,18 @@ namespace Rebus.Pipeline.Receive
             var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
             var listOfHandlerInvokers = handlers
-                .Select(handler => new HandlerInvoker<TMessage>(() => handler.Handle(message), handler, transactionContext))
-                .Cast<HandlerInvoker>()
+                .Select(handler => CreateHandlerInvoker(handler, message, transactionContext, logicalMessage))
                 .ToList();
 
             return new HandlerInvokers(logicalMessage, listOfHandlerInvokers);
+        }
+
+        /// <summary>
+        /// Creates instance of HandlerInvoker
+        /// </summary>
+        protected virtual HandlerInvoker CreateHandlerInvoker<TMessage>(IHandleMessages<TMessage> handler, TMessage message, ITransactionContext transactionContext, Message logicalMessage)
+        {
+            return new HandlerInvoker<TMessage>(() => handler.Handle(message), handler, transactionContext);
         }
 
         MethodInfo GetDispatchMethod(Type messageType)
