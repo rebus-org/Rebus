@@ -409,7 +409,7 @@ namespace Rebus.Bus
             }
             else
             {
-                using (var context = new TransactionContext())
+                using (var context = new TransactionContextWithOwningBus(this))
                 {
                     await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
                     await context.Complete();
@@ -430,7 +430,7 @@ namespace Rebus.Bus
 
             if (transactionContext == null)
             {
-                using (var context = new TransactionContext())
+                using (var context = new TransactionContextWithOwningBus(this))
                 {
                     await _transport.Send(destinationAddress, transportMessage, context);
                     await context.Complete();
@@ -590,12 +590,13 @@ namespace Rebus.Bus
             // if the context is not required to belong to this bus instance, just return it
             if (!mustBelongToThisBus) return transactionContext;
 
-            // if there's a context but there's no OwningBus, just return the context (the user created it)
-            object owningBus;
-            if (!transactionContext.Items.TryGetValue("OwningBus", out owningBus))
+            // if there's a context, but it is not one with an owning bus, just return the context (the user or someone else created it)
+            if (!(transactionContext is ITransactionContextWithOwningBus transactionContextWithOwningBus))
             {
                 return transactionContext;
             }
+
+            var owningBus = transactionContextWithOwningBus.OwningBus;
 
             // if there is an OwningBus and it is this
             return Equals(owningBus, this) 

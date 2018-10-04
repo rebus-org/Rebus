@@ -27,8 +27,9 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
+        /// <param name="token"></param>
         /// <inheritdoc />
-        public void Wait()
+        public void Wait(CancellationToken token)
         {
             InnerWait();
         }
@@ -45,8 +46,9 @@ namespace Rebus.Workers.ThreadPoolBased
 		    InnerWait();
 	    }
 
-		/// <inheritdoc />
-		public Task WaitNoMessageAsync()
+        /// <param name="token"></param>
+        /// <inheritdoc />
+        public Task WaitNoMessageAsync(CancellationToken token)
         {
             return InnerWaitAsync();
         }
@@ -57,8 +59,9 @@ namespace Rebus.Workers.ThreadPoolBased
 			Thread.Sleep(TimeSpan.FromSeconds(5));
 	    }
 
-		/// <inheritdoc />
-		public async Task WaitErrorAsync()
+        /// <param name="token"></param>
+        /// <inheritdoc />
+        public async Task WaitErrorAsync(CancellationToken token)
 	    {
 		    await Task.Delay(TimeSpan.FromSeconds(5));
 	    }

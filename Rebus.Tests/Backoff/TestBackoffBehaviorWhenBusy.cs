@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -127,16 +128,16 @@ namespace Rebus.Tests.Backoff
                 BackoffStrategy.WaitNoMessage();
             }
 
-	        public Task WaitNoMessageAsync()
+	        public Task WaitNoMessageAsync(CancellationToken token)
 	        {
 		        _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
-		        return BackoffStrategy.WaitNoMessageAsync();
+		        return BackoffStrategy.WaitNoMessageAsync(token);
 	        }
 
-			public void Wait()
+			public void Wait(CancellationToken token)
 			{
 				_waitTimes.Enqueue(DateTime.UtcNow);
-				BackoffStrategy.Wait();
+				BackoffStrategy.Wait(token);
 			}
 
 	        public Task WaitAsync()
@@ -150,9 +151,9 @@ namespace Rebus.Tests.Backoff
                 BackoffStrategy.WaitError();
             }
 
-	        public Task WaitErrorAsync()
+	        public Task WaitErrorAsync(CancellationToken token)
 	        {
-		        return BackoffStrategy.WaitErrorAsync();
+		        return BackoffStrategy.WaitErrorAsync(token);
 	        }
         }
 	}

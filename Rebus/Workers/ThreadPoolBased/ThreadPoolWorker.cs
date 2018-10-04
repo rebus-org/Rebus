@@ -59,7 +59,7 @@ namespace Rebus.Workers.ThreadPoolBased
                 }
                 catch (Exception exception)
                 {
-                    _log.Error(exception, "Unhandled exception in worker!!");
+                    _log.Error(exception, "Unhandled exception in worker {workerName} when try-receiving", Name);
 
                     _backoffStrategy.WaitError();
                 }
@@ -76,19 +76,19 @@ namespace Rebus.Workers.ThreadPoolBased
 
             if (!parallelOperation.CanContinue())
             {
-                _backoffStrategy.Wait();
+                _backoffStrategy.Wait(token);
                 return;
-            }
-
-            void LogException(Task task)
-            {
-                var exception = task.Exception;
-                if (exception == null) return;
-                _log.Error(exception, "Unhandled exception in thread worker");
             }
 
             TryAsyncReceive(token, parallelOperation)
                 .ContinueWith(LogException, TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        void LogException(Task task)
+        {
+            var exception = task.Exception;
+            if (exception == null) return;
+            _log.Error(exception, "Unhandled exception in worker {workerName}", Name);
         }
 
         async Task TryAsyncReceive(CancellationToken token, IDisposable parallelOperation)
@@ -96,7 +96,7 @@ namespace Rebus.Workers.ThreadPoolBased
             try
             {
                 using (parallelOperation)
-                using (var context = new TransactionContext())
+                using (var context = new TransactionContextWithOwningBus(_owningBus))
                 {
                     var transportMessage = await ReceiveTransportMessage(token, context);
 
@@ -110,7 +110,7 @@ namespace Rebus.Workers.ThreadPoolBased
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
 
-                        await _backoffStrategy.WaitNoMessageAsync();
+                        await _backoffStrategy.WaitNoMessageAsync(token);
                         return;
                     }
 
@@ -125,7 +125,7 @@ namespace Rebus.Workers.ThreadPoolBased
             }
             catch (Exception exception)
             {
-                _log.Error(exception, "Unhandled exception in thread pool worker");
+                _log.Error(exception, "Unhandled exception in worker {workerName}", Name);
             }
         }
 
@@ -144,7 +144,7 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 _log.Warn("An error occurred when attempting to receive the next message: {exception}", exception);
 
-                await _backoffStrategy.WaitErrorAsync();
+                await _backoffStrategy.WaitErrorAsync(token);
 
                 return null;
             }
@@ -154,8 +154,6 @@ namespace Rebus.Workers.ThreadPoolBased
         {
             try
             {
-                context.Items["OwningBus"] = _owningBus;
-
                 AmbientTransactionContext.SetCurrent(context);
 
                 var stepContext = new IncomingStepContext(transportMessage, context);

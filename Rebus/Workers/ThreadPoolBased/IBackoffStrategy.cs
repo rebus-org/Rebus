@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rebus.Workers.ThreadPoolBased
@@ -12,7 +13,8 @@ namespace Rebus.Workers.ThreadPoolBased
         /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
         /// This function is called each time a worker thread cannot continue because no more parallel operations are allowed to happen.
         /// </summary>
-        void Wait();
+        /// <param name="token"></param>
+        void Wait(CancellationToken token);
 
 	    /// <summary>
 	    /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
@@ -26,21 +28,23 @@ namespace Rebus.Workers.ThreadPoolBased
 		/// </summary>
 		void WaitNoMessage();
 
-	    /// <summary>
-	    /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
-	    /// This function is called each time no message was received.
-	    /// </summary>
-	    Task WaitNoMessageAsync();
+        /// <summary>
+        /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
+        /// This function is called each time no message was received.
+        /// </summary>
+        /// <param name="token"></param>
+        Task WaitNoMessageAsync(CancellationToken token);
 
 		/// <summary>
 		/// Blocks the thread for a (most likely longer) while, when an error has occurred
 		/// </summary>
 		void WaitError();
 
-	    /// <summary>
-	    /// Blocks the thread for a (most likely longer) while, when an error has occurred
-	    /// </summary>
-	    Task WaitErrorAsync();
+        /// <summary>
+        /// Blocks the thread for a (most likely longer) while, when an error has occurred
+        /// </summary>
+        /// <param name="token"></param>
+        Task WaitErrorAsync(CancellationToken token);
 
 		/// <summary>
 		/// Resets the strategy. Is called whenever a message was received.

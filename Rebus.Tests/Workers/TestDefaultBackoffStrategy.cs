@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts;
@@ -21,7 +22,7 @@ namespace Rebus.Tests.Workers
 
 			// Act
 		    var stopwatch = Stopwatch.StartNew();
-		    backoffStrategy.Wait();
+		    backoffStrategy.Wait(CancellationToken.None);
 		    stopwatch.Stop();
 
 			// Assert
@@ -63,7 +64,7 @@ namespace Rebus.Tests.Workers
 
             while (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
             {
-                backoffStrategy.Wait();
+                backoffStrategy.Wait(CancellationToken.None);
 
                 var waitTime = stopwatch.Elapsed - previousElapsed;
                 Printt($"Waited {waitTime}");
