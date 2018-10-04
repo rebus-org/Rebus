@@ -42,6 +42,11 @@ namespace Rebus.Messages
         public const string ReturnAddress = "rbs2-return-address";
 
         /// <summary>
+        /// Address of the message sender, if the sender is not a one-way client.
+        /// </summary>
+        public const string SenderAddress = "rbs2-sender-address";
+
+        /// <summary>
         /// A ;-separated list of addresses that the routing slip must visit
         /// </summary>
         public const string RoutingSlipItinerary = "rbs2-itinerary";

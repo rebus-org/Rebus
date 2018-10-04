@@ -60,6 +60,15 @@ namespace Rebus.Pipeline.Send
 
             headers[Headers.SentTime] = RebusTime.Now.ToString("O");
 
+            if (_hasOwnAddress)
+            {
+                headers[Headers.SenderAddress] = _address;
+            }
+            else
+            {
+                headers.Remove(Headers.SenderAddress);
+            }
+
             if (!headers.ContainsKey(Headers.Type))
             {
                 headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();

@@ -38,6 +38,15 @@ namespace Rebus.Pipeline.Send
                 headers[Headers.ReturnAddress] = _address;
             }
 
+            if (_hasOwnAddress)
+            {
+                headers[Headers.SenderAddress] = _address;
+            }
+            else
+            {
+                headers.Remove(Headers.SenderAddress);
+            }
+
             await next();
         }
     }
