@@ -104,7 +104,7 @@ namespace Rebus.Tests.Backoff
                 .GetIntervals(TimeSpan.FromSeconds(1));
 
             Console.WriteLine(string.Join(Environment.NewLine,
-                seconds.Select(time => $"{time}: {new string('.', waitsPerSecond.GetValueOrDefault(time))}{new string('*', waitNoMessagesPerSecond.GetValueOrDefault(time))}")));
+                seconds.Select(time => $"{time}: {new string('.', waitsPerSecond.GetOrDefault(time))}{new string('*', waitNoMessagesPerSecond.GetOrDefault(time))}")));
         }
 
         class BackoffSnitch : IBackoffStrategy

@@ -37,7 +37,7 @@ namespace Rebus.Tests.Contracts.Extensions
             return list[medianIndex];
         }
 
-        public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+        public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
         {
             return dictionary.TryGetValue(key, out var value)
                 ? value
