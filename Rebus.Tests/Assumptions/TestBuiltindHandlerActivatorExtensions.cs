@@ -54,7 +54,7 @@ namespace Rebus.Tests.Assumptions
                                      ?? throw new ArgumentException($"The type {handlerType} cannot be registered as a Rebus handler this way, because it does not have a default constructor");
 
             var implementedHandlerInterfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType() && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>));
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>));
 
             var genericRegistrationMethod = typeof(BuiltinHandlerActivatorExtensions)
                                                 .GetMethod(nameof(RegisterGeneric), BindingFlags.NonPublic | BindingFlags.Static)

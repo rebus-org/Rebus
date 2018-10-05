@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Extensions;
-using Rebus.Internals;
 using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Extensions
@@ -32,7 +30,7 @@ Made 22433 iterations in 5s
         //[Repeat(5)]
         public void MeasureRate()
         {
-            var types = GetType().GetAssembly().GetTypes();
+            var types = GetType().Assembly.GetTypes();
             var iterations = 0L;
             var keepRunning = true;
 
@@ -169,6 +167,17 @@ Made 22433 iterations in 5s
             var actualTypeStatic = Type.GetType(actualTypeStringStatic, false);
             var actualTypeInstance = Type.GetType(actualTypeStringInstance, false);
             var actualTypeInstanceRuntimeConstructed = Type.GetType(actualTypeStringInstanceRuntimeConstructed, false);
+
+            Console.WriteLine($@"
+
+actualTypeStringStatic = {actualTypeStringStatic}
+actualTypeStringInstance = {actualTypeStringInstance}
+actualTypeStringInstanceRuntimeConstructed = {actualTypeStringInstanceRuntimeConstructed}
+
+actualTypeStatic = {actualTypeStatic}
+actualTypeInstance = {actualTypeInstance}
+actualTypeInstanceRuntimeConstructed = {actualTypeInstanceRuntimeConstructed}
+");
 
             // assert   
             Assert.That(actualTypeStringStatic, Is.EqualTo(expectedTypeString));

@@ -1,6 +1,5 @@
 ﻿// ReSharper disable RedundantUsingDirective
 using System;
-using System.Reflection;
 using System.Text;
 
 namespace Rebus.Internals
@@ -10,22 +9,15 @@ namespace Rebus.Internals
     /// </summary>
     static class Shims
     {
-        public static Assembly GetAssembly(this Type type)
+        public static string GetSimpleAssemblyQualifiedName(Type type)
         {
-            return type.Assembly;
+            var simpleAssemblyQualifiedName = BuildSimpleAssemblyQualifiedName(type, new StringBuilder()).ToString();
+
+            // type lookups apparently accept "mscorlib" as an alias for System.Private.CoreLib, so we can make the "simple assembly-qualified type name" consistent across platforms like this
+            return simpleAssemblyQualifiedName.Replace("System.Private.CoreLib", "mscorlib");
         }
 
-        /// <summary>
-        /// Gets whether the type is generic
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static bool IsGenericType(this Type type)
-        {
-            return type.IsGenericType;
-        }
-
-        public static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
+        static StringBuilder BuildSimpleAssemblyQualifiedName(Type type, StringBuilder sb)
         {
             if (!type.IsGenericType)
             {
@@ -38,7 +30,7 @@ namespace Rebus.Internals
                 return sb;
             }
 
-            var fullName = type.FullName;
+            var fullName = type.FullName ?? "???";
             var requiredPosition = fullName.IndexOf("[", StringComparison.Ordinal);
             var name = fullName.Substring(0, requiredPosition);
             sb.Append($"{name}[");
@@ -55,6 +47,5 @@ namespace Rebus.Internals
 
             return sb;
         }
-
     }
 }

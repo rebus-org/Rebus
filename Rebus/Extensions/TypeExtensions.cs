@@ -39,8 +39,7 @@ namespace Rebus.Extensions
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            return SimpleAssemblyQualifiedTypeNameCache.GetOrAdd(type,
-                t => Shims.BuildSimpleAssemblyQualifiedName(t, new StringBuilder()).ToString());
+            return SimpleAssemblyQualifiedTypeNameCache.GetOrAdd(type, Shims.GetSimpleAssemblyQualifiedName);
         }
     }
 }
