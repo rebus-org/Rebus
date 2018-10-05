@@ -1,5 +1,5 @@
 using System;
-#if NET45
+#if !HAS_ASYNC_LOCAL
 using System.Runtime.Remoting.Messaging;
 #else
 using System.Threading;
@@ -13,19 +13,7 @@ namespace Rebus.Transport
     /// </summary>
     public static class AmbientTransactionContext
     {
-#if NET45
-        const string TransactionContextKey = "rebus2-current-transaction-context";
-
-        /// <summary>
-        /// Gets the default set function (which is using <see cref="CallContext.LogicalSetData"/> to do its thing)
-        /// </summary>
-        public static readonly Action<ITransactionContext> DefaultSetter = context => CallContext.LogicalSetData(TransactionContextKey, context);
-
-        /// <summary>
-        /// Gets the default set function (which is using <see cref="CallContext.LogicalGetData"/> to do its thing)
-        /// </summary>
-        public static readonly Func<ITransactionContext> DefaultGetter = () => CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
-#else
+#if HAS_ASYNC_LOCAL
         static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new AsyncLocal<ITransactionContext>();
       
         /// <summary>
@@ -37,6 +25,18 @@ namespace Rebus.Transport
         /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
         /// </summary>
         public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value;
+#else
+        const string TransactionContextKey = "rebus2-current-transaction-context";
+
+        /// <summary>
+        /// Gets the default set function (which is using <see cref="CallContext.LogicalSetData"/> to do its thing)
+        /// </summary>
+        public static readonly Action<ITransactionContext> DefaultSetter = context => CallContext.LogicalSetData(TransactionContextKey, context);
+
+        /// <summary>
+        /// Gets the default set function (which is using <see cref="CallContext.LogicalGetData"/> to do its thing)
+        /// </summary>
+        public static readonly Func<ITransactionContext> DefaultGetter = () => CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
 #endif
 
         static Action<ITransactionContext> _setCurrent = DefaultSetter;

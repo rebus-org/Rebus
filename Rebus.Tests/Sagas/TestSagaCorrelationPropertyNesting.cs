@@ -63,11 +63,7 @@ namespace Rebus.Tests.Sagas
 
             public async Task Handle(MyMsg message)
             {
-#if NETSTANDARD1_3
-                await Task.CompletedTask;
-#else
                 await Task.FromResult(false);
-#endif
 
                 if (Data.Child == null)
                 {

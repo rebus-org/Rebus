@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-#if NETSTANDARD1_3
-using System.Reflection;
-#endif
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;

@@ -13,12 +13,7 @@ namespace Rebus.Tests.Encryption
         {
             var argumentException = Assert.Throws<ArgumentException>(() =>
             {
-#if NET45
                 new RijndaelEncryptor("not a valid key");
-#elif NETSTANDARD1_3
-                new AesEncryptor("not a valid key");
-#endif
-
             });
 
             Console.WriteLine(argumentException);

@@ -55,11 +55,7 @@ namespace Rebus.Tests.Pipeline
         [TestCase(ThingToCheck.NewPipelineInvoker)]
         public async Task ComparePerf(ThingToCheck whatToCheck)
         {
-#if NETSTANDARD1_3
-            await Task.CompletedTask;
-#else
             await Task.FromResult(false);
-#endif
 
             var iterations = 100000;
             var pipeline = CreateFakePipeline(10).ToArray();

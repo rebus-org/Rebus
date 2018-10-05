@@ -59,11 +59,7 @@ namespace Rebus.Serialization.Json
             _settings = jsonSerializerSettings;
             _encoding = encoding;
 
-#if NET45
             _encodingHeaderValue = $"{JsonContentType};charset={_encoding.HeaderName}";
-#else
-            _encodingHeaderValue = $"{JsonContentType};charset={_encoding.WebName}";
-#endif
         }
 
         /// <summary>

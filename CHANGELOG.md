@@ -1239,6 +1239,7 @@
 * Include symbol packages in the nuggie - thanks [poizan42]
 * Add sender's address to all outgoing messages
 * Ability to override `HandlerInvoker` instances created in the `ActivateHandlersStep` by overriding - thanks [Liero]
+* Remove .NET Standard 1.3 as a target
 
 ---
 

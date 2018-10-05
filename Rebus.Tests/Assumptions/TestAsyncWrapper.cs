@@ -52,7 +52,6 @@ namespace Rebus.Tests.Assumptions
                         done.WaitOne();
                     }
                     break;
-#if net45
                 case InvocationMode.ThreadPoolUnsafe:
                     for (var counter = 0; counter < iterations; counter++)
                     {
@@ -61,7 +60,6 @@ namespace Rebus.Tests.Assumptions
                         done.WaitOne();
                     }
                     break;
-#endif
                 case InvocationMode.AsyncHelpers:
                     for (var counter = 0; counter < iterations; counter++)
                     {

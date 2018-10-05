@@ -105,11 +105,7 @@ namespace Rebus.Tests.Sagas
 
             public async Task Handle(MyMessage message)
             {
-#if NETSTANDARD1_3
-                await Task.CompletedTask;
-#else
                 await Task.FromResult(false);
-#endif
 
                 _sagaDataCounters.AddOrUpdate(Data.Id, 1, (_, count) => count + 1);
                 _sharedCounter.Decrement();

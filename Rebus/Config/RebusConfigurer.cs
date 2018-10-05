@@ -149,7 +149,7 @@ namespace Rebus.Config
         /// </summary>
         public IBus Start()
         {
-#if NET45
+#if HAS_CONFIGURATION_MANAGER
             // force the silly configuration subsystem to initialize itself as a service to users, thus
             // avoiding the oft-encountered stupid Entity Framework initialization exception
             // complaining that something in Rebus' transaction context is not serializable

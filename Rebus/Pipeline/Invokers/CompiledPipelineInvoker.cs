@@ -89,14 +89,10 @@ namespace Rebus.Pipeline.Invokers
 
         static MethodInfo GetProcessMethod(IStep step, string methodName, Type contextType)
         {
-#if NETSTANDARD1_3
-            var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
-#else
-            var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) });
-#endif
-            if (processMethod != null) return processMethod;
+            var processMethod = step.GetType().GetMethod(methodName, new[] { contextType, typeof(Func<Task>) })
+                ?? throw new ArgumentException($"Could not find method with signature {methodName}({contextType.Name} context, Func<Task> next) on {step}");
 
-            throw new ArgumentException($"Could not find method with signature {methodName}({contextType.Name} context, Func<Task> next) on {step}");
+            return processMethod;
         }
     }
 }

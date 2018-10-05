@@ -13,11 +13,7 @@ namespace Rebus.DataBus
     /// Model that represents a data bus attachment. Only the <see cref="Id"/> is significant, as all the
     /// other pieces of information are not required in order to retrieve the attachment from the database.
     /// </summary>
-#if NET45
     [Serializable]
-#elif NETSTANDARD2_0
-    [Serializable]
-#endif
     public class DataBusAttachment
     {
         /// <summary>

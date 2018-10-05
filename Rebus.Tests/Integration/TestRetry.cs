@@ -93,13 +93,6 @@ namespace Rebus.Tests.Integration
             Assert.That(attemptedDeliveries, Is.EqualTo(expectedNumberOfAttemptedDeliveries));
         }
 
-        private static string GetMachineName()
-        {
-#if NETSTANDARD1_3
-            return Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
-#else
-            return Environment.MachineName;
-#endif
-        }
+        static string GetMachineName() => Environment.MachineName;
     }
 }

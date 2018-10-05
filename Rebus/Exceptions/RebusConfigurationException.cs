@@ -1,20 +1,12 @@
 using System;
-#if NET45
 using System.Runtime.Serialization;
-#elif NETSTANDARD2_0
-using System.Runtime.Serialization;
-#endif
 
 namespace Rebus.Exceptions
 {
     /// <summary>
     /// Generic configuration exception to use instead of ConfigurationErrorsException from System.Configuration
     /// </summary>
-#if NET45
     [Serializable]
-#elif NETSTANDARD2_0
-    [Serializable]
-#endif
     public class RebusConfigurationException : Exception
     {
         /// <summary>
@@ -33,7 +25,6 @@ namespace Rebus.Exceptions
         {
         }
 
-#if NET45
         /// <summary>
         /// Happy cross-domain serialization!
         /// </summary>
@@ -41,14 +32,5 @@ namespace Rebus.Exceptions
             : base(info, context)
         {
         }
-#elif NETSTANDARD2_0
-        /// <summary>
-        /// Happy cross-domain serialization!
-        /// </summary>
-        public RebusConfigurationException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-#endif
     }
 }
