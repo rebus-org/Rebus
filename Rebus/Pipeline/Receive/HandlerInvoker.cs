@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
 using Rebus.Extensions;
@@ -16,7 +15,7 @@ namespace Rebus.Pipeline.Receive
     /// Wrapper of the handler that is ready to invoke
     /// </summary>
     public abstract class HandlerInvoker
-    {
+    {        
         static readonly ConcurrentDictionary<string, bool> CanBeInitiatedByCache = new ConcurrentDictionary<string, bool>();
 
         /// <summary>
@@ -36,6 +35,11 @@ namespace Rebus.Pipeline.Receive
                     return implementedInterfaces.Intersect(handlerTypesToLookFor).Any();
                 });
         }
+
+        /// <summary>
+        /// Cached setter methods that "mount" a saga data instance on a handler (which is assumed to have a <code>Data</code> property, like <see cref="Saga"/>
+        /// </summary>
+        protected static readonly ConcurrentDictionary<Type, Action<object, ISagaData>> SagaDataSetters = new ConcurrentDictionary<Type, Action<object, ISagaData>>();
 
         /// <summary>
         /// Key under which the handler invoker will stash itself in the <see cref="ITransactionContext.Items"/>
@@ -170,14 +174,20 @@ namespace Rebus.Pipeline.Receive
                 throw new InvalidOperationException($"Attempted to set {sagaData} as saga data on handler {_handler}, but the handler is not a saga!");
             }
 
-            var dataProperty = _handler.GetType().GetProperty(SagaDataPropertyName);
-
-            if (dataProperty == null)
+            var setter = SagaDataSetters.GetOrAdd(_handler.GetType(), type =>
             {
-                throw new RebusApplicationException($"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
-            }
+                var dataProperty = _handler.GetType().GetProperty(SagaDataPropertyName);
 
-            dataProperty.SetValue(_handler, sagaData);
+                if (dataProperty == null)
+                {
+                    throw new RebusApplicationException(
+                        $"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
+                }
+
+                return (handler, data) => dataProperty.SetValue(handler, data);
+            });
+
+            setter(_handler, sagaData);
 
             _sagaData = sagaData;
         }
