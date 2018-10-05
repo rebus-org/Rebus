@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Activation;
-using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -69,9 +68,12 @@ namespace Rebus.Pipeline.Receive
 
         MethodInfo GetDispatchMethod(Type messageType)
         {
-            return GetType()
-                .GetMethod(nameof(GetHandlerInvokers), BindingFlags.NonPublic | BindingFlags.Instance)
-                .MakeGenericMethod(messageType);
+            const string methodName = nameof(GetHandlerInvokers);
+            
+            var genericDispatchMethod = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new ArgumentException($"Could not find the {methodName} method?!");
+
+            return genericDispatchMethod.MakeGenericMethod(messageType);
         }
     }
 }
