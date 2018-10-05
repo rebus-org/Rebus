@@ -1238,6 +1238,7 @@
 * Change signature of several methods of the backoff strategy to be async to avoid accidentally blocking thread pool threads - thanks [Plasma]
 * Include symbol packages in the nuggie - thanks [poizan42]
 * Add sender's address to all outgoing messages
+* Ability to override `HandlerInvoker` instances created in the `ActivateHandlersStep` by overriding - thanks [Liero]
 
 ---
 
@@ -1264,6 +1265,7 @@
 [jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
+[Liero]: https://github.com/Liero
 [madstt]: https://github.com/madstt
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337
