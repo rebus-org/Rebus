@@ -30,9 +30,9 @@ namespace Rebus.Tests.Profiling
             Action,
         }
 
-        [TestCase(100000, 10, PipelineInvokerMode.Action)]
-        [TestCase(100000, 10, PipelineInvokerMode.Compiled)]
-        [TestCase(100000, 10, PipelineInvokerMode.Default)]
+        [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Irrelevant for now")]
+        [TestCase(100000, 10, PipelineInvokerMode.Compiled, Ignore = "Irrelevant for now")]
+        [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Irrelevant for now")]
         [TestCase(100000, 10, PipelineInvokerMode.DefaultNew)]
         public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
         {
