@@ -44,7 +44,7 @@ namespace Rebus.Tests.Workers
 		    stopwatch.Stop();
 
 		    // Assert
-		    Assert.GreaterOrEqual(stopwatch.Elapsed, TimeSpan.FromMilliseconds(500));
+	        Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromMilliseconds(490)).And.LessThan(TimeSpan.FromMilliseconds(510)));
 	    }
 
 		[Test]
