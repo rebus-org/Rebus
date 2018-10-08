@@ -85,10 +85,10 @@ namespace Rebus.Tests.Backoff
             Console.WriteLine($"Second period median: {secondPeriodMedian}");
             Console.WriteLine($" Third period median: {thirdPeriodMedian}");
 
-            Assert.That(firstPeriodMedian.Count, Is.GreaterThan(4*secondPeriodMedian.Count), 
+            Assert.That(firstPeriodMedian.Count, Is.GreaterThanOrEqualTo(4*secondPeriodMedian.Count), 
                 "Expected receive calls during the first period to be more than four times as frequent as during the second period");
 
-            Assert.That(secondPeriodMedian.Count, Is.GreaterThan(4*thirdPeriodMedian.Count),
+            Assert.That(secondPeriodMedian.Count, Is.GreaterThanOrEqualTo(4*thirdPeriodMedian.Count),
                 "Expected receive calls during the second period to be more than four times as frequent as during the third period");
         }
 
