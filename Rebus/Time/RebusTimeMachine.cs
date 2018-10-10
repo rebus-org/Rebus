@@ -16,7 +16,11 @@ namespace Rebus.Time
             RebusTime.CurrentTimeFactory = () =>
             {
                 var timeToReturn = fakeTime;
-                fakeTime = fakeTime.AddTicks(1);
+                if (incrementSlightlyOnEachInvocation)
+                {
+                    fakeTime = fakeTime.AddTicks(1);
+                }
+
                 return timeToReturn;
             };
         }
