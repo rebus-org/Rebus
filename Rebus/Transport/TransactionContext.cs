@@ -21,13 +21,37 @@ namespace Rebus.Transport
 
         public ConcurrentDictionary<string, object> Items { get; } = new ConcurrentDictionary<string, object>();
 
-        public void OnCommitted(Func<Task> commitAction) => _onCommittedActions.Enqueue(commitAction);
+        public void OnCommitted(Func<Task> commitAction)
+        {
+            if (_completed)
+                throw new InvalidOperationException("Cannot add OnCommitted action on a complete transaction context;");
 
-        public void OnCompleted(Func<Task> completedAction) => _onCompletedActions.Enqueue(completedAction);
+            _onCommittedActions.Enqueue(commitAction);
+        }
 
-        public void OnAborted(Action abortedAction) => _onAbortedActions.Enqueue(abortedAction);
+        public void OnCompleted(Func<Task> completedAction)
+        {
+            if (_completed)
+                throw new InvalidOperationException("Cannot add OnCompleted an action on a complete transaction context;");
 
-        public void OnDisposed(Action disposedAction) => _onDisposedActions.Enqueue(disposedAction);
+            _onCompletedActions.Enqueue(completedAction);
+        }
+
+        public void OnAborted(Action abortedAction)
+        {
+            if (_completed)
+                throw new InvalidOperationException("Cannot add OnAborted an action on a complete transaction context;");
+
+            _onAbortedActions.Enqueue(abortedAction);
+        }
+
+        public void OnDisposed(Action disposedAction)
+        {
+            if (_completed)
+                throw new InvalidOperationException("Cannot add OnDisposed an action on a complete transaction context;");
+
+            _onDisposedActions.Enqueue(disposedAction);
+        }
 
         public void Abort() => _mustAbort = true;
 
