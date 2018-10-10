@@ -1241,6 +1241,10 @@
 * Ability to override `HandlerInvoker` instances created in the `ActivateHandlersStep` by overriding - thanks [Liero]
 * Remove .NET Standard 1.3 as a target
 
+## 5.0.1
+
+* Throw exceptions in `TransactionContext` when hooking up callbacks after it has been completed (usually a sign of `async` stuff not being `await`ed) - thanks [mattwhetton]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1269,6 +1273,7 @@
 [Liero]: https://github.com/Liero
 [madstt]: https://github.com/madstt
 [maeserichar]: https://github.com/maeserichar
+[mattwhetton]: https://github.com/mattwhetton
 [maxx1337]: https://github.com/maxx1337
 [mclausen]: https://github.com/mclausen
 [meyce]: https://github.com/Meyce
