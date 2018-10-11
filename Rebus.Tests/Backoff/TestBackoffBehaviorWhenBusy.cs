@@ -140,10 +140,10 @@ namespace Rebus.Tests.Backoff
 				BackoffStrategy.Wait(token);
 			}
 
-	        public Task WaitAsync()
+	        public Task WaitAsync(CancellationToken token)
 	        {
 		        _waitTimes.Enqueue(DateTime.UtcNow);
-		        return BackoffStrategy.WaitAsync();
+		        return BackoffStrategy.WaitAsync(token);
 	        }
 
 			public void WaitError()

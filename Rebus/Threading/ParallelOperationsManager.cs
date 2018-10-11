@@ -74,10 +74,7 @@ namespace Rebus.Threading
             /// <summary>
             /// Gets whether the token was successfully acquired
             /// </summary>
-            public bool CanContinue()
-            {
-                return _canContinue;
-            }
+            public bool CanContinue() => _canContinue;
         }
     }
 }

@@ -40,7 +40,7 @@ namespace Rebus.Tests.Workers
 
 		    // Act
 		    var stopwatch = Stopwatch.StartNew();
-		    await backoffStrategy.WaitAsync();
+		    await backoffStrategy.WaitAsync(CancellationToken.None);
 		    stopwatch.Stop();
 
 		    // Assert

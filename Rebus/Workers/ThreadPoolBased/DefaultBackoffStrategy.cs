@@ -34,8 +34,9 @@ namespace Rebus.Workers.ThreadPoolBased
             InnerWait();
         }
 
-	    /// <inheritdoc />
-	    public Task WaitAsync()
+        /// <param name="cancellationToken"></param>
+        /// <inheritdoc />
+        public Task WaitAsync(CancellationToken cancellationToken)
 	    {
 		    return InnerWaitAsync();
 	    }

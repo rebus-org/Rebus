@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Rebus.Activation;
@@ -33,6 +32,7 @@ using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
 using Rebus.Topic;
+using Rebus.Workers.TplBased;
 
 // ReSharper disable EmptyGeneralCatchClause
 
@@ -216,6 +216,17 @@ namespace Rebus.Config
                 var backoffStrategy = c.Get<IBackoffStrategy>();
                 return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
             });
+
+            //PossiblyRegisterDefault<IWorkerFactory>(c =>
+            //{
+            //    var transport = c.Get<ITransport>();
+            //    var loggerFactory = c.Get<IRebusLoggerFactory>();
+            //    var pipelineInvoker = c.Get<IPipelineInvoker>();
+            //    var options = c.Get<Options>();
+            //    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+            //    var backoffStrategy = c.Get<IBackoffStrategy>();
+            //    return new TplWorkerFactory(transport, loggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
+            //});
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
             {
