@@ -107,6 +107,18 @@ namespace Rebus.Tests.Routing
             return _router.GetDestinationAddress(new Message(NoHeaders, messageBody)).Result;
         }
 
+        [Test]
+        public void WithMultipleRoutesReturnList()
+        {
+            _router
+                .Map<string>("StringDestination")
+                .Map<DateTime>("DateTimeDestination")
+                .Map<int>("IntDestination");
+
+            Assert.That(_router.GetListOfTopics(), Is.EqualTo(new List<string> { "StringDestination" , "DateTimeDestination", "IntDestination" }));
+            
+        }
+
         static Dictionary<string, string> NoHeaders => new Dictionary<string, string>();
     }
 }
