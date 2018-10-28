@@ -156,6 +156,10 @@ You need to ensure that all message types that you intend to bus.Send or bus.Sub
             return destinationAddress;
         }
 
+        /// <summary>
+        /// Called when you need to get a full list of all topics currently in use
+        /// </summary>
+        /// <returns></returns>
         public List<string> GetListOfTopics()
         {
             return _messageTypeAddresses
