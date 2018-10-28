@@ -162,8 +162,11 @@ You need to ensure that all message types that you intend to bus.Send or bus.Sub
         /// <returns></returns>
         public List<string> GetListOfTopics()
         {
+            if(_messageTypeAddresses == null) return new List<string>();
+
             return _messageTypeAddresses
                 .Select(x=>x.Value)
+                .Distinct()
                 .ToList();
         }
     }
