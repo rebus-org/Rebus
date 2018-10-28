@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rebus.Messages;
 
 namespace Rebus.Routing
@@ -18,5 +19,11 @@ namespace Rebus.Routing
         /// Called when subscribing to messages
         /// </summary>
         Task<string> GetOwnerAddress(string topic);
+
+        /// <summary>
+        /// Called when you need to get a full list of all topics currently in use
+        /// </summary>
+        /// <returns></returns>
+        List<string> GetListOfTopics();
     }
 }

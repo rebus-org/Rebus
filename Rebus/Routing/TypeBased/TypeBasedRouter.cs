@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Logging;
@@ -153,6 +154,13 @@ You need to ensure that all message types that you intend to bus.Send or bus.Sub
             }
 
             return destinationAddress;
+        }
+
+        public List<string> GetListOfTopics()
+        {
+            return _messageTypeAddresses
+                .Select(x=>x.Value)
+                .ToList();
         }
     }
 }
