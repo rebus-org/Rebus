@@ -12,19 +12,21 @@ namespace Rebus.Transport
     /// </summary>
     public abstract class AbstractRebusTransport : ITransport
     {
+        static readonly Task<int> TaskCompletedResult = Task.FromResult(0);
+
+        /// <summary>
+        /// Creates the abstract Rebus transport with the given <paramref name="inputQueueName"/> (or NULL, if it's a one-way client)
+        /// </summary>
         protected AbstractRebusTransport(string inputQueueName)
         {
             Address = inputQueueName;
         }
 
         /// <summary>
-        /// Enqueues a
+        /// Enqueues a message in-mem to be sent when the transaction context is committed
         /// </summary>
-        /// <param name="destinationAddress"></param>
-        /// <param name="message"></param>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
+        /// <inheritdoc />
+        public Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             var outgoingMessages = context.GetOrAdd("outgoing-messages", () =>
             {
@@ -36,10 +38,18 @@ namespace Rebus.Transport
             });
 
             outgoingMessages.Enqueue(new OutgoingMessage(message, destinationAddress));
+
+            return TaskCompletedResult;
         }
 
+        /// <summary>
+        /// Creates a queue with the given name
+        /// </summary>
         public abstract void CreateQueue(string address);
 
+        /// <summary>
+        /// Receives the next message
+        /// </summary>
         public abstract Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken);
 
         /// <summary>
