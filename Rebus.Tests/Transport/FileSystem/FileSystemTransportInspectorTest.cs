@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Tests.Time;
 using Rebus.Transport.FileSystem;
 
 namespace Rebus.Tests.Transport.FileSystem
@@ -27,7 +28,7 @@ namespace Rebus.Tests.Transport.FileSystem
 
             public TransportAndInspector Create(string address)
             {
-                var transport = new FileSystemTransport(_path, address);
+                var transport = new FileSystemTransport(new FakeRebusTime(), _path, address);
                 return new TransportAndInspector(transport, transport);
             }
 

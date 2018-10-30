@@ -19,6 +19,7 @@ namespace Rebus.Persistence.FileSystem
         static readonly string TickFormat;
 
         readonly string _basePath;
+        readonly IRebusTime _rebusTime;
         readonly string _lockFile;
         readonly ILog _log;
 
@@ -32,13 +33,13 @@ namespace Rebus.Persistence.FileSystem
         /// <summary>
         /// Creates the timeout manager, storing timeouts in the given <paramref name="basePath"/>
         /// </summary>
-        public FileSystemTimeoutManager(string basePath, IRebusLoggerFactory loggerFactory)
+        public FileSystemTimeoutManager(string basePath, IRebusLoggerFactory rebusLoggerFactory, IRebusTime rebusTime)
         {
-            if (basePath == null) throw new ArgumentNullException(nameof(basePath));
-            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
-            _basePath = basePath;
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _basePath = basePath ?? throw new ArgumentNullException(nameof(basePath));
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
             _lockFile = Path.Combine(basePath, "lock.txt");
-            _log = loggerFactory.GetLogger<FileSystemTimeoutManager>();
+            _log = rebusLoggerFactory.GetLogger<FileSystemTimeoutManager>();
         }
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace Rebus.Persistence.FileSystem
         public async Task<DueMessagesResult> GetDueMessages()
         {
             var lockItem = new FileSystemExclusiveLock(_lockFile, _log);
-            var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(TickFormat);
+            var prefix = _rebusTime.Now.UtcDateTime.Ticks.ToString(TickFormat);
             var enumerable = Directory.EnumerateFiles(_basePath, "*.json")
                 .Where(x => string.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, TickFormat.Length) >= 0)
                 .ToList();

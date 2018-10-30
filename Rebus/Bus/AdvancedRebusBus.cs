@@ -22,19 +22,21 @@ namespace Rebus.Bus
         class AdvancedApi : IAdvancedApi
         {
             readonly RebusBus _rebusBus;
+            readonly IRebusTime _rebusTime;
 
-            public AdvancedApi(RebusBus rebusBus)
+            public AdvancedApi(RebusBus rebusBus, IRebusTime rebusTime)
             {
                 _rebusBus = rebusBus;
+                _rebusTime = rebusTime;
             }
 
             public IWorkersApi Workers => new WorkersApi(_rebusBus);
 
             public ITopicsApi Topics => new TopicsApi(_rebusBus);
 
-            public IRoutingApi Routing => new RoutingApi(_rebusBus);
+            public IRoutingApi Routing => new RoutingApi(_rebusBus, _rebusTime);
 
-            public ITransportMessageApi TransportMessage => new TransportMessageApi(_rebusBus);
+            public ITransportMessageApi TransportMessage => new TransportMessageApi(_rebusBus, _rebusTime);
 
             public IDataBus DataBus => _rebusBus._dataBus;
 
@@ -44,8 +46,13 @@ namespace Rebus.Bus
         class TransportMessageApi : ITransportMessageApi
         {
             readonly RebusBus _rebusBus;
+            readonly IRebusTime _rebusTime;
 
-            public TransportMessageApi(RebusBus rebusBus) => _rebusBus = rebusBus ?? throw new ArgumentNullException(nameof(rebusBus));
+            public TransportMessageApi(RebusBus rebusBus, IRebusTime rebusTime)
+            {
+                _rebusBus = rebusBus ?? throw new ArgumentNullException(nameof(rebusBus));
+                _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+            }
 
             public async Task Forward(string destinationAddress, Dictionary<string, string> optionalAdditionalHeaders = null)
             {
@@ -59,7 +66,7 @@ namespace Rebus.Bus
                 var transportMessage = GetCloneOfCurrentTransportMessage(optionalAdditionalHeaders);
                 var timeoutManagerAddress = _rebusBus.GetTimeoutManagerAddress();
 
-                transportMessage.SetDeferHeaders(RebusTime.Now + delay, _rebusBus._transport.Address);
+                transportMessage.SetDeferHeaders(_rebusTime.Now + delay, _rebusBus._transport.Address);
 
                 await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage);
             }
@@ -160,10 +167,12 @@ namespace Rebus.Bus
         class RoutingApi : IRoutingApi
         {
             readonly RebusBus _rebusBus;
+            readonly IRebusTime _rebusTime;
 
-            public RoutingApi(RebusBus rebusBus)
+            public RoutingApi(RebusBus rebusBus, IRebusTime rebusTime)
             {
                 _rebusBus = rebusBus;
+                _rebusTime = rebusTime;
             }
 
             public Task Send(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
@@ -177,7 +186,7 @@ namespace Rebus.Bus
             {
                 var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Defer, optionalHeaders);
 
-                logicalMessage.SetDeferHeaders(RebusTime.Now + delay, destinationAddress);
+                logicalMessage.SetDeferHeaders(_rebusTime.Now + delay, destinationAddress);
 
                 var timeoutManagerAddress = _rebusBus.GetTimeoutManagerAddress();
 

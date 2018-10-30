@@ -42,11 +42,12 @@ namespace Rebus.Bus
         readonly ILog _log;
         readonly string _busName;
         readonly ITopicNameConvention _topicNameConvention;
+        readonly IRebusTime _rebusTime;
 
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus, ITopicNameConvention topicNameConvention)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus, ITopicNameConvention topicNameConvention, IRebusTime rebusTime)
         {
             _workerFactory = workerFactory;
             _router = router;
@@ -58,7 +59,8 @@ namespace Rebus.Bus
             _dataBus = dataBus;
             _log = rebusLoggerFactory.GetLogger<RebusBus>();
             _topicNameConvention = topicNameConvention;
-            
+            _rebusTime = rebusTime;
+
             var defaultBusName = $"Rebus {Interlocked.Increment(ref _busIdCounter)}";
             
             _busName = options.OptionalBusName ?? defaultBusName;
@@ -116,7 +118,7 @@ namespace Rebus.Bus
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
             
-            logicalMessage.SetDeferHeaders(RebusTime.Now + delay, _transport.Address);
+            logicalMessage.SetDeferHeaders(_rebusTime.Now + delay, _transport.Address);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 
@@ -133,7 +135,7 @@ namespace Rebus.Bus
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
-            logicalMessage.SetDeferHeaders(RebusTime.Now + delay, destinationAddress);
+            logicalMessage.SetDeferHeaders(_rebusTime.Now + delay, destinationAddress);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 
@@ -247,7 +249,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Gets the API for advanced features of the bus
         /// </summary>
-        public IAdvancedApi Advanced => new AdvancedApi(this);
+        public IAdvancedApi Advanced => new AdvancedApi(this, _rebusTime);
 
         /// <summary>
         /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message

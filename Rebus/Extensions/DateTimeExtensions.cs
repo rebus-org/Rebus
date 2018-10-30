@@ -12,9 +12,9 @@ namespace Rebus.Extensions
         /// <summary>
         /// Gets the time from this instant until now (as returned by <see cref="RebusTime.Now"/>)
         /// </summary>
-        public static TimeSpan ElapsedUntilNow(this DateTimeOffset dateTime)
+        public static TimeSpan ElapsedUntilNow(this DateTimeOffset dateTime, IRebusTime rebusTime)
         {
-            return RebusTime.Now - dateTime.ToUniversalTime();
+            return rebusTime.Now - dateTime.ToUniversalTime();
         }
 
         /// <summary>

@@ -16,14 +16,16 @@ namespace Rebus.Auditing.Messages
     {
         readonly AuditingHelper _auditingHelper;
         readonly ITransport _transport;
+        readonly IRebusTime _rebusTime;
 
         /// <summary>
         /// Constructs the step
         /// </summary>
-        public IncomingAuditingStep(AuditingHelper auditingHelper, ITransport transport)
+        public IncomingAuditingStep(AuditingHelper auditingHelper, ITransport transport, IRebusTime rebusTime)
         {
             _auditingHelper = auditingHelper;
             _transport = transport;
+            _rebusTime = rebusTime;
         }
 
         public void Initialize()
@@ -33,7 +35,7 @@ namespace Rebus.Auditing.Messages
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var begin = RebusTime.Now;
+            var begin = _rebusTime.Now;
 
             await next();
 

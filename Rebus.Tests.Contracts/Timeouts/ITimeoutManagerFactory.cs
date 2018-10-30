@@ -1,4 +1,5 @@
-﻿using Rebus.Timeouts;
+﻿using System;
+using Rebus.Timeouts;
 
 namespace Rebus.Tests.Contracts.Timeouts
 {
@@ -7,5 +8,6 @@ namespace Rebus.Tests.Contracts.Timeouts
         ITimeoutManager Create();
         void Cleanup();
         string GetDebugInfo();
+        void FakeIt(DateTimeOffset fakeTime);
     }
 }

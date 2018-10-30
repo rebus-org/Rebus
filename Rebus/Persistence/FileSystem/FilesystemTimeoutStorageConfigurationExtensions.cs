@@ -1,6 +1,7 @@
 using System;
 using Rebus.Config;
 using Rebus.Logging;
+using Rebus.Time;
 using Rebus.Timeouts;
 
 namespace Rebus.Persistence.FileSystem
@@ -20,7 +21,7 @@ namespace Rebus.Persistence.FileSystem
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (basePath == null) throw new ArgumentNullException(nameof(basePath));
 
-            configurer.Register(c => new FileSystemTimeoutManager(basePath, c.Get<IRebusLoggerFactory>()));
+            configurer.Register(c => new FileSystemTimeoutManager(basePath, c.Get<IRebusLoggerFactory>(), c.Get<IRebusTime>()));
         }
     }
 }

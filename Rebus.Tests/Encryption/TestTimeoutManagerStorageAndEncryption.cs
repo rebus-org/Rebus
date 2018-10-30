@@ -9,6 +9,7 @@ using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
+using Rebus.Tests.Time;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Encryption
@@ -26,7 +27,7 @@ namespace Rebus.Tests.Encryption
 
             Using(activator);
 
-            _timeoutManager = new InMemoryTimeoutManager();
+            _timeoutManager = new InMemoryTimeoutManager(new FakeRebusTime());
 
             _bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "encryption-and-timeouts-together"))

@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus.Config;
+using Rebus.Time;
 
 namespace Rebus.Transport.FileSystem
 {
@@ -19,11 +20,11 @@ namespace Rebus.Transport.FileSystem
 
             configurer
                 .OtherService<FileSystemTransport>()
-                .Register(context => new FileSystemTransport(baseDirectory, inputQueueName));
+                .Register(c => new FileSystemTransport(c.Get<IRebusTime>(), baseDirectory, inputQueueName));
 
             configurer
                 .OtherService<ITransportInspector>()
-                .Register(context => context.Get<FileSystemTransport>());
+                .Register(c => c.Get<FileSystemTransport>());
 
             configurer.Register(context => context.Get<FileSystemTransport>());
             
@@ -37,7 +38,8 @@ namespace Rebus.Transport.FileSystem
         {
             if (baseDirectory == null) throw new ArgumentNullException(nameof(baseDirectory));
 
-            configurer.Register(context => new FileSystemTransport(baseDirectory, null));
+            configurer.Register(c => new FileSystemTransport(c.Get<IRebusTime>(), baseDirectory, null));
+            
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
     }

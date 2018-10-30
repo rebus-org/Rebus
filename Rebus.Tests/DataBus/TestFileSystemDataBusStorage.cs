@@ -11,6 +11,7 @@ using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Time;
 
 namespace Rebus.Tests.DataBus
 {
@@ -25,7 +26,7 @@ namespace Rebus.Tests.DataBus
 
             DeleteHelper.DeleteDirectory(directoryPath);
 
-            _storage = new FileSystemDataBusStorage(directoryPath, new ConsoleLoggerFactory(false));
+            _storage = new FileSystemDataBusStorage(directoryPath, new ConsoleLoggerFactory(false), new FakeRebusTime());
             _storage.Initialize();
         }
 

@@ -2,8 +2,8 @@
 using System;
 using System.Threading.Tasks;
 using Rebus.Transport;
-using Rebus.Time;
 using Rebus.Extensions;
+using Rebus.Time;
 
 namespace Rebus.Pipeline.Send
 {
@@ -27,14 +27,16 @@ namespace Rebus.Pipeline.Send
 (*) Unless explicitly set to something else")]
     public class AssignDefaultHeadersStep : IOutgoingStep
     {
+        readonly IRebusTime _rebusTime;
         readonly bool _hasOwnAddress;
         readonly string _address;
 
         /// <summary>
         /// Constructs the step, getting the input queue address from the given <see cref="ITransport"/>
         /// </summary>
-        public AssignDefaultHeadersStep(ITransport transport)
+        public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime)
         {
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
             _address = transport.Address;
             _hasOwnAddress = !string.IsNullOrWhiteSpace(_address);
         }
@@ -58,7 +60,7 @@ namespace Rebus.Pipeline.Send
                 headers[Headers.ReturnAddress] = _address;
             }
 
-            headers[Headers.SentTime] = RebusTime.Now.ToString("O");
+            headers[Headers.SentTime] = _rebusTime.Now.ToString("O");
 
             if (_hasOwnAddress)
             {

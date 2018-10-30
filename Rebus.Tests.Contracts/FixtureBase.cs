@@ -15,8 +15,6 @@ namespace Rebus.Tests.Contracts
         [SetUp]
         public void _SetUp()
         {
-            RebusTimeMachine.Reset();
-
             _disposables.Clear();
 
             SetUp();
