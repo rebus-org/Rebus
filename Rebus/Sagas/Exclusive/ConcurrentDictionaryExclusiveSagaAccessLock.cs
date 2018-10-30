@@ -12,7 +12,7 @@ namespace Rebus.Sagas.Exclusive
         const string DummyValue = "dummy";
         
         static readonly Task<bool> TrueResult = Task.FromResult(true);
-        static readonly Task<bool> FalseResult = Task.FromResult(true);
+        static readonly Task<bool> FalseResult = Task.FromResult(false);
 
         readonly ConcurrentDictionary<string, string> _locks = new ConcurrentDictionary<string, string>();
 
