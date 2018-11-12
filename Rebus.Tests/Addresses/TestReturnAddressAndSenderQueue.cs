@@ -10,6 +10,7 @@ using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Addresses
 {
@@ -42,8 +43,8 @@ namespace Rebus.Tests.Addresses
             {
                 var headers = context.Headers;
 
-                returnAddress = headers.GetValueOrNull(Messages.Headers.ReturnAddress);
-                senderAddress = headers.GetValueOrNull(Messages.Headers.SenderAddress);
+                returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
+                senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
                 
                 messageHandled.Set();
             });
@@ -67,8 +68,8 @@ namespace Rebus.Tests.Addresses
             {
                 var headers = context.Headers;
 
-                returnAddress = headers.GetValueOrNull(Messages.Headers.ReturnAddress);
-                senderAddress = headers.GetValueOrNull(Messages.Headers.SenderAddress);
+                returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
+                senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
                 
                 messageHandled.Set();
             });

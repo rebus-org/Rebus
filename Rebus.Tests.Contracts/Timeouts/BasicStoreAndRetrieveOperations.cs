@@ -41,7 +41,7 @@ namespace Rebus.Tests.Contracts.Timeouts
         [Test]
         public async Task IsCapableOfReturningTheMessageBodyAsWell()
         {
-            var someTimeInThePast = RebusTime.Now.AddMinutes(-1);
+            var someTimeInThePast = DateTime.Now.AddMinutes(-1);
 
             const string stringBody = "hello there!";
 
@@ -62,7 +62,7 @@ namespace Rebus.Tests.Contracts.Timeouts
         [Test]
         public async Task ImmediatelyGetsTimeoutWhenItIsDueInThePast()
         {
-            var someTimeInThePast = RebusTime.Now.AddMinutes(-1);
+            var someTimeInThePast = DateTime.Now.AddMinutes(-1);
 
             await _timeoutManager.Defer(someTimeInThePast, HeadersWith("i know u"), EmptyBody());
 
@@ -78,11 +78,11 @@ namespace Rebus.Tests.Contracts.Timeouts
         [Test]
         public async Task TimeoutsAreNotRemovedIfTheyAreNotMarkedAsComplete()
         {
-            var theFuture = RebusTime.Now.AddMinutes(1);
+            var theFuture = DateTime.Now.AddMinutes(1);
 
             await _timeoutManager.Defer(theFuture, HeadersWith("i know u"), EmptyBody());
             
-            RebusTimeMachine.FakeIt(theFuture + TimeSpan.FromSeconds(1));
+            _factory.FakeIt(theFuture + TimeSpan.FromSeconds(1));
 
             using (var result = await _timeoutManager.GetDueMessages())
             {
@@ -122,7 +122,7 @@ namespace Rebus.Tests.Contracts.Timeouts
                 Assert.That(dueTimeoutsNow.Count, Is.EqualTo(0));
             }
 
-            RebusTimeMachine.FakeIt(theFuture);
+            _factory.FakeIt(theFuture);
 
             using (var result = await _timeoutManager.GetDueMessages())
             {
@@ -133,7 +133,7 @@ namespace Rebus.Tests.Contracts.Timeouts
                 await dueTimeoutsInTheFuture[0].MarkAsCompleted();
             }
 
-            RebusTimeMachine.FakeIt(evenFurtherIntoTheFuture);
+            _factory.FakeIt(evenFurtherIntoTheFuture);
 
             using (var result = await _timeoutManager.GetDueMessages())
             {

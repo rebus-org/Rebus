@@ -11,6 +11,8 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+// ReSharper disable UnusedMember.Global
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Assumptions
 {
@@ -104,8 +106,7 @@ namespace Rebus.Tests.Assumptions
 
         abstract class BaseTaskCommand
         {
-            private IList<TimeSpan> _delays = new List<TimeSpan>();
-            public IList<TimeSpan> Delays => _delays;
+            public IList<TimeSpan> Delays { get; } = new List<TimeSpan>();
         }
 
         class DerivedTaskCommand : BaseTaskCommand

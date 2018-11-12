@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus.Config;
+using Rebus.Time;
 using Rebus.Timeouts;
 
 namespace Rebus.Persistence.InMem
@@ -17,7 +18,8 @@ namespace Rebus.Persistence.InMem
         public static void StoreInMemory(this StandardConfigurer<ITimeoutManager> configurer)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer.Register(c => new InMemoryTimeoutManager());
+            
+            configurer.Register(c => new InMemoryTimeoutManager(c.Get<IRebusTime>()));
         }
     }
 }

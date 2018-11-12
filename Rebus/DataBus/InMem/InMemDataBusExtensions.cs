@@ -1,5 +1,6 @@
 using System;
 using Rebus.Config;
+using Rebus.Time;
 
 namespace Rebus.DataBus.InMem
 {
@@ -17,7 +18,7 @@ namespace Rebus.DataBus.InMem
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (inMemDataStore == null) throw new ArgumentNullException(nameof(inMemDataStore));
 
-            configurer.Register(c => new InMemDataBusStorage(inMemDataStore));
+            configurer.Register(c => new InMemDataBusStorage(inMemDataStore, c.Get<IRebusTime>()));
         }
     }
 }

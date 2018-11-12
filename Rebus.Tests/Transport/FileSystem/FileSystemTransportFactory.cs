@@ -2,6 +2,7 @@
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Time;
 using Rebus.Transport;
 using Rebus.Transport.FileSystem;
 
@@ -20,12 +21,12 @@ namespace Rebus.Tests.Transport.FileSystem
 
         public ITransport CreateOneWayClient()
         {
-            return new FileSystemTransport(_baseDirectory, null);
+            return new FileSystemTransport(new FakeRebusTime(), _baseDirectory, null);
         }
 
         public ITransport Create(string inputQueueAddress)
         {
-            return new FileSystemTransport(_baseDirectory, inputQueueAddress);
+            return new FileSystemTransport(new FakeRebusTime(), _baseDirectory, inputQueueAddress);
         }
 
         public void CleanUp()

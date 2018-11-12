@@ -48,7 +48,7 @@ namespace Rebus.Tests.Contracts.DataBus
 
             var justSomeTime = new DateTimeOffset(new DateTime(2016, 1, 1));
 
-            RebusTimeMachine.FakeIt(justSomeTime);
+            _factory.FakeIt(justSomeTime);
 
             _storage.Read(knownId).Result.Dispose();
 
@@ -104,7 +104,8 @@ namespace Rebus.Tests.Contracts.DataBus
         public async Task CanGetStandardMetada()
         {
             var fakeTime = new DateTimeOffset(new DateTime(2016, 6, 17));
-            RebusTimeMachine.FakeIt(fakeTime);
+            
+            _factory.FakeIt(fakeTime);
 
             const string knownId = "known id";
 

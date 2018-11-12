@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Compression;
 using Rebus.DataBus.InMem;
 using Rebus.Tests.Contracts;
+using Rebus.Tests.Time;
 
 namespace Rebus.Tests.DataBus.Zip
 {
@@ -18,7 +19,7 @@ namespace Rebus.Tests.DataBus.Zip
         {
             _random = new Random(DateTime.Now.GetHashCode());
 
-            var storage = new InMemDataBusStorage(new InMemDataStore());
+            var storage = new InMemDataBusStorage(new InMemDataStore(), new FakeRebusTime());
 
             _zipStorage = new ZippingDataBusStorageDecorator(storage, DataCompressionMode.Always);
         }

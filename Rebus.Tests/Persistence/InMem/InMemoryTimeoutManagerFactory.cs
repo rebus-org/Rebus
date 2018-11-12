@@ -5,6 +5,7 @@ using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts.Timeouts;
+using Rebus.Tests.Time;
 using Rebus.Timeouts;
 
 namespace Rebus.Tests.Persistence.InMem
@@ -14,7 +15,13 @@ namespace Rebus.Tests.Persistence.InMem
 
     public class InMemoryTimeoutManagerFactory : ITimeoutManagerFactory
     {
-        readonly InMemoryTimeoutManager _timeoutManager = new InMemoryTimeoutManager();
+        readonly FakeRebusTime _fakeRebusTime = new FakeRebusTime();
+        readonly InMemoryTimeoutManager _timeoutManager;
+
+        public InMemoryTimeoutManagerFactory()
+        {
+            _timeoutManager = new InMemoryTimeoutManager(_fakeRebusTime);
+        }
 
         public ITimeoutManager Create()
         {
@@ -23,6 +30,7 @@ namespace Rebus.Tests.Persistence.InMem
 
         public void Cleanup()
         {
+            _fakeRebusTime.Reset();
         }
 
         public string GetDebugInfo()
@@ -35,6 +43,11 @@ namespace Rebus.Tests.Persistence.InMem
 
                     return $"{deferredMessage.DueTime}: {label}";
                 }));
+        }
+
+        public void FakeIt(DateTimeOffset fakeTime)
+        {
+            _fakeRebusTime.FakeIt(fakeTime);
         }
     }
 }

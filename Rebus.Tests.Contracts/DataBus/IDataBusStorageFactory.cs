@@ -1,4 +1,5 @@
-﻿using Rebus.DataBus;
+﻿using System;
+using Rebus.DataBus;
 
 namespace Rebus.Tests.Contracts.DataBus
 {
@@ -6,5 +7,6 @@ namespace Rebus.Tests.Contracts.DataBus
     {
         IDataBusStorage Create();
         void CleanUp();
+        void FakeIt(DateTimeOffset fakeTime);
     }
 }

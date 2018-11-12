@@ -31,6 +31,7 @@ using Rebus.Transport;
 using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
+using Rebus.Time;
 using Rebus.Topic;
 using Rebus.Workers.TplBased;
 
@@ -164,6 +165,8 @@ namespace Rebus.Config
             _injectionist.Register(c => c.Get<CancellationTokenSource>().Token);
 
             PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
+            
+            PossiblyRegisterDefault<IRebusTime>(c => new DefaultRebusTime());
 
             //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
             PossiblyRegisterDefault<IAsyncTaskFactory>(c =>
@@ -234,7 +237,8 @@ namespace Rebus.Config
                 var settings = c.Get<SimpleRetryStrategySettings>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, transport);
+                var rebusTime = c.Get<IRebusTime>();
+                return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, transport, rebusTime);
             });
 
             PossiblyRegisterDefault<IErrorHandler>(c =>
@@ -273,6 +277,7 @@ namespace Rebus.Config
                 var serializer = c.Get<ISerializer>();
                 var transport = c.Get<ITransport>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var rebusTime = c.Get<IRebusTime>();
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
@@ -284,7 +289,7 @@ namespace Rebus.Config
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
-                    .OnSend(new AssignDefaultHeadersStep(transport))
+                    .OnSend(new AssignDefaultHeadersStep(transport, rebusTime))
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
@@ -313,7 +318,9 @@ namespace Rebus.Config
                 c.Get<IRebusLoggerFactory>(),
                 c.Get<BusLifetimeEvents>(),
                 c.Get<IDataBus>(),
-                c.Get<ITopicNameConvention>()));
+                c.Get<ITopicNameConvention>(),
+                c.Get<IRebusTime>()
+            ));
 
             // since an error during resolution does not give access to disposable instances, we need to do this
             var disposableInstancesTrackedFromInitialResolution = new ConcurrentStack<IDisposable>();

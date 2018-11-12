@@ -1,6 +1,7 @@
 ﻿using System;
 using Rebus.Config;
 using Rebus.Logging;
+using Rebus.Time;
 
 namespace Rebus.DataBus.FileSystem
 {
@@ -20,8 +21,9 @@ namespace Rebus.DataBus.FileSystem
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var rebusTime = c.Get<IRebusTime>();
 
-                return new FileSystemDataBusStorage(directoryPath, rebusLoggerFactory);
+                return new FileSystemDataBusStorage(directoryPath, rebusLoggerFactory, rebusTime);
             });
         }
     }

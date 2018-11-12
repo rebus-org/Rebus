@@ -17,7 +17,16 @@ namespace Rebus.Persistence.InMem
     /// </summary>
     public class InMemoryTimeoutManager : ITimeoutManager, IEnumerable<InMemoryTimeoutManager.DeferredMessage>
     {
+        readonly IRebusTime _rebusTime;
         readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
+
+        /// <summary>
+        /// Creates the in-mem timeout manager
+        /// </summary>
+        public InMemoryTimeoutManager(IRebusTime rebusTime)
+        {
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+        }
 
         /// <summary>
         /// Stores the message with the given headers and body data, delaying it until the specified <paramref name="approximateDueTime"/>
@@ -44,7 +53,7 @@ namespace Rebus.Persistence.InMem
             lock (_deferredMessages)
             {
                 var keyValuePairsToRemove = _deferredMessages
-                    .Where(v => RebusTime.Now >= v.Value.DueTime)
+                    .Where(v => _rebusTime.Now >= v.Value.DueTime)
                     .ToHashSet();
 
                 var result = new DueMessagesResult(keyValuePairsToRemove

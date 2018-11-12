@@ -27,6 +27,7 @@ namespace Rebus.Retry.ErrorTracking
         readonly ILog _log;
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
         readonly ITransport _transport;
+        readonly IRebusTime _rebusTime;
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly IAsyncTask _cleanupOldTrackedErrorsTask;
 
@@ -35,13 +36,14 @@ namespace Rebus.Retry.ErrorTracking
         /// <summary>
         /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
         /// </summary>
-        public InMemErrorTracker(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, ITransport transport)
+        public InMemErrorTracker(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, ITransport transport, IRebusTime rebusTime)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
 
             _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
 
             _log = rebusLoggerFactory.GetLogger<InMemErrorTracker>();
 
@@ -69,7 +71,7 @@ namespace Rebus.Retry.ErrorTracking
         public void MarkAsFinal(string messageId)
         {
             _trackedErrors.AddOrUpdate(messageId,
-                id => new ErrorTracking(final: true),
+                id => new ErrorTracking(_rebusTime, final: true),
                 (id, tracking) => tracking.MarkAsFinal());
         }
 
@@ -79,8 +81,8 @@ namespace Rebus.Retry.ErrorTracking
         public void RegisterError(string messageId, Exception exception)
         {
             var errorTracking = _trackedErrors.AddOrUpdate(messageId,
-                id => new ErrorTracking(exception),
-                (id, tracking) => tracking.AddError(exception, tracking.Final));
+                id => new ErrorTracking(_rebusTime, exception),
+                (id, tracking) => tracking.AddError(_rebusTime, exception, tracking.Final));
 
             var message = errorTracking.Final
                 ? "Unhandled exception {errorNumber} (FINAL) while handling message with ID {messageId}"
@@ -167,16 +169,18 @@ namespace Rebus.Retry.ErrorTracking
 
         class ErrorTracking
         {
+            readonly IRebusTime _rebusTime;
             readonly CaughtException[] _caughtExceptions;
 
-            ErrorTracking(IEnumerable<CaughtException> caughtExceptions, bool final = false)
+            ErrorTracking(IRebusTime rebusTime, IEnumerable<CaughtException> caughtExceptions, bool final = false)
             {
+                _rebusTime = rebusTime;
                 Final = final;
                 _caughtExceptions = caughtExceptions.ToArray();
             }
 
-            public ErrorTracking(Exception exception = null, bool final = false)
-                : this(exception != null ? new[] { new CaughtException(exception) } : new CaughtException[0], final)
+            public ErrorTracking(IRebusTime rebusTime, Exception exception = null, bool final = false)
+                : this(rebusTime, exception != null ? new[] { new CaughtException(rebusTime.Now, exception) } : new CaughtException[0], final)
             {
             }
 
@@ -186,12 +190,12 @@ namespace Rebus.Retry.ErrorTracking
 
             public IEnumerable<CaughtException> Errors => _caughtExceptions;
 
-            public ErrorTracking AddError(Exception caughtException, bool final)
+            public ErrorTracking AddError(IRebusTime rebusTime, Exception caughtException, bool final)
             {
                 //// don't change anymore if this one is already final
                 //if (Final) return this;
 
-                return new ErrorTracking(_caughtExceptions.Concat(new[] { new CaughtException(caughtException) }), final);
+                return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { new CaughtException(_rebusTime.Now, caughtException) }), final);
             }
 
             public TimeSpan ElapsedSinceLastError
@@ -199,23 +203,20 @@ namespace Rebus.Retry.ErrorTracking
                 get
                 {
                     var timeOfMostRecentError = _caughtExceptions.Max(e => e.Time);
-                    var elapsedSinceLastError = timeOfMostRecentError.ElapsedUntilNow();
+                    var elapsedSinceLastError = timeOfMostRecentError.ElapsedUntilNow(_rebusTime);
                     return elapsedSinceLastError;
                 }
             }
 
-            public ErrorTracking MarkAsFinal()
-            {
-                return new ErrorTracking(_caughtExceptions, final: true);
-            }
+            public ErrorTracking MarkAsFinal() => new ErrorTracking(_rebusTime, _caughtExceptions, final: true);
         }
 
         class CaughtException
         {
-            public CaughtException(Exception exception)
+            public CaughtException(DateTimeOffset time, Exception exception)
             {
                 Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-                Time = RebusTime.Now;
+                Time = time;
             }
 
             public Exception Exception { get; }

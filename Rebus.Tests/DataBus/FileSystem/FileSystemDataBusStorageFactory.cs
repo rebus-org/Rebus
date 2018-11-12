@@ -6,12 +6,15 @@ using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.DataBus;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Time;
 
 namespace Rebus.Tests.DataBus.FileSystem
 {
     public class FileSystemDataBusStorageFactory : IDataBusStorageFactory
     {
         static readonly string DirectoryPath = Path.Combine(TestConfig.DirectoryPath(), "databus");
+
+        readonly FakeRebusTime _fakeRebusTime = new FakeRebusTime();
 
         public FileSystemDataBusStorageFactory()
         {
@@ -20,7 +23,7 @@ namespace Rebus.Tests.DataBus.FileSystem
 
         public IDataBusStorage Create()
         {
-            var fileSystemDataBusStorage = new FileSystemDataBusStorage(DirectoryPath, new ConsoleLoggerFactory(false));
+            var fileSystemDataBusStorage = new FileSystemDataBusStorage(DirectoryPath, new ConsoleLoggerFactory(false), _fakeRebusTime);
             fileSystemDataBusStorage.Initialize();
             return fileSystemDataBusStorage;
         }
@@ -28,7 +31,11 @@ namespace Rebus.Tests.DataBus.FileSystem
         public void CleanUp()
         {
             CleanUpDirectory();
+
+            _fakeRebusTime.Reset();
         }
+
+        public void FakeIt(DateTimeOffset fakeTime) => _fakeRebusTime.FakeIt(fakeTime);
 
         static void CleanUpDirectory()
         {
@@ -37,7 +44,6 @@ namespace Rebus.Tests.DataBus.FileSystem
             Console.WriteLine($"Removing directory '{DirectoryPath}'");
 
             DeleteHelper.DeleteDirectory(DirectoryPath);
-
         }
     }
 }

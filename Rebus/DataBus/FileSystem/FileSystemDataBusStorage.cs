@@ -20,16 +20,17 @@ namespace Rebus.DataBus.FileSystem
         const string MetadataFileExtension = "meta";
         readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly string _directoryPath;
+        readonly IRebusTime _rebusTime;
         readonly ILog _log;
 
         /// <summary>
         /// Creates the data storage
         /// </summary>
-        public FileSystemDataBusStorage(string directoryPath, IRebusLoggerFactory rebusLoggerFactory)
+        public FileSystemDataBusStorage(string directoryPath, IRebusLoggerFactory rebusLoggerFactory, IRebusTime rebusTime)
         {
-            if (directoryPath == null) throw new ArgumentNullException(nameof(directoryPath));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            _directoryPath = directoryPath;
+            _directoryPath = directoryPath ?? throw new ArgumentNullException(nameof(directoryPath));
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
             _log = rebusLoggerFactory.GetLogger<FileSystemDataBusStorage>();
         }
 
@@ -62,7 +63,7 @@ namespace Rebus.DataBus.FileSystem
 
             var metadataToSave = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
             {
-                [MetadataKeys.SaveTime] = RebusTime.Now.ToString("O")
+                [MetadataKeys.SaveTime] = _rebusTime.Now.ToString("O")
             };
             var metadataFilePath = GetFilePath(id, MetadataFileExtension);
 
@@ -139,7 +140,7 @@ namespace Rebus.DataBus.FileSystem
                         var jsonText = await reader.ReadToEndAsync();
                         var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
 
-                        metadata[MetadataKeys.ReadTime] = RebusTime.Now.ToString("O");
+                        metadata[MetadataKeys.ReadTime] = _rebusTime.Now.ToString("O");
 
                         var newJsonText = _dictionarySerializer.SerializeToString(metadata);
 

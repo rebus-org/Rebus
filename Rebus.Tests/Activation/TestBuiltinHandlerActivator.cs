@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Activation
 {
