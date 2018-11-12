@@ -40,7 +40,7 @@ namespace Rebus.Tests.Workers
             await Task.WhenAll(Enumerable.Range(0, messageCount)
                 .Select(n => bus.SendLocal($"THIS IS MESSAGE {n}")));
 
-            counter.WaitForResetEvent(timeoutSeconds: 10);
+            counter.WaitForResetEvent(timeoutSeconds: 15);
         }
 
         BuiltinHandlerActivator StartBus(int workers, int parallelism, WorkerFactory workerFactory)
