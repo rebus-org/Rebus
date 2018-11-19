@@ -44,6 +44,20 @@ namespace Rebus.Transport.InMem
 
             _queues.Clear();
         }
+        
+        public int Count()
+        {
+            return _queues.Values.Sum(q => q.Count);
+        }
+
+        public int Count(string inputQueueName)
+        {
+            if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
+
+            var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<InMemTransportMessage>());
+
+            return messageQueue.Count;
+        }
 
         /// <summary>
         /// Delivers the specified <see cref="InMemTransportMessage"/> to the address specified by <paramref name="destinationAddress"/>.
