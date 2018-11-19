@@ -1245,7 +1245,7 @@
 
 * Throw exceptions in `TransactionContext` when hooking up callbacks after it has been completed (usually a sign of `async` stuff not being `await`ed) - thanks [mattwhetton]
 
-## 6.0.0-b01
+## 5.0.2
 
 * Add count methods form `InMemNetwork` - thanks [caspertdk]
 
