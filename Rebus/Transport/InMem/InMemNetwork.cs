@@ -46,11 +46,17 @@ namespace Rebus.Transport.InMem
             _queues.Clear();
         }
         
+        /// <summary>
+        /// Get the total count of all queue messages
+        /// </summary>
         public int Count()
         {
             return _queues.Values.Sum(q => q.Count);
         }
 
+        /// <summary>
+        /// Get the current queue message count of the specified <paramref name="inputQueueName"/>
+        /// </summary>
         public int Count(string inputQueueName)
         {
             if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
