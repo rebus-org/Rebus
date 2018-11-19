@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Transport.InMem;
 
 namespace Rebus.Transport.InMem
 {
@@ -43,6 +44,26 @@ namespace Rebus.Transport.InMem
             Console.WriteLine($"Resetting in-mem network '{_networkId}'");
 
             _queues.Clear();
+        }
+        
+        /// <summary>
+        /// Get the total count of all queue messages
+        /// </summary>
+        public int Count()
+        {
+            return _queues.Values.Sum(q => q.Count);
+        }
+
+        /// <summary>
+        /// Get the current queue message count of the specified <paramref name="inputQueueName"/>
+        /// </summary>
+        public int Count(string inputQueueName)
+        {
+            if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
+
+            var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<InMemTransportMessage>());
+
+            return messageQueue.Count;
         }
 
         /// <summary>
