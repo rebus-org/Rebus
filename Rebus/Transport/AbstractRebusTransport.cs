@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Messages;
+#pragma warning disable 1998
 
 namespace Rebus.Transport
 {
@@ -38,8 +39,14 @@ namespace Rebus.Transport
             outgoingMessages.Enqueue(new OutgoingMessage(message, destinationAddress));
         }
 
+        /// <summary>
+        /// Must implement the creation of a "queue" (whatever that means for the given transport implementation)
+        /// </summary>
         public abstract void CreateQueue(string address);
 
+        /// <summary>
+        /// Must implement a receive operation, returning the next available message, or null of none could be found
+        /// </summary>
         public abstract Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken);
 
         /// <summary>

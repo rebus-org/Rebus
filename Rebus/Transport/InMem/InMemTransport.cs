@@ -38,7 +38,7 @@ namespace Rebus.Transport.InMem
         }
 
         /// <summary>
-        /// Receives the next message from the queue identified by the configured <see cref="Address"/>, returning null if none was available
+        /// Receives the next message from the queue identified by the configured <see cref="AbstractRebusTransport.Address"/>, returning null if none was available
         /// </summary>
         public override async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
@@ -57,6 +57,9 @@ namespace Rebus.Transport.InMem
             return nextMessage.ToTransportMessage();
         }
 
+        /// <summary>
+        /// Sends all outgoing messages by delivering them to the in-mem network
+        /// </summary>
         protected override async Task SendOutgoingMessages(IEnumerable<OutgoingMessage> outgoingMessages, ITransactionContext context)
         {
             foreach (var message in outgoingMessages)
