@@ -13,6 +13,9 @@ namespace Rebus.Transport
     /// </summary>
     public abstract class AbstractRebusTransport : ITransport
     {
+        /// <summary>
+        /// Creates the abstract transport with the given <paramref name="inputQueueName"/>
+        /// </summary>
         protected AbstractRebusTransport(string inputQueueName)
         {
             Address = inputQueueName;
