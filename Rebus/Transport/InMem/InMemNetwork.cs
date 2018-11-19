@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Rebus.Extensions;
 using Rebus.Messages;
-using Rebus.Transport.InMem;
 
 namespace Rebus.Transport.InMem
 {
