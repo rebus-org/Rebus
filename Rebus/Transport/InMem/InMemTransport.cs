@@ -92,10 +92,5 @@ namespace Rebus.Transport.InMem
                 {TransportInspectorPropertyKeys.QueueLength, count.ToString()}
             };
         }
-
-        /// <summary>
-        /// Gets the input queue
-        /// </summary>
-        public string Address => _inputQueueAddress;
     }
 }
