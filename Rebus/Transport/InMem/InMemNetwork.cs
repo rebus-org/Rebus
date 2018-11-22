@@ -22,6 +22,11 @@ namespace Rebus.Transport.InMem
             new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// Retrieves all queues.
+        /// </summary>
+        public IEnumerable<string> Queues => _queues.Keys;
+
+        /// <summary>
         /// Constructs the in-mem network, optionally (if <paramref name="outputEventsToConsole"/> is set to true) outputting information
         /// about what is happening inside it to <see cref="Console.Out"/>
         /// </summary>

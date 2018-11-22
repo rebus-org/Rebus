@@ -17,6 +17,19 @@ namespace Rebus.Tests.Transport.InMem
             _inMemNetwork = new InMemNetwork();
             _inMemNetwork.CreateQueue("input");
         }
+
+        [Test]
+        public void Queues_NoQueues_ReturnsEmpty()
+        {
+            Assert.That(new InMemNetwork().Queues, Is.Empty);
+        }
+
+        [Test]
+        public void Queues_ReturnsCreatedQueues()
+        {
+            _inMemNetwork.CreateQueue("test");
+            Assert.That(_inMemNetwork.Queues, Is.EquivalentTo(new[] {"input", "test"}));
+        }
         
         [Test]
         public void GetMessages_NonExistingQueue_ReturnsEmptyList()
