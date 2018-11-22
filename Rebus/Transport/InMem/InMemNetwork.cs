@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -125,6 +126,16 @@ namespace Rebus.Transport.InMem
             return _queues.TryGetValue(address, out var queue)
                 ? queue.Count
                 : 0;
+        }
+
+        /// <summary>
+        /// Gets the messages currently stored in the queue with the given <paramref name="address"/>
+        /// </summary>
+        public IReadOnlyList<InMemTransportMessage> GetMessages(string address)
+        {
+            return _queues.TryGetValue(address, out var queue)
+                ? queue.ToArray()
+                : new InMemTransportMessage[0];
         }
 
         static bool MessageIsExpired(InMemTransportMessage message)
