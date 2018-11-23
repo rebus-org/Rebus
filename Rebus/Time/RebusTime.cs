@@ -7,11 +7,22 @@ namespace Rebus.Time
     /// </summary>
     public class RebusTime
     {
-        internal static readonly Func<DateTimeOffset> DefaultTimeFactory = () => DateTimeOffset.Now;
+        private static readonly Func<DateTimeOffset> DefaultTimeFactory = () => DateTimeOffset.Now;
 
-        internal static Func<DateTimeOffset> CurrentTimeFactory = DefaultTimeFactory;
+        private static Func<DateTimeOffset> CurrentTimeFactory = DefaultTimeFactory;
 
-        internal static void Reset()
+        /// <summary>
+        /// Sets the current factory which determines the current time. 
+        /// </summary>
+        public static void SetFactory(Func<DateTimeOffset> factory)
+        {
+            CurrentTimeFactory = factory ?? throw new ArgumentNullException(nameof(factory));
+        }
+
+        /// <summary>
+        /// Reverts the current time factory to the default implementation using <see cref="DateTimeOffset.Now"/>.
+        /// </summary>
+        public static void Reset()
         {
             CurrentTimeFactory = DefaultTimeFactory;
         }

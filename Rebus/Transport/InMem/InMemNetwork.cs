@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Messages;
 
 namespace Rebus.Transport.InMem
@@ -14,25 +15,35 @@ namespace Rebus.Transport.InMem
     {
         static int _networkIdCounter;
 
+        readonly ILog _log; 
         readonly string _networkId = $"In-mem network {Interlocked.Increment(ref _networkIdCounter)}";
 
         readonly ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>> _queues =
             new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.OrdinalIgnoreCase);
 
-        readonly bool _outputEventsToConsole;
+        /// <summary>
+        /// Retrieves all queues.
+        /// </summary>
+        public IEnumerable<string> Queues => _queues.Keys;
 
         /// <summary>
         /// Constructs the in-mem network, optionally (if <paramref name="outputEventsToConsole"/> is set to true) outputting information
         /// about what is happening inside it to <see cref="Console.Out"/>
         /// </summary>
         public InMemNetwork(bool outputEventsToConsole = false)
+            : this(outputEventsToConsole ? new ConsoleLoggerFactory(colored: false) : null)
         {
-            _outputEventsToConsole = outputEventsToConsole;
+        }
 
-            if (_outputEventsToConsole)
-            {
-                Console.WriteLine($"Created in-mem network '{_networkId}'");
-            }
+        /// <summary>
+        /// Constructs the in-mem network, outputting information about what is happening inside it to the given logger.
+        /// </summary>
+        public InMemNetwork(IRebusLoggerFactory loggerFactory)
+        {
+            loggerFactory = loggerFactory ?? new NullLoggerFactory();
+
+            _log = loggerFactory.GetLogger<InMemNetwork>();
+            _log.Info($"Created in-mem network '{_networkId}'");
         }
 
         /// <summary>
@@ -40,7 +51,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public void Reset()
         {
-            Console.WriteLine($"Resetting in-mem network '{_networkId}'");
+            _log.Info($"Resetting in-mem network '{_networkId}'");
 
             _queues.Clear();
         }
@@ -55,11 +66,11 @@ namespace Rebus.Transport.InMem
             if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             if (msg == null) throw new ArgumentNullException(nameof(msg));
 
-            if (_outputEventsToConsole && !alwaysQuiet)
+            if (!alwaysQuiet)
             {
                 var messageId = msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
-                Console.WriteLine($"{messageId} ---> {destinationAddress} ({_networkId})");
+                _log.Info($"{messageId} ---> {destinationAddress} ({_networkId})");
             }
 
             var messageQueue = _queues
@@ -86,17 +97,11 @@ namespace Rebus.Transport.InMem
 
                 if (MessageIsExpired(message))
                 {
-                    if (_outputEventsToConsole)
-                    {
-                        Console.WriteLine($"{inputQueueName} EXPIRED> {messageId} ({_networkId})");
-                    }
+                    _log.Info($"{inputQueueName} EXPIRED> {messageId} ({_networkId})");
                     continue;
                 }
 
-                if (_outputEventsToConsole)
-                {
-                    Console.WriteLine($"{inputQueueName} ---> {messageId} ({_networkId})");
-                }
+                _log.Info($"{inputQueueName} ---> {messageId} ({_networkId})");
 
                 return message;
             }
@@ -126,6 +131,16 @@ namespace Rebus.Transport.InMem
             return _queues.TryGetValue(address, out var queue)
                 ? queue.Count
                 : 0;
+        }
+
+        /// <summary>
+        /// Gets the messages currently stored in the queue with the given <paramref name="address"/>
+        /// </summary>
+        public IReadOnlyList<InMemTransportMessage> GetMessages(string address)
+        {
+            return _queues.TryGetValue(address, out var queue)
+                ? queue.ToArray()
+                : new InMemTransportMessage[0];
         }
 
         static bool MessageIsExpired(InMemTransportMessage message)
