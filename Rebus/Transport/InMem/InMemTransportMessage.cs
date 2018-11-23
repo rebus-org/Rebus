@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rebus.Messages;
+using Rebus.Time;
 
 namespace Rebus.Transport.InMem
 {
@@ -9,7 +10,7 @@ namespace Rebus.Transport.InMem
     /// </summary>
     public class InMemTransportMessage
     {
-        readonly DateTime _creationTime = DateTime.UtcNow;
+        readonly DateTimeOffset _creationTime = RebusTime.Now;
 
         /// <summary>
         /// Constructs the in-mem transport message from the given <see cref="TransportMessage"/>
@@ -25,7 +26,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public TimeSpan Age
         {
-            get { return DateTime.UtcNow - _creationTime; }
+            get { return RebusTime.Now - _creationTime; }
         }
 
         /// <summary>

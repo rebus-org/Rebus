@@ -13,7 +13,7 @@ namespace Rebus.Time
         /// </summary>
         public static void FakeIt(DateTimeOffset fakeTime, bool incrementSlightlyOnEachInvocation = true)
         {
-            RebusTime.CurrentTimeFactory = () =>
+            RebusTime.SetFactory(() =>
             {
                 var timeToReturn = fakeTime;
                 if (incrementSlightlyOnEachInvocation)
@@ -22,7 +22,7 @@ namespace Rebus.Time
                 }
 
                 return timeToReturn;
-            };
+            });
         }
 
         /// <summary>
