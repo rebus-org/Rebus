@@ -40,7 +40,7 @@ namespace Rebus.Tests.DataBus.InMem
         public void Contains_Data_ReturnsTrue()
         {
             _inMemDataStore.Save("test", new byte[] {1, 2, 3});
-            Assert.That(_inMemDataStore.Contains("test"));
+            Assert.That(_inMemDataStore.Contains("test"), Is.True);
         }
 
         [Test]
