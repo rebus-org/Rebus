@@ -1218,6 +1218,10 @@
 
 * Remove `.ConfigureAwait(false)` throughout, because it messes up the ability to carry ambient contexts into callbacks, which (via decorators) is one of Rebus' most important extensibility points - thanks [oliverhanappi]
 
+## 4.3.0
+
+* Add methods to in-mem persistence providers, making it easier to inspect them e.g. when testing - thanks [oliverhanappi]
+
 ---
 
 
