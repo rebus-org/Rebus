@@ -25,7 +25,19 @@ namespace Rebus.Persistence.InMem
             TypeNameHandling = TypeNameHandling.All
         };
 
-        internal IEnumerable<ISagaData> Instances => _data.Values.ToList();
+        /// <summary>
+        /// Returns all stored saga data instances. 
+        /// </summary>
+        public IEnumerable<ISagaData> Instances
+        {
+            get
+            {
+                lock (_data)
+                {
+                    return _data.Values.ToList();
+                }
+            }
+        }
 
         internal void AddInstance(ISagaData sagaData)
         {
@@ -174,6 +186,23 @@ namespace Rebus.Persistence.InMem
                     Deleted?.Invoke(temp);
                 }
                 sagaData.Revision++;
+            }
+        }
+
+        /// <summary>
+        /// Resets the saga storage (i.e. all stored saga data instances are deleted)
+        /// </summary>
+        public void Reset()
+        {
+            lock (_data)
+            {
+                foreach (var id in _data.Keys.ToList())
+                {
+                    if (_data.TryRemove(id, out var sagaData))
+                    {
+                        Deleted?.Invoke(sagaData);
+                    }
+                }
             }
         }
 
