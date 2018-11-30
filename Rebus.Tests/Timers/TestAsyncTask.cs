@@ -22,6 +22,31 @@ namespace Rebus.Tests.Timers
             _factory = new TFactory();
         }
 
+        [Test]
+        public async Task AsyncTaskMayBeStoppedBeforeBeingInvoked()
+        {
+            var wasInvoked = false;
+
+            Console.WriteLine("Starting task...");
+
+            using (_factory.CreateTask(TimeSpan.FromSeconds(2), async () => wasInvoked = true))
+            {
+                Console.WriteLine("Waiting one second...");
+
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
+                Console.WriteLine("Stopping task...");
+            }
+
+            Assert.That(wasInvoked, Is.False);
+
+            Console.WriteLine("Waiting two more seconds...");
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            Assert.That(wasInvoked, Is.False);
+        }
+
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
