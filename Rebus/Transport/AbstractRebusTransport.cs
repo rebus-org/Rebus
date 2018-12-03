@@ -22,12 +22,8 @@ namespace Rebus.Transport
         }
 
         /// <summary>
-        /// Enqueues a
+        /// Enqueues the <paramref name="message"/> by adding it to an in-mem list of outgoing messages
         /// </summary>
-        /// <param name="destinationAddress"></param>
-        /// <param name="message"></param>
-        /// <param name="context"></param>
-        /// <returns></returns>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             var outgoingMessages = context.GetOrAdd("outgoing-messages", () =>
