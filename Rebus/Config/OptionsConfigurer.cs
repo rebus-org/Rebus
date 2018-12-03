@@ -74,6 +74,19 @@ namespace Rebus.Config
         }
 
         /// <summary>
+        /// Sets the default return address to set on outgoing messages
+        /// </summary>
+        public void SetDefaultReturnAddress(string returnAddress)
+        {
+            if (!string.IsNullOrWhiteSpace(_options.DefaultReturnAddressOrNull))
+            {
+                throw new ArgumentException($"Cannot set default return address to '{returnAddress}' because it has already been set to '{_options.DefaultReturnAddressOrNull}'");
+            }
+
+            _options.DefaultReturnAddressOrNull = returnAddress;
+        }
+
+        /// <summary>
         /// Registers the given factory function as a resolver of the given primary implementation of the <typeparamref name="TService"/> service
         /// </summary>
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)

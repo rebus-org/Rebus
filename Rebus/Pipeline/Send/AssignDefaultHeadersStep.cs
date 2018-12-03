@@ -28,15 +28,17 @@ namespace Rebus.Pipeline.Send
     public class AssignDefaultHeadersStep : IOutgoingStep
     {
         readonly bool _hasOwnAddress;
-        readonly string _address;
+        readonly string _senderAddress;
+        readonly string _returnAddress;
 
         /// <summary>
         /// Constructs the step, getting the input queue address from the given <see cref="ITransport"/>
         /// </summary>
-        public AssignDefaultHeadersStep(ITransport transport)
+        public AssignDefaultHeadersStep(ITransport transport, string defaultReturnAddressOrNull)
         {
-            _address = transport.Address;
-            _hasOwnAddress = !string.IsNullOrWhiteSpace(_address);
+            _senderAddress = transport.Address;
+            _returnAddress = defaultReturnAddressOrNull ?? transport.Address;
+            _hasOwnAddress = !string.IsNullOrWhiteSpace(_senderAddress);
         }
 
         /// <summary>
@@ -55,14 +57,14 @@ namespace Rebus.Pipeline.Send
 
             if (_hasOwnAddress && !headers.ContainsKey(Headers.ReturnAddress))
             {
-                headers[Headers.ReturnAddress] = _address;
+                headers[Headers.ReturnAddress] =  _returnAddress;
             }
 
             headers[Headers.SentTime] = RebusTime.Now.ToString("O");
 
             if (_hasOwnAddress)
             {
-                headers[Headers.SenderAddress] = _address;
+                headers[Headers.SenderAddress] = _senderAddress;
             }
             else
             {

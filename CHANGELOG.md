@@ -1257,6 +1257,10 @@
 
 * Port changes from 4.3.0 forward
 
+## 5.2.0
+
+* Allow for setting the default return address by going `.Options(o => o.SetDefaultReturnAddress("another-queue"))`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

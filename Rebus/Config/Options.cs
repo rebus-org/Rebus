@@ -57,6 +57,11 @@ namespace Rebus.Config
         public string ExternalTimeoutManagerAddressOrNull { get; set; }
 
         /// <summary>
+        /// Gets/sets the default return address to use on outgoing messages
+        /// </summary>
+        public string DefaultReturnAddressOrNull { get; set; }
+
+        /// <summary>
         /// Gets/sets the poll interval when checking for due timeouts
         /// </summary>
         public TimeSpan DueTimeoutsPollInterval { get; set; }

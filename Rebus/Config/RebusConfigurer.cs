@@ -262,6 +262,7 @@ namespace Rebus.Config
                 var serializer = c.Get<ISerializer>();
                 var transport = c.Get<ITransport>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var options = c.Get<Options>();
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
@@ -273,7 +274,7 @@ namespace Rebus.Config
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
-                    .OnSend(new AssignDefaultHeadersStep(transport))
+                    .OnSend(new AssignDefaultHeadersStep(transport, options.DefaultReturnAddressOrNull))
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
