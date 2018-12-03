@@ -13,9 +13,6 @@ namespace Rebus.Transport
     /// </summary>
     public abstract class AbstractRebusTransport : ITransport
     {
-        /// <summary>
-        /// Creates the abstract transport with the given <paramref name="inputQueueName"/>
-        /// </summary>
         static readonly Task<int> TaskCompletedResult = Task.FromResult(0);
 
         /// <summary>
@@ -27,7 +24,7 @@ namespace Rebus.Transport
         }
 
         /// <summary>
-        /// Enqueues a message in-mem to be sent when the transaction context is committed
+        /// Enqueues the <paramref name="message"/> by adding it to an in-mem list of outgoing messages
         /// </summary>
         /// <inheritdoc />
         public Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
