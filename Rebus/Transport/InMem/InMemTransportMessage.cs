@@ -9,7 +9,7 @@ namespace Rebus.Transport.InMem
     /// </summary>
     public class InMemTransportMessage
     {
-        readonly DateTime _creationTime = DateTime.UtcNow;
+        readonly DateTimeOffset _creationTime = DateTime.UtcNow;
 
         /// <summary>
         /// Constructs the in-mem transport message from the given <see cref="TransportMessage"/>
@@ -23,10 +23,7 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Gets the age of this in-mem transport message
         /// </summary>
-        public TimeSpan Age
-        {
-            get { return DateTime.UtcNow - _creationTime; }
-        }
+        public TimeSpan Age => DateTime.UtcNow - _creationTime;
 
         /// <summary>
         /// Gets the headers of this in-mem transport message
@@ -41,9 +38,6 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Returns this in-mem transport message's headers and body in a <see cref="TransportMessage"/>
         /// </summary>
-        public TransportMessage ToTransportMessage()
-        {
-            return new TransportMessage(Headers, Body);
-        }
+        public TransportMessage ToTransportMessage() => new TransportMessage(Headers, Body);
     }
 }

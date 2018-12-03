@@ -20,11 +20,27 @@ namespace Rebus.DataBus.InMem
         public long SizeBytes => _data.Values.Sum(kvp => kvp.Data.Length);
 
         /// <summary>
+        /// Gets all IDs for which data is stored.
+        /// </summary>
+        public IEnumerable<string> AttachmentIds => _data.Keys;
+
+        /// <summary>
         /// Saves the given bytes under the given ID
         /// </summary>
-        public void Save(string id, byte[] bytes, Dictionary<string, string> metadata)
+        public void Save(string id, byte[] bytes, Dictionary<string, string> metadata = null)
         {
-            _data[id] = new InMemBlob(metadata, bytes);
+            _data[id] = new InMemBlob(metadata ?? new Dictionary<string, string>(), bytes);
+        }
+
+        /// <summary>
+        /// Determines whether there is some data with the given ID.
+        /// </summary>
+        public bool Contains(string id)
+        {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+            
+            return _data.ContainsKey(id);
         }
 
         /// <summary>
@@ -72,6 +88,25 @@ namespace Rebus.DataBus.InMem
             }
 
             return blob.Metadata.Clone();
+        }
+
+        /// <summary>
+        /// Deletes the data stored under the given ID and returns true when some has been deleted. 
+        /// </summary>
+        public bool Delete(string id)
+        {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+            
+            return _data.TryRemove(id, out var blob);
+        }
+
+        /// <summary>
+        /// Resets the data store (i.e. all stored data and metadata is deleted)
+        /// </summary>
+        public void Reset()
+        {
+            _data.Clear();
         }
 
         class InMemBlob

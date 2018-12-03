@@ -29,16 +29,18 @@ namespace Rebus.Pipeline.Send
     {
         readonly IRebusTime _rebusTime;
         readonly bool _hasOwnAddress;
-        readonly string _address;
+        readonly string _senderAddress;
+        readonly string _returnAddress;
 
         /// <summary>
         /// Constructs the step, getting the input queue address from the given <see cref="ITransport"/>
         /// </summary>
-        public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime)
+        public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime, string defaultReturnAddressOrNull)
         {
             _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
-            _address = transport.Address;
-            _hasOwnAddress = !string.IsNullOrWhiteSpace(_address);
+            _senderAddress = transport.Address;
+            _returnAddress = defaultReturnAddressOrNull ?? transport.Address;
+            _hasOwnAddress = !string.IsNullOrWhiteSpace(_senderAddress);
         }
 
         /// <summary>
@@ -57,14 +59,14 @@ namespace Rebus.Pipeline.Send
 
             if (_hasOwnAddress && !headers.ContainsKey(Headers.ReturnAddress))
             {
-                headers[Headers.ReturnAddress] = _address;
+                headers[Headers.ReturnAddress] =  _returnAddress;
             }
 
             headers[Headers.SentTime] = _rebusTime.Now.ToString("O");
 
             if (_hasOwnAddress)
             {
-                headers[Headers.SenderAddress] = _address;
+                headers[Headers.SenderAddress] = _senderAddress;
             }
             else
             {

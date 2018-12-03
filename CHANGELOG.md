@@ -1218,6 +1218,10 @@
 
 * Remove `.ConfigureAwait(false)` throughout, because it messes up the ability to carry ambient contexts into callbacks, which (via decorators) is one of Rebus' most important extensibility points - thanks [oliverhanappi]
 
+## 4.3.0
+
+* Add methods to in-mem persistence providers, making it easier to inspect them e.g. when testing - thanks [oliverhanappi]
+
 ## 5.0.0
 
 * Move entire `Rebus.Testing` namespace to its own NuGet package: `Rebus.TestHelpers` (named "TestHelpers" to avoid confusing it with Rebus' own test project, and just because it's more appropriate)
@@ -1245,9 +1249,17 @@
 
 * Throw exceptions in `TransactionContext` when hooking up callbacks after it has been completed (usually a sign of `async` stuff not being `await`ed) - thanks [mattwhetton]
 
-## 6.0.0-b01
+## 5.0.2
 
 * Add count methods form `InMemNetwork` - thanks [caspertdk]
+
+## 5.1.0
+
+* Port changes from 4.3.0 forward
+
+## 5.2.0
+
+* Allow for setting the default return address by going `.Options(o => o.SetDefaultReturnAddress("another-queue"))`
 
 ---
 

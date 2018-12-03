@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Messages;
+#pragma warning disable 1998
 
 namespace Rebus.Transport
 {
@@ -12,6 +13,9 @@ namespace Rebus.Transport
     /// </summary>
     public abstract class AbstractRebusTransport : ITransport
     {
+        /// <summary>
+        /// Creates the abstract transport with the given <paramref name="inputQueueName"/>
+        /// </summary>
         static readonly Task<int> TaskCompletedResult = Task.FromResult(0);
 
         /// <summary>
@@ -43,12 +47,12 @@ namespace Rebus.Transport
         }
 
         /// <summary>
-        /// Creates a queue with the given name
+        /// Must implement the creation of a "queue" (whatever that means for the given transport implementation)
         /// </summary>
         public abstract void CreateQueue(string address);
 
         /// <summary>
-        /// Receives the next message
+        /// Must implement a receive operation, returning the next available message, or null of none could be found
         /// </summary>
         public abstract Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken);
 

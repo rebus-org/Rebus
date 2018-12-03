@@ -58,7 +58,7 @@ namespace Rebus.Transport.InMem
         }
 
         /// <summary>
-        /// Sends all of the queued outgoing messages by delivering them to their destination queues in the in-mem network
+        /// Sends all outgoing messages by delivering them to the in-mem network
         /// </summary>
         protected override async Task SendOutgoingMessages(IEnumerable<OutgoingMessage> outgoingMessages, ITransactionContext context)
         {
