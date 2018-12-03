@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
@@ -61,8 +60,7 @@ namespace Rebus.Tests.Workers
 
             // assert
 
-            timer.Elapsed
-                .Should().BeCloseTo(TimeSpan.FromSeconds(5), 1000);
+            Assert.That(timer.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(4)).And.LessThan(TimeSpan.FromSeconds(6)));
         }
 
         [Test]
@@ -91,9 +89,7 @@ namespace Rebus.Tests.Workers
             timer.Stop();
 
             // assert
-
-            timer.Elapsed
-                .Should().BeLessThan(TimeSpan.FromSeconds(1));
+            Assert.That(timer.Elapsed, Is.LessThan(TimeSpan.FromSeconds(1)));
         }
 
         [Test]
@@ -123,8 +119,9 @@ namespace Rebus.Tests.Workers
 
             // assert
 
-            timer.Elapsed
-                .Should().BeCloseTo(taskTakingTime, 1000);
+            var tolerance = TimeSpan.FromSeconds(1);
+
+            Assert.That(timer.Elapsed, Is.GreaterThan(taskTakingTime.Subtract(tolerance)).And.LessThan(taskTakingTime.Add(tolerance)));
         }
     }
 }
