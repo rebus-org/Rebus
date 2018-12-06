@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using MyDomain;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
+using Rebus.Retry.FailFast;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
@@ -45,5 +48,58 @@ namespace Rebus.Tests.Integration
             Assert.That(numberOfWarnings, Is.EqualTo(1), "Expected onle one single WARNING, because the delivery should not be retried");
             Assert.That(numberOfErrors, Is.EqualTo(1), "Expected an error message saying that the message is moved to the error queue");
         }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task GetFailFastLog(bool failFast)
+        {
+            var activator = Using(new BuiltinHandlerActivator());
+
+            activator.Handle<string>(async str => throw new DomainException());
+
+            Configure.With(activator)
+                .Logging(l => l.Console(minLevel: LogLevel.Warn))
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "fail-fast-log-tjek"))
+                .Options(o =>
+                {
+                    if (failFast)
+                    {
+                        o.Decorate<IFailFastChecker>(c => new MyFailFastChecker(c.Get<IFailFastChecker>()));
+                    }
+                })
+                .Start();
+
+            await activator.Bus.SendLocal("HEJ MED DIG");
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+
+        class MyFailFastChecker : IFailFastChecker
+        {
+            readonly IFailFastChecker _failFastChecker;
+
+            public MyFailFastChecker(IFailFastChecker failFastChecker)
+            {
+                _failFastChecker = failFastChecker;
+            }
+
+            public bool ShouldFailFast(string messageId, Exception exception)
+            {
+                switch (exception)
+                {
+                    // fail fast on our domain exception
+                    case DomainException _: return true;
+
+                    // delegate all other behavior to default
+                    default: return _failFastChecker.ShouldFailFast(messageId, exception);
+                }
+            }
+        }
+
     }
+}
+
+namespace MyDomain
+{
+    public class DomainException : Exception { }
 }
