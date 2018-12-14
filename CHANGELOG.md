@@ -1261,9 +1261,9 @@
 
 * Allow for setting the default return address by going `.Options(o => o.SetDefaultReturnAddress("another-queue"))`
 
-## 5.2.1-b1
+## 5.2.1
 
-* Fix subtle cancellation/timing bug in `TplAsyncTask`
+* Fix subtle cancellation/timing bug in `TplAsyncTask` which would lead to disposal taking several seconds, logging a warning that it took a long time
 
 ---
 
