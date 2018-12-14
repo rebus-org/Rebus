@@ -65,6 +65,8 @@ namespace Rebus.Threading.TaskParallelLibrary
 
             var token = _tokenSource.Token;
 
+            // don't pass cancellation token to this one, as it might cancel prematurely, thus not setting our reset event as required
+            // ReSharper disable once MethodSupportsCancellation
             _task = Task.Run(async () =>
             {
                 try
@@ -97,7 +99,7 @@ namespace Rebus.Threading.TaskParallelLibrary
                 {
                     _finished.Set();
                 }
-            }, token);
+            });
         }
 
         /// <summary>
