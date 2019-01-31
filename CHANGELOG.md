@@ -1265,6 +1265,10 @@
 
 * Fix subtle cancellation/timing bug in `TplAsyncTask` which would lead to disposal taking several seconds, logging a warning that it took a long time
 
+## 6.0.0-b01
+
+* Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

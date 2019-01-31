@@ -14,15 +14,12 @@ namespace Rebus.Persistence.Throwing
 
         public Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => throw GetException();
 
-        static InvalidOperationException GetException() => new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .Options(...) configurer, e.g. like so:
+        static InvalidOperationException GetException() => new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .DataBus(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)
-    .Options(o => {
-        o.EnableDataBus()
-            .StoreInSqlServer(....);
-    })
-    .(...)
+    .DataBus(d => d.StoreInSqlServer(....))
+    .Start();
 
 in order to save data in a central SQL Server");
     }

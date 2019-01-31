@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.DataBus;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
@@ -18,7 +17,7 @@ namespace Rebus.Tests.DataBus
             {
                 Configure.With(Using(new BuiltinHandlerActivator()))
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bim"))
-                    .Options(o => o.EnableDataBus())
+                    .DataBus(o => { })
                     .Start();
             }
             catch (Exception exception)

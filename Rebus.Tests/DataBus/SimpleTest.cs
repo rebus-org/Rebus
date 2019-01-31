@@ -13,7 +13,6 @@ using Rebus.DataBus.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.DataBus
@@ -42,11 +41,10 @@ namespace Rebus.Tests.DataBus
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(_inMemNetwork, queueName))
                 .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
-                .Options(o =>
+                .DataBus(d =>
                 {
-                    o.EnableDataBus()
-                        .UseCompression(DataCompressionMode.Always)
-                        .StoreInMemory(_inMemDataStore);
+                    d.UseCompression(DataCompressionMode.Always);
+                    d.StoreInMemory(_inMemDataStore);
                 })
                 .Start();
 

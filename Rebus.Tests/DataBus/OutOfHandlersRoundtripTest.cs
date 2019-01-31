@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,10 +26,7 @@ namespace Rebus.Tests.DataBus
 
             _bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "data-tripping"))
-                .Options(o =>
-                {
-                    o.EnableDataBus().StoreInMemory(new InMemDataStore());
-                })
+                .DataBus(d => d.StoreInMemory(new InMemDataStore()))
                 .Start();
         }
 

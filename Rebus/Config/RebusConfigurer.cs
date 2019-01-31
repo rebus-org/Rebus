@@ -82,6 +82,39 @@ namespace Rebus.Config
         }
 
         /// <summary>
+        /// Enables the data bus and configures which implementation of <see cref="IDataBusStorage"/> to use.
+        /// </summary>
+        public RebusConfigurer DataBus(Action<StandardConfigurer<IDataBusStorage>> configurer)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            
+            configurer(new StandardConfigurer<IDataBusStorage>(_injectionist, _options));
+
+            if (_injectionist.Has<IDataBusStorage>())
+            {
+                _injectionist.Register<IDataBus>(c =>
+                {
+                    var dataBusStorage = c.Get<IDataBusStorage>();
+
+                    return new DefaultDataBus(dataBusStorage);
+                });
+
+                _injectionist.Decorate<IPipeline>(c =>
+                {
+                    var dataBusStorage = c.Get<IDataBusStorage>();
+                    var pipeline = c.Get<IPipeline>();
+
+                    var step = new DataBusIncomingStep(dataBusStorage);
+
+                    return new PipelineStepInjector(pipeline)
+                        .OnReceive(step, PipelineRelativePosition.After, typeof(DeserializeIncomingMessageStep));
+                });
+            }
+
+            return this;
+        }
+
+        /// <summary>
         /// Configures how Rebus routes messages by allowing for choosing which implementation of <see cref="IRouter"/> to use
         /// </summary>
         public RebusConfigurer Routing(Action<StandardConfigurer<IRouter>> configurer)
