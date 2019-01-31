@@ -37,8 +37,7 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public bool Contains(string id)
         {
-            if (id == null)
-                throw new ArgumentNullException(nameof(id));
+            if (id == null) throw new ArgumentNullException(nameof(id));
             
             return _data.ContainsKey(id);
         }
@@ -49,9 +48,7 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public byte[] Load(string id)
         {
-            InMemBlob blob;
-
-            if (!_data.TryGetValue(id, out blob))
+            if (!_data.TryGetValue(id, out var blob))
             {
                 throw new ArgumentException($"Could not find data with ID {id}");
             }
@@ -64,9 +61,7 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public void AddMetadata(string id, Dictionary<string, string> metadata)
         {
-            InMemBlob blob;
-
-            if (!_data.TryGetValue(id, out blob))
+            if (!_data.TryGetValue(id, out var blob))
             {
                 throw new ArgumentException($"Could not find data with ID {id}");
             }
@@ -80,9 +75,7 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public Dictionary<string, string> LoadMetadata(string id)
         {
-            InMemBlob blob;
-
-            if (!_data.TryGetValue(id, out blob))
+            if (!_data.TryGetValue(id, out var blob))
             {
                 throw new ArgumentException($"Could not find data with ID {id}");
             }
@@ -95,8 +88,7 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public bool Delete(string id)
         {
-            if (id == null)
-                throw new ArgumentNullException(nameof(id));
+            if (id == null) throw new ArgumentNullException(nameof(id));
             
             return _data.TryRemove(id, out var blob);
         }
@@ -113,10 +105,8 @@ namespace Rebus.DataBus.InMem
         {
             public InMemBlob(Dictionary<string, string> metadata, byte[] data)
             {
-                if (metadata == null) throw new ArgumentNullException(nameof(metadata));
-                if (data == null) throw new ArgumentNullException(nameof(data));
-                Metadata = metadata.Clone();
-                Data = data;
+                Metadata = metadata?.Clone() ?? throw new ArgumentNullException(nameof(metadata));
+                Data = data ?? throw new ArgumentNullException(nameof(data));
             }
 
             public byte[] Data { get; }
