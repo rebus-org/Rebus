@@ -122,5 +122,10 @@ namespace Rebus.Messages
             /// </summary>
             public const string PublishSubscribe = "pub";
         }
+
+        /// <summary>
+        /// Header that contains the ID of a data bus attachment, which was used to store the message body
+        /// </summary>
+        public const string MessagePayloadAttachmentId = "rbs2-payload-attachment-id";
     }
 }
