@@ -38,18 +38,12 @@ namespace Rebus.DataBus.ClaimCheck
                     var dataBus = c.Get<IDataBus>();
 
                     var dehydrateStep = new DehydrateOutgoingMessageStep(dataBus, bodySizeThresholdBytes);
-                    var hydrateStep = new HydrateIncomingMessageStep(dataBus);
 
                     return new PipelineStepInjector(pipeline)
                         .OnSend(
                             step: dehydrateStep,
                             position: PipelineRelativePosition.After,
                             anchorStep: typeof(SerializeOutgoingMessageStep)
-                        )
-                        .OnReceive(
-                            step: hydrateStep,
-                            position: PipelineRelativePosition.Before,
-                            anchorStep: typeof(DeserializeIncomingMessageStep)
                         );
                 });
         }

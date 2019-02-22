@@ -6,6 +6,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Compression;
 using Rebus.DataBus;
+using Rebus.DataBus.ClaimCheck;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
@@ -33,8 +34,6 @@ using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
 using Rebus.Time;
 using Rebus.Topic;
-using Rebus.Workers.TplBased;
-
 // ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.Config
@@ -317,6 +316,7 @@ namespace Rebus.Config
                     .OnReceive(c.Get<IRetryStrategyStep>())
                     .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>()))
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                    .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
                     .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
                     .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))

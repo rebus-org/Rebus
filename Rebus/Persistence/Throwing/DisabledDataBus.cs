@@ -18,9 +18,16 @@ namespace Rebus.Persistence.Throwing
 
 Configure.With(..)
     .(...)
+    .DataBus(d => d.StoreInFileSystem(""\\network-share\\some-path""))
+    .Start();
+
+to exchange attachments via a network share, or something like
+
+Configure.With(..)
+    .(...)
     .DataBus(d => d.StoreInSqlServer(....))
     .Start();
 
-in order to save data in a central SQL Server");
+to use a central SQL Server.");
     }
 }
