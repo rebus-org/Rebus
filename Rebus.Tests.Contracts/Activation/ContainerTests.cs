@@ -9,6 +9,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Handlers;
+using Rebus.Messages;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
@@ -56,6 +57,53 @@ namespace Rebus.Tests.Contracts.Activation
 
             public string Text { get; }
         }
+
+        [Test]
+        public async Task CanGetFailedMessageHandler()
+        {
+            var headers = new Dictionary<string, string> { { Headers.MessageId, Guid.NewGuid().ToString() } };
+            var body = new SomeMessage();
+            var wrapper = new FailedMessageWrapper<SomeMessage>(
+                headers: headers,
+                message: body,
+                errorDescription: "something went bad",
+                exceptions: new[] {new Exception("oh noes!")}
+            );
+
+            var handlerActivator = _activationCtx.CreateActivator(r => r.Register<SomeMessageHandler>());
+
+            Console.WriteLine(@"
+Resolving handlers for message created like this:
+
+var wrapper = new FailedMessageWrapper<SomeMessage>(
+    headers: headers,
+    message: body,
+    errorDescription: ""something went bad"",
+    exceptions: new[] {new Exception(""oh noes!"")}
+);
+
+(this is a FailedMessageWrapper<>, which is the wrapper that will be
+dispatched when 2nd level retries are enabled, and the initial message
+has failed too many times)
+            ");
+
+            using (var scope = new RebusTransactionScope())
+            {
+                var handlers = (await handlerActivator.GetHandlers(wrapper, scope.TransactionContext)).ToList();
+
+                Assert.That(handlers.Count, Is.EqualTo(1), "Expected one single handler instance of type SomeMessageHandler");
+                Assert.That(handlers.First(), Is.TypeOf<SomeMessageHandler>());
+            }
+        }
+
+        public class SomeMessageHandler : IHandleMessages<IFailed<SomeMessage>>
+        {
+            public async Task Handle(IFailed<SomeMessage> message)
+            {
+            }
+        }
+
+        public class SomeMessage { }
 
         [Test]
         public void MultipleRegistrationsException()
