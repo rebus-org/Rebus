@@ -9,11 +9,11 @@ namespace Rebus.DataBus.ClaimCheck
     /// <summary>
     /// Configuration extensions for Rebus' automatic big message claim check feature.
     /// </summary>
-    public static class LargeMessageSupportExtensions
+    public static class AutomaticClaimCheckConfigurationExtensions
     {
         /// <summary>
         /// <para>
-        /// Configures Rebus to automatically transfer message bodies as data bus attachments, if the size of the body exceeds <paramref name="messageSizeThresholdBytes"/> bytes.
+        /// Configures Rebus to automatically transfer message bodies as data bus attachments, if the size of the body exceeds <paramref name="bodySizeThresholdBytes"/> bytes.
         /// </para>
         /// <para>
         /// This can be used in situations when you know that the message size will sometimes be too big for the transport, like e.g. when using Azure Service Bus.
@@ -28,29 +28,30 @@ namespace Rebus.DataBus.ClaimCheck
         /// (e.g. to use Azure Blob Storage to store attachments), and then call this method to enable automatic big message claim check.
         /// </para>
         /// </summary>
-        public static void AutomaticallySendBigMessagesAsAttachments(this OptionsConfigurer configurer, int messageSizeThresholdBytes)
+        public static void SendBigMessagesAsAttachments(this StandardConfigurer<IDataBusStorage> configurer, int bodySizeThresholdBytes)
         {
-            configurer.Decorate<IPipeline>(c =>
-            {
-                var pipeline = c.Get<IPipeline>();
-                var dataBus = c.Get<IDataBus>();
+            configurer
+                .OtherService<IPipeline>()
+                .Decorate(c =>
+                {
+                    var pipeline = c.Get<IPipeline>();
+                    var dataBus = c.Get<IDataBus>();
 
-                var dehydrateStep = new DehydrateOutgoingMessageStep(dataBus, messageSizeThresholdBytes);
-                var hydrateStep = new HydrateIncomingMessageStep(dataBus);
+                    var dehydrateStep = new DehydrateOutgoingMessageStep(dataBus, bodySizeThresholdBytes);
+                    var hydrateStep = new HydrateIncomingMessageStep(dataBus);
 
-                return new PipelineStepInjector(pipeline)
-                    .OnSend(
-                        step: dehydrateStep,
-                        position: PipelineRelativePosition.After,
-                        anchorStep: typeof(SerializeOutgoingMessageStep)
-                    )
-                    .OnReceive(
-                        step: hydrateStep,
-                        position: PipelineRelativePosition.Before,
-                        anchorStep: typeof(DeserializeIncomingMessageStep)
-                    );
-            });
+                    return new PipelineStepInjector(pipeline)
+                        .OnSend(
+                            step: dehydrateStep,
+                            position: PipelineRelativePosition.After,
+                            anchorStep: typeof(SerializeOutgoingMessageStep)
+                        )
+                        .OnReceive(
+                            step: hydrateStep,
+                            position: PipelineRelativePosition.Before,
+                            anchorStep: typeof(DeserializeIncomingMessageStep)
+                        );
+                });
         }
-
     }
 }

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.DataBus;
 using Rebus.DataBus.ClaimCheck;
 using Rebus.DataBus.InMem;
 using Rebus.Messages;
@@ -19,37 +18,45 @@ namespace Rebus.Tests.DataBus
     [TestFixture]
     public class TestAutomaticClaimCheckWhenMessageIsBig : FixtureBase
     {
+        const int limit = 2048;
+
+        BuiltinHandlerActivator _activator;
+
+        protected override void SetUp()
+        {
+            // installs a transport decorator that throws an exception, if the sent message size exceeds the given threshold
+            void FailIfMessageSizeExceeds(OptionsConfigurer optionsConfigurer, int messageSizeLimitBytes) =>
+                optionsConfigurer.Decorate<ITransport>(c => new ThrowExceptionsOnBigMessagesTransportDecorator(c.Get<ITransport>(), messageSizeLimitBytes));
+
+
+            _activator = new BuiltinHandlerActivator();
+
+            Using(_activator);
+
+            Configure.With(_activator)
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "automatic-claim-check"))
+                .Options(o => o.LogPipeline(verbose: true))
+                .DataBus(d =>
+                {
+                    d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: limit / 2);
+
+                    d.StoreInMemory(new InMemDataStore());
+                })
+                .Options(o => FailIfMessageSizeExceeds(o, limit))
+                .Start();
+        }
+
         [Test]
         public async Task ItWorks()
         {
-            // installs a transport decorator that throws an exception, if the sent message size exceeds the given threshold
-            void FailIfMessageSizeExceeds(OptionsConfigurer optionsConfigurer, int messageSizeLimitBytes) => 
-                optionsConfigurer.Decorate<ITransport>(c => new ThrowExceptionsOnBigMessagesTransportDecorator(c.Get<ITransport>(), messageSizeLimitBytes));
-
-            const int limit = 2048;
-
             var gotTheMessage = new ManualResetEvent(false);
 
-            var activator = new BuiltinHandlerActivator();
-
-            activator.Handle<string>(async message =>
+            _activator.Handle<string>(async message =>
             {
                 gotTheMessage.Set();
             });
 
-            Using(activator);
-
-            var bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "automatic-claim-check"))
-                .Options(o =>
-                {
-                    o.AutomaticallySendBigMessagesAsAttachments(messageSizeThresholdBytes: limit/2);
-
-                    o.LogPipeline(verbose: true);
-                })
-                .DataBus(d => d.StoreInMemory(new InMemDataStore()))
-                .Options(o => FailIfMessageSizeExceeds(o, limit))
-                .Start();
+            var bus = _activator.Bus;
 
             // serialized to JSON encoded as UTF-8, this will be 3 bytes too big (2 bytes for the two ", and one because we add 1 to the size :))
             var bigStringThatWeKnowIsTooBig = new string('*', limit + 1);
