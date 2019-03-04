@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Rebus.Activation;
@@ -33,7 +32,6 @@ using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
 using Rebus.Topic;
-
 // ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.Config
@@ -214,7 +212,18 @@ namespace Rebus.Config
                 var options = c.Get<Options>();
                 var busLifetimeEvents = c.Get<BusLifetimeEvents>();
                 var backoffStrategy = c.Get<IBackoffStrategy>();
-                return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
+                var cancellationToken = c.Get<CancellationToken>();
+
+                return new ThreadPoolWorkerFactory(
+                    transport: transport,
+                    rebusLoggerFactory: rebusLoggerFactory,
+                    pipelineInvoker: pipelineInvoker,
+                    options: options,
+                    busGetter: c.Get<RebusBus>,
+                    busLifetimeEvents: busLifetimeEvents,
+                    backoffStrategy: backoffStrategy,
+                    busDisposalCancellationToken: cancellationToken
+                );
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
@@ -239,9 +248,11 @@ namespace Rebus.Config
             PossiblyRegisterDefault<IRetryStrategy>(c =>
             {
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var errorTracker = c.Get<IErrorTracker>();
                 var errorHandler = c.Get<IErrorHandler>();
-                return new SimpleRetryStrategy(simpleRetryStrategySettings, errorTracker, errorHandler);
+                var cancellationToken = c.Get<CancellationToken>();
+                return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, cancellationToken);
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
@@ -315,10 +326,10 @@ namespace Rebus.Config
                     var bus = c.Get<RebusBus>();
                     var cancellationTokenSource = c.Get<CancellationTokenSource>();
 
+                    c.Get<BusLifetimeEvents>().BusDisposing += () => cancellationTokenSource.Cancel();
+
                     bus.Disposed += () =>
                     {
-                        cancellationTokenSource.Cancel();
-
                         var disposableInstances = c.TrackedInstances.OfType<IDisposable>().Reverse();
 
                         foreach (var disposableInstance in disposableInstances)
