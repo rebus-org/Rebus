@@ -1265,7 +1265,7 @@
 
 * Fix subtle cancellation/timing bug in `TplAsyncTask` which would lead to disposal taking several seconds, logging a warning that it took a long time
 
-## 5.3.0
+## 5.3.0-b1
 
 * Add cancellation support by adding a `CancellationToken` to the incoming step context
 
