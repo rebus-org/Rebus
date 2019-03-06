@@ -30,6 +30,8 @@ namespace Rebus.Compression
         /// </summary>
         public async Task<Stream> Read(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
             var metadata = await _innerDataBusStorage.ReadMetadata(id);
 
             if (!metadata.TryGetValue(MetadataKeys.ContentEncoding, out var contentEncoding))
@@ -53,6 +55,8 @@ namespace Rebus.Compression
         /// </summary>
         public async Task<Dictionary<string, string>> ReadMetadata(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
             return await _innerDataBusStorage.ReadMetadata(id);
         }
 
@@ -61,6 +65,9 @@ namespace Rebus.Compression
         /// </summary>
         public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
             metadata = metadata?.Clone() ?? new Dictionary<string, string>();
 
             if (_dataCompressionMode == DataCompressionMode.Explicit)

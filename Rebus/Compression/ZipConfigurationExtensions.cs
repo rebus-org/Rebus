@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using System;
+using Rebus.Config;
 using Rebus.DataBus;
 using Rebus.Serialization;
 
@@ -20,6 +21,8 @@ namespace Rebus.Compression
         /// </summary>
         public static void EnableCompression(this OptionsConfigurer configurer, int bodySizeThresholdBytes = DefaultBodyThresholdBytes)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            
             configurer.Decorate<ISerializer>(c => new ZippingSerializerDecorator(c.Get<ISerializer>(), new Zipper(), bodySizeThresholdBytes));
         }
 
@@ -32,6 +35,8 @@ namespace Rebus.Compression
         /// </summary>
         public static StandardConfigurer<IDataBusStorage> UseCompression(this StandardConfigurer<IDataBusStorage> configurer, DataCompressionMode dataCompressionMode)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
             configurer.Decorate(c =>
             {
                 var dataBusStorage = c.Get<IDataBusStorage>();

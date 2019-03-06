@@ -22,6 +22,8 @@ namespace Rebus.Compression
 
         public async Task<TransportMessage> Serialize(Message message)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             var transportMessage = await _serializer.Serialize(message);
             var body = transportMessage.Body;
 
@@ -40,6 +42,11 @@ namespace Rebus.Compression
             return compressedTransportMessage;
         }
 
-        public async Task<Message> Deserialize(TransportMessage transportMessage) => await _serializer.Deserialize(transportMessage);
+        public async Task<Message> Deserialize(TransportMessage transportMessage)
+        {
+            if (transportMessage == null) throw new ArgumentNullException(nameof(transportMessage));
+
+            return await _serializer.Deserialize(transportMessage);
+        }
     }
 }

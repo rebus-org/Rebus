@@ -13,10 +13,8 @@ namespace Rebus.Messages
         /// </summary>
         public TransportMessage(Dictionary<string, string> headers, byte[] body)
         {
-            if (headers == null) throw new ArgumentNullException(nameof(headers));
-            if (body == null) throw new ArgumentNullException(nameof(body));
-            Headers = headers;
-            Body = body;
+            Headers = headers ?? throw new ArgumentNullException(nameof(headers));
+            Body = body ?? throw new ArgumentNullException(nameof(body));
         }
 
         /// <summary>

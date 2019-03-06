@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 using Newtonsoft.Json;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Serialization
 {
