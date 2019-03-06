@@ -30,9 +30,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static DateTimeOffset ToDateTimeOffset(this string iso8601String)
         {
-            DateTimeOffset result;
-
-            if (!DateTimeOffset.TryParseExact(iso8601String, "O", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out result))
+            if (!DateTimeOffset.TryParseExact(iso8601String, "O", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var result))
             {
                 throw new FormatException($"Could not parse '{iso8601String}' as a proper ISO8601-formatted DateTimeOffset!");
             }

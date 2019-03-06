@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Extensions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
@@ -14,8 +15,9 @@ namespace Rebus.Tests.Cancellation
     [TestFixture]
     public class VerifyLongMessageHandlerCanBeCancelled : FixtureBase
     {
-        [Test]
-        public async Task ItWorks()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task ItWorks(bool useExtensionMethod)
         {
             var network = new InMemNetwork();
             var handlerWasEntered = new ManualResetEvent(false);
@@ -25,7 +27,9 @@ namespace Rebus.Tests.Cancellation
 
             activator.Handle<string>(async (bus, context, message) =>
             {
-                var cancellationToken = context.IncomingStepContext.Load<CancellationToken>();
+                var cancellationToken = useExtensionMethod
+                ? context.GetCancellationToken()
+                : context.IncomingStepContext.Load<CancellationToken>();
 
                 handlerWasEntered.Set();
 
