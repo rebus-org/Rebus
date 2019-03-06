@@ -1267,7 +1267,7 @@
 
 ## 5.3.0-b1
 
-* Add cancellation support by adding a `CancellationToken` to the incoming step context
+* Add cancellation support by adding a `CancellationToken` to the incoming step context. The token can be easily found by calling the `GetCancellationToken()` extension method on `IMessageContenxt`
 
 ---
 
