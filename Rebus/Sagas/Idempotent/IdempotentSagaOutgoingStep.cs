@@ -22,25 +22,25 @@ namespace Rebus.Sagas.Idempotent
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var transactionContext = context.Load<ITransactionContext>();
+            var items = transactionContext.Items;
 
-            object temp;
-            if (transactionContext.Items.TryGetValue(HandlerInvoker.CurrentHandlerInvokerItemsKey, out temp))
+            if (items.TryGetValue(HandlerInvoker.CurrentHandlerInvokerItemsKey, out var item))
             {
-                var handlerInvoker = (HandlerInvoker)temp;
-
-                if (handlerInvoker.HasSaga)
+                if (item is HandlerInvoker handlerInvoker)
                 {
-
-                    if (handlerInvoker.GetSagaData() is IIdempotentSagaData idempotentSagaData)
+                    if (handlerInvoker.HasSaga)
                     {
-                        var idempotencyData = idempotentSagaData.IdempotencyData;
+                        if (handlerInvoker.GetSagaData() is IIdempotentSagaData idempotentSagaData)
+                        {
+                            var idempotencyData = idempotentSagaData.IdempotencyData;
 
-                        var transportMessage = context.Load<TransportMessage>();
-                        var destinationAddresses = context.Load<DestinationAddresses>();
-                        var incomingStepContext = transactionContext.Items.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey);
-                        var messageId = incomingStepContext.Load<Message>().GetMessageId();
+                            var transportMessage = context.Load<TransportMessage>();
+                            var destinationAddresses = context.Load<DestinationAddresses>();
+                            var incomingStepContext = items.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey);
+                            var messageId = incomingStepContext.Load<Message>().GetMessageId();
 
-                        idempotencyData.AddOutgoingMessage(messageId, destinationAddresses, transportMessage);
+                            idempotencyData.AddOutgoingMessage(messageId, destinationAddresses, transportMessage);
+                        }
                     }
                 }
             }

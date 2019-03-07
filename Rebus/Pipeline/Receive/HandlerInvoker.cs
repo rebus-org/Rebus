@@ -176,12 +176,11 @@ namespace Rebus.Pipeline.Receive
 
             var setter = SagaDataSetters.GetOrAdd(_handler.GetType(), type =>
             {
-                var dataProperty = _handler.GetType().GetProperty(SagaDataPropertyName);
+                var dataProperty = type.GetProperty(SagaDataPropertyName);
 
                 if (dataProperty == null)
                 {
-                    throw new RebusApplicationException(
-                        $"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
+                    throw new RebusApplicationException($"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
                 }
 
                 return (handler, data) => dataProperty.SetValue(handler, data);
