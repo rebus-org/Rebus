@@ -26,7 +26,7 @@ Rebus aims to have
 * a few well-selected options
 * no doodleware
 * as few dependencies as possible (currently only [JSON.NET][JSON])
-* a broad reach (targets .NET 4.5 and .NET Standard 1.3, i.e. full .NET fx and .NET core)
+* a broad reach (targets .NET 4.5, .NET 4.6, and .NET Standard 2.0, i.e. full .NET fx and .NET core)
 * integration with external dependencies via small, dedicated projects
 * the best error messages in the world
 * a frictionless getting-up-and-running-experience
