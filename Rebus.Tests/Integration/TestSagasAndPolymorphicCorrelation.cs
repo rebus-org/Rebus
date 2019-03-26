@@ -10,6 +10,7 @@ using Rebus.Handlers;
 using Rebus.Persistence.InMem;
 using Rebus.Retry.Simple;
 using Rebus.Sagas;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
@@ -21,12 +22,13 @@ namespace Rebus.Tests.Integration
     public class TestSagasAndPolymorphicCorrelation : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "polycorrrewwllll"))
                 .Sagas(s => s.StoreInMemory())
                 .Options(o =>
@@ -38,7 +40,7 @@ namespace Rebus.Tests.Integration
 
                     o.LogPipeline(verbose: true);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -47,6 +49,8 @@ namespace Rebus.Tests.Integration
             var counter = new SharedCounter(3);
 
             _activator.Register(() => new SomeSagas(counter));
+
+            _busStarter.Start();
 
             await _activator.Bus.SendLocal(new SomeMessageThatFails("bimse"));
 
@@ -134,6 +138,8 @@ namespace Rebus.Tests.Integration
             var counter = new SharedCounter(3);
 
             _activator.Register((bus, context) => new PolySaga(encounteredSagaIds, counter));
+
+            _busStarter.Start();
 
             _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
             _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();

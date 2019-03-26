@@ -1265,6 +1265,10 @@
 
 * Fix subtle cancellation/timing bug in `TplAsyncTask` which would lead to disposal taking several seconds, logging a warning that it took a long time
 
+## 5.3.0
+
+* Add cancellation support by adding a `CancellationToken` to the incoming step context. The token can be easily found by calling the `GetCancellationToken()` extension method on `IMessageContenxt`
+
 ## 6.0.0-b02
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`

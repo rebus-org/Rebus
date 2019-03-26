@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Serialization
 {

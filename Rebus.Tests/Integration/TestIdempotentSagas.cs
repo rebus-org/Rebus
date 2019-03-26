@@ -14,6 +14,7 @@ using Rebus.Messages;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Sagas.Idempotent;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
@@ -27,8 +28,8 @@ namespace Rebus.Tests.Integration
     {
         const int MakeEveryFifthMessageFail = 5;
         BuiltinHandlerActivator _activator;
-        IBus _bus;
         ConcurrentDictionary<Guid, ISagaData> _persistentSagaData;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
@@ -36,7 +37,7 @@ namespace Rebus.Tests.Integration
 
             _persistentSagaData = new ConcurrentDictionary<Guid, ISagaData>();
 
-            _bus = Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Logging(l => l.Console(LogLevel.Info))
                 .Transport(t =>
                 {
@@ -63,7 +64,7 @@ namespace Rebus.Tests.Integration
                 {
                     o.EnableIdempotentSagas();
                 })
-                .Start();
+                .Create();
         }
 
         [TestCase(10)]
@@ -80,6 +81,10 @@ namespace Rebus.Tests.Integration
             _activator.Register((b, context) => new MyIdempotentSaga(allMessagesReceived, b));
             _activator.Register(() => new OutgoingMessageCollector(receivedMessages));
 
+            _busStarter.Start();
+
+            var bus = _activator.Bus;
+
             var messagesToSend = Enumerable
                 .Range(0, total)
                 .Select(id => new MyMessage
@@ -91,7 +96,7 @@ namespace Rebus.Tests.Integration
                 })
                 .ToList();
 
-            await Task.WhenAll(messagesToSend.Select(message => _bus.SendLocal(message)));
+            await Task.WhenAll(messagesToSend.Select(message => bus.SendLocal(message)));
 
             allMessagesReceived.WaitOrDie(TimeSpan.FromSeconds(10));
 

@@ -5,6 +5,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
@@ -18,12 +19,13 @@ namespace Rebus.Tests.Bugs
     public class DoesNotDispatchWrongSagaDataType : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Logging(l => l.Use(new ListLoggerFactory(true)))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesntmatter"))
                 .Sagas(s => s.StoreInMemory())
@@ -32,15 +34,18 @@ namespace Rebus.Tests.Bugs
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(1);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
         public void DoesNotBreak()
         {
             var counter = new SharedCounter(6);
+            
             _activator.Register(() => new FirstSaga(counter));
             _activator.Register(() => new SecondSaga(counter));
+
+            _busStarter.Start();
 
             var sagaId = Guid.NewGuid().ToString();
 

@@ -22,10 +22,13 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly RebusBus _owningBus;
         readonly Options _options;
         readonly IBackoffStrategy _backoffStrategy;
+        readonly CancellationToken _busDisposalCancellationToken;
         readonly Thread _workerThread;
         readonly ILog _log;
 
-        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, IBackoffStrategy backoffStrategy)
+        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory,
+            IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus,
+            Options options, IBackoffStrategy backoffStrategy, CancellationToken busDisposalCancellationToken)
         {
             Name = name;
             _log = rebusLoggerFactory.GetLogger<ThreadPoolWorker>();
@@ -35,6 +38,7 @@ namespace Rebus.Workers.ThreadPoolBased
             _owningBus = owningBus;
             _options = options;
             _backoffStrategy = backoffStrategy;
+            _busDisposalCancellationToken = busDisposalCancellationToken;
             _workerThread = new Thread(Run)
             {
                 Name = name,
@@ -114,12 +118,12 @@ namespace Rebus.Workers.ThreadPoolBased
                         return;
                     }
 
-	                _backoffStrategy.Reset();
+                    _backoffStrategy.Reset();
 
                     await ProcessMessage(context, transportMessage);
                 }
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            catch (OperationCanceledException) when (token.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested)
             {
                 // it's fine - just a sign that we are shutting down
             }
@@ -135,7 +139,7 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 return await _transport.Receive(context, token);
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            catch (OperationCanceledException) when (token.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested)
             {
                 // it's fine - just a sign that we are shutting down
                 return null;
@@ -157,6 +161,9 @@ namespace Rebus.Workers.ThreadPoolBased
                 AmbientTransactionContext.SetCurrent(context);
 
                 var stepContext = new IncomingStepContext(transportMessage, context);
+
+                stepContext.Save(_busDisposalCancellationToken);
+
                 await _pipelineInvoker.Invoke(stepContext);
 
                 try

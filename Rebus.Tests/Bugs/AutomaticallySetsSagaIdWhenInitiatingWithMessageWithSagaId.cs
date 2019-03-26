@@ -8,6 +8,8 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 using Rebus.Persistence.InMem;
+using Rebus.Startup;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
@@ -16,15 +18,16 @@ namespace Rebus.Tests.Bugs
     public class AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-is-preserved"))
                 .Sagas(s => s.StoreInMemory())
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -34,6 +37,8 @@ namespace Rebus.Tests.Bugs
             var fields = new Fields();
 
             _activator.Register(() => new MySaga(counter, fields));
+
+            _busStarter.Start();
 
             await _activator.Bus.SendLocal(new MyMessageWithGuid {SagaId = Guid.NewGuid()});
 

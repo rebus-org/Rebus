@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
@@ -29,15 +31,19 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
         readonly IErrorTracker _errorTracker;
         readonly IErrorHandler _errorHandler;
+        readonly CancellationToken _cancellationToken;
+        readonly ILog _logger;
 
         /// <summary>
         /// Constructs the step, using the given transport and settings
         /// </summary>
-        public SimpleRetryStrategyStep(SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker, IErrorHandler errorHandler)
+        public SimpleRetryStrategyStep(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IErrorTracker errorTracker, IErrorHandler errorHandler, CancellationToken cancellationToken)
         {
             _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
             _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
             _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
+            _logger = rebusLoggerFactory?.GetLogger<SimpleRetryStrategyStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _cancellationToken = cancellationToken;
         }
 
         /// <summary>
@@ -119,6 +125,13 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 {
                     _errorTracker.CleanUp(secondLevelMessageId);
                 }
+            }
+            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+            {
+                // we're exiting, so we abort like this:
+                _logger.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
+
+                transactionContext.Abort();
             }
             catch (Exception exception)
             {

@@ -52,6 +52,11 @@ namespace Rebus.Tests.Bugs
             var gotTheMessage = new ManualResetEvent(false);
             _activator2.Handle<string>(async str => gotTheMessage.Set());
 
+
+            _activator1.Bus.Advanced.Workers.SetNumberOfWorkers(1);
+            _activator2.Bus.Advanced.Workers.SetNumberOfWorkers(1);
+
+
             _activator1.Bus.SendLocal("hej med dig min ven!!").Wait();
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(3), @"Looks like we never got the message.
@@ -86,6 +91,7 @@ immediately when calling bus.....Forward");
                 {
                     t.Register(c => new AlternativeInMemTransport(network, queueName));
                 })
+                .Options(o => o.SetNumberOfWorkers(0))
                 .Start();
 
             return activator;

@@ -8,6 +8,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
@@ -18,7 +19,7 @@ namespace Rebus.Tests.Sagas
     public class TestHeaderCorrelation : FixtureBase
     {
         BuiltinHandlerActivator _activator;
-        IBus _bus;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
@@ -26,12 +27,10 @@ namespace Rebus.Tests.Sagas
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "header-correlation"))
                 .Sagas(s => s.StoreInMemory())
-                .Start();
-
-            _bus = _activator.Bus;
+                .Create();
         }
 
         [Test]
@@ -42,17 +41,21 @@ namespace Rebus.Tests.Sagas
 
             _activator.Register(() => new MySaga(sharedCounter, sagaDataCounters, false));
 
+            _busStarter.Start();
+
+            var bus = _activator.Bus;
+
             var sameMessage = new MyMessage();
             var headers1 = new Dictionary<string, string> { { "custom-correlation-id", "saga1" } };
             var headers2 = new Dictionary<string, string> { { "custom-correlation-id", "saga2" } };
 
-            await _bus.SendLocal(sameMessage, headers1);
-            await _bus.SendLocal(sameMessage, headers2);
-            await _bus.SendLocal(sameMessage, headers2);
-            await _bus.SendLocal(sameMessage, headers1);
-            await _bus.SendLocal(sameMessage, headers1);
+            await bus.SendLocal(sameMessage, headers1);
+            await bus.SendLocal(sameMessage, headers2);
+            await bus.SendLocal(sameMessage, headers2);
+            await bus.SendLocal(sameMessage, headers1);
+            await bus.SendLocal(sameMessage, headers1);
 
-            sharedCounter.WaitForResetEvent(timeoutSeconds:2);
+            sharedCounter.WaitForResetEvent(timeoutSeconds: 2);
         }
 
         [Test]
@@ -63,17 +66,21 @@ namespace Rebus.Tests.Sagas
 
             _activator.Register(() => new MySaga(sharedCounter, sagaDataCounters, true));
 
+            _busStarter.Start();
+
+            var bus = _activator.Bus;
+
             var sameMessage = new MyMessage();
             var headers1 = new Dictionary<string, string> { { "custom-correlation-id", "saga1" } };
             var headers2 = new Dictionary<string, string> { { "custom-correlation-id", "saga2" } };
 
-            await _bus.SendLocal(sameMessage, headers1);
-            await _bus.SendLocal(sameMessage, headers2);
-            await _bus.SendLocal(sameMessage, headers2);
-            await _bus.SendLocal(sameMessage, headers1);
-            await _bus.SendLocal(sameMessage, headers1);
+            await bus.SendLocal(sameMessage, headers1);
+            await bus.SendLocal(sameMessage, headers2);
+            await bus.SendLocal(sameMessage, headers2);
+            await bus.SendLocal(sameMessage, headers1);
+            await bus.SendLocal(sameMessage, headers1);
 
-            sharedCounter.WaitForResetEvent(timeoutSeconds:2);
+            sharedCounter.WaitForResetEvent(timeoutSeconds: 2);
         }
 
         class MyMessage { }

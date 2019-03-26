@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Bus;
-using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
@@ -157,6 +156,7 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<THandler> handlerFactory) where THandler : IHandleMessages
         {
+            AssertHasNotBeenStarted<THandler>();
             _handlerFactoriesNoArguments.Add(handlerFactory);
             return this;
         }
@@ -167,6 +167,7 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<IMessageContext, THandler> handlerFactory) where THandler : IHandleMessages
         {
+            AssertHasNotBeenStarted<THandler>();
             _handlerFactoriesMessageContextArgument.Add(handlerFactory);
             return this;
         }
@@ -177,8 +178,54 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<IBus, IMessageContext, THandler> handlerFactory) where THandler : IHandleMessages
         {
+            AssertHasNotBeenStarted<THandler>();
             _handlerFactoriesBusAndMessageContextArguments.Add(handlerFactory);
             return this;
+        }
+
+        void AssertHasNotBeenStarted<THandler>() where THandler : IHandleMessages
+        {
+            // if it's not initialized, it's definitely alright
+            if (Bus == null) return;
+
+            // if it's currently paused, then it's also alright
+            if (Bus.Advanced.Workers.Count == 0) return;
+
+            throw new InvalidOperationException($@"Cannot register factory for handler {typeof(THandler)} now, because the bus has already been started!
+
+The reason this is not allowed, is because there's a high risk of a RACE CONDITION between an incoming message and the registrationf of a new handler.
+
+If you need to initialize the bus BEFORE registering your handlers, please start it with 0 workers like this:
+
+    Configure.With(...)
+        .(...)
+        .Options(o => o.SetNumberOfWorkers(0))
+        .Start();
+
+or temporarily turn down the number of workers like this:
+
+    bus.Advanced.Workers.SetNumberOfWorkers(0);
+
+Then you may register handlers in the built-in container adapter, and then you may turn up the number of workers again like this:
+
+    bus.Advanced.Workers.SetNumberOfWorkers(n);
+    
+where n > 0.
+
+You may also want to take a look at the Create/Start API, which works by calling .Create() instead of .Start() in the configuration spell:
+
+    var starter = Configure.With(...)
+        .(...)
+        .Options(o => o.SetNumberOfWorkers(0))
+        .Create();
+
+    // do more stuff
+    //
+    // and then:
+    starter.Start();
+
+Using this method, it's possible to perform additional registrations in the ""do more stuff"" part.
+");
         }
 
         /// <summary>

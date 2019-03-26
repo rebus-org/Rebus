@@ -9,6 +9,7 @@ using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Persistence.InMem;
+using Rebus.Startup;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -21,12 +22,13 @@ namespace Rebus.Tests.Integration
     public class TestSlowContinuations : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Logging(l => l.Console(LogLevel.Info))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "slow await"))
                 .Options(o =>
@@ -38,7 +40,7 @@ namespace Rebus.Tests.Integration
                 })
                 .Sagas(s => s.StoreInMemory())
                 .Subscriptions(s => s.StoreInMemory())
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -46,6 +48,8 @@ namespace Rebus.Tests.Integration
         {
             var finishedHandlingMessage = new ManualResetEvent(false);
             _activator.Register((bus, context) => new TakeTimeHandler(bus, finishedHandlingMessage));
+
+            _busStarter.Start();
 
             var stopwatch = Stopwatch.StartNew();
             _activator.Bus.SendLocal("hej med dig!").Wait();

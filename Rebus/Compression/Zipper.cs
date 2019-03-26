@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
 
 namespace Rebus.Compression
@@ -13,6 +14,8 @@ namespace Rebus.Compression
         /// </summary>
         public byte[] Zip(byte[] uncompressedBytes)
         {
+            if (uncompressedBytes == null) throw new ArgumentNullException(nameof(uncompressedBytes));
+
             using (var targetStream = new MemoryStream())
             {
                 using (var sourceStream = new MemoryStream(uncompressedBytes))
@@ -29,6 +32,8 @@ namespace Rebus.Compression
         /// </summary>
         public byte[] Unzip(byte[] compressedBytes)
         {
+            if (compressedBytes == null) throw new ArgumentNullException(nameof(compressedBytes));
+
             using (var targetStream = new MemoryStream())
             {
                 using (var sourceStream = new MemoryStream(compressedBytes))

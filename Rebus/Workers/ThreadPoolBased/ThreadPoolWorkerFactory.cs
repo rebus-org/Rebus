@@ -22,13 +22,16 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly Options _options;
         readonly Func<RebusBus> _busGetter;
         readonly IBackoffStrategy _backoffStrategy;
+        readonly CancellationToken _busDisposalCancellationToken;
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ILog _log;
 
         /// <summary>
         /// Creates the worker factory
         /// </summary>
-        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, IBackoffStrategy backoffStrategy)
+        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory,
+            IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter,
+            BusLifetimeEvents busLifetimeEvents, IBackoffStrategy backoffStrategy, CancellationToken busDisposalCancellationToken)
         {
             if (busLifetimeEvents == null) throw new ArgumentNullException(nameof(busLifetimeEvents));
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
@@ -37,6 +40,7 @@ namespace Rebus.Workers.ThreadPoolBased
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _busGetter = busGetter ?? throw new ArgumentNullException(nameof(busGetter));
             _backoffStrategy = backoffStrategy ?? throw new ArgumentNullException(nameof(backoffStrategy));
+            _busDisposalCancellationToken = busDisposalCancellationToken;
             _parallelOperationsManager = new ParallelOperationsManager(options.MaxParallelism);
             _log = _rebusLoggerFactory.GetLogger<ThreadPoolWorkerFactory>();
 
@@ -70,7 +74,8 @@ namespace Rebus.Workers.ThreadPoolBased
                 _parallelOperationsManager,
                 owningBus,
                 _options,
-                _backoffStrategy
+                _backoffStrategy,
+                _busDisposalCancellationToken
             );
 
             return worker;

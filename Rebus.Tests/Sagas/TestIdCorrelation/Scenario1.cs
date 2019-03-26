@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
@@ -16,6 +17,7 @@ namespace Rebus.Tests.Sagas.TestIdCorrelation
     {
         BuiltinHandlerActivator _activator;
         InMemorySagaStorage _sagas;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
@@ -23,10 +25,10 @@ namespace Rebus.Tests.Sagas.TestIdCorrelation
 
             _sagas = new InMemorySagaStorage();
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-correlation"))
                 .Sagas(s => s.Register(c => _sagas))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -35,6 +37,8 @@ namespace Rebus.Tests.Sagas.TestIdCorrelation
             var counter = new SharedCounter(5);
 
             _activator.Register(() => new DefaultSaga(counter));
+
+            _busStarter.Start();
 
             var id1 = Guid.NewGuid();
             var id2 = Guid.NewGuid();

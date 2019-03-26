@@ -4,14 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -21,13 +20,13 @@ namespace Rebus.Tests.Integration
     public class TestSagaIsNew : FixtureBase
     {
         BuiltinHandlerActivator _activator;
-        IBus _bus;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            _bus = Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_is_new"))
                 .Sagas(s => s.StoreInMemory())
                 .Options(o =>
@@ -35,7 +34,7 @@ namespace Rebus.Tests.Integration
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(1);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -69,8 +68,11 @@ namespace Rebus.Tests.Integration
             Using(counter);
 
             _activator.Register(() => new MySaga(eventsPerCorrelationId, counter));
+            _busStarter.Start();
 
-            await Task.WhenAll(messages.Select(message => _bus.SendLocal(message)));
+            var bus = _activator.Bus;
+
+            await Task.WhenAll(messages.Select(message => bus.SendLocal(message)));
 
             counter.WaitForResetEvent();
 
