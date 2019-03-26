@@ -8,6 +8,7 @@ using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Sagas.Exclusive;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
@@ -20,6 +21,7 @@ namespace Rebus.Tests.Bugs
     public class VerifyIsNewPropertyWhenExclusiveAccessIsConfigured : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
@@ -27,14 +29,14 @@ namespace Rebus.Tests.Bugs
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "exlusivitivity"))
                 .Sagas(s =>
                 {
                     s.StoreInMemory();
                     s.EnforceExclusiveAccess();
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -46,6 +48,8 @@ namespace Rebus.Tests.Bugs
             var sharedCounter = new SharedCounter(count);
 
             _activator.Register(() => new MyExclusiveSaga(props, sharedCounter));
+
+            _busStarter.Start();
 
             var bus = _activator.Bus;
 

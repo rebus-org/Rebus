@@ -9,6 +9,7 @@ using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Persistence.InMem;
 using Rebus.Retry.Simple;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
@@ -40,12 +41,13 @@ It could happen to you too!
     public class DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Logging(l => l.None())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "check that it works"))
                 .Timeouts(t => t.StoreInMemory())
@@ -53,7 +55,7 @@ It could happen to you too!
                 {
                     o.SimpleRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -69,6 +71,8 @@ It could happen to you too!
                 events.Enqueue(text);
                 Console.WriteLine(text);
             }));
+
+            _busStarter.Start();
 
             _activator.Bus.SendLocal(new YourMessage()).Wait();
 

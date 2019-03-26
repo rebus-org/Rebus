@@ -8,6 +8,7 @@ using Rebus.Handlers;
 using Rebus.Handlers.Reordering;
 using Rebus.Pipeline;
 using Rebus.Routing.TransportMessages;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -19,6 +20,7 @@ namespace Rebus.Tests.Pipeline
     {
         BuiltinHandlerActivator _activator;
         ConcurrentQueue<string> _events;
+        IBusStarter _busStarter;
 
         bool _shouldAbortPipelineInTransportMessageRoutingFilter;
 
@@ -30,7 +32,7 @@ namespace Rebus.Tests.Pipeline
 
             _events = new ConcurrentQueue<string>();
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test abort pipeline"))
                 .Options(o => o.SpecifyOrderOfHandlers()
                     .First<FirstHandler>()
@@ -44,7 +46,7 @@ namespace Rebus.Tests.Pipeline
 
                     return ForwardAction.None;
                 }))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -68,11 +70,13 @@ namespace Rebus.Tests.Pipeline
             _activator.Register(context => new FirstHandler(_events, context, true));
             _activator.Register(() => new SecondHandler(_events));
 
+            _busStarter.Start();
+
             await _activator.Bus.SendLocal("hej med dig!!!");
 
             await Task.Delay(1000);
 
-            Assert.That(_events.ToArray(), Is.EqualTo(new[] {"FirstHandler"}), "got {0}", string.Join(", ", _events));
+            Assert.That(_events.ToArray(), Is.EqualTo(new[] { "FirstHandler" }), "got {0}", string.Join(", ", _events));
         }
 
         [Test]
@@ -81,9 +85,11 @@ namespace Rebus.Tests.Pipeline
             _activator.Register(context => new FirstHandler(_events, context, false));
             _activator.Register(() => new SecondHandler(_events));
 
+            _busStarter.Start();
+
             await _activator.Bus.SendLocal("hej med dig!!!");
 
-            await Task.Delay(1000);
+            await Task.Delay(1500);
 
             Assert.That(_events.ToArray(), Is.EqualTo(new[] { "FirstHandler", "SecondHandler" }), "got {0}", string.Join(", ", _events));
         }
@@ -94,7 +100,7 @@ namespace Rebus.Tests.Pipeline
             readonly IMessageContext _messageContext;
             readonly bool _shouldAbortThisTime;
 
-            public FirstHandler(ConcurrentQueue<string>  events, IMessageContext messageContext, bool shouldAbortThisTime)
+            public FirstHandler(ConcurrentQueue<string> events, IMessageContext messageContext, bool shouldAbortThisTime)
             {
                 _events = events;
                 _messageContext = messageContext;
@@ -117,7 +123,7 @@ namespace Rebus.Tests.Pipeline
         {
             readonly ConcurrentQueue<string> _events;
 
-            public SecondHandler(ConcurrentQueue<string>  events)
+            public SecondHandler(ConcurrentQueue<string> events)
             {
                 _events = events;
             }

@@ -29,13 +29,15 @@ namespace Rebus.Tests.Integration
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "input"))
                 .Options(o =>
                 {
-                    o.SetNumberOfWorkers(1);
+                    o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(1);
                 })
                 .Start();
 
             Using(_bus);
         }
+
+        void StartBus() => _bus.Advanced.Workers.SetNumberOfWorkers(1);
 
         [Test]
         public async Task ItWorksInSimpleScenario()
@@ -49,6 +51,8 @@ namespace Rebus.Tests.Integration
 
                 gotMessage.Set();
             });
+
+            StartBus();
 
             await _bus.SendLocal(new SpecializationA { Payload = "a" });
             await _bus.SendLocal(new SpecializationB { Payload = "b" });
@@ -75,6 +79,8 @@ namespace Rebus.Tests.Integration
                 gotMessage.Set();
             });
 
+            StartBus();
+
             await _bus.SendLocal("hej med dig");
 
             gotMessage.WaitOrDie(BlockingWaitTimeout);
@@ -96,6 +102,8 @@ namespace Rebus.Tests.Integration
                 events.Enqueue($"Got {msg.GetType().Name}");
                 gotMessage.Set();
             });
+
+            StartBus();
 
             await _bus.SendLocal(new ImplementorOfInterface());
 
@@ -127,6 +135,8 @@ namespace Rebus.Tests.Integration
             _handlerActivator
                 .Register(() => new Handler1(events))
                 .Register(() => new Handler2(events));
+
+            StartBus();
 
             await _bus.SendLocal(new SomeMessage());
 
