@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -14,10 +13,10 @@ using Rebus.Persistence.InMem;
 using Rebus.Retry.Simple;
 using Rebus.Sagas;
 using Rebus.Sagas.Exclusive;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 
@@ -30,7 +29,7 @@ namespace Rebus.Tests.Sagas
         readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory();
 
         BuiltinHandlerActivator _activator;
-        IBus _bus;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
@@ -41,7 +40,7 @@ namespace Rebus.Tests.Sagas
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Logging(l => l.Use(_listLoggerFactory))
                 .Transport(t => t.UseInMemoryTransport(_network, "in-process locking"))
                 .Sagas(s =>
@@ -55,9 +54,7 @@ namespace Rebus.Tests.Sagas
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(20);
                 })
-                .Start();
-
-            _bus = _activator.Bus;
+                .Create();
         }
 
         [TestCase(10)]
@@ -71,13 +68,17 @@ namespace Rebus.Tests.Sagas
             var sagaWasInitiated = new ManualResetEvent(false);
             var sagaWasMarkedAsComplete = new ManualResetEvent(false);
 
-            _activator.Register((bus, context) => new MySaga(bus, sagaWasInitiated, sagaWasMarkedAsComplete));
+            _activator.Register((b, context) => new MySaga(b, sagaWasInitiated, sagaWasMarkedAsComplete));
+
+            _busStarter.Start();
+
+            var bus = _activator.Bus;
 
             var replyIdsToWaitFor = Enumerable.Range(0, messageCount).Select(n => $"reply-{n}").ToList();
 
             // start the saga
             var initiator = new StartSaga(caseNumber, replyIdsToWaitFor);
-            await _bus.SendLocal(initiator);
+            await bus.SendLocal(initiator);
 
             // wait until we know it was started
             sagaWasInitiated.WaitOrDie(TimeSpan.FromSeconds(2), "Saga was not properly initiated. That was weird.");
@@ -85,7 +86,7 @@ namespace Rebus.Tests.Sagas
 
             // force saga instance to handle many messages concurrently
             await Task.WhenAll(replyIdsToWaitFor
-                .Select(replyId => _bus.SendLocal(new SimulateReply(caseNumber, replyId))));
+                .Select(replyId => bus.SendLocal(new SimulateReply(caseNumber, replyId))));
 
             try
             {

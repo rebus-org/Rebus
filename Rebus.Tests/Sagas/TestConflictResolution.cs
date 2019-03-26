@@ -37,7 +37,7 @@ namespace Rebus.Tests.Sagas
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "will_experience_conflicts"))
                 .Options(o =>
                 {
-                    o.SetNumberOfWorkers(10);
+                    o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(10);
                 })
                 .Sagas(s => s.StoreInMemory())
@@ -55,6 +55,8 @@ namespace Rebus.Tests.Sagas
             _builtinHandlerActivator.Handle<AllDone>(async i => resetEvent.Set());
 
             _builtinHandlerActivator.Register((bus, messageContext) => new MySaga(messageCount, messageContext, bus));
+
+            _bus.Advanced.Workers.SetNumberOfWorkers(10);
 
             await _bus.SendLocal("warmup message");
 

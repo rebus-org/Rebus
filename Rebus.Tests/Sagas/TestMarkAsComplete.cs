@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
+using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -17,12 +18,13 @@ namespace Rebus.Tests.Sagas
     public class TestMarkAsComplete : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _busStarter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _busStarter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test saga things"))
                 .Options(o =>
                 {
@@ -30,14 +32,17 @@ namespace Rebus.Tests.Sagas
                     o.SetNumberOfWorkers(1);
                 })
                 .Sagas(s => s.StoreInMemory())
-                .Start();
+                .Create();
         }
 
         [Test]
         public async Task CanMarkSagaAsComplete()
         {
             var registeredCounts = new ConcurrentQueue<int>();
+
             _activator.Register(() => new SomeSaga(registeredCounts));
+
+            _busStarter.Start();
 
             await _activator.Bus.SendLocal("1/hej");
             await _activator.Bus.SendLocal("1/med");
