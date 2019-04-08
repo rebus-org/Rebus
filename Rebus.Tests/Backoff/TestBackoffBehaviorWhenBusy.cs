@@ -122,10 +122,10 @@ namespace Rebus.Tests.Backoff
                 BackoffStrategy.Reset();
             }
 
-            public void WaitNoMessage()
+            public void WaitNoMessage(CancellationToken token)
             {
                 _waitNoMessageTimes.Enqueue(DateTime.UtcNow);
-                BackoffStrategy.WaitNoMessage();
+                BackoffStrategy.WaitNoMessage(token);
             }
 
 	        public Task WaitNoMessageAsync(CancellationToken token)
@@ -146,9 +146,9 @@ namespace Rebus.Tests.Backoff
 		        return BackoffStrategy.WaitAsync(token);
 	        }
 
-			public void WaitError()
+			public void WaitError(CancellationToken token)
             {
-                BackoffStrategy.WaitError();
+                BackoffStrategy.WaitError(token);
             }
 
 	        public Task WaitErrorAsync(CancellationToken token)

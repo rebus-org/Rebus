@@ -17,7 +17,7 @@ namespace Rebus.Tests.Backoff
     public class TestCustomizedBackoff : FixtureBase
     {
         [Test]
-        public void RunIdleForSomeTIme()
+        public void RunIdleForSomeTime()
         {
             var receiveCalls = RunTest(false);
             var receiveCallsWithCustomizedBackoff = RunTest(true);
