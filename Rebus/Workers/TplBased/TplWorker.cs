@@ -100,8 +100,11 @@ namespace Rebus.Workers.TplBased
                     _backoffStrategy.Reset();
 
                     await ProcessMessage(context, transportMessage);
-
                 }
+            }
+            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+            {
+                // we're shutting down
             }
             catch (Exception exception)
             {

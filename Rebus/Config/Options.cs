@@ -29,6 +29,11 @@ namespace Rebus.Config
         public static readonly TimeSpan DefaultDueTimeoutsPollInterval = TimeSpan.FromSeconds(1);
 
         /// <summary>
+        /// This is the default time to pause, when the transport experiences an error during receive.
+        /// </summary>
+        public static readonly TimeSpan DefaultTransportReceiveErrorCooldownTime = TimeSpan.FromSeconds(30);
+
+        /// <summary>
         /// Constructs the options with the default settings
         /// </summary>
         public Options()
@@ -37,6 +42,7 @@ namespace Rebus.Config
             MaxParallelism = DefaultMaxParallelism;
             DueTimeoutsPollInterval = DefaultDueTimeoutsPollInterval;
             WorkerShutdownTimeout = DefaultWorkerShutdownTimeout;
+            TransportReceiveErrorCooldownTime = DefaultTransportReceiveErrorCooldownTime;
         }
 
         /// <summary>
@@ -70,6 +76,11 @@ namespace Rebus.Config
         /// Gets/sets the maximum timeout for workers to finish running active handlers after being signaled to stop.
         /// </summary>
         public TimeSpan WorkerShutdownTimeout { get; set; }
+
+        /// <summary>
+        /// Gets/sets the time to pause, when the transport experiences an error during receive.
+        /// </summary>
+        public TimeSpan TransportReceiveErrorCooldownTime { get; set; }
 
         /// <summary>
         /// Gets/sets the name of the bus. If this is left unset, bus instances will be named with numbers.

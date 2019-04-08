@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Workers.ThreadPoolBased;
 
@@ -18,7 +19,7 @@ namespace Rebus.Tests.Workers
 		    var backoffStrategy = new DefaultBackoffStrategy(new[]
 		    {
 			    TimeSpan.FromMilliseconds(500)
-		    });
+		    }, new Options());
 
 			// Act
 		    var stopwatch = Stopwatch.StartNew();
@@ -36,7 +37,7 @@ namespace Rebus.Tests.Workers
 		    var backoffStrategy = new DefaultBackoffStrategy(new[]
 		    {
 			    TimeSpan.FromMilliseconds(500)
-		    });
+		    }, new Options());
 
 		    // Act
 		    var stopwatch = Stopwatch.StartNew();
@@ -55,7 +56,7 @@ namespace Rebus.Tests.Workers
                 TimeSpan.FromMilliseconds(100), 
                 TimeSpan.FromMilliseconds(500), 
                 TimeSpan.FromMilliseconds(1000), 
-            });
+            }, new Options());
 
             Printt("Starting");
 

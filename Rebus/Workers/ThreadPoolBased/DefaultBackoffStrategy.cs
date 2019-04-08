@@ -3,21 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Config;
 
 namespace Rebus.Workers.ThreadPoolBased
 {
     class DefaultBackoffStrategy : IBackoffStrategy
     {
         readonly TimeSpan[] _backoffTimes;
+        readonly Options _options;
 
         long _waitTimeTicks;
 
         /// <summary>
         /// Constructs the backoff strategy with the given waiting times
         /// </summary>
-        public DefaultBackoffStrategy(IEnumerable<TimeSpan> backoffTimes)
+        public DefaultBackoffStrategy(IEnumerable<TimeSpan> backoffTimes, Options options)
         {
             if (backoffTimes == null) throw new ArgumentNullException(nameof(backoffTimes));
+            _options = options;
 
             _backoffTimes = backoffTimes.ToArray();
 
@@ -58,8 +61,8 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <param name="token"></param>
 	    /// <inheritdoc />
 	    public void WaitError(CancellationToken token)
-	    {
-            var cooldownTime = TimeSpan.FromSeconds(5);
+        {
+            var cooldownTime = _options.TransportReceiveErrorCooldownTime;
 
             token.WaitHandle.WaitOne(cooldownTime);
         }
@@ -68,7 +71,7 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <inheritdoc />
         public async Task WaitErrorAsync(CancellationToken token)
 	    {
-            var cooldownTime = TimeSpan.FromSeconds(5);
+            var cooldownTime = _options.TransportReceiveErrorCooldownTime;
 
             await Task.Delay(cooldownTime, token);
         }

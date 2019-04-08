@@ -238,7 +238,9 @@ namespace Rebus.Config
                     Enumerable.Repeat(TimeSpan.FromMilliseconds(250), 1)
                 };
 
-                return new DefaultBackoffStrategy(backoffTimes.SelectMany(e => e));
+                var options = c.Get<Options>();
+
+                return new DefaultBackoffStrategy(backoffTimes.SelectMany(e => e), options);
             });
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
