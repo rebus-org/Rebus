@@ -31,41 +31,47 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <inheritdoc />
         public void Wait(CancellationToken token)
         {
-            InnerWait();
+            InnerWait(token);
         }
 
-        /// <param name="cancellationToken"></param>
+        /// <param name="token"></param>
         /// <inheritdoc />
-        public Task WaitAsync(CancellationToken cancellationToken)
+        public Task WaitAsync(CancellationToken token)
 	    {
-		    return InnerWaitAsync();
+		    return InnerWaitAsync(token);
 	    }
 
+        /// <param name="token"></param>
 		/// <inheritdoc />
-		public void WaitNoMessage()
+		public void WaitNoMessage(CancellationToken token)
 	    {
-		    InnerWait();
+		    InnerWait(token);
 	    }
 
         /// <param name="token"></param>
         /// <inheritdoc />
         public Task WaitNoMessageAsync(CancellationToken token)
         {
-            return InnerWaitAsync();
+            return InnerWaitAsync(token);
         }
 
+        /// <param name="token"></param>
 	    /// <inheritdoc />
-	    public void WaitError()
+	    public void WaitError(CancellationToken token)
 	    {
-			Thread.Sleep(TimeSpan.FromSeconds(5));
-	    }
+            var cooldownTime = TimeSpan.FromSeconds(5);
+
+            token.WaitHandle.WaitOne(cooldownTime);
+        }
 
         /// <param name="token"></param>
         /// <inheritdoc />
         public async Task WaitErrorAsync(CancellationToken token)
 	    {
-		    await Task.Delay(TimeSpan.FromSeconds(5));
-	    }
+            var cooldownTime = TimeSpan.FromSeconds(5);
+
+            await Task.Delay(cooldownTime, token);
+        }
 
         /// <inheritdoc />
         public void Reset()
@@ -73,18 +79,18 @@ namespace Rebus.Workers.ThreadPoolBased
             Interlocked.Exchange(ref _waitTimeTicks, 0);
         }
 
-        async Task InnerWaitAsync()
+        async Task InnerWaitAsync(CancellationToken token)
         {
             var backoffTime = GetNextBackoffTime();
 
-            await Task.Delay(backoffTime);
+            await Task.Delay(backoffTime, token);
         }
 
-        void InnerWait()
+        void InnerWait(CancellationToken token)
         {
             var backoffTime = GetNextBackoffTime();
 
-            Thread.Sleep(backoffTime);
+            token.WaitHandle.WaitOne(backoffTime);
         }
 
         TimeSpan GetNextBackoffTime()
@@ -102,6 +108,7 @@ namespace Rebus.Workers.ThreadPoolBased
             var waitTimeIndex = Math.Max(0, Math.Min(totalSecondsIdle, _backoffTimes.Length - 1));
 
             var backoffTime = _backoffTimes[waitTimeIndex];
+
             return backoffTime;
         }
     }

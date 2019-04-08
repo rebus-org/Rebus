@@ -65,7 +65,7 @@ namespace Rebus.Workers.ThreadPoolBased
                 {
                     _log.Error(exception, "Unhandled exception in worker {workerName} when try-receiving", Name);
 
-                    _backoffStrategy.WaitError();
+                    _backoffStrategy.WaitError(token);
                 }
             }
 

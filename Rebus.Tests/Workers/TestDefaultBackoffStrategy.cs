@@ -25,9 +25,9 @@ namespace Rebus.Tests.Workers
 		    backoffStrategy.Wait(CancellationToken.None);
 		    stopwatch.Stop();
 
-			// Assert
-			Assert.GreaterOrEqual(stopwatch.Elapsed, TimeSpan.FromMilliseconds(500));
-	    }
+            // Assert
+            Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromMilliseconds(450)).And.LessThan(TimeSpan.FromMilliseconds(550)));
+        }
 
 	    [Test]
 	    public async Task WaitAsyncDoesPause()

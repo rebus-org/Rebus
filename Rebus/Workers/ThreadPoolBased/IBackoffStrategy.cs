@@ -20,14 +20,15 @@ namespace Rebus.Workers.ThreadPoolBased
         /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
         /// This function is called each time a worker thread cannot continue because no more parallel operations are allowed to happen.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        Task WaitAsync(CancellationToken cancellationToken);
+        /// <param name="token"></param>
+        Task WaitAsync(CancellationToken token);
 
-		/// <summary>
-		/// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
-		/// This function is called each time no message was received.
-		/// </summary>
-		void WaitNoMessage();
+        /// <summary>
+        /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
+        /// This function is called each time no message was received.
+        /// </summary>
+        /// <param name="token"></param>
+        void WaitNoMessage(CancellationToken token);
 
         /// <summary>
         /// Executes the next wait operation by blocking the thread, possibly advancing the wait cursor to a different wait time for the next time.
@@ -36,10 +37,11 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <param name="token"></param>
         Task WaitNoMessageAsync(CancellationToken token);
 
-		/// <summary>
-		/// Blocks the thread for a (most likely longer) while, when an error has occurred
-		/// </summary>
-		void WaitError();
+        /// <summary>
+        /// Blocks the thread for a (most likely longer) while, when an error has occurred
+        /// </summary>
+        /// <param name="token"></param>
+        void WaitError(CancellationToken token);
 
         /// <summary>
         /// Blocks the thread for a (most likely longer) while, when an error has occurred
