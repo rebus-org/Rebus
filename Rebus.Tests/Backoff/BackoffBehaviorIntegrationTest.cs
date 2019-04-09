@@ -39,14 +39,24 @@ namespace Rebus.Tests.Backoff
                 .Options(o =>
                 {
                     o.SetBackoffTimes(
-                        // first five  seconds
+                        // first ten seconds
+                        TimeSpan.FromSeconds(0.01),
+                        TimeSpan.FromSeconds(0.01),
+                        TimeSpan.FromSeconds(0.01),
+                        TimeSpan.FromSeconds(0.01),
+                        TimeSpan.FromSeconds(0.01),
                         TimeSpan.FromSeconds(0.01),
                         TimeSpan.FromSeconds(0.01),
                         TimeSpan.FromSeconds(0.01),
                         TimeSpan.FromSeconds(0.01),
                         TimeSpan.FromSeconds(0.01),
 
-                        // next five seconds
+                        // next ten seconds
+                        TimeSpan.FromSeconds(0.1),
+                        TimeSpan.FromSeconds(0.1),
+                        TimeSpan.FromSeconds(0.1),
+                        TimeSpan.FromSeconds(0.1),
+                        TimeSpan.FromSeconds(0.1),
                         TimeSpan.FromSeconds(0.1),
                         TimeSpan.FromSeconds(0.1),
                         TimeSpan.FromSeconds(0.1),
@@ -59,7 +69,7 @@ namespace Rebus.Tests.Backoff
                 })
                 .Start();
 
-            await Task.Delay(TimeSpan.FromSeconds(15));
+            await Task.Delay(TimeSpan.FromSeconds(30));
 
             var recordedReceiveTimes = transportDecorator.ReceiveTimes.ToList();
 
@@ -75,11 +85,11 @@ namespace Rebus.Tests.Backoff
 
             Console.WriteLine(string.Join(Environment.NewLine, results.Select(r => $"{r.Time}: {new string('*', r.Count)}")));
 
-            var firstPeriodMedian = results.Skip(0).Take(5).GetMedianBy(g => g.Time);
+            var firstPeriodMedian = results.Skip(0).Take(10).GetMedianBy(g => g.Time);
 
-            var secondPeriodMedian = results.Skip(5).Take(5).GetMedianBy(g => g.Time);
+            var secondPeriodMedian = results.Skip(10).Take(10).GetMedianBy(g => g.Time);
 
-            var thirdPeriodMedian = results.Skip(10).Take(5).GetMedianBy(g => g.Time);
+            var thirdPeriodMedian = results.Skip(20).Take(10).GetMedianBy(g => g.Time);
 
             Console.WriteLine($" First period median: {firstPeriodMedian}");
             Console.WriteLine($"Second period median: {secondPeriodMedian}");
