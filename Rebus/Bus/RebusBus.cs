@@ -513,13 +513,13 @@ namespace Rebus.Bus
 
             if (desiredNumberOfWorkers > _options.MaxParallelism)
             {
-                _log.Warn("Attempted to set number of workers to {numberOfWorkers}, but the max allowed parallelism is {maxParallelism}",
-                    desiredNumberOfWorkers, _options.MaxParallelism);
+                _log.Warn("Bus {busName} attempted to set number of workers to {numberOfWorkers}, but the max allowed parallelism is {maxParallelism}",
+                    _busName, desiredNumberOfWorkers, _options.MaxParallelism);
 
                 desiredNumberOfWorkers = _options.MaxParallelism;
             }
 
-            _log.Info("Setting number of workers to {numberOfWorkers}", desiredNumberOfWorkers);
+            _log.Info("Bus {busName} setting number of workers to {numberOfWorkers}", _busName, desiredNumberOfWorkers);
             while (desiredNumberOfWorkers > GetNumberOfWorkers())
             {
                 AddWorker();
