@@ -1269,11 +1269,12 @@
 
 * Add cancellation support by adding a `CancellationToken` to the incoming step context. The token can be easily found by calling the `GetCancellationToken()` extension method on `IMessageContenxt`
 
-## 6.0.0-b04
+## 6.0.0-b05
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`
 * Move cancellation support into the backoff strategy - thanks [nativenolde]
+* Change log messages when changing number of workers to include the bus name - thanks [nativenolde]
 
 ---
 
