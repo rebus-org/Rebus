@@ -1,6 +1,7 @@
 ﻿using Rebus.Auditing.Sagas;
 using Rebus.Config;
 using Rebus.Logging;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Persistence.FileSystem
 {

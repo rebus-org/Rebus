@@ -24,6 +24,7 @@ namespace Rebus.Tests.Contracts.Sagas
         IBus _bus;
         TFactory _factory;
         ListLoggerFactory _logger;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -35,12 +36,14 @@ namespace Rebus.Tests.Contracts.Sagas
 
             _logger = new ListLoggerFactory(true);
 
-            _bus = Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Logging(l => l.Use(_logger))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_snapshots_integration_testerino"))
                 .Sagas(s => s.StoreInMemory())
                 .Options(o => o.EnableSagaAuditing().Register(c => _factory.Create()))
-                .Start();
+                .Create();
+
+            _bus = _starter.Bus;
         }
 
         [Test]
@@ -49,6 +52,7 @@ namespace Rebus.Tests.Contracts.Sagas
             var sharedCounter = Using(new SharedCounter(1));
 
             _activator.Register(() => new SomeSaga(sharedCounter, false));
+            _starter.Start();
 
             await _bus.SendLocal(new MessageThatCanNeverBeCorrelated());
 
@@ -79,6 +83,7 @@ as part of this:
             Using(sharedCounter);
 
             _activator.Register(() => new SomeSaga(sharedCounter, false));
+            _starter.Start();
 
             Task.WaitAll(
                 _bus.SendLocal("hej/med dig"),
@@ -86,7 +91,7 @@ as part of this:
                 _bus.SendLocal("hej/igen med dig")
                 );
 
-            sharedCounter.WaitForResetEvent();
+            sharedCounter.WaitForResetEvent(timeoutSeconds: 10);
 
             var allSnapshots = _factory.GetAllSnapshots().ToList();
 
@@ -110,6 +115,7 @@ as part of this:
             Using(sharedCounter);
 
             _activator.Register(() => new SomeSaga(sharedCounter, true));
+            _starter.Start();
 
             Task.WaitAll(
                 _bus.SendLocal("hej/med dig"),
