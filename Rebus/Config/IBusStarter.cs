@@ -1,6 +1,6 @@
 ﻿using Rebus.Bus;
 
-namespace Rebus.Startup
+namespace Rebus.Config
 {
     /// <summary>
     /// Wraps a bus, which has had its message processing stopped, by setting number of workers to 0.

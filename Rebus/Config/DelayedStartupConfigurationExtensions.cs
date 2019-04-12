@@ -1,7 +1,6 @@
 ﻿using Rebus.Bus;
-using Rebus.Config;
 
-namespace Rebus.Startup
+namespace Rebus.Config
 {
     /// <summary>
     /// Configuration extension that allows for delaying bus startup

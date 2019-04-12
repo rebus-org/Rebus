@@ -7,7 +7,6 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
-using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998

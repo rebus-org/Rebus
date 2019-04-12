@@ -14,7 +14,6 @@ using Rebus.Messages;
 using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Sagas.Idempotent;
-using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;

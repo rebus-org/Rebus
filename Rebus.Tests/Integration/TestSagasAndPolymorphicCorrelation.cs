@@ -10,7 +10,6 @@ using Rebus.Handlers;
 using Rebus.Persistence.InMem;
 using Rebus.Retry.Simple;
 using Rebus.Sagas;
-using Rebus.Startup;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
