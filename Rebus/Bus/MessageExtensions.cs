@@ -150,7 +150,7 @@ namespace Rebus.Bus
 
         static string GetMessageLabel(string id, string type)
         {
-            return $"{type}/{id}";
+            return $"{type}, {id}";
         }
     }
 }
