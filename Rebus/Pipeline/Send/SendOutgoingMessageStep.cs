@@ -42,7 +42,8 @@ namespace Rebus.Pipeline.Send
 
             var hasOneOrMoreDestinations = destinationAddressesList.Any();
 
-            _log.Debug("Sending {messageBody} -> {queueNames}",
+            _log.Debug("Bus {busName} sending {messageBody} -> {queueNames}",
+                _transport.Address,
                 logicalMessage.Body ?? "<empty message>",
                 hasOneOrMoreDestinations ? string.Join(";", destinationAddressesList) : "<no destinations>");
 
