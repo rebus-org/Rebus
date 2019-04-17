@@ -62,6 +62,24 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Gets the sender address from the message.
+        /// </summary>
+        public static string GetSenderAddress(this Message message)
+        {
+            return message.Headers.GetValueOrNull(Headers.SenderAddress)
+                   ?? "<unknown>";
+        }
+
+        /// <summary>
+        /// Gets the sender address from the message.
+        /// </summary>
+        public static string GetSenderAddress(this TransportMessage message)
+        {
+            return message.Headers.GetValueOrNull(Headers.SenderAddress)
+                   ?? "<unknown>";
+        }
+
+        /// <summary>
         /// Gets the message type from the message
         /// </summary>
         public static string GetMessageType(this Message message)
@@ -77,6 +95,7 @@ namespace Rebus.Bus
         public static string GetMessageType(this TransportMessage message)
         {
             return message.Headers.GetValueOrNull(Headers.Type)
+                   ?? GetTypeNameFromBodyObjectOrNull(message.Body)
                    ?? "<unknown>";
         }
 
@@ -101,7 +120,9 @@ namespace Rebus.Bus
         /// </summary>
         public static string GetMessageLabel(this Message message)
         {
-            return GetMessageLabel(message.Headers);
+            var messageId = GetMessageId(message);
+            var messageType = GetMessageType(message);
+            return GetMessageLabel(messageId, messageType);
         }
 
         /// <summary>
@@ -109,7 +130,9 @@ namespace Rebus.Bus
         /// </summary>
         public static string GetMessageLabel(this TransportMessage message)
         {
-            return GetMessageLabel(message.Headers);
+            var messageId = GetMessageId(message);
+            var messageType = GetMessageType(message);
+            return GetMessageLabel(messageId, messageType);
         }
 
         /// <summary>
@@ -120,30 +143,14 @@ namespace Rebus.Bus
             return new TransportMessage(message.Headers.Clone(), message.Body);
         }
 
-        static string GetMessageLabel(Dictionary<string, string> headers)
-        {
-            var id = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
-
-            if (headers.TryGetValue(Headers.Type, out var type))
-            {
-                var dotnetType = Type.GetType(type);
-
-                if (dotnetType != null)
-                {
-                    type = dotnetType.Name;
-                }
-            }
-            else
-            {
-                type = "<unknown>";
-            }
-
-            return $"{type}/{id}";
-        }
-
         static string GetTypeNameFromBodyObjectOrNull(object body)
         {
             return body?.GetType().GetSimpleAssemblyQualifiedName();
+        }
+
+        static string GetMessageLabel(string id, string type)
+        {
+            return $"{type}/{id}";
         }
     }
 }

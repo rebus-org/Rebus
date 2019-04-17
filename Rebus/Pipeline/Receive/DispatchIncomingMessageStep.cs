@@ -41,18 +41,17 @@ If no invokers were found, a RebusApplicationException is thrown.")]
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var invokers = context.Load<HandlerInvokers>();
             var handlersInvoked = 0;
+            var invokers = context.Load<HandlerInvokers>();
             var message = invokers.Message;
 
-            var messageId = message.GetMessageId();
-            var messageType = message.GetMessageType();
+            var messageLabel = message.GetMessageLabel();
 
             // if dispatch has already been aborted (e.g. in a transport message filter or something else that
             // was run before us....) bail out here:
             if (context.Load<bool>(AbortDispatchContextKey))
             {
-                _log.Debug("Skipping dispatch of message {messageType} {messageId}", messageType, messageId);
+                _log.Debug("Skipping dispatch of message {messageLabel}", messageLabel);
                 await next();
                 return;
             }
@@ -69,7 +68,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
                 // if dispatch was aborted at this point, bail out
                 if (context.Load<bool>(AbortDispatchContextKey))
                 {
-                    _log.Debug("Skipping further dispatch of message {messageType} {messageId}", messageType, messageId);
+                    _log.Debug("Skipping further dispatch of message {messageLabel}", messageLabel);
                     break;
                 }
             }
@@ -77,13 +76,13 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             // throw error if we should have executed a handler but we didn't
             if (handlersInvoked == 0)
             {
-                var text = $"Message with ID {messageId} and type {messageType} could not be dispatched to any handlers (and will not be retried under the default fail-fast settings)";
+                var text = $"Message {messageLabel} could not be dispatched to any handlers (and will not be retried under the default fail-fast settings)";
 
                 throw new MessageCouldNotBeDispatchedToAnyHandlersException(text);
             }
 
-            _log.Debug("Dispatching {messageType} {messageId} to {count} handlers took {elapsedMs:0} ms", 
-                messageType, messageId, handlersInvoked, stopwatch.ElapsedMilliseconds);
+            _log.Debug("Dispatching message {messageLabel} to {count} handlers took {elapsedMs:0} ms",
+                messageLabel, handlersInvoked, stopwatch.ElapsedMilliseconds);
 
             await next();
         }

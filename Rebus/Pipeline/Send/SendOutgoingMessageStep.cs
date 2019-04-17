@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -42,10 +43,12 @@ namespace Rebus.Pipeline.Send
 
             var hasOneOrMoreDestinations = destinationAddressesList.Any();
 
-            _log.Debug("Bus {busName} sending {messageBody} -> {queueNames}",
-                _transport.Address,
-                logicalMessage.Body ?? "<empty message>",
-                hasOneOrMoreDestinations ? string.Join(";", destinationAddressesList) : "<no destinations>");
+            _log.Debug("Sending {messageLabel} from {senderAddress} -> {queueNames}",
+                logicalMessage.GetMessageLabel(),
+                logicalMessage.GetSenderAddress(),
+                hasOneOrMoreDestinations ?
+                    string.Join(";", destinationAddressesList)
+                    : "<no destinations>");
 
             await Send(destinationAddressesList, transportMessage, currentTransactionContext);
 
