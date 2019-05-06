@@ -1273,7 +1273,7 @@
 
 * Fix bug in the "enforce exclusive saga access" feature that would result in an exception, if the same lock bucket got hit more than once
 
-## 6.0.0-b06
+## 6.0.0-b07
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`
