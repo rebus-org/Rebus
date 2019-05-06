@@ -58,6 +58,7 @@ namespace Rebus.Sagas.Exclusive
                 })
                 .Select(a => a.ToString())
                 .Select(lockId => Math.Abs(lockId.GetHashCode()) % _locks.Length)
+                .Distinct() // avoid accidentally acquiring the same lock twice, because a bucket got hit more than once
                 .OrderBy(bucket => bucket) // enforce consistent ordering to avoid deadlocks
                 .ToList();
 

@@ -1269,6 +1269,10 @@
 
 * Add cancellation support by adding a `CancellationToken` to the incoming step context. The token can be easily found by calling the `GetCancellationToken()` extension method on `IMessageContenxt`
 
+## 5.3.1
+
+* Fix bug in the "enforce exclusive saga access" feature that would result in an exception, if the same lock bucket got hit more than once
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
