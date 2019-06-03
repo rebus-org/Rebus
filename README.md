@@ -6,7 +6,7 @@ Latest stable: [![NuGet stable](https://img.shields.io/nuget/v/Rebus.svg?style=f
 
 Current prerelease: [![NuGet pre](https://img.shields.io/nuget/vpre/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
 
-Tests: [![Automated build/test on Appveyor](https://img.shields.io/appveyor/tests/mookid8000/rebus.svg)](https://ci.appveyor.com/project/mookid8000/rebus)
+Tests: [![Build status](https://ci.appveyor.com/api/projects/status/gk13466i0o57o4rp?svg=true)](https://ci.appveyor.com/project/mookid8000/rebus)
 
 This repository contains Rebus "core". You may also be interested in one of [the many integration libraries](https://github.com/rebus-org?utf8=%E2%9C%93&q=rebus.). 
 
