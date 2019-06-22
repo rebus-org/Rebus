@@ -6,7 +6,6 @@ using System.Threading;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Transport.InMem;
 
 namespace Rebus.Transport.InMem
 {
@@ -112,8 +111,7 @@ namespace Rebus.Transport.InMem
 
             while (true)
             {
-                InMemTransportMessage message;
-                if (!messageQueue.TryDequeue(out message)) return null;
+                if (!messageQueue.TryDequeue(out var message)) return null;
 
                 var messageId = message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
