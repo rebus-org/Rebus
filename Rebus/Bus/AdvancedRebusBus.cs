@@ -113,27 +113,27 @@ namespace Rebus.Bus
                 _rebusBus = rebusBus;
             }
 
-            public void SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            public void SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 AsyncHelpers.RunSync(() => _rebusBus.SendLocal(commandMessage, optionalHeaders));
             }
 
-            public void Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            public void Send(object commandMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 AsyncHelpers.RunSync(() => _rebusBus.Send(commandMessage, optionalHeaders));
             }
 
-            public void Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+            public void Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 AsyncHelpers.RunSync(() => _rebusBus.Reply(replyMessage, optionalHeaders));
             }
 
-            public void Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            public void Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
             {
                 AsyncHelpers.RunSync(() => _rebusBus.Defer(delay, message, optionalHeaders));
             }
 
-            public void DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            public void DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
             {
                 AsyncHelpers.RunSync(() => _rebusBus.DeferLocal(delay, message, optionalHeaders));
             }
@@ -158,7 +158,7 @@ namespace Rebus.Bus
                 AsyncHelpers.RunSync(() => _rebusBus.Unsubscribe(eventType));
             }
 
-            public void Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            public void Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 AsyncHelpers.RunSync(() => _rebusBus.Publish(eventMessage, optionalHeaders));
             }
@@ -175,14 +175,14 @@ namespace Rebus.Bus
                 _rebusTime = rebusTime;
             }
 
-            public Task Send(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Send(string destinationAddress, object explicitlyRoutedMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
 
                 return _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
             }
 
-            public Task Defer(string destinationAddress, TimeSpan delay, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Defer(string destinationAddress, TimeSpan delay, object explicitlyRoutedMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Defer, optionalHeaders);
 
@@ -193,7 +193,7 @@ namespace Rebus.Bus
                 return _rebusBus.InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
             }
 
-            public Task SendRoutingSlip(Itinerary itinerary, object message, Dictionary<string, string> optionalHeaders = null)
+            public Task SendRoutingSlip(Itinerary itinerary, object message, IDictionary<string, string> optionalHeaders = null)
             {
                 var logicalMessage = CreateMessage(message, Operation.Send, optionalHeaders);
                 var destinationAddresses = itinerary.GetDestinationAddresses();
@@ -256,7 +256,7 @@ namespace Rebus.Bus
                 _rebusBus = rebusBus;
             }
 
-            public Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Publish(string topic, object eventMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 return _rebusBus.InnerPublish(topic, eventMessage, optionalHeaders);
             }

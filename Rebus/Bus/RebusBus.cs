@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Rebus.Bus.Advanced;
+﻿using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.DataBus;
 using Rebus.Exceptions;
@@ -19,6 +14,11 @@ using Rebus.Time;
 using Rebus.Topic;
 using Rebus.Transport;
 using Rebus.Workers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 // ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Bus
@@ -62,7 +62,7 @@ namespace Rebus.Bus
             _rebusTime = rebusTime;
 
             var defaultBusName = $"Rebus {Interlocked.Increment(ref _busIdCounter)}";
-            
+
             _busName = options.OptionalBusName ?? defaultBusName;
         }
 
@@ -83,7 +83,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Sends the specified command message to this instance's own input queue, optionally specifying some headers to attach to the message
         /// </summary>
-        public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        public async Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null)
         {
             var destinationAddress = _transport.Address;
 
@@ -100,12 +100,12 @@ namespace Rebus.Bus
         /// <summary>
         /// Sends the specified command message to the address mapped as the owner of the message type, optionally specifying some headers to attach to the message
         /// </summary>
-        public async Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        public async Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(commandMessage, Operation.Send, optionalHeaders);
 
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
-            
+
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
@@ -114,10 +114,10 @@ namespace Rebus.Bus
         /// in a header, the bus instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
-        public async Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        public async Task DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
-            
+
             logicalMessage.SetDeferHeaders(_rebusTime.Now + delay, _transport.Address);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
@@ -130,7 +130,7 @@ namespace Rebus.Bus
         /// in a header, the endpoint mapping corresponding to the sent message will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
-        public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        public async Task Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
@@ -146,7 +146,7 @@ namespace Rebus.Bus
         /// Replies back to the endpoint specified as return address on the message currently being handled. Throws an <see cref="InvalidOperationException"/> if
         /// called outside of a proper message context.
         /// </summary>
-        public async Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+        public async Task Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null)
         {
             // reply is slightly different from Send and Publish in that it REQUIRES a transaction context to be present
             var currentTransactionContext = GetCurrentTransactionContext(mustBelongToThisBus: true);
@@ -236,7 +236,7 @@ namespace Rebus.Bus
         /// </code>
         /// in the configuration
         /// </summary>
-        public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+        public Task Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null)
         {
             if (eventMessage == null) throw new ArgumentNullException(nameof(eventMessage));
 
@@ -254,7 +254,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message
         /// </summary>
-        async Task InnerPublish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
+        async Task InnerPublish(string topic, object eventMessage, IDictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);
 
@@ -340,7 +340,7 @@ namespace Rebus.Bus
             return address;
         }
 
-        static Message CreateMessage(object commandMessage, Operation operation, Dictionary<string, string> optionalHeaders = null)
+        static Message CreateMessage(object commandMessage, Operation operation, IDictionary<string, string> optionalHeaders = null)
         {
             var headers = CreateHeaders(optionalHeaders);
 
@@ -358,11 +358,11 @@ namespace Rebus.Bus
             return new Message(headers, commandMessage);
         }
 
-        static Dictionary<string, string> CreateHeaders(Dictionary<string, string> optionalHeaders)
+        static Dictionary<string, string> CreateHeaders(IDictionary<string, string> optionalHeaders)
         {
-            return optionalHeaders != null
-                ? optionalHeaders.Clone()
-                : new Dictionary<string, string>();
+            return optionalHeaders == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>(optionalHeaders);
         }
 
         enum Operation
@@ -601,8 +601,8 @@ namespace Rebus.Bus
             var owningBus = transactionContextWithOwningBus.OwningBus;
 
             // if there is an OwningBus and it is this
-            return Equals(owningBus, this) 
-                ? transactionContext 
+            return Equals(owningBus, this)
+                ? transactionContext
                 : null; //< another bus created this context
         }
 

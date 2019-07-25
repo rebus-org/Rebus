@@ -15,7 +15,7 @@ namespace Rebus.Bus.Advanced
         /// Publishes the specified message to the specified topic. Default behavior is to look up the addresses of those who subscribed to the given topic
         /// by calling <see cref="ISubscriptionStorage.GetSubscriberAddresses"/> but the transport may override this behavior if it has special capabilities.
         /// </summary>
-        Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null);
+        Task Publish(string topic, object eventMessage, IDictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Subscribes the current endpoint to the given topic. If the <see cref="ISubscriptionStorage"/> is centralized (determined by checking <see cref="ISubscriptionStorage.IsCentralized"/>),

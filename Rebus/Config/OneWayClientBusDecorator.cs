@@ -24,27 +24,27 @@ namespace Rebus.Config
             _innerBus.Dispose();
         }
 
-        public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        public Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.SendLocal(commandMessage, optionalHeaders);
         }
 
-        public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        public Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.Send(commandMessage, optionalHeaders);
         }
 
-        public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+        public Task Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.Reply(replyMessage, optionalHeaders);
         }
 
-        public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        public Task Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.Defer(delay, message, optionalHeaders);
         }
 
-        public Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        public Task DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.DeferLocal(delay, message, optionalHeaders);
         }
@@ -71,7 +71,7 @@ namespace Rebus.Config
             return _innerBus.Unsubscribe(eventType);
         }
 
-        public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+        public Task Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.Publish(eventMessage, optionalHeaders);
         }

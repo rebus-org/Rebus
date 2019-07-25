@@ -221,15 +221,15 @@ has failed too many times)
 
             public void Dispose() => _bus.Dispose();
 
-            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
+            public Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
 
-            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
+            public Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
 
-            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null) => _bus.Reply(replyMessage, optionalHeaders);
+            public Task Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null) => _bus.Reply(replyMessage, optionalHeaders);
 
-            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null) => _bus.Defer(delay, message, optionalHeaders);
+            public Task Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null) => _bus.Defer(delay, message, optionalHeaders);
 
-            public Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null) => _bus.DeferLocal(delay, message, optionalHeaders);
+            public Task DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null) => _bus.DeferLocal(delay, message, optionalHeaders);
 
             public IAdvancedApi Advanced => _bus.Advanced;
 
@@ -241,7 +241,7 @@ has failed too many times)
 
             public Task Unsubscribe(Type eventType) => _bus.Unsubscribe(eventType);
 
-            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null) => _bus.Publish(eventMessage, optionalHeaders);
+            public Task Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null) => _bus.Publish(eventMessage, optionalHeaders);
         }
 
         [Test]
@@ -275,32 +275,32 @@ has failed too many times)
                 Disposed = true;
             }
 
-            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
 
-            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
 
-            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
 
-            public Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Publish(string topic, object eventMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
 
-            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            public Task Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
 
-            public Task DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            public Task DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
@@ -315,7 +315,7 @@ has failed too many times)
                 throw new NotImplementedException();
             }
 
-            public Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Route(string destinationAddress, object explicitlyRoutedMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
@@ -342,7 +342,7 @@ has failed too many times)
                 throw new NotImplementedException();
             }
 
-            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            public Task Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null)
             {
                 throw new NotImplementedException();
             }
