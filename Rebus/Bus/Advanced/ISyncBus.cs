@@ -16,32 +16,32 @@ namespace Rebus.Bus.Advanced
         /// <summary>
         /// Sends the specified message to our own input queue address
         /// </summary>
-        void SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null);
+        void SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Sends the specified message to a destination that is determined by calling <see cref="IRouter.GetDestinationAddress"/>
         /// </summary>
-        void Send(object commandMessage, Dictionary<string, string> optionalHeaders = null);
+        void Send(object commandMessage, IDictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Sends the specified reply message to a destination that is determined by looking up the <see cref="Headers.ReturnAddress"/> header of the message currently being handled.
         /// This method can only be called from within a message handler.
         /// </summary>
-        void Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null);
+        void Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
         /// in a header, the endpoint mapping corresponding to the sent message will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
-        void Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
+        void Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.DeferredRecipient"/> is specified
         /// in a header, the bus instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
         /// </summary>
-        void DeferLocal(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
+        void DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
@@ -96,6 +96,6 @@ namespace Rebus.Bus.Advanced
         /// </code>
         /// in the configuration
         /// </summary>
-        void Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null);
+        void Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null);
     }
 }
