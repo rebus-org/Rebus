@@ -1273,7 +1273,7 @@
 
 * Fix bug in the "enforce exclusive saga access" feature that would result in an exception, if the same lock bucket got hit more than once
 
-## 6.0.0-b08
+## 6.0.0-b09
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`
@@ -1281,6 +1281,7 @@
 * Change log messages when changing number of workers to include the bus name - thanks [nativenolde]
 * Add nifty fail fast helper on options configurer: `.Options(o => o.FailFastOn<TException>())` or `.Options(o => o.FailFastOn<TException>(when: ex => ex.Message.Contains("whatever")))`
 * Change `RebusTransactionScope` so it can be used inside Rebus handlers (in case that would be handy to anyone)
+* Change signature of all methods that accept headers to be `IDictionary<string, string>` - thanks [hellfirehd]
 
 ---
 
@@ -1301,6 +1302,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [Hangsolow]: https://github.com/Hangsolow
 [heberop]: https://github.com/heberop
+[hellfirehd]: https://github.com/hellfirehd
 [jasperdk]: https://github.com/jasperdk
 [jeffreyabecker]: https://github.com/jeffreyabecker
 [joshua5822]: https://github.com/joshua5822
