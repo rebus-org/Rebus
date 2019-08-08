@@ -29,7 +29,7 @@ namespace Rebus.Config
 
                 if (transport.Address != null)
                 {
-                    throw new InvalidOperationException($"Cannot configure thus but to be a one-way client, because the transport is configured with '{transport.Address}' as its input queue. One-way clients must have a NULL input queue, otherwise the transport could be fooled into believing it was supposed to receive messages");
+                    throw new InvalidOperationException($"Cannot configure this bus to be a one-way client, because the transport is configured with '{transport.Address}' as its input queue. One-way clients must have a NULL input queue, otherwise the transport could be fooled into believing it was supposed to receive messages");
                 }
 
                 var options = c.Get<Options>();
