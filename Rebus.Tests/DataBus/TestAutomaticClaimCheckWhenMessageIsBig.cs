@@ -14,6 +14,7 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleOther
 #pragma warning disable 1998
 
 namespace Rebus.Tests.DataBus
