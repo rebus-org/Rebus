@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable SuggestBaseTypeForParameter
 
@@ -7,11 +9,11 @@ namespace Rebus.Transport
 {
     class TransactionContext : ITransactionContext
     {
-        readonly ConcurrentQueue<Func<Task>> _onCommittedActions = new ConcurrentQueue<Func<Task>>();
-        readonly ConcurrentQueue<Func<Task>> _onCompletedActions = new ConcurrentQueue<Func<Task>>();
-
-        readonly ConcurrentQueue<Action> _onAbortedActions = new ConcurrentQueue<Action>();
-        readonly ConcurrentQueue<Action> _onDisposedActions = new ConcurrentQueue<Action>();
+        // Note: C# generates thread-safe add/remove. They use a compare-and-exchange loop.
+        event Func<Task> _onCommitted;
+        event Func<Task> _onCompleted;        
+        event Action _onAborted;
+        event Action _onDisposed;
 
         bool _mustAbort;
         bool _completed;
@@ -24,38 +26,38 @@ namespace Rebus.Transport
         public void OnCommitted(Func<Task> commitAction)
         {
             if (_completed)
-                throw new InvalidOperationException("Cannot add OnCommitted action on a complete transaction context;");
+                ThrowCompletedException();
 
-            _onCommittedActions.Enqueue(commitAction);
+            _onCommitted += commitAction;
         }
 
         public void OnCompleted(Func<Task> completedAction)
         {
             if (_completed)
-                throw new InvalidOperationException("Cannot add OnCompleted an action on a complete transaction context;");
+                ThrowCompletedException();
 
-            _onCompletedActions.Enqueue(completedAction);
+            _onCompleted += completedAction;
         }
 
         public void OnAborted(Action abortedAction)
         {
             if (_completed)
-                throw new InvalidOperationException("Cannot add OnAborted an action on a complete transaction context;");
+                ThrowCompletedException();
 
-            _onAbortedActions.Enqueue(abortedAction);
+            _onAborted += abortedAction;
         }
 
         public void OnDisposed(Action disposedAction)
         {
             if (_completed)
-                throw new InvalidOperationException("Cannot add OnDisposed an action on a complete transaction context;");
+                ThrowCompletedException();
 
-            _onDisposedActions.Enqueue(disposedAction);
+            _onDisposed += disposedAction;
         }
 
         public void Abort() => _mustAbort = true;
 
-        public async Task Commit() => await Invoke(_onCommittedActions);
+        public Task Commit() => RaiseCommitted();
 
         public void Dispose()
         {
@@ -76,7 +78,7 @@ namespace Rebus.Transport
                 {
                     try
                     {
-                        Invoke(_onDisposedActions);
+                        _onDisposed?.Invoke();
                     }
                     finally
                     {
@@ -101,34 +103,41 @@ namespace Rebus.Transport
             Dispose();
         }
 
+        void ThrowCompletedException([CallerMemberName] string actionName = null)
+        {
+            throw new InvalidOperationException($"Cannot add {actionName} action on a completed transaction context.");
+        }
+
         void RaiseAborted()
         {
             if (_aborted) return;
-            Invoke(_onAbortedActions);
+            _onAborted?.Invoke();
             _aborted = true;
         }
 
-        async Task RaiseCommitted() => await Invoke(_onCommittedActions);
-
-        async Task RaiseCompleted()
+        Task RaiseCommitted() 
         {
-            await Invoke(_onCompletedActions);
+            // RaiseCommitted() can be called multiple time.
+            // So we atomically extract the current list of subscribers and reset the event to null (empty)
+            var onCommitted = Interlocked.Exchange(ref _onCommitted, null);            
+            return InvokeAsync(onCommitted);
+        } 
+
+        Task RaiseCompleted()
+        {
+            var task = InvokeAsync(_onCompleted);
             _completed = true;
+            return task;
         }
 
-        static void Invoke(ConcurrentQueue<Action> actions)
+        static async Task InvokeAsync(Func<Task> actions)
         {
-            while (actions.TryDequeue(out var action))
-            {
-                action();
-            }
-        }
-
-        static async Task Invoke(ConcurrentQueue<Func<Task>> actions)
-        {
-            while (actions.TryDequeue(out var action))
-            {
-                await action();
+            if (actions != null) 
+            {    
+                foreach (Func<Task> action in actions.GetInvocationList())
+                {
+                    await action();
+                }
             }
         }
     }
