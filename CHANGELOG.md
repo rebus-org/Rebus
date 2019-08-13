@@ -1273,6 +1273,10 @@
 
 * Fix bug in the "enforce exclusive saga access" feature that would result in an exception, if the same lock bucket got hit more than once
 
+## 5.4.0
+
+* Add `rbs2-defer-count` header, which is initially set to 1 when a message is deferred - each subsequence deferral (of the transport message) will then increment this counter
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

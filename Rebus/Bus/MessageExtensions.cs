@@ -59,6 +59,17 @@ namespace Rebus.Bus
             {
                 headers[Headers.DeferredRecipient] = destinationAddress;
             }
+
+            // if the headers indicate that this message has been deferred before, we increment the count
+            if (int.TryParse(headers.GetValueOrNull(Headers.DeferCount), out var deferCount))
+            {
+                headers[Headers.DeferCount] = (deferCount + 1).ToString();
+            }
+            else
+            {
+                // otherwise we set to 1
+                headers[Headers.DeferCount] = "1";
+            }
         }
 
         /// <summary>
