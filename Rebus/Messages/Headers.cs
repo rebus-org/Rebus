@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus.Advanced;
 
 namespace Rebus.Messages
 {
@@ -86,6 +87,12 @@ namespace Rebus.Messages
         /// </summary>
         public const string DeferredRecipient = "rbs2-defer-recipient";
 
+        /// <summary>
+        /// Indicates how many times the message has been deferred. Will initially be set to 1, and will then be incremented each time the transport message
+        /// is deferred with <see cref="ITransportMessageApi.Defer"/>.
+        /// </summary>
+        public const string DeferCount = "rbs2-defer-count";
+        
         /// <summary>
         /// Indicates a time span (as a string, on the form hh:MM:ss) after which the queueing system can safely delete the message and thus never deliver it
         /// </summary>

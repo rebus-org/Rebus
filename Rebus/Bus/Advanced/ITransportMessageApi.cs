@@ -15,7 +15,7 @@ namespace Rebus.Bus.Advanced
         Task Forward(string destinationAddress, Dictionary<string, string> optionalAdditionalHeaders = null);
 
         /// <summary>
-        /// Defers the transport message currently being handled some time into the future, optionally specifying some additional headers
+        /// Defers the transport message currently being handled some time into the future, optionally specifying some additional headers.
         /// </summary>
         Task Defer(TimeSpan delay, Dictionary<string, string> optionalAdditionalHeaders = null);
     }

@@ -1273,6 +1273,10 @@
 
 * Fix bug in the "enforce exclusive saga access" feature that would result in an exception, if the same lock bucket got hit more than once
 
+## 5.4.0
+
+* Add `rbs2-defer-count` header, which is initially set to 1 when a message is deferred - each subsequent deferral of the message will then increment this counter
+
 ## 6.0.0-b10
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
