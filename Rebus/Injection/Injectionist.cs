@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Rebus.Config;
 
 namespace Rebus.Injection
 {
@@ -12,6 +13,13 @@ namespace Rebus.Injection
     /// </summary>
     public class Injectionist
     {
+        /// <summary>
+        /// Gets the injectionist instance backing the given <paramref name="configurer"/>
+        /// </summary>
+        public static Injectionist FromStandardConfigurer<TService>(StandardConfigurer<TService> configurer) => configurer.Injectionist;
+
+        readonly Injectionist _parent;
+
         class Handler
         {
             public Handler()
@@ -21,12 +29,7 @@ namespace Rebus.Injection
 
             public Resolver PrimaryResolver { get; private set; }
 
-            public List<Resolver> Decorators { get; private set; }
-
-            void AddDecorator(Resolver resolver)
-            {
-                Decorators.Insert(0, resolver);
-            }
+            public List<Resolver> Decorators { get; }
 
             public void AddResolver(Resolver resolver)
             {
@@ -40,6 +43,11 @@ namespace Rebus.Injection
                 }
             }
 
+            void AddDecorator(Resolver resolver)
+            {
+                Decorators.Insert(0, resolver);
+            }
+
             void AddPrimary(Resolver resolver)
             {
                 PrimaryResolver = resolver;
@@ -49,19 +57,34 @@ namespace Rebus.Injection
         readonly Dictionary<Type, Handler> _resolvers = new Dictionary<Type, Handler>();
 
         /// <summary>
+        /// Creates an empty injectionist container
+        /// </summary>
+        public Injectionist()
+        {
+        }
+
+        /// <summary>
+        /// Creates an injectionist container which will use the passed-in <paramref name="parent"/> container as a backup resolver
+        /// </summary>
+        public Injectionist(Injectionist parent)
+        {
+            _parent = parent;
+        }
+
+        /// <summary>
         /// Starts a new resolution context, resolving an instance of the given <typeparamref name="TService"/>
         /// </summary>
         public ResolutionResult<TService> Get<TService>()
         {
-            var resolutionContext = new ResolutionContext(_resolvers, ResolveRequested);
+            var resolutionContext = new ResolutionContext(_resolvers, ResolveRequested, _parent);
             var instance = resolutionContext.Get<TService>();
             return new ResolutionResult<TService>(instance, resolutionContext.TrackedInstances);
         }
 
         /// <summary>
-        /// Events that is raised when the resolution of a top-level instance is requested
+        /// Event that is raised when the resolution of a top-level instance is requested
         /// </summary>
-        public event Action<Type> ResolveRequested = delegate { };
+        public event Action<Type> ResolveRequested;
 
         /// <summary>
         /// Registers a factory method that can provide an instance of <typeparamref name="TService"/>. Optionally,
@@ -127,9 +150,7 @@ namespace Rebus.Injection
 
         Handler GetOrCreateHandler<TService>()
         {
-            Handler handler;
-
-            if (_resolvers.TryGetValue(typeof(TService), out handler)) return handler;
+            if (_resolvers.TryGetValue(typeof(TService), out var handler)) return handler;
 
             handler = new Handler();
             _resolvers[typeof(TService)] = handler;
@@ -144,7 +165,7 @@ namespace Rebus.Injection
                 IsDecorator = isDecorator;
             }
 
-            public bool IsDecorator { get; private set; }
+            public bool IsDecorator { get; }
         }
 
         class Resolver<TService> : Resolver
@@ -182,11 +203,13 @@ namespace Rebus.Injection
             readonly Action<Type> _serviceTypeRequested;
             readonly Dictionary<Type, object> _instances = new Dictionary<Type, object>();
             readonly List<object> _resolvedInstances = new List<object>();
+            readonly Injectionist _parent;
 
-            public ResolutionContext(Dictionary<Type, Handler> resolvers, Action<Type> serviceTypeRequested)
+            public ResolutionContext(Dictionary<Type, Handler> resolvers, Action<Type> serviceTypeRequested, Injectionist parent)
             {
                 _resolvers = resolvers;
                 _serviceTypeRequested = serviceTypeRequested;
+                _parent = parent;
             }
 
             public bool Has<TService>(bool primary = true)
@@ -194,26 +217,45 @@ namespace Rebus.Injection
                 return ResolverHaveRegistrationFor<TService>(primary, _resolvers);
             }
 
+            public void Track(IEnumerable instances)
+            {
+                _resolvedInstances.AddRange(instances.Cast<object>());
+            }
+
             public TService Get<TService>()
             {
                 var serviceType = typeof(TService);
 
-                object existingInstance;
-
-                if (_instances.TryGetValue(serviceType, out existingInstance))
+                if (_instances.TryGetValue(serviceType, out var existingInstance))
                 {
                     return (TService)existingInstance;
                 }
 
                 if (!_resolvers.ContainsKey(serviceType))
                 {
+                    if (_parent != null)
+                    {
+                        try
+                        {
+                            var resolutionResult = _parent.Get<TService>();
+
+                            _resolvedInstances.AddRange(resolutionResult.TrackedInstances.Cast<object>());
+
+                            return resolutionResult.Instance;
+                        }
+                        catch (ResolutionException exception)
+                        {
+                            throw new ResolutionException(exception, $"Could not find resolver for {serviceType} (neither in this container, nor in the parent container)");
+                        }
+                    }
+
                     throw new ResolutionException($"Could not find resolver for {serviceType}");
                 }
 
                 if (!_decoratorDepth.ContainsKey(serviceType))
                 {
                     _decoratorDepth[serviceType] = 0;
-                    _serviceTypeRequested(serviceType);
+                    _serviceTypeRequested?.Invoke(serviceType);
                 }
 
                 var handlerForThisType = _resolvers[serviceType];
@@ -226,7 +268,7 @@ namespace Rebus.Injection
                         .Cast<Resolver<TService>>()
                         .Skip(depth)
                         .FirstOrDefault()
-                                   ?? (Resolver<TService>) handlerForThisType.PrimaryResolver;
+                                   ?? (Resolver<TService>)handlerForThisType.PrimaryResolver;
 
                     var instance = resolver.InvokeResolver(this);
 

@@ -21,5 +21,10 @@ namespace Rebus.Injection
         /// Gets whether there exists a primary registration for the <typeparamref name="TService"/> type
         /// </summary>
         bool Has<TService>(bool primary = true);
+
+        /// <summary>
+        /// Adds the given <paramref name="instances"/> to be tracked by this resolution context
+        /// </summary>
+        void Track(IEnumerable instances);
     }
 }

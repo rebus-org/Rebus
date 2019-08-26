@@ -203,5 +203,32 @@ namespace Rebus.Tests.Contracts.Extensions
 
             return next;
         }
+
+        public static async Task<T> GetNextOrThrowAsync<T>(this ConcurrentQueue<T> queue, int timeoutSeconds = 5)
+        {
+            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+            {
+                while (true)
+                {
+                    var cancellationToken = cancellationTokenSource.Token;
+
+                    try
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (queue.TryDequeue(out var next))
+                        {
+                            return next;
+                        }
+
+                        await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw new TimeoutException($"Message was not received in ConcurrentQueue within {timeoutSeconds} s timeout");
+                    }
+                }
+            }
+        }
     }
 }

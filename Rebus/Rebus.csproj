@@ -8,7 +8,7 @@
     <TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://mookid.dk/oncode/rebus</PackageProjectUrl>
     <Copyright>Copyright 2012-2019</Copyright>
     <PackageTags>rebus queue messaging service bus</PackageTags>

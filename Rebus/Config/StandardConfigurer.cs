@@ -2,6 +2,7 @@ using System;
 using Rebus.Injection;
 using Rebus.Subscriptions;
 using Rebus.Transport;
+// ReSharper disable ArgumentsStyleNamedExpression
 
 namespace Rebus.Config
 {
@@ -27,16 +28,16 @@ namespace Rebus.Config
 
         internal StandardConfigurer(Injectionist injectionist, Options options)
         {
-            if (injectionist == null) throw new ArgumentNullException(nameof(injectionist));
-            if (options == null) throw new ArgumentNullException(nameof(options));
-            _injectionist = injectionist;
-            _options = options;
+            _injectionist = injectionist ?? throw new ArgumentNullException(nameof(injectionist));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         internal Options Options => _options;
 
+        internal Injectionist Injectionist => _injectionist;
+
         /// <summary>
-        /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service
+        /// Registers the given factory function as a resolver of the given <typeparamref name="TService"/> service
         /// </summary>
         public void Register(Func<IResolutionContext, TService> factoryMethod, string description = null)
         {
@@ -45,7 +46,7 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service
+        /// Registers the given factory function as a resolver of the given <typeparamref name="TService"/> service
         /// </summary>
         public void Decorate(Func<IResolutionContext, TService> factoryMethod, string description = null)
         {
@@ -60,6 +61,14 @@ namespace Rebus.Config
         public StandardConfigurer<TOther> OtherService<TOther>()
         {
             return new StandardConfigurer<TOther>(_injectionist, _options);
+        }
+
+        /// <summary>
+        /// Gets a configurer whose backing injectionist is a child of this configurer's injectionist
+        /// </summary>
+        public StandardConfigurer<TService> GetChildConfigurer()
+        {
+            return new StandardConfigurer<TService>(new Injectionist(_injectionist), _options);
         }
     }
 }

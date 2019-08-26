@@ -5,6 +5,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Tests.Transport.InMem
 {
@@ -15,7 +16,7 @@ namespace Rebus.Tests.Transport.InMem
 
         protected override void SetUp()
         {
-            _network = new InMemNetwork(true);
+            _network = new InMemNetwork(outputEventsToConsole: true);
         }
 
         [Test]
@@ -23,6 +24,8 @@ namespace Rebus.Tests.Transport.InMem
         {
             var messageId = Guid.NewGuid().ToString();
             var transportMessageToSend = GetTransportMessage(messageId);
+
+            _network.CreateQueue("bimse");
 
             _network.Deliver("bimse", transportMessageToSend.ToInMemTransportMessage());
 
@@ -36,7 +39,9 @@ namespace Rebus.Tests.Transport.InMem
         {
             var messageId = Guid.NewGuid().ToString();
             var transportMessageToSend = GetTransportMessage(messageId);
-
+            
+            _network.CreateQueue("bimse");
+            
             _network.Deliver("bImSe", transportMessageToSend.ToInMemTransportMessage());
 
             var receivedTransportMessage = _network.GetNextOrNull("BiMsE");

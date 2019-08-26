@@ -94,8 +94,10 @@ namespace Rebus.Transport.InMem
                 _log.Info($"{messageId} ---> {destinationAddress} ({_networkId})");
             }
 
-            var messageQueue = _queues
-                .GetOrAdd(destinationAddress, address => new ConcurrentQueue<InMemTransportMessage>());
+            if (!_queues.TryGetValue(destinationAddress, out var messageQueue))
+            {
+                throw new ArgumentException($"The queue '{destinationAddress}' does not exist");
+            }
 
             messageQueue.Enqueue(msg);
         }
@@ -111,8 +113,7 @@ namespace Rebus.Transport.InMem
 
             while (true)
             {
-                InMemTransportMessage message;
-                if (!messageQueue.TryDequeue(out message)) return null;
+                if (!messageQueue.TryDequeue(out var message)) return null;
 
                 var messageId = message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
