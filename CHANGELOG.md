@@ -1277,7 +1277,7 @@
 
 * Add `rbs2-defer-count` header, which is initially set to 1 when a message is deferred - each subsequent deferral of the message will then increment this counter
 
-## 6.0.0-b11
+## 6.0.0-b12
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`
@@ -1287,6 +1287,7 @@
 * Change `RebusTransactionScope` so it can be used inside Rebus handlers (in case that would be handy to anyone)
 * Change signature of all methods that accept headers to be `IDictionary<string, string>` - thanks [hellfirehd]
 * Optimize Rebus' internal `TransactionContext` to use `event` (code-generated lists of callbacks) instead of `ConcurrentQueue<Func<Task>>` - thanks [jods4]
+* Remove need for `ManualResetEvent` from Rebus' async background task implementation - thanks [jods4]
 
 ---
 
