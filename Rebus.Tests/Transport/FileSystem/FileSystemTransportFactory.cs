@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Concurrent;
+using System.IO;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Tests.Contracts.Utilities;
@@ -10,6 +12,7 @@ namespace Rebus.Tests.Transport.FileSystem
 {
     public class FileSystemTransportFactory : ITransportFactory
     {
+        readonly ConcurrentStack<IDisposable> _disposables = new ConcurrentStack<IDisposable>();
         readonly string _baseDirectory;
 
         public FileSystemTransportFactory()
@@ -21,16 +24,23 @@ namespace Rebus.Tests.Transport.FileSystem
 
         public ITransport CreateOneWayClient()
         {
-            return new FileSystemTransport(new FakeRebusTime(), _baseDirectory, null);
+            return new FileSystemTransport(_baseDirectory, null, new FileSystemTransportOptions(), new FakeRebusTime());
         }
 
         public ITransport Create(string inputQueueAddress)
         {
-            return new FileSystemTransport(new FakeRebusTime(), _baseDirectory, inputQueueAddress);
+            var fileSystemTransport = new FileSystemTransport(_baseDirectory, inputQueueAddress, new FileSystemTransportOptions(), new FakeRebusTime());
+            _disposables.Push(fileSystemTransport);
+            fileSystemTransport.Initialize();;
+            return fileSystemTransport;
         }
 
         public void CleanUp()
         {
+            while (_disposables.TryPop(out var disposable))
+            {
+                disposable.Dispose();
+            }
             DeleteHelper.DeleteDirectory(_baseDirectory);
         }
     }

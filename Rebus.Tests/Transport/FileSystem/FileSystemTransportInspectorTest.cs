@@ -28,7 +28,7 @@ namespace Rebus.Tests.Transport.FileSystem
 
             public TransportAndInspector Create(string address)
             {
-                var transport = new FileSystemTransport(new FakeRebusTime(), _path, address);
+                var transport = new FileSystemTransport(_path, address, new FileSystemTransportOptions(), new FakeRebusTime());
                 return new TransportAndInspector(transport, transport);
             }
 

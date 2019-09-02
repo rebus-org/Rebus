@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Contracts.Utilities;
 
 namespace Rebus.Tests.Contracts
 {
@@ -39,6 +40,22 @@ namespace Rebus.Tests.Contracts
         {
             _disposables.Push(disposable);
             return disposable;
+        }
+
+        protected string NewTempDirectory()
+        {
+            var directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Guid.NewGuid().ToString("N"));
+
+            Console.WriteLine($"Creating temp directory '{directoryPath}'");
+            Directory.CreateDirectory(directoryPath);
+
+            Using(new DisposableCallback(() =>
+            {
+                Console.WriteLine($"Deleting temp directory '{directoryPath}'");
+                DeleteHelper.DeleteDirectory(directoryPath);
+            }));
+
+            return directoryPath;
         }
 
         protected string GetTempFilePath()

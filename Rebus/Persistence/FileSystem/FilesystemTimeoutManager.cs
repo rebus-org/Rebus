@@ -35,7 +35,6 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public FileSystemTimeoutManager(string basePath, IRebusLoggerFactory rebusLoggerFactory, IRebusTime rebusTime)
         {
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _basePath = basePath ?? throw new ArgumentNullException(nameof(basePath));
             _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
             _lockFile = Path.Combine(basePath, "lock.txt");

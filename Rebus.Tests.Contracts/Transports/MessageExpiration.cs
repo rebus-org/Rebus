@@ -71,6 +71,7 @@ namespace Rebus.Tests.Contracts.Transports
                 var headers = new Dictionary<string, string>
                 {
                     {Headers.MessageId, Guid.NewGuid().ToString() },
+                    {Headers.SentTime, DateTimeOffset.Now.ToString("o") },
                     {"recognizzle", id},
                     {Headers.TimeToBeReceived, "00:00:04"} //< expires after 4 seconds!
                 };
