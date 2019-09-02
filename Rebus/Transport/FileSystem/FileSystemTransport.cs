@@ -1,273 +1,385 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Rebus.Bus;
-using Rebus.Exceptions;
 using Rebus.Messages;
+using Rebus.Serialization;
 using Rebus.Time;
+// ReSharper disable EmptyGeneralCatchClause
+// ReSharper disable ArgumentsStyleLiteral
+// ReSharper disable RedundantJumpStatement
 #pragma warning disable 1998
 
 namespace Rebus.Transport.FileSystem
 {
     /// <summary>
-    /// Transport implementation that uses the file system to send/receive messages.
+    /// File system-based transport implementation
     /// </summary>
-    public class FileSystemTransport : ITransport, IInitializable, ITransportInspector
+    public class FileSystemTransport : ITransport, IInitializable, ITransportInspector, IDisposable
     {
-        static readonly JsonSerializerSettings SuperSecretSerializerSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
-        static readonly Encoding FavoriteEncoding = Encoding.UTF8;
+        static readonly GenericJsonSerializer Serializer = new GenericJsonSerializer();
 
-        readonly ConcurrentDictionary<string, object> _messagesBeingHandled = new ConcurrentDictionary<string, object>();
-        readonly ConcurrentBag<string> _queuesAlreadyInitialized = new ConcurrentBag<string>();
+        readonly ConcurrentQueue<IncomingMessage> _incomingMessages = new ConcurrentQueue<IncomingMessage>();
+        readonly FileSystemTransportOptions _options;
         readonly string _baseDirectory;
-        readonly string _inputQueue;
-
-        int _incrementingCounter = 1;
 
         /// <summary>
-        /// Constructs the file system transport to create "queues" as subdirectories of the specified base directory.
-        /// While it is apparent that <seealso cref="_baseDirectory"/> must be a valid directory name, please note that 
-        /// <seealso cref="_inputQueue"/> must not contain any invalid path either.
+        /// Creates the transport using the given <paramref name="baseDirectory"/> to store messages in the form of JSON files
         /// </summary>
-        public FileSystemTransport(string baseDirectory, string inputQueue)
+        public FileSystemTransport(string baseDirectory, string inputQueueName, FileSystemTransportOptions options)
         {
-            _baseDirectory = baseDirectory;
-
-            if (inputQueue == null) return;
-
-            EnsureQueueNameIsValid(inputQueue);
-
-            _inputQueue = inputQueue;
+            _baseDirectory = baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory));
+            _options = options;
+            Address = inputQueueName;
         }
 
         /// <summary>
-        /// Creates a "queue" (i.e. a directory) with the given name
+        /// Creates the "queue" with the given <paramref name="address"/>
         /// </summary>
         public void CreateQueue(string address)
         {
-            EnsureQueueInitialized(address);
+            if (address == null) throw new ArgumentNullException(nameof(address));
+            EnsureDirectoryExists(GetDirectory(address));
         }
 
         /// <summary>
-        /// Sends the specified message to the logical queue specified by <paramref name="destinationQueueName"/> by writing
-        /// a JSON serialied text to a file in the corresponding directory. The actual write operation is delayed until
-        /// the commit phase of the queue transaction unless we're non-transactional, in which case it is written immediately.
+        /// Sends
         /// </summary>
-        public async Task Send(string destinationQueueName, TransportMessage message, ITransactionContext context)
+        /// <param name="destinationAddress"></param>
+        /// <param name="message"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
-            EnsureQueueInitialized(destinationQueueName);
-
-            var destinationDirectory = GetDirectoryForQueueNamed(destinationQueueName);
-
-            var serializedMessage = Serialize(message);
-            var fileName = GetNextFileName();
-            var fullPath = Path.Combine(destinationDirectory, fileName);
-
-            context.OnCommitted(async () =>
+            var outgoingMessages = context.GetOrAdd("file-system-transport-outgoing-messages", () =>
             {
-                using (var stream = File.OpenWrite(fullPath))
-                using (var writer = new StreamWriter(stream, FavoriteEncoding))
-                {
-                    await writer.WriteAsync(serializedMessage);
-                }
+                var queue = new ConcurrentQueue<OutgoingMessage>();
+
+                context.OnCommitted(() => SendOutgoingMessages(queue));
+                context.OnAborted(() => AbortOutgoingMessages(queue));
+
+                return queue;
             });
+
+            var outgoingMessage = await OutgoingMessage.WriteTemp(GetDirectory(destinationAddress), message);
+
+            outgoingMessages.Enqueue(outgoingMessage);
+        }
+
+        void AbortOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
+        {
+            foreach (var message in outgoingMessages)
+            {
+                message.Delete();
+            }
+        }
+
+        static async Task SendOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
+        {
+            var unitOfWorkId = Guid.NewGuid();
+            var now = RebusTime.Now;
+            var index = 0;
+
+            foreach (var message in outgoingMessages)
+            {
+                message.Complete(unitOfWorkId, now, index);
+
+                index++;
+            }
         }
 
         /// <summary>
-        /// Receives the next message from the logical input queue by loading the next file from the corresponding directory,
-        /// deserializing it, deleting it when the transaction is committed.
+        /// Receives the next message from the in-mem prefetch buffer, possibly trying to prefetch into the buffer first
         /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
-            string fullPath = null;
-            try
+            while (true)
             {
-                var fileNames = Directory.GetFiles(GetDirectoryForQueueNamed(_inputQueue), "*.rebusmessage.json")
-                    .OrderBy(f => f)
-                    .ToList();
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var index = 0;
-                while (index < fileNames.Count)
+                if (_incomingMessages.TryDequeue(out var next))
                 {
-                    fullPath = fileNames[index++];
+                    var envelope = next.Envelope;
+                    var transportMessage = new TransportMessage(envelope.Headers, envelope.Body);
 
-                    // attempt to capture a "lock" on the file
-                    if (_messagesBeingHandled.TryAdd(fullPath, new object()))
-                        break;
+                    if (transportMessage.Headers.TryGetValue(Headers.TimeToBeReceived, out var timeToBeReceivedString))
+                    {
+                        if (transportMessage.Headers.TryGetValue(Headers.SentTime, out var sentTimeString))
+                        {
+                            if (TimeSpan.TryParse(timeToBeReceivedString, CultureInfo.InvariantCulture, out var timeToBeReceived))
+                            {
+                                if (DateTimeOffset.TryParse(sentTimeString, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var sentTime))
+                                {
+                                    var messageExpired = RebusTime.Now > sentTime + timeToBeReceived;
 
-                    fullPath = null;
+                                    if (messageExpired)
+                                    {
+                                        using (next)
+                                        {
+                                            next.Complete();
+                                        }
+
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    context.OnCompleted(async () => next.Complete());
+                    context.OnDisposed(() =>
+                    {
+                        if (next.IsCompleted)
+                        {
+                            next.Dispose();
+                        }
+                        else
+                        {
+                            _incomingMessages.Enqueue(next);
+                        }
+                    });
+
+                    return transportMessage;
                 }
 
-                if (fullPath == null) return null;
+                ReceiveNextBatch();
 
-                var jsonText = await ReadAllText(fullPath);
-                var receivedTransportMessage = Deserialize(jsonText);
+                // just let backoff strategy do its thing, if there's nothing at this point
+                if (!_incomingMessages.Any()) return null;
+            }
+        }
 
-                if (receivedTransportMessage.Headers.TryGetValue(Headers.TimeToBeReceived, out var timeToBeReceived))
+        void ReceiveNextBatch()
+        {
+            var files = Directory
+                .GetFiles(GetDirectory(Address), "*.json")
+                .Select(file => new FileInfo(file))
+                .OrderBy(file => file.Name)
+                .Take(_options.PrefetchCount)
+                .ToList();
+
+            foreach (var file in files)
+            {
+                try
                 {
-                    var maxAge = TimeSpan.Parse(timeToBeReceived);
+                    var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Delete);
 
-                    var creationTimeUtc = File.GetCreationTimeUtc(fullPath);
-                    var nowUtc = RebusTime.Now.UtcDateTime;
-
-                    var messageAge = nowUtc - creationTimeUtc;
-
-                    if (messageAge > maxAge)
+                    using (var reader = new StreamReader(fileStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
+                        leaveOpen: true, bufferSize: 4096))
                     {
                         try
                         {
-                            File.Delete(fullPath);
-                            return null;
+                            var contents = reader.ReadToEnd();
+                            var envelope = Serializer.Deserialize<Envelope>(contents);
+
+                            _incomingMessages.Enqueue(new IncomingMessage(envelope, fileStream, file.FullName));
                         }
-                        finally
+                        catch (Exception)
                         {
-                            _messagesBeingHandled.TryRemove(fullPath, out object _);
+                            // if we can't deserialize the file, skip it
+                            fileStream.Dispose();
+                            continue;
                         }
                     }
                 }
-
-                context.OnCompleted(async () => File.Delete(fullPath));
-                context.OnDisposed(() =>
+                catch (Exception)
                 {
-                    _messagesBeingHandled.TryRemove(fullPath, out object _);
-                });
-
-                return receivedTransportMessage;
-            }
-            catch (IOException)
-            {
-                if (fullPath != null)
-                {
-                    _messagesBeingHandled.TryRemove(fullPath, out object _);
+                    // could not acquire lock on file or it was empty
                 }
-
-                return null;
-            }
-        }
-
-        static async Task<string> ReadAllText(string fileName)
-        {
-            using (var stream = File.OpenRead(fileName))
-            using (var reader = new StreamReader(stream, FavoriteEncoding))
-            {
-                return await reader.ReadToEndAsync();
             }
         }
 
         /// <summary>
-        /// Gets the logical input queue name which for this transport correponds to a subdirectory of the specified base directory.
-        /// For other transports, this is a global "address", but for this transport the address space is confined to the base directory.
-        /// Therefore, the global address is the same as the input queue name.
+        /// Gets the "queue name" of this transport
         /// </summary>
-        public string Address => _inputQueue;
+        public string Address { get; }
 
         /// <summary>
-        /// Ensures that the "queue" is initialized (i.e. that the corresponding subdirectory exists).
+        /// Initializes the transport by ensuring that its own input queue exists
         /// </summary>
         public void Initialize()
         {
-            if (_inputQueue == null) return;
+            if (string.IsNullOrWhiteSpace(Address)) return;
 
-            EnsureQueueInitialized(_inputQueue);
+            CreateQueue(Address);
         }
 
         /// <summary>
-        /// Gets the number of messages waiting in this "queue"
+        /// Gets additional information about the transport
         /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<Dictionary<string, object>> GetProperties(CancellationToken cancellationToken)
         {
-            var count = GetCount(cancellationToken);
+            var length = Directory.GetFiles(GetDirectory(Address), "*.json").Length;
 
             return new Dictionary<string, object>
             {
-                {TransportInspectorPropertyKeys.QueueLength, count.ToString()}
+                {TransportInspectorPropertyKeys.QueueLength, length }
             };
         }
 
-        int GetCount(CancellationToken cancellationToken)
-        {
-            var count = 0;
-            var directoryPath = GetDirectoryForQueueNamed(_inputQueue);
-
-            using (var enumerator = Directory.EnumerateFiles(directoryPath, "*.rebusmessage.json").GetEnumerator())
-            {
-                while (enumerator.MoveNext())
-                {
-                    count++;
-                    cancellationToken.ThrowIfCancellationRequested();
-                }
-            }
-
-            return count;
-        }
-
-        string GetNextFileName()
-        {
-            return
-                $"{DateTime.UtcNow:yyyy_MM_dd_HH_mm_ss}_{Interlocked.Increment(ref _incrementingCounter):0000000}_{Guid.NewGuid()}.rebusmessage.json";
-        }
-
-        void EnsureQueueNameIsValid(string queueName)
-        {
-            var invalidPathCharactersPresentsInQueueName =
-                queueName.ToCharArray()
-                    .Intersect(Path.GetInvalidPathChars())
-                    .ToList();
-
-            if (!invalidPathCharactersPresentsInQueueName.Any())
-                return;
-
-            throw new InvalidOperationException(
-                $"Cannot use '{_inputQueue}' as an input queue name because it contains the following invalid characters: {string.Join(", ", invalidPathCharactersPresentsInQueueName.Select(c => $"'{c}'"))}");
-        }
-
-        void EnsureQueueInitialized(string queueName)
-        {
-            if (_queuesAlreadyInitialized.Contains(queueName)) return;
-
-            var directory = GetDirectoryForQueueNamed(queueName);
-
-            if (Directory.Exists(directory)) return;
-
-            Exception caughtException = null;
-            try
-            {
-                Directory.CreateDirectory(directory);
-            }
-            catch (Exception exception)
-            {
-                caughtException = exception;
-            }
-
-            if (caughtException != null && !Directory.Exists(directory))
-            {
-                throw new RebusApplicationException(
-                    caughtException, $"Could not initialize directory '{directory}' for queue named '{queueName}'");
-            }
-
-            // if an exception occurred but the directory exists now, it must have been a race... we're good
-            _queuesAlreadyInitialized.Add(queueName);
-        }
-
-        string GetDirectoryForQueueNamed(string queueName)
+        string GetDirectory(string queueName)
         {
             return Path.Combine(_baseDirectory, queueName);
         }
 
-        static string Serialize(TransportMessage message)
+        static void EnsureDirectoryExists(string directoryPath)
         {
-            return JsonConvert.SerializeObject(message, SuperSecretSerializerSettings);
+            if (Directory.Exists(directoryPath)) return;
+
+            try
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+            catch (Exception exception)
+            {
+                if (Directory.Exists(directoryPath)) return;
+
+                throw new IOException($"Could not create directory {directoryPath}", exception);
+            }
         }
 
-        static TransportMessage Deserialize(string serialiedMessage)
+        class IncomingMessage : IDisposable
         {
-            return JsonConvert.DeserializeObject<TransportMessage>(serialiedMessage, SuperSecretSerializerSettings);
+            readonly string _filePath;
+
+            FileStream _source;
+
+            public IncomingMessage(Envelope envelope, FileStream source, string filePath)
+            {
+                _source = source ?? throw new ArgumentNullException(nameof(source));
+                _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+                Envelope = envelope ?? throw new ArgumentNullException(nameof(envelope));
+            }
+
+            public Envelope Envelope { get; }
+
+            public bool IsCompleted { get; private set; }
+
+            public void Complete()
+            {
+                try
+                {
+                    using (_source)
+                    {
+                        File.Delete(_filePath); //< we can delete the file, because our file handle used the "Delete" FileShare option
+                    }
+                }
+                catch (Exception exception)
+                {
+                    throw new IOException($@"Could not complete the receive operation for
+
+    {_filePath}
+", exception);
+                }
+                finally
+                {
+                    IsCompleted = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                _source?.Dispose();
+            }
+        }
+
+        class Envelope
+        {
+            public Dictionary<string, string> Headers { get; }
+            public byte[] Body { get; }
+
+            public Envelope(Dictionary<string, string> headers, byte[] body)
+            {
+                Headers = headers;
+                Body = body;
+            }
+        }
+
+        class OutgoingMessage
+        {
+            public static async Task<OutgoingMessage> WriteTemp(string destinationDirectoryPath,
+                TransportMessage message)
+            {
+                var filePath = Path.Combine(destinationDirectoryPath, $"{Guid.NewGuid():N}.tmp");
+                try
+                {
+                    var outgoingMessage = new OutgoingMessage(destinationDirectoryPath, filePath);
+                    var contents = Serializer.Serialize(new Envelope(message.Headers, message.Body));
+
+                    using (var destination = File.OpenWrite(filePath))
+                    using (var writer = new StreamWriter(destination, Encoding.UTF8))
+                    {
+                        writer.Write(contents);
+                    }
+
+                    return outgoingMessage;
+                }
+                catch (Exception exception)
+                {
+                    throw new IOException($@"Could not write outgoing message to
+
+    {filePath}
+", exception);
+                }
+            }
+
+            readonly string _destinationDirectoryPath;
+            readonly string _tempFilePath;
+
+            OutgoingMessage(string destinationDirectoryPath, string tempFilePath)
+            {
+                _destinationDirectoryPath = destinationDirectoryPath;
+                _tempFilePath = tempFilePath;
+            }
+
+            public void Complete(Guid unitOfWorkId, DateTimeOffset now, int index)
+            {
+                var finalFilePath = Path.Combine(_destinationDirectoryPath, $"rebusmessage-{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.json");
+
+                try
+                {
+                    File.Move(_tempFilePath, finalFilePath);
+                }
+                catch (Exception exception)
+                {
+                    throw new IOException($@"Could not commit message by renaming temp file
+
+    {_tempFilePath}
+
+into final file
+
+    {finalFilePath}
+", exception);
+                }
+            }
+
+            public void Delete()
+            {
+                try
+                {
+                    File.Delete(_tempFilePath);
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// Disposes the transport by releasing all currently locked messages
+        /// </summary>
+        public void Dispose()
+        {
+            while (_incomingMessages.TryDequeue(out var incomingMessage))
+            {
+                incomingMessage.Dispose();
+            }
         }
     }
 }
