@@ -1,5 +1,4 @@
 ﻿using System;
-// ReSharper disable ArgumentsStyleNamedExpression
 
 namespace Rebus.DataBus
 {

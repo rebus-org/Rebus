@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Serialization;
 using Rebus.Time;
 // ReSharper disable UnusedVariable
 // ReSharper disable PossibleNullReferenceException
+// ReSharper disable EmptyGeneralCatchClause
+#pragma warning disable 1998
 
 namespace Rebus.DataBus.FileSystem
 {
