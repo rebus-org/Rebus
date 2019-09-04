@@ -44,6 +44,16 @@ namespace Rebus.Tests.DataBus.InMem
         }
 
         [Test]
+        public void Contains_DeletedData_ReturnsFalse()
+        {
+            _inMemDataStore.Save("test", new byte[] {1, 2, 3});
+
+            _inMemDataStore.Delete("test");
+
+            Assert.That(_inMemDataStore.Contains("test"), Is.False);
+        }
+
+        [Test]
         public void Contains_Null_ThrowsArgumentNullException()
         {
             Assert.That(() => _inMemDataStore.Contains(null), Throws.ArgumentNullException);

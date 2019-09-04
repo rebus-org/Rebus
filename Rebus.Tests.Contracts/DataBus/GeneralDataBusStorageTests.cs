@@ -9,7 +9,7 @@ using Rebus.Compression;
 using Rebus.DataBus;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Time;
+// ReSharper disable ArgumentsStyleOther
 
 namespace Rebus.Tests.Contracts.DataBus
 {
@@ -30,6 +30,58 @@ namespace Rebus.Tests.Contracts.DataBus
         protected override void TearDown()
         {
             _factory.CleanUp();
+        }
+
+        [Test]
+        public async Task CanQueryByTimeStamps()
+        {
+            async Task CreateAttachment(DateTime saveTime, string attachmendId)
+            {
+                _factory.FakeIt(new DateTimeOffset(saveTime));
+
+                using (var source = new MemoryStream(new byte[0]))
+                {
+                    await _storage.Save(attachmendId, source);
+                }
+            }
+
+            await CreateAttachment(new DateTime(2019, 01, 01), "id1");
+            await CreateAttachment(new DateTime(2019, 02, 01), "id2");
+            await CreateAttachment(new DateTime(2019, 03, 01), "id3");
+            await CreateAttachment(new DateTime(2019, 04, 01), "id4");
+            await CreateAttachment(new DateTime(2019, 05, 01), "id5");
+
+            var ids1 = _storage.Query(saveTime: new TimeRange(from: new DateTime(2019, 02, 01))).InOrder().ToList();
+            var ids2 = _storage.Query(saveTime: new TimeRange(from: new DateTime(2019, 03, 01))).InOrder().ToList();
+            var ids3 = _storage.Query(saveTime: new TimeRange(from: new DateTime(2019, 03, 01), to: new DateTime(2019, 05, 01))).InOrder().ToList();
+
+            Assert.That(ids1, Is.EqualTo(new[] { "id2", "id3", "id4", "id5" }));
+            Assert.That(ids2, Is.EqualTo(new[] { "id3", "id4", "id5" }));
+            Assert.That(ids3, Is.EqualTo(new[] { "id3", "id4" }));
+        }
+
+        [Test]
+        public async Task CanDeleteAttachment()
+        {
+            const string knownId = "known id";
+
+            using (var source = new MemoryStream(new byte[0]))
+            {
+                await _storage.Save(knownId, source);
+            }
+
+            using (var sourceStream = await _storage.Read(knownId))
+            {
+                Assert.That(sourceStream, Is.Not.Null);
+            }
+
+            await _storage.Delete(knownId);
+
+            var exception = Assert.ThrowsAsync<ArgumentException>(() => _storage.Read(knownId));
+
+            Console.WriteLine(exception);
+
+            Assert.That(exception.ToString(), Contains.Substring(knownId));
         }
 
         [Test]
@@ -104,7 +156,7 @@ namespace Rebus.Tests.Contracts.DataBus
         public async Task CanGetStandardMetada()
         {
             var fakeTime = new DateTimeOffset(new DateTime(2016, 6, 17));
-            
+
             _factory.FakeIt(fakeTime);
 
             const string knownId = "known id";

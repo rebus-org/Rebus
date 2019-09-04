@@ -90,7 +90,7 @@ namespace Rebus.DataBus.InMem
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
             
-            return _data.TryRemove(id, out var blob);
+            return _data.TryRemove(id, out _);
         }
 
         /// <summary>

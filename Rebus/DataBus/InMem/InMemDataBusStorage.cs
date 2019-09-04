@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Extensions;
 using Rebus.Time;
+// ReSharper disable EmptyGeneralCatchClause
 #pragma warning disable 1998
 
 namespace Rebus.DataBus.InMem
@@ -52,5 +56,19 @@ namespace Rebus.DataBus.InMem
         }
 
         public async Task<Dictionary<string, string>> ReadMetadata(string id) => _dataStore.LoadMetadata(id);
+
+        public async Task Delete(string id) => _dataStore.Delete(id);
+
+        public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null)
+        {
+            return _dataStore
+                .AttachmentIds
+                .Where(id =>
+                {
+                    var metadata = _dataStore.LoadMetadata(id);
+
+                    return DataBusStorageQuery.IsSatisfied(metadata, readTime, saveTime);
+                });
+        }
     }
 }

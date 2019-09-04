@@ -5,9 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Serialization;
 using Rebus.Time;
+// ReSharper disable UnusedVariable
+// ReSharper disable PossibleNullReferenceException
 
 namespace Rebus.DataBus.FileSystem
 {
@@ -18,6 +21,8 @@ namespace Rebus.DataBus.FileSystem
     {
         const string DataFileExtension = "dat";
         const string MetadataFileExtension = "meta";
+        const string FilePrefix = "data-";
+        
         readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly string _directoryPath;
         readonly IRebusTime _rebusTime;
@@ -104,26 +109,75 @@ namespace Rebus.DataBus.FileSystem
             var filePath = GetFilePath(id, DataFileExtension);
             var metadataFilePath = GetFilePath(id, MetadataFileExtension);
 
+            return InnerReadMetadata(id, metadataFilePath, filePath);
+        }
+
+        /// <summary>
+        /// Deletes the attachment with the given ID
+        /// </summary>
+        public async Task Delete(string id)
+        {
+            var filePath = GetFilePath(id, DataFileExtension);
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
             try
             {
-                using (var fileStream = File.OpenRead(metadataFilePath))
-                {
-                    using (var reader = new StreamReader(fileStream, Encoding.UTF8))
-                    {
-                        var jsonText = await reader.ReadToEndAsync();
-                        var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
-
-                        var fileInfo = new FileInfo(filePath);
-
-                        metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
-
-                        return metadata;
-                    }
-                }
+                File.Delete(filePath);
+            }
+            catch (FileNotFoundException)
+            {
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException(exception, $"Could not read metadata for data with ID {id}");
+                throw new IOException($"Could not delete file for data with ID {id}", exception);
+            }
+
+            try
+            {
+                File.Delete(metadataFilePath);
+            }
+            catch (FileNotFoundException)
+            {
+            }
+            catch (Exception exception)
+            {
+                throw new IOException($"Could not delete file for metadata with ID {id}", exception);
+            }
+        }
+
+        /// <summary>
+        /// Iterates through IDs of attachments that match the given <paramref name="readTime"/> and <paramref name="saveTime"/> criteria.
+        /// </summary>
+        public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null)
+        {
+            var metadataFilePaths = Directory.EnumerateFiles(_directoryPath, $"*.{MetadataFileExtension}");
+
+            foreach (var metadataFilePath in metadataFilePaths)
+            {
+                string id;
+
+                try
+                {
+                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(metadataFilePath);
+                    
+                    id = fileNameWithoutExtension.Substring(FilePrefix.Length);
+                    
+                    var metadata = InnerReadMetadata(id, metadataFilePath, GetFilePath(id, DataFileExtension));
+
+                    if (!DataBusStorageQuery.IsSatisfied(metadata, readTime, saveTime))
+                    {
+                        continue;
+                    }
+                }
+                catch (Exception)
+                {
+                    id = null;
+                }
+
+                if (id != null)
+                {
+                    yield return id;
+                }
             }
         }
 
@@ -164,9 +218,30 @@ namespace Rebus.DataBus.FileSystem
             }
         }
 
-        string GetFilePath(string id, string extension)
+        string GetFilePath(string id, string extension) => Path.Combine(_directoryPath, $"{FilePrefix}{id}.{extension}");
+
+        Dictionary<string, string> InnerReadMetadata(string id, string metadataFilePath, string filePath)
         {
-            return Path.Combine(_directoryPath, $"data-{id}.{extension}");
+            try
+            {
+                using (var fileStream = File.OpenRead(metadataFilePath))
+                {
+                    using (var reader = new StreamReader(fileStream, Encoding.UTF8))
+                    {
+                        var jsonText = reader.ReadToEnd();
+                        var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+                        var fileInfo = new FileInfo(filePath);
+
+                        metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
+
+                        return metadata;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not read metadata for data with ID {id}");
+            }
         }
 
         void EnsureDirectoryIsWritable()
@@ -183,7 +258,7 @@ This file can be safely deleted.";
 
                 File.WriteAllText(filePath, contents, Encoding.UTF8);
 
-                var readAllText = File.ReadAllText(filePath, Encoding.UTF8);
+                File.ReadAllText(filePath, Encoding.UTF8);
 
             }
             catch (Exception exception)

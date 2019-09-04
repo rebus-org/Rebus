@@ -23,5 +23,15 @@ namespace Rebus.DataBus
         /// Loads the metadata stored with the given ID
         /// </summary>
         Task<Dictionary<string, string>> ReadMetadata(string id);
+
+        /// <summary>
+        /// Deletes the attachment with the given ID
+        /// </summary>
+        Task Delete(string id);
+
+        /// <summary>
+        /// Iterates through IDs of attachments that match the given <paramref name="readTime"/> and <paramref name="saveTime"/> criteria.
+        /// </summary>
+        IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null);
     }
 }

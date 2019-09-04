@@ -181,6 +181,8 @@ namespace Rebus.Tests.Contracts.Extensions
             return list;
         }
 
+        public static IEnumerable<TItem> InOrder<TItem>(this IEnumerable<TItem> items) => items.OrderBy(i => i);
+
         public static Task WaitAsync(this ManualResetEvent resetEvent)
         {
             var completionSource = new TaskCompletionSource<object>();
