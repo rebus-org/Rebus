@@ -33,7 +33,40 @@ namespace Rebus.Tests.Contracts.DataBus
         }
 
         [Test]
-        public async Task CanQueryByTimeStamps()
+        public async Task CanQueryByTimeStamps_ReadTime()
+        {
+            async Task CreateAttachment(DateTime readTime, string attachmendId)
+            {
+                _factory.FakeIt(DateTimeOffset.Now);
+                using (var source = new MemoryStream(new byte[0]))
+                {
+                    await _storage.Save(attachmendId, source);
+                }
+
+                // update read time
+                _factory.FakeIt(readTime);
+                using (await _storage.Read(attachmendId))
+                {
+                }
+            }
+
+            await CreateAttachment(new DateTime(2019, 01, 01), "id1");
+            await CreateAttachment(new DateTime(2019, 02, 01), "id2");
+            await CreateAttachment(new DateTime(2019, 03, 01), "id3");
+            await CreateAttachment(new DateTime(2019, 04, 01), "id4");
+            await CreateAttachment(new DateTime(2019, 05, 01), "id5");
+
+            var ids1 = _storage.Query(readTime: new TimeRange(from: new DateTime(2019, 02, 01))).InOrder().ToList();
+            var ids2 = _storage.Query(readTime: new TimeRange(from: new DateTime(2019, 03, 01))).InOrder().ToList();
+            var ids3 = _storage.Query(readTime: new TimeRange(from: new DateTime(2019, 03, 01), to: new DateTime(2019, 05, 01))).InOrder().ToList();
+
+            Assert.That(ids1, Is.EqualTo(new[] { "id2", "id3", "id4", "id5" }));
+            Assert.That(ids2, Is.EqualTo(new[] { "id3", "id4", "id5" }));
+            Assert.That(ids3, Is.EqualTo(new[] { "id3", "id4" }));
+        }
+
+        [Test]
+        public async Task CanQueryByTimeStamps_SaveTime()
         {
             async Task CreateAttachment(DateTime saveTime, string attachmendId)
             {
