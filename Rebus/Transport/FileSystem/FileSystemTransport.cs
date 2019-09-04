@@ -59,11 +59,16 @@ namespace Rebus.Transport.FileSystem
         /// <returns></returns>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
+            // this timestamp will only be used in the file names of message files written to approach some kind
+            // of global ordering - individual messages sent from this context will have sequence numbers on them
+            // in addition to the timestamp
+            var time = _rebusTime.Now;
+
             var outgoingMessages = context.GetOrAdd("file-system-transport-outgoing-messages", () =>
             {
                 var queue = new ConcurrentQueue<OutgoingMessage>();
 
-                context.OnCommitted(() => SendOutgoingMessages(queue));
+                context.OnCommitted(() => SendOutgoingMessages(queue, time));
                 context.OnAborted(() => AbortOutgoingMessages(queue));
 
                 return queue;
@@ -74,7 +79,7 @@ namespace Rebus.Transport.FileSystem
             outgoingMessages.Enqueue(outgoingMessage);
         }
 
-        void AbortOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
+        static void AbortOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
         {
             foreach (var message in outgoingMessages)
             {
@@ -82,15 +87,16 @@ namespace Rebus.Transport.FileSystem
             }
         }
 
-        async Task SendOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
+        static async Task SendOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages, DateTimeOffset time)
         {
             var unitOfWorkId = Guid.NewGuid();
-            var now = _rebusTime.Now;
+
+            // use this index to enforce ordering of sent messages from this transaction context
             var index = 0;
 
             foreach (var message in outgoingMessages)
             {
-                message.Complete(unitOfWorkId, now, index);
+                message.Complete(unitOfWorkId, time, index);
 
                 index++;
             }
@@ -345,21 +351,33 @@ namespace Rebus.Transport.FileSystem
             public void Complete(Guid unitOfWorkId, DateTimeOffset now, int index)
             {
                 var finalFilePath = Path.Combine(_destinationDirectoryPath, $"rebusmessage-{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.json");
+                var attempts = 0;
 
-                try
+                while (true)
                 {
-                    File.Move(_tempFilePath, finalFilePath);
-                }
-                catch (Exception exception)
-                {
-                    throw new IOException($@"Could not commit message by renaming temp file
+                    attempts++;
+                    try
+                    {
+                        File.Move(_tempFilePath, finalFilePath);
+                        return;
+                    }
+                    catch (Exception) when (attempts < 5)
+                    {
+                        Thread.Sleep(500);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new IOException($@"Could not commit message by renaming temp file
 
     {_tempFilePath}
 
 into final file
 
     {finalFilePath}
+
+even after {attempts} attempts
 ", exception);
+                    }
                 }
             }
 
