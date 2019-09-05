@@ -18,7 +18,12 @@ namespace Rebus.DataBus.InMem
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (inMemDataStore == null) throw new ArgumentNullException(nameof(inMemDataStore));
 
-            configurer.Register(c => new InMemDataBusStorage(inMemDataStore, c.Get<IRebusTime>()));
+            configurer.OtherService<InMemDataBusStorage>()
+                .Register(c => new InMemDataBusStorage(inMemDataStore, c.Get<IRebusTime>()));
+
+            configurer.Register(c => c.Get<InMemDataBusStorage>());
+
+            configurer.OtherService<IDataBusStorageManagement>().Register(c => c.Get<InMemDataBusStorage>());
         }
     }
 }

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.DataBus.FileSystem;
+using Rebus.DataBus.InMem;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -26,16 +27,16 @@ A little app gets messages sent, and each message has an attachment.
 The app automatically cleans up each attachment after having read it.
 
 That's it.")]
-    public class TestFileSystemDataBusCleanup : FixtureBase
+    public class TestInMemDataBusCleanup : FixtureBase
     {
         InMemNetwork _network;
-        string _attachmentsBaseDirectory;
         BuiltinHandlerActivator _activator;
+        InMemDataStore _inMemDataStore;
 
         protected override void SetUp()
         {
+            _inMemDataStore = new InMemDataStore();
             _network = new InMemNetwork();
-            _attachmentsBaseDirectory = NewTempDirectory();
 
             _activator = Using(new BuiltinHandlerActivator());
         }
@@ -74,15 +75,11 @@ That's it.")]
 
             counter.WaitForResetEvent(timeoutSeconds: 5);
 
-            var files = Directory.GetFiles(_attachmentsBaseDirectory);
+            var attachments = _inMemDataStore.AttachmentIds.ToList();
 
-            Assert.That(files.Length, Is.EqualTo(10), $@"Expected 
+            Assert.That(attachments.Count, Is.EqualTo(5), $@"Expected 5 attachments, but found the following IDs:
 
-    {_attachmentsBaseDirectory}
-
-to contain 10 files (5 x .dat + 5 x .meta), but found the following files:
-
-{string.Join(Environment.NewLine, files.Select(filePath => $"    {Path.GetFileName(filePath)}"))}
+{string.Join(Environment.NewLine, attachments.Select(id => $"    {id}"))}
 
 ");
         }
@@ -117,17 +114,14 @@ to contain 10 files (5 x .dat + 5 x .meta), but found the following files:
 
             counter.WaitForResetEvent(timeoutSeconds: 5);
 
-            var files = Directory.GetFiles(_attachmentsBaseDirectory);
+            var attachments = _inMemDataStore.AttachmentIds.ToList();
 
-            Assert.That(files.Length, Is.EqualTo(0), $@"Expected 
+            Assert.That(attachments.Count, Is.EqualTo(0), $@"Expected 0 attachments, but found the following IDs:
 
-    {_attachmentsBaseDirectory}
-
-to be an empty directory, but found the following files:
-
-{string.Join(Environment.NewLine, files.Select(filePath => $"    {Path.GetFileName(filePath)}"))}
+{string.Join(Environment.NewLine, attachments.Select(id => $"    {id}"))}
 
 ");
+
         }
 
         async Task SendMessageWithAttachedText(string text)
@@ -144,7 +138,7 @@ to be an empty directory, but found the following files:
         {
             Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(_network, "test-queue"))
-                .DataBus(d => d.StoreInFileSystem(_attachmentsBaseDirectory))
+                .DataBus(d => d.StoreInMemory(_inMemDataStore))
                 .Options(o =>
                 {
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
