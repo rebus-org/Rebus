@@ -52,6 +52,8 @@ That's it.")]
                 var dataBus = bus.Advanced.DataBus;
                 var attachmentId = message.AttachmentId;
 
+                Console.WriteLine($"*** Reading attachment with ID {attachmentId} ***");
+
                 using (var source = await dataBus.OpenRead(attachmentId))
                 using (var reader = new StreamReader(source, Encoding.UTF8))
                 {
@@ -59,7 +61,7 @@ That's it.")]
                 }
 
                 // now clean up
-                foreach (var id in dataBus.Query().Skip(5))
+                foreach (var id in dataBus.Query().InOrder().Skip(5))
                 {
                     Console.WriteLine($"*** DELETING ATTACHMENT WITH ID {id} ***");
                     await dataBus.Delete(id);
@@ -70,7 +72,12 @@ That's it.")]
 
             StartBus();
 
-            messageCount.Times(() => SendMessageWithAttachedText("HEJ").Wait());
+            messageCount.Times(() =>
+            {
+                SendMessageWithAttachedText("HEJ")
+                    .ContinueWith(_ => Task.Delay(TimeSpan.FromMilliseconds(200)))
+                    .Wait();
+            });
 
             counter.WaitForResetEvent(timeoutSeconds: 5);
 
