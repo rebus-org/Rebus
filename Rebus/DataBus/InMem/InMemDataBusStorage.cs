@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Rebus.Extensions;
 using Rebus.Time;
 // ReSharper disable EmptyGeneralCatchClause
 #pragma warning disable 1998
 
 namespace Rebus.DataBus.InMem
 {
-    class InMemDataBusStorage : IDataBusStorage
+    class InMemDataBusStorage : IDataBusStorage, IDataBusStorageManagement
     {
         readonly InMemDataStore _dataStore;
         readonly IRebusTime _rebusTime;

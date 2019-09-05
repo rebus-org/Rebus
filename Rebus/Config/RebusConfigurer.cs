@@ -91,11 +91,17 @@ namespace Rebus.Config
 
             if (_injectionist.Has<IDataBusStorage>())
             {
+                if (!_injectionist.Has<IDataBusStorageManagement>())
+                {
+                    _injectionist.Register<IDataBusStorageManagement>(c => new DisabledDataBusStorageManagement());
+                }
+
                 _injectionist.Register<IDataBus>(c =>
                 {
                     var dataBusStorage = c.Get<IDataBusStorage>();
+                    var dataBusStorageManagement = c.Get<IDataBusStorageManagement>();
 
-                    return new DefaultDataBus(dataBusStorage);
+                    return new DefaultDataBus(dataBusStorage, dataBusStorageManagement);
                 });
 
                 _injectionist.Decorate<IPipeline>(c =>

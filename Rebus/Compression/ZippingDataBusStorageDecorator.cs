@@ -61,16 +61,6 @@ namespace Rebus.Compression
         }
 
         /// <summary>
-        /// Deletes the attachment with the given ID
-        /// </summary>
-        public Task Delete(string id) => _innerDataBusStorage.Delete(id);
-
-        /// <summary>
-        /// Iterates through IDs of attachments that match the given <paramref name="readTime"/> and <paramref name="saveTime"/> criteria.
-        /// </summary>
-        public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null) => _innerDataBusStorage.Query(readTime, saveTime);
-
-        /// <summary>
         /// Saves the data from the given source stream under the given ID
         /// </summary>
         public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)

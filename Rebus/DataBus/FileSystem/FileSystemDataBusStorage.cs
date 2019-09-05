@@ -11,6 +11,8 @@ using Rebus.Time;
 // ReSharper disable UnusedVariable
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable EmptyGeneralCatchClause
+// ReSharper disable ArgumentsStyleAnonymousFunction
+// ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
 
 namespace Rebus.DataBus.FileSystem
@@ -18,15 +20,16 @@ namespace Rebus.DataBus.FileSystem
     /// <summary>
     /// Implementation of <see cref="IDataBusStorage"/> that stores data in the file system. Could be a directory on a network share.
     /// </summary>
-    public class FileSystemDataBusStorage : IDataBusStorage, IInitializable
+    public class FileSystemDataBusStorage : IDataBusStorage, IDataBusStorageManagement, IInitializable
     {
         const string DataFileExtension = "dat";
         const string MetadataFileExtension = "meta";
         const string FilePrefix = "data-";
-        
+
         readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly string _directoryPath;
         readonly IRebusTime _rebusTime;
+        readonly Retrier _retrier;
         readonly ILog _log;
 
         /// <summary>
@@ -38,6 +41,7 @@ namespace Rebus.DataBus.FileSystem
             _directoryPath = directoryPath ?? throw new ArgumentNullException(nameof(directoryPath));
             _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
             _log = rebusLoggerFactory.GetLogger<FileSystemDataBusStorage>();
+            _retrier = new Retrier(rebusLoggerFactory);
         }
 
         /// <summary>
@@ -121,6 +125,15 @@ namespace Rebus.DataBus.FileSystem
             var filePath = GetFilePath(id, DataFileExtension);
             var metadataFilePath = GetFilePath(id, MetadataFileExtension);
 
+            _retrier.Execute(
+                action: () => InnerDelete(id, filePath, metadataFilePath),
+                handle: ex => ex is IOException,
+                attempts: 10
+            );
+        }
+
+        static void InnerDelete(string id, string filePath, string metadataFilePath)
+        {
             try
             {
                 File.Delete(filePath);
@@ -160,9 +173,9 @@ namespace Rebus.DataBus.FileSystem
                 try
                 {
                     var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(metadataFilePath);
-                    
+
                     id = fileNameWithoutExtension.Substring(FilePrefix.Length);
-                    
+
                     var metadata = InnerReadMetadata(id, metadataFilePath, GetFilePath(id, DataFileExtension));
 
                     if (!DataBusStorageQuery.IsSatisfied(metadata, readTime, saveTime))

@@ -18,13 +18,17 @@ namespace Rebus.DataBus.FileSystem
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (directoryPath == null) throw new ArgumentNullException(nameof(directoryPath));
 
-            configurer.Register(c =>
+            configurer.OtherService<FileSystemDataBusStorage>().Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var rebusTime = c.Get<IRebusTime>();
 
                 return new FileSystemDataBusStorage(directoryPath, rebusLoggerFactory, rebusTime);
             });
+
+            configurer.Register(c => c.Get<FileSystemDataBusStorage>());
+
+            configurer.OtherService<IDataBusStorageManagement>().Register(c => c.Get<FileSystemDataBusStorage>());
         }
     }
 }

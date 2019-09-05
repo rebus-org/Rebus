@@ -8,10 +8,12 @@ namespace Rebus.DataBus
     class DefaultDataBus : IDataBus
     {
         readonly IDataBusStorage _dataBusStorage;
+        readonly IDataBusStorageManagement _dataBusStorageManagement;
 
-        public DefaultDataBus(IDataBusStorage dataBusStorage)
+        public DefaultDataBus(IDataBusStorage dataBusStorage, IDataBusStorageManagement dataBusStorageManagement)
         {
             _dataBusStorage = dataBusStorage ?? throw new ArgumentNullException(nameof(dataBusStorage));
+            _dataBusStorageManagement = dataBusStorageManagement;
         }
 
         public async Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null)
@@ -27,8 +29,12 @@ namespace Rebus.DataBus
             return attachment;
         }
 
-        public async Task<Stream> OpenRead(string dataBusAttachmentId) => await _dataBusStorage.Read(dataBusAttachmentId);
+        public Task<Stream> OpenRead(string dataBusAttachmentId) => _dataBusStorage.Read(dataBusAttachmentId);
 
-        public async Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => await _dataBusStorage.ReadMetadata(dataBusAttachmentId);
+        public Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => _dataBusStorage.ReadMetadata(dataBusAttachmentId);
+
+        public Task Delete(string dataBusAttachmentId) =>  _dataBusStorageManagement.Delete(dataBusAttachmentId);
+
+        public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null) => _dataBusStorageManagement.Query(readTime, saveTime);
     }
 }
