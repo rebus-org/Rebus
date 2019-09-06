@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.DataBus;
 using Rebus.DataBus.FileSystem;
+using Rebus.Extensions;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -43,7 +45,7 @@ That's it.")]
         [TestCase(5)]
         [TestCase(10)]
         [TestCase(20)]
-        public void ItWorks_KeepLastFiveAttachments(int messageCount)
+        public async Task ItWorks_KeepLastFiveAttachments(int messageCount)
         {
             var counter = Using(new SharedCounter(initialValue: messageCount));
 
@@ -52,18 +54,20 @@ That's it.")]
                 var dataBus = bus.Advanced.DataBus;
                 var attachmentId = message.AttachmentId;
 
-                Console.WriteLine($"*** Reading attachment with ID {attachmentId} ***");
-
+                // ensure this attachment exists
                 using (var source = await dataBus.OpenRead(attachmentId))
                 using (var reader = new StreamReader(source, Encoding.UTF8))
                 {
                     Console.WriteLine($"Got message: {await reader.ReadToEndAsync()}");
                 }
 
-                // now clean up
-                foreach (var id in dataBus.Query().InOrder().Skip(5))
+                // delete all attachments written before this
+                var metadata = await dataBus.GetMetadata(attachmentId);
+                var saveTime = metadata[MetadataKeys.SaveTime].ToDateTimeOffset();
+
+                foreach (var id in dataBus.Query(saveTime: new TimeRange(to: saveTime)))
                 {
-                    Console.WriteLine($"*** DELETING ATTACHMENT WITH ID {id} ***");
+                    Console.WriteLine($"*** Deleting attachment with ID {id} ***");
                     await dataBus.Delete(id);
                 }
 
@@ -72,22 +76,21 @@ That's it.")]
 
             StartBus();
 
-            messageCount.Times(() =>
+            for (var idx = 0; idx < messageCount; idx++)
             {
-                SendMessageWithAttachedText("HEJ")
-                    .ContinueWith(_ => Task.Delay(TimeSpan.FromMilliseconds(200)))
-                    .Wait();
-            });
+                await SendMessageWithAttachedText($"This is message {idx}");
+                await Task.Delay(100);
+            }
 
             counter.WaitForResetEvent(timeoutSeconds: 5);
 
             var files = Directory.GetFiles(_attachmentsBaseDirectory);
 
-            Assert.That(files.Length, Is.EqualTo(10), $@"Expected 
+            Assert.That(files.Length, Is.EqualTo(2), $@"Expected 
 
     {_attachmentsBaseDirectory}
 
-to contain 10 files (5 x .dat + 5 x .meta), but found the following files:
+to contain 2 files (1 x .dat + 1 x .meta), but found the following files:
 
 {string.Join(Environment.NewLine, files.Select(filePath => $"    {Path.GetFileName(filePath)}"))}
 
