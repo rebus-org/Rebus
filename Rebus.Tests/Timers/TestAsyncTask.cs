@@ -2,10 +2,12 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Timers.Factories;
+// ReSharper disable ArgumentsStyleAnonymousFunction
 
 #pragma warning disable 1998
 
@@ -20,6 +22,35 @@ namespace Rebus.Tests.Timers
         protected override void SetUp()
         {
             _factory = new TFactory();
+        }
+
+        [Test]
+        public async Task CanCancelTaskFromCancellationTokenSource()
+        {
+            var cancellationTokenSource = Using(new CancellationTokenSource());
+            var calls = 0;
+
+            var task = _factory.CreateTask(
+                interval: TimeSpan.FromSeconds(1),
+                action: async () =>
+                {
+                    Console.WriteLine($"Task function called {DateTimeOffset.Now}");
+                    calls++;
+
+                    if (calls == 3)
+                    {
+                        Console.WriteLine($"Got 3 calls now, cancelling task {DateTimeOffset.Now}");
+                        cancellationTokenSource.Cancel();
+                    }
+                }
+            );
+
+            task.Start();
+
+            using (task)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(4), CancellationToken.None);
+            }
         }
 
         [TestCase(0)]
