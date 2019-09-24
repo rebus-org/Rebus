@@ -1277,7 +1277,7 @@
 
 * Add `rbs2-defer-count` header, which is initially set to 1 when a message is deferred - each subsequent deferral of the message will then increment this counter
 
-## 6.0.0-b16
+## 6.0.0-b17
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`

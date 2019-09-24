@@ -17,15 +17,19 @@ namespace Rebus.Workers.TplBased
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         readonly ManualResetEvent _workerStopped = new ManualResetEvent(false);
         readonly ParallelOperationsManager _parallelOperationsManager;
+        readonly CancellationToken _busDisposalCancellationToken;
         readonly CancellationToken _cancellationToken;
         readonly IPipelineInvoker _pipelineInvoker;
+        readonly IBackoffStrategy _backoffStrategy;
         readonly ITransport _transport;
         readonly RebusBus _owningBus;
         readonly Options _options;
-        readonly IBackoffStrategy _backoffStrategy;
         readonly ILog _log;
 
-        public TplWorker(string workerName, RebusBus owningBus, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, Options options, IBackoffStrategy backoffStrategy)
+        public TplWorker(string workerName, RebusBus owningBus, ITransport transport,
+            IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker,
+            ParallelOperationsManager parallelOperationsManager, Options options, IBackoffStrategy backoffStrategy,
+            CancellationToken busDisposalCancellationToken)
         {
             _owningBus = owningBus;
             _transport = transport;
@@ -33,6 +37,7 @@ namespace Rebus.Workers.TplBased
             _parallelOperationsManager = parallelOperationsManager;
             _options = options;
             _backoffStrategy = backoffStrategy;
+            _busDisposalCancellationToken = busDisposalCancellationToken;
             Name = workerName;
 
             _cancellationToken = _cancellationTokenSource.Token;
@@ -45,13 +50,16 @@ namespace Rebus.Workers.TplBased
         {
             _log.Debug("Starting (tpl-based) worker {workerName}", Name);
 
-            while (!_cancellationToken.IsCancellationRequested)
+            while (true)
             {
+                if (_cancellationToken.IsCancellationRequested) break;
+                if (_busDisposalCancellationToken.IsCancellationRequested) break;
+
                 try
                 {
                     await TryProcessNextMessage();
                 }
-                catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+                catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested)
                 {
                     // we're shutting down
                 }
@@ -88,7 +96,7 @@ namespace Rebus.Workers.TplBased
                         context.Dispose();
 
                         // get out quickly if we're shutting down
-                        if (_cancellationToken.IsCancellationRequested) return;
+                        if (_cancellationToken.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested) return;
 
                         // no need for another thread to rush in and discover that there is no message
                         //parallelOperation.Dispose();
@@ -102,7 +110,7 @@ namespace Rebus.Workers.TplBased
                     await ProcessMessage(context, transportMessage);
                 }
             }
-            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested)
             {
                 // we're shutting down
             }
@@ -119,6 +127,9 @@ namespace Rebus.Workers.TplBased
                 AmbientTransactionContext.SetCurrent(context);
 
                 var stepContext = new IncomingStepContext(transportMessage, context);
+                
+                stepContext.Save(_busDisposalCancellationToken);
+                
                 await _pipelineInvoker.Invoke(stepContext);
 
                 try
@@ -154,7 +165,7 @@ namespace Rebus.Workers.TplBased
             {
                 return await _transport.Receive(context, token);
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            catch (OperationCanceledException) when (token.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested)
             {
                 // it's fine - just a sign that we are shutting down
                 return null;

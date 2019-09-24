@@ -19,8 +19,8 @@ namespace Rebus.Workers.TplBased
     public class TplWorkerFactory : IWorkerFactory
     {
         readonly ParallelOperationsManager _parallelOperationsManager;
+        readonly CancellationToken _busDisposalCancellationToken;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
-        readonly BusLifetimeEvents _busLifetimeEvents;
         readonly IBackoffStrategy _backoffStrategy;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly Func<RebusBus> _busGetter;
@@ -31,15 +31,15 @@ namespace Rebus.Workers.TplBased
         /// <summary>
         /// Constructs the TPL worker factory
         /// </summary>
-        public TplWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, IBackoffStrategy backoffStrategy)
+        public TplWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, IBackoffStrategy backoffStrategy, CancellationToken busDisposalCancellationToken)
         {
             _transport = transport;
             _rebusLoggerFactory = rebusLoggerFactory;
             _pipelineInvoker = pipelineInvoker;
             _options = options;
             _busGetter = busGetter;
-            _busLifetimeEvents = busLifetimeEvents;
             _backoffStrategy = backoffStrategy;
+            _busDisposalCancellationToken = busDisposalCancellationToken;
             _parallelOperationsManager = new ParallelOperationsManager(options.MaxParallelism);
             _log = _rebusLoggerFactory.GetLogger<TplWorkerFactory>();
 
@@ -99,7 +99,8 @@ namespace Rebus.Workers.TplBased
                 _pipelineInvoker,
                 _parallelOperationsManager,
                 _options,
-                _backoffStrategy
+                _backoffStrategy,
+                _busDisposalCancellationToken
             );
         }
     }

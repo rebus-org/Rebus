@@ -1,4 +1,5 @@
-﻿using Rebus.Bus;
+﻿using System.Threading;
+using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Pipeline;
@@ -29,7 +30,8 @@ namespace Rebus.Workers.TplBased
                     c.Get<Options>(),
                     c.Get<RebusBus>,
                     c.Get<BusLifetimeEvents>(),
-                    c.Get<IBackoffStrategy>()
+                    c.Get<IBackoffStrategy>(),
+                    c.Get<CancellationToken>()
                 );
             });
         }
