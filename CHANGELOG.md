@@ -1290,6 +1290,7 @@
 * Remove need for `ManualResetEvent` from Rebus' async background task implementation - thanks [jods4]
 * Replace file system-based transport with a new one that uses temp-file+rename to send, and file-locking-w-FileShare-Delete to receive
 * Add new data bus storage feature for querying by save time/last read time as well as deleting attachments
+* Add `RebusTransactionScopeSuppressor`, which may be used in cases where an already active Rebus transaction scope must be temporarily suppressed
 
 ---
 
