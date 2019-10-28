@@ -12,6 +12,7 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleLiteral
 
 #pragma warning disable 1998
 
@@ -125,7 +126,7 @@ immediately when calling bus.....Forward");
                     throw new ArgumentException($"Destination queue address '{destinationAddress}' does not exist!");
                 }
 
-                context.OnCommitted(async () => networkToUse.Deliver(destinationAddress, message.ToInMemTransportMessage()));
+                context.OnCommitted(async _ => networkToUse.Deliver(destinationAddress, message.ToInMemTransportMessage()));
             }
 
             public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
@@ -136,10 +137,7 @@ immediately when calling bus.....Forward");
 
                 if (nextMessage != null)
                 {
-                    context.OnAborted(() =>
-                    {
-                        networkToUse.Deliver(Address, nextMessage, alwaysQuiet: true);
-                    });
+                    context.OnAborted(_ => networkToUse.Deliver(Address, nextMessage, alwaysQuiet: true));
 
                     return nextMessage.ToTransportMessage();
                 }

@@ -279,19 +279,13 @@ namespace Rebus.Tests.Integration
 
                 if (shouldFailThisTime)
                 {
-                    context.OnCommitted(async () =>
-                    {
-                        throw new Exception("oh noes!!!!!");
-                    });
+                    context.OnCommitted(async _ => throw new Exception("oh noes!!!!!"));
                 }
 
                 return transportMessage;
             }
 
-            public string Address
-            {
-                get { return _innerTransport.Address; }
-            }
+            public string Address => _innerTransport.Address;
         }
     }
 }

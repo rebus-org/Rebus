@@ -69,22 +69,23 @@ namespace Rebus.Tests.Pipeline
             }
 
             public ConcurrentDictionary<string, object> Items { get; }
-            public void OnCommitted(Func<Task> commitAction)
+            
+            public void OnCommitted(Func<ITransactionContext, Task> commitAction)
             {
                 throw new NotImplementedException();
             }
 
-            public void OnAborted(Action abortedAction)
+            public void OnAborted(Action<ITransactionContext> abortedAction)
             {
                 throw new NotImplementedException();
             }
 
-            public void OnCompleted(Func<Task> completedAction)
+            public void OnCompleted(Func<ITransactionContext, Task> completedAction)
             {
                 throw new NotImplementedException();
             }
 
-            public void OnDisposed(Action disposedAction)
+            public void OnDisposed(Action<ITransactionContext> disposedAction)
             {
                 throw new NotImplementedException();
             }

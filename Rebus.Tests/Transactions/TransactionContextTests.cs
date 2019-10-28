@@ -25,15 +25,27 @@ namespace Rebus.Tests.Transactions
 
             var foundTransactionContextInCommittedCallback = false;
             var foundTransactionContextInAbortedCallback = false;
-            //var foundTransactionContextInDisposedCallback = false;
+            var foundTransactionContextInDisposedCallback = false;
 
             activator.Handle<string>(async (bus, context, message) =>
             {
-                var transactionContext = context.TransactionContext;
+                // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
+                context.TransactionContext.OnCommitted(async transactionContext =>
+                {
+                    foundTransactionContextInCommittedCallback = FoundTransactionContext()
+                                                                 && transactionContext != null;
+                });
 
-                transactionContext.OnCommitted(async () => foundTransactionContextInCommittedCallback = FoundTransactionContext());
-                transactionContext.OnAborted(() => foundTransactionContextInAbortedCallback = FoundTransactionContext());
-                //transactionContext.OnDisposed(() => foundTransactionContextInDisposedCallback = FoundTransactionContext());
+                // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
+                context.TransactionContext.OnAborted(transactionContext =>
+                {
+                    foundTransactionContextInAbortedCallback = FoundTransactionContext()
+                                                               && transactionContext != null;
+                });
+
+                // this check is just here to show how the transaction context must be access from the disposed callback, because
+                // the ambient transaction context is no longer available at this point
+                context.TransactionContext.OnDisposed(transactionContext => foundTransactionContextInDisposedCallback = transactionContext != null);
 
                 if (message == "throw!") throw new RebusApplicationException("thrown!");
             });
@@ -52,8 +64,8 @@ namespace Rebus.Tests.Transactions
                 "Expected to find an ambient transaction context in the OnCommitted callback from the transaction context");
             Assert.That(foundTransactionContextInAbortedCallback, Is.True,
                 "Expected to find an ambient transaction context in the OnAborted callback from the transaction context");
-            //Assert.That(foundTransactionContextInDisposedCallback, Is.True,
-            //    "Expected to find an ambient transaction context in the OnDisposed callback from the transaction context");
+            Assert.That(foundTransactionContextInDisposedCallback, Is.True,
+                "Expected to find an ambient transaction context in the OnDisposed callback from the transaction context");
         }
     }
 }

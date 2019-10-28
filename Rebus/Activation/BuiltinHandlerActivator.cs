@@ -68,7 +68,7 @@ namespace Rebus.Activation
                 result[index] = (IHandleMessages<TMessage>)handlerFactories[index](messageContext);
             }
 
-            transactionContext.OnDisposed(() =>
+            transactionContext.OnDisposed(context =>
             {
                 for (var index = 0; index < handlerFactories.Length; index++)
                 {

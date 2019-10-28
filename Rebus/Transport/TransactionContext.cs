@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,10 +11,10 @@ namespace Rebus.Transport
     class TransactionContext : ITransactionContext
     {
         // Note: C# generates thread-safe add/remove. They use a compare-and-exchange loop.
-        event Func<Task> _onCommitted;
-        event Func<Task> _onCompleted;        
-        event Action _onAborted;
-        event Action _onDisposed;
+        event Func<ITransactionContext, Task> _onCommitted;
+        event Func<ITransactionContext, Task> _onCompleted;
+        event Action<ITransactionContext> _onAborted;
+        event Action<ITransactionContext> _onDisposed;
 
         bool _mustAbort;
         bool _completed;
@@ -23,34 +24,30 @@ namespace Rebus.Transport
 
         public ConcurrentDictionary<string, object> Items { get; } = new ConcurrentDictionary<string, object>();
 
-        public void OnCommitted(Func<Task> commitAction)
+        public void OnCommitted(Func<ITransactionContext, Task> commitAction)
         {
-            if (_completed)
-                ThrowCompletedException();
+            if (_completed) ThrowCompletedException();
 
             _onCommitted += commitAction;
         }
 
-        public void OnCompleted(Func<Task> completedAction)
+        public void OnCompleted(Func<ITransactionContext, Task> completedAction)
         {
-            if (_completed)
-                ThrowCompletedException();
+            if (_completed) ThrowCompletedException();
 
             _onCompleted += completedAction;
         }
 
-        public void OnAborted(Action abortedAction)
+        public void OnAborted(Action<ITransactionContext> abortedAction)
         {
-            if (_completed)
-                ThrowCompletedException();
+            if (_completed) ThrowCompletedException();
 
             _onAborted += abortedAction;
         }
 
-        public void OnDisposed(Action disposedAction)
+        public void OnDisposed(Action<ITransactionContext> disposedAction)
         {
-            if (_completed)
-                ThrowCompletedException();
+            if (_completed) ThrowCompletedException();
 
             _onDisposed += disposedAction;
         }
@@ -78,7 +75,7 @@ namespace Rebus.Transport
                 {
                     try
                     {
-                        _onDisposed?.Invoke();
+                        _onDisposed?.Invoke(this);
                     }
                     finally
                     {
@@ -103,25 +100,22 @@ namespace Rebus.Transport
             Dispose();
         }
 
-        void ThrowCompletedException([CallerMemberName] string actionName = null)
-        {
-            throw new InvalidOperationException($"Cannot add {actionName} action on a completed transaction context.");
-        }
+        static void ThrowCompletedException([CallerMemberName] string actionName = null) => throw new InvalidOperationException($"Cannot add {actionName} action on a completed transaction context.");
 
         void RaiseAborted()
         {
             if (_aborted) return;
-            _onAborted?.Invoke();
+            _onAborted?.Invoke(this);
             _aborted = true;
         }
 
-        Task RaiseCommitted() 
+        Task RaiseCommitted()
         {
             // RaiseCommitted() can be called multiple time.
             // So we atomically extract the current list of subscribers and reset the event to null (empty)
-            var onCommitted = Interlocked.Exchange(ref _onCommitted, null);            
+            var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
             return InvokeAsync(onCommitted);
-        } 
+        }
 
         Task RaiseCompleted()
         {
@@ -130,13 +124,13 @@ namespace Rebus.Transport
             return task;
         }
 
-        static async Task InvokeAsync(Func<Task> actions)
+        async Task InvokeAsync(Func<ITransactionContext, Task> actions)
         {
-            if (actions != null) 
-            {    
-                foreach (Func<Task> action in actions.GetInvocationList())
+            if (actions != null)
+            {
+                foreach (var action in actions.GetInvocationList().OfType<Func<ITransactionContext, Task>>())
                 {
-                    await action();
+                    await action(this);
                 }
             }
         }

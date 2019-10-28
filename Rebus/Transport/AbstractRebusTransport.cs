@@ -33,7 +33,7 @@ namespace Rebus.Transport
             {
                 var messages = new ConcurrentQueue<OutgoingMessage>();
 
-                context.OnCommitted(async () => await SendOutgoingMessages(messages, context));
+                context.OnCommitted(async _ => await SendOutgoingMessages(messages, context));
 
                 return messages;
             });

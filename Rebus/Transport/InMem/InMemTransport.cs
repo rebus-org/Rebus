@@ -49,7 +49,7 @@ namespace Rebus.Transport.InMem
 
             if (nextMessage == null) return null;
 
-            context.OnAborted(() =>
+            context.OnAborted(_ =>
             {
                 _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
             });

@@ -68,8 +68,8 @@ namespace Rebus.Transport.FileSystem
             {
                 var queue = new ConcurrentQueue<OutgoingMessage>();
 
-                context.OnCommitted(() => SendOutgoingMessages(queue, time));
-                context.OnAborted(() => AbortOutgoingMessages(queue));
+                context.OnCommitted(_ => SendOutgoingMessages(queue, time));
+                context.OnAborted(_ => AbortOutgoingMessages(queue));
 
                 return queue;
             });
@@ -140,8 +140,8 @@ namespace Rebus.Transport.FileSystem
                         }
                     }
 
-                    context.OnCompleted(async () => next.Complete());
-                    context.OnDisposed(() =>
+                    context.OnCompleted(async _ => next.Complete());
+                    context.OnDisposed(_ =>
                     {
                         if (next.IsCompleted)
                         {

@@ -120,7 +120,15 @@ namespace Rebus.Workers.ThreadPoolBased
 
                     _backoffStrategy.Reset();
 
-                    await ProcessMessage(context, transportMessage);
+                    try
+                    {
+                        AmbientTransactionContext.SetCurrent(context);
+                        await ProcessMessage(context, transportMessage);
+                    }
+                    finally
+                    {
+                        AmbientTransactionContext.SetCurrent(null);
+                    }
                 }
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested || _busDisposalCancellationToken.IsCancellationRequested)
@@ -158,8 +166,6 @@ namespace Rebus.Workers.ThreadPoolBased
         {
             try
             {
-                AmbientTransactionContext.SetCurrent(context);
-
                 var stepContext = new IncomingStepContext(transportMessage, context);
 
                 stepContext.Save(_busDisposalCancellationToken);
@@ -186,10 +192,6 @@ namespace Rebus.Workers.ThreadPoolBased
                 context.Abort();
 
                 _log.Error(exception, "Unhandled exception while handling message {messageLabel}", transportMessage.GetMessageLabel());
-            }
-            finally
-            {
-                AmbientTransactionContext.SetCurrent(null);
             }
         }
 

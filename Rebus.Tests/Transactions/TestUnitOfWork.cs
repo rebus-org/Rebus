@@ -10,7 +10,6 @@ using Rebus.Pipeline;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -39,10 +38,7 @@ namespace Rebus.Tests.Transactions
         {
             _activator.Handle<string>(async str =>
             {
-                MessageContext.Current.TransactionContext.OnCommitted(async () =>
-                {
-                    throw new ConcurrencyException();
-                });
+                MessageContext.Current.TransactionContext.OnCommitted(async _ => throw new ConcurrencyException());
             });
 
             await _bus.SendLocal("hej!");

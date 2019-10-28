@@ -18,25 +18,25 @@ namespace Rebus.Transport
         /// Registers a listener to be called when the queue transaction is committed. This hook is reserved for the queue transaction
         /// and you may get unpredictable results of you enlist your own transaction in this
         /// </summary>
-        void OnCommitted(Func<Task> commitAction);
+        void OnCommitted(Func<ITransactionContext, Task> commitAction);
 
         /// <summary>
         /// Registers a listener to be called when the queue transaction is aborted. This hook is reserved for the queue transaction
         /// and you may get unpredictable results of you enlist your own transaction in this
         /// </summary>
-        void OnAborted(Action abortedAction);
+        void OnAborted(Action<ITransactionContext> abortedAction);
 
         /// <summary>
         /// Registers a listener to be called AFTER the queue transaction has been successfully committed (i.e. all listeners
         /// registered with <see cref="OnCommitted"/> have been executed). This would be a good place to complete the incoming
         /// message.
         /// </summary>
-        void OnCompleted(Func<Task> completedAction);
+        void OnCompleted(Func<ITransactionContext, Task> completedAction);
 
         /// <summary>
         /// Registers a listener to be called after the transaction is over
         /// </summary>
-        void OnDisposed(Action disposedAction);
+        void OnDisposed(Action<ITransactionContext> disposedAction);
 
         /// <summary>
         /// Signals that something is wrong and the queue transaction must be aborted

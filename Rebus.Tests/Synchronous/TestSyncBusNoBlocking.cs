@@ -93,7 +93,7 @@ async implementation underneath the covers without deadlocking, even in a single
                         try
                         {
                             // enlist some other async thing
-                            scope.TransactionContext.OnCommitted(async () =>
+                            scope.TransactionContext.OnCommitted(async _ =>
                             {
                                 Console.WriteLine("waiting....");
                                 await Task.Delay(100);
