@@ -1277,7 +1277,7 @@
 
 * Add `rbs2-defer-count` header, which is initially set to 1 when a message is deferred - each subsequent deferral of the message will then increment this counter
 
-## 6.0.0-b18
+## 6.0.0-b19
 
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`
@@ -1291,6 +1291,7 @@
 * Replace file system-based transport with a new one that uses temp-file+rename to send, and file-locking-w-FileShare-Delete to receive
 * Add new data bus storage feature for querying by save time/last read time as well as deleting attachments
 * Add `RebusTransactionScopeSuppressor`, which may be used in cases where an already active Rebus transaction scope must be temporarily suppressed
+* Also target .NET Standard 2.1 (i.e. .NET Core 3.0)
 
 ---
 
