@@ -47,7 +47,19 @@ namespace Rebus.Tests.Pipeline
                 100000 iterations took 4,2 s - that's 23891,6 iterations/s
                 100000 iterations took 4,0 s - that's 24804,4 iterations/s
 
+            Another day:
 
+                100000 iterations took 3,7 s - that's 27286,5 iterations/s
+                100000 iterations took 3,3 s - that's 30694,6 iterations/s
+                100000 iterations took 3,8 s - that's 26189,0 iterations/s
+                100000 iterations took 3,7 s - that's 26914,6 iterations/s
+                100000 iterations took 3,6 s - that's 27495,5 iterations/s
+
+                100000 iterations took 3,9 s - that's 25347,3 iterations/s
+                100000 iterations took 3,6 s - that's 27760,3 iterations/s
+                100000 iterations took 3,7 s - that's 26711,1 iterations/s
+                100000 iterations took 3,8 s - that's 26186,0 iterations/s
+                100000 iterations took 3,9 s - that's 25823,8 iterations/s
         */
 
         [Repeat(5)]

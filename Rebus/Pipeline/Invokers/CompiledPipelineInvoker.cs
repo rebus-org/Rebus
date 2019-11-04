@@ -31,37 +31,31 @@ namespace Rebus.Pipeline.Invokers
             );
         }
 
-        public Task Invoke(IncomingStepContext context)
-        {
-            return _invokeReceivePipeline(context);
-        }
+        public Task Invoke(IncomingStepContext context) => _invokeReceivePipeline(context);
 
-        public Task Invoke(OutgoingStepContext context)
-        {
-            return _invokeSendPipeline(context);
-        }
+        public Task Invoke(OutgoingStepContext context) => _invokeSendPipeline(context);
 
         static Func<TContext, Task> GenerateFunc<TContext, TStep>(IReadOnlyList<TStep> steps, string processMethodName)
             where TContext : StepContext
             where TStep : IStep
         {
-            var expression = GenerateExpression<TContext, TStep>(steps, processMethodName, 0);
+            var expression = GenerateExpression<TContext, TStep>(steps, processMethodName);
 
             // use Dadhi's fast expression compiler because he's awesome - https://github.com/dadhi
             return ExpressionCompiler.Compile<Func<TContext, Task>>(expression);
-            
+
             //return expression.Compile();
         }
 
         /// <summary>
         /// Recursively builds and expression that invokes the pipeline, FUN STYLE BABY!
         /// </summary>
-        static Expression<Func<TContext, Task>> GenerateExpression<TContext, TStep>(IReadOnlyCollection<TStep> steps, string processMethodName, int index)
+        static Expression<Func<TContext, Task>> GenerateExpression<TContext, TStep>(IReadOnlyCollection<TStep> steps, string processMethodName, int depth = 0)
             where TContext : StepContext
             where TStep : IStep
         {
             // we need a context parameter no matter what
-            var contextParameter = Expression.Parameter(typeof(TContext), $"context{index}");
+            var contextParameter = Expression.Parameter(typeof(TContext), $"context{depth}");
 
             // if we have no steps to invoke, just return the terminator expression
             if (!steps.Any())
@@ -73,7 +67,7 @@ namespace Rebus.Pipeline.Invokers
 
             // otherwise, get an expression for invoking the tail of the pipeline...
             var tail = steps.Skip(1).ToList();
-            var tailExpression = GenerateExpression<TContext, TStep>(tail, processMethodName, index + 1);
+            var tailExpression = GenerateExpression<TContext, TStep>(tail, processMethodName, depth + 1);
 
             // ...and attach it to the invocation of the head of the pipeline:
             var head = steps.First();
