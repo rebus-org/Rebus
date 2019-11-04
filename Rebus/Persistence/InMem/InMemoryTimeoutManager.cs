@@ -8,6 +8,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Time;
 using Rebus.Timeouts;
+// ReSharper disable InconsistentlySynchronizedField
 #pragma warning disable 1998
 
 namespace Rebus.Persistence.InMem
@@ -92,12 +93,12 @@ namespace Rebus.Persistence.InMem
             /// Gets the time of when delivery of this message is due
             /// </summary>
             public DateTimeOffset DueTime { get; }
-            
+
             /// <summary>
             /// Gets the message's headers
             /// </summary>
             public Dictionary<string, string> Headers { get; }
-            
+
             /// <summary>
             /// Gets the message's body
             /// </summary>
@@ -116,7 +117,9 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public IEnumerator<DeferredMessage> GetEnumerator()
         {
-            return _deferredMessages.Values.ToList().GetEnumerator();
+            var deferredMessages = _deferredMessages.Values.ToList();
+
+            return deferredMessages.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

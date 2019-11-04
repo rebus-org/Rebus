@@ -49,10 +49,10 @@ namespace Rebus.Tests.Routing
 
             var distributorQueueName = TestConfig.GetName("distributor");
 
-            workers.ForEach(name =>
+            foreach (var name in workers)
             {
                 StartWorker(name, transportConfigurer);
-            });
+            }
 
             var distributor = Configure.With(Using(new BuiltinHandlerActivator()))
                 .Logging(l => l.Console(LogLevel.Info))

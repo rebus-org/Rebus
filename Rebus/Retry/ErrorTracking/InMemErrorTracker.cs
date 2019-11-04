@@ -151,21 +151,24 @@ namespace Rebus.Retry.ErrorTracking
         /// <summary>
         /// Cleans up whichever tracking wr have done for the given <paramref name="messageId"/>
         /// </summary>
-        public void CleanUp(string messageId)
-        {
-            ErrorTracking dummy;
-            _trackedErrors.TryRemove(messageId, out dummy);
-        }
+        public void CleanUp(string messageId) => RemoveTracking(messageId);
 
         async Task CleanupOldTrackedErrors()
         {
             var maxAge = TimeSpan.FromMinutes(_simpleRetryStrategySettings.ErrorTrackingMaxAgeMinutes);
 
-            _trackedErrors
-                .ToList()
+            var messageIdsOfExpiredTrackings = _trackedErrors
                 .Where(e => e.Value.ElapsedSinceLastError > maxAge)
-                .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out var _));
+                .Select(t => t.Key)
+                .ToList();
+
+            foreach (var messageId in messageIdsOfExpiredTrackings)
+            {
+                RemoveTracking(messageId);
+            }
         }
+
+        void RemoveTracking(string messageId) => _trackedErrors.TryRemove(messageId, out _);
 
         class ErrorTracking
         {

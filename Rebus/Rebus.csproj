@@ -5,7 +5,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
-    <TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;net46;netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
     <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
@@ -53,11 +53,13 @@
     <DefineConstants>HAS_CONFIGURATION_MANAGER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <DefineConstants>HAS_CONFIGURATION_MANAGER</DefineConstants>
-    <DefineConstants>HAS_ASYNC_LOCAL</DefineConstants>
+    <DefineConstants>HAS_CONFIGURATION_MANAGER;HAS_ASYNC_LOCAL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>HAS_ASYNC_LOCAL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <DefineConstants>HAS_TO_HASHSET;HAS_ASYNC_LOCAL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -65,7 +67,7 @@
   <ItemGroup Condition="'$(EnableSourceLink)' != 'false'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
     <PackageReference Include="System.Reflection.Emit.LightWeight" Version="4.3.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />

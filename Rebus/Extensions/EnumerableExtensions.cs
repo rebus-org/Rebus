@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Rebus.Extensions
 {
@@ -8,6 +7,7 @@ namespace Rebus.Extensions
     /// </summary>
     public static class EnumerableExtensions
     {
+#if !HAS_TO_HASHSET
         /// <summary>
         /// Returns the items of the sequence in a new <see cref="HashSet{T}"/> 
         /// </summary>
@@ -15,24 +15,6 @@ namespace Rebus.Extensions
         {
             return new HashSet<T>(items);
         }
-
-        /// <summary>
-        /// Returns the items of the sequence in a new <see cref="HashSet{T}"/>, checking equality with the given <paramref name="equalityComparer"/>
-        /// </summary>
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> items, IEqualityComparer<T> equalityComparer)
-        {
-            return new HashSet<T>(items, equalityComparer);
-        }
-
-        /// <summary>
-        /// Iterates the sequence, calling the given <paramref name="itemAction"/> for each item
-        /// </summary>
-        public static void ForEach<T>(this IEnumerable<T> items, Action<T> itemAction)
-        {
-            foreach (var item in items)
-            {
-                itemAction(item);
-            }
-        }
+#endif
     }
 }
