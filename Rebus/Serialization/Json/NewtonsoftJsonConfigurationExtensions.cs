@@ -2,6 +2,7 @@
 using System.Text;
 using Newtonsoft.Json;
 using Rebus.Config;
+using Rebus.Messages.MessageType;
 
 namespace Rebus.Serialization.Json
 {
@@ -69,7 +70,7 @@ namespace Rebus.Serialization.Json
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
-            configurer.Register(c => new JsonSerializer(settings, encoding ?? Encoding.UTF8));
+            configurer.Register(c => new JsonSerializer(c.Get<IMessageTypeMapper>(), settings, encoding ?? Encoding.UTF8));
         }
     }
 }

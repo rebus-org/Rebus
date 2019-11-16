@@ -8,6 +8,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Messages.MessageType;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Invokers;
 using Rebus.Profiling;
@@ -100,7 +101,7 @@ Stats:
                     })
                     .Start();
 
-                var serializer = new JsonSerializer();
+                var serializer = new JsonSerializer(new DefaultMessageTypeMapper());
                 var boy = new SomeMessage("hello there!");
 
                 for(var counter = 0; counter < numberOfMessages; counter++)

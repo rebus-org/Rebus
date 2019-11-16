@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 using Rebus.Extensions;
+using Rebus.Messages.MessageType;
+using Rebus.Tests.Contracts;
 using Rebus.Topic;
 
 namespace Rebus.Tests.Topic
@@ -10,9 +12,10 @@ namespace Rebus.Tests.Topic
         [Test]
         public void DefaultTopicNameConventionUseGetAssExtension()
         {
-            var convention = new DefaultTopicNameConvention();
+            var messageTypeConvetion = new DefaultMessageTypeMapper();
+            var convention = new DefaultTopicNameConvention(messageTypeConvetion);
 
-            var expected = typeof(SimpleMessage).GetSimpleAssemblyQualifiedName();
+            var expected = messageTypeConvetion.GetMessageType(typeof(SimpleMessage));
             var actual = convention.GetTopic(typeof(SimpleMessage));
 
             Assert.That(actual, Is.EqualTo(expected));

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Messages.MessageType;
 using Rebus.Tests.Contracts;
 using JsonSerializer = Rebus.Serialization.Json.JsonSerializer;
 #pragma warning disable 4014
@@ -20,7 +21,7 @@ namespace Rebus.Tests.Serialization
 
         protected override void SetUp()
         {
-            _serializer = new JsonSerializer();
+            _serializer = new JsonSerializer(new DefaultMessageTypeMapper()) ;
         }
 
         /*
@@ -70,7 +71,7 @@ Made 274822 iterations in 5s
         [Test]
         public async Task WorksWithoutFullTypeNameHandlingToo()
         {
-            var simpleSerializer = new JsonSerializer(new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
+            var simpleSerializer = new JsonSerializer(new DefaultMessageTypeMapper(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
             var message = new RandomMessage("hei allihoppa");
             var transportMessage = await simpleSerializer.Serialize(new Message(new Dictionary<string, string>(), message));
             var roundtrippedMessage = (await simpleSerializer.Deserialize(transportMessage)).Body;

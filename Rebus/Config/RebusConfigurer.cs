@@ -34,6 +34,7 @@ using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
 using Rebus.Time;
 using Rebus.Topic;
+using Rebus.Messages.MessageType;
 // ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.Config
@@ -128,6 +129,14 @@ namespace Rebus.Config
             configurer(new StandardConfigurer<IRouter>(_injectionist, _options));
             return this;
         }
+
+        public RebusConfigurer MessageTypes(Action<StandardConfigurer<IMessageTypeMapper>> configurer)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            configurer(new StandardConfigurer<IMessageTypeMapper>(_injectionist, _options));
+            return this;
+        }
+        
 
         /// <summary>
         /// Configures how Rebus persists saga data by allowing for choosing which implementation of <see cref="ISagaStorage"/> to use
@@ -225,7 +234,12 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
 
-            PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
+            PossiblyRegisterDefault<IMessageTypeMapper>(c => new DefaultMessageTypeMapper());
+
+            PossiblyRegisterDefault<ISerializer>(c => {
+                var mapper = c.Get<IMessageTypeMapper>();
+                return new JsonSerializer(mapper);
+            });
 
             PossiblyRegisterDefault<IPipelineInvoker>(c =>
             {
@@ -332,6 +346,7 @@ namespace Rebus.Config
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var options = c.Get<Options>();
                 var rebusTime = c.Get<IRebusTime>();
+                var messageTypeMapper = c.Get<IMessageTypeMapper>();
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
@@ -344,7 +359,7 @@ namespace Rebus.Config
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
-                    .OnSend(new AssignDefaultHeadersStep(transport, rebusTime, options.DefaultReturnAddressOrNull))
+                    .OnSend(new AssignDefaultHeadersStep(transport, messageTypeMapper, rebusTime, options.DefaultReturnAddressOrNull))
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
@@ -358,7 +373,9 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IDataBus>(c => new DisabledDataBus());
 
-            PossiblyRegisterDefault<ITopicNameConvention>(c => new DefaultTopicNameConvention());
+            PossiblyRegisterDefault<ITopicNameConvention>(c => {
+                return new DefaultTopicNameConvention(c.Get<IMessageTypeMapper>());
+            });
 
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
             Action startAction = null;

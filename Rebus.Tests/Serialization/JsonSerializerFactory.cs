@@ -1,3 +1,4 @@
+using Rebus.Messages.MessageType;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts.Serialization;
@@ -8,7 +9,7 @@ namespace Rebus.Tests.Serialization
     {
         public ISerializer GetSerializer()
         {
-            return new JsonSerializer();
+            return new JsonSerializer(new DefaultMessageTypeMapper());
         }
     }
 }

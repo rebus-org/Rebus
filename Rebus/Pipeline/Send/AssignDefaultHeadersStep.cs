@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Rebus.Transport;
 using Rebus.Extensions;
 using Rebus.Time;
+using Rebus.Messages.MessageType;
 
 namespace Rebus.Pipeline.Send
 {
@@ -28,6 +29,7 @@ namespace Rebus.Pipeline.Send
     public class AssignDefaultHeadersStep : IOutgoingStep
     {
         readonly IRebusTime _rebusTime;
+        readonly IMessageTypeMapper _messageTypeMapper;
         readonly bool _hasOwnAddress;
         readonly string _senderAddress;
         readonly string _returnAddress;
@@ -35,9 +37,10 @@ namespace Rebus.Pipeline.Send
         /// <summary>
         /// Constructs the step, getting the input queue address from the given <see cref="ITransport"/>
         /// </summary>
-        public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime, string defaultReturnAddressOrNull)
+        public AssignDefaultHeadersStep(ITransport transport, IMessageTypeMapper messageTypeMapper, IRebusTime rebusTime, string defaultReturnAddressOrNull)
         {
             _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+            _messageTypeMapper = messageTypeMapper ?? throw new ArgumentNullException(nameof(rebusTime));
             _senderAddress = transport.Address;
             _returnAddress = defaultReturnAddressOrNull ?? transport.Address;
             _hasOwnAddress = !string.IsNullOrWhiteSpace(_senderAddress);
@@ -75,7 +78,7 @@ namespace Rebus.Pipeline.Send
 
             if (!headers.ContainsKey(Headers.Type))
             {
-                headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
+                headers[Headers.Type] = _messageTypeMapper.GetMessageType(messageType);
             }
 
             await next();

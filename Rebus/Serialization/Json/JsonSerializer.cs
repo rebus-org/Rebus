@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Messages.MessageType;
 
 #pragma warning disable 1998
 
@@ -37,27 +38,34 @@ namespace Rebus.Serialization.Json
 
         readonly JsonSerializerSettings _settings;
         readonly Encoding _encoding;
+        readonly IMessageTypeMapper _messageTypeMapper;
         readonly string _encodingHeaderValue;
 
-        public JsonSerializer()
-            : this(DefaultSettings, DefaultEncoding)
+        public JsonSerializer(IMessageTypeMapper messageTypeMapper)
+            : this(messageTypeMapper, DefaultSettings, DefaultEncoding)
         {
         }
 
-        internal JsonSerializer(Encoding encoding)
-            : this(DefaultSettings, encoding)
+        internal JsonSerializer(IMessageTypeMapper messageTypeMapper, Encoding encoding)
+            : this(messageTypeMapper, DefaultSettings, encoding)
         {
         }
 
-        internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings)
-            : this(jsonSerializerSettings, DefaultEncoding)
+        internal JsonSerializer(IMessageTypeMapper messageTypeMapper, JsonSerializerSettings jsonSerializerSettings)
+            : this(messageTypeMapper, jsonSerializerSettings, DefaultEncoding)
         {
         }
 
-        internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings, Encoding encoding)
+        internal JsonSerializer(IMessageTypeMapper messageTypeMapper, JsonSerializerSettings jsonSerializerSettings, Encoding encoding)
         {
             _settings = jsonSerializerSettings;
             _encoding = encoding;
+            _messageTypeMapper = messageTypeMapper;
+
+            if (!messageTypeMapper.UseTypeNameHandling)
+            {
+                _settings.TypeNameHandling = TypeNameHandling.None;
+            }
 
             _encodingHeaderValue = $"{JsonContentType};charset={_encoding.HeaderName}";
         }
@@ -75,7 +83,7 @@ namespace Rebus.Serialization.Json
 
             if (!headers.ContainsKey(Headers.Type))
             {
-                headers[Headers.Type] = message.Body.GetType().GetSimpleAssemblyQualifiedName();
+                headers[Headers.Type] = _messageTypeMapper.GetMessageType(message.Body.GetType());
             }
 
             return new TransportMessage(headers, bytes);
@@ -139,18 +147,10 @@ namespace Rebus.Serialization.Json
 
         static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>();
 
-        static Type GetTypeOrNull(TransportMessage transportMessage)
+        Type GetTypeOrNull(TransportMessage transportMessage)
         {
             if (!transportMessage.Headers.TryGetValue(Headers.Type, out var typeName)) return null;
-
-            try
-            {
-                return TypeCache.GetOrAdd(typeName, Type.GetType);
-            }
-            catch (Exception exception)
-            {
-                throw new FormatException($"Could not get .NET type named '{typeName}'", exception);
-            }
+            return _messageTypeMapper.GetTypeFromMessage(typeName);
         }
 
         object Deserialize(string bodyString, Type type)
