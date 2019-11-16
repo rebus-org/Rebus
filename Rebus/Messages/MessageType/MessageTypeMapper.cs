@@ -7,8 +7,8 @@ using Rebus.Extensions;
 namespace Rebus.Messages.MessageType
 {
     /// <summary>
-    /// Default convention to name message type after their "short assembly-qualified type names", which is
-    /// an assembly- and namespace-qualified type name without assembly version and public key token info.
+    /// MessageTypeMapper permit to configure mapping of class to relative 
+    /// header type used in serialization and deserialization
     /// </summary>
     public class MessageTypeMapper : IMessageTypeMapper
     {
@@ -43,6 +43,9 @@ namespace Rebus.Messages.MessageType
             return tuple.Name;
         }
 
+        /// <summary>
+        /// Returns the type based on header type message
+        /// </summary>
         public Type GetTypeFromMessage(string messageType)
         {
             var tuple = mappedMessageTypes.FirstOrDefault(t => t.Name == messageType);
@@ -53,6 +56,10 @@ namespace Rebus.Messages.MessageType
             return tuple.Type;            
         }
 
+
+        /// <summary>
+        /// MessageTypeMapper not use assembly name for mapping
+        /// </summary>
         public bool UseTypeNameHandling => false;
     }
 }

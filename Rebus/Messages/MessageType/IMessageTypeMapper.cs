@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Rebus.Messages.MessageType
 {
     /// <summary>
-    /// Defines the rules to header type of message
+    /// Mapper for message type
     /// </summary>
     public interface IMessageTypeMapper
     {
@@ -16,8 +16,14 @@ namespace Rebus.Messages.MessageType
         /// </summary>
         string GetMessageType(Type messageType);
 
+        /// <summary>
+        /// Returns the type based on header type message
+        /// </summary>
         Type GetTypeFromMessage(string messageType);
 
+        /// <summary>
+        /// Returns true if serializer can use assembly-qualified to message serialization and deserialization
+        /// </summary>
         bool UseTypeNameHandling { get; }
     }
 }

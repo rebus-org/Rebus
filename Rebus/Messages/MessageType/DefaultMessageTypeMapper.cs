@@ -4,8 +4,7 @@ using Rebus.Extensions;
 namespace Rebus.Messages.MessageType
 {
     /// <summary>
-    /// Default convention to name message type after their "short assembly-qualified type names", which is
-    /// an assembly- and namespace-qualified type name without assembly version and public key token info.
+    /// Default Mapper for message type on "short assembly-qualified type names"
     /// </summary>
     public class DefaultMessageTypeMapper : IMessageTypeMapper
     {
@@ -19,6 +18,9 @@ namespace Rebus.Messages.MessageType
             return messageType.GetSimpleAssemblyQualifiedName();
         }
 
+        /// <summary>
+        /// Returns the type based on header type message
+        /// </summary>
         public Type GetTypeFromMessage(string messageType)
         {
             try

@@ -6,24 +6,15 @@ using Rebus.Messages.MessageType;
 
 namespace Rebus.Messages.MessageType
 {
-
+    /// <summary>
+    /// Configuration extensions for configuring message type mapper 
+    /// (i.e. when you cannot reuse same class between application)
+    /// </summary>
     public static class MessageTypeMapperConfigurationExtensions
     {
 
-        public static void MapMessageType(this StandardConfigurer<IMessageTypeMapper> configurer, Action<MessageTypeMapper> mappingAction)
-        {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-
-            configurer.Register(c =>
-            {
-                var messagetypeConvetion = new MessageTypeMapper();
-                mappingAction(messagetypeConvetion);
-                return messagetypeConvetion;
-            });
-        }
-
         /// <summary>
-        /// Configures Rebus to use type-based routing
+        /// Configures Rebus to use message type mapper configurable
         /// </summary>
         public static MessageTypeMapperConfigurationBuilder MapMessageType(this StandardConfigurer<IMessageTypeMapper> configurer)
         {
@@ -33,7 +24,8 @@ namespace Rebus.Messages.MessageType
         }
 
         /// <summary>
-        /// Type-based routing configuration builder that can be called fluently to map message types to their owning endpoints
+        /// Configuration Builder for mapping message header type to a specific class
+        /// Can be use when you cannot reuse same class. or using differente application codes
         /// </summary>
         public class MessageTypeMapperConfigurationBuilder
         {
@@ -47,20 +39,20 @@ namespace Rebus.Messages.MessageType
             }
 
             /// <summary>
-            /// Maps <paramref name="destinationAddress"/> as the owner of the <typeparamref name="TMessage"/> message type
+            /// Maps <paramref name="typename"/> as the "type" of the <typeparamref name="TMessage"/> message type
             /// </summary>
-            public MessageTypeMapperConfigurationBuilder Map<TMessage>(string destinationAddress)
+            public MessageTypeMapperConfigurationBuilder Map<TMessage>(string typename)
             {
-                _configurationActions.Add(r => r.Map<TMessage>(destinationAddress));
+                _configurationActions.Add(r => r.Map<TMessage>(typename));
                 return this;
             }
 
             /// <summary>
-            /// Maps <paramref name="destinationAddress"/> as the owner of the <paramref name="messageType"/> message type
+            /// Maps <paramref name="typename"/> as "type" of the <paramref name="messageType"/> message type
             /// </summary>
-            public MessageTypeMapperConfigurationBuilder Map(Type messageType, string destinationAddress)
+            public MessageTypeMapperConfigurationBuilder Map(Type messageType, string typename)
             {
-                _configurationActions.Add(r => r.Map(messageType, destinationAddress));
+                _configurationActions.Add(r => r.Map(messageType, typename));
                 return this;
             }
 
