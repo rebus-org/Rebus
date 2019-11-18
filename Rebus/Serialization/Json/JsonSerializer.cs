@@ -150,7 +150,7 @@ namespace Rebus.Serialization.Json
         Type GetTypeOrNull(TransportMessage transportMessage)
         {
             if (!transportMessage.Headers.TryGetValue(Headers.Type, out var typeName)) return null;
-            return _messageTypeMapper.GetTypeFromMessage(typeName);
+            return TypeCache.GetOrAdd(typeName, (t) => _messageTypeMapper.GetTypeFromMessage(t));
         }
 
         object Deserialize(string bodyString, Type type)
