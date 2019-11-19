@@ -130,6 +130,9 @@ namespace Rebus.Config
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus generate message types by allowing for choosing which implementation of <see cref="IMessageTypeMapper"/> to use
+        /// </summary>
         public RebusConfigurer MessageTypes(Action<StandardConfigurer<IMessageTypeMapper>> configurer)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));

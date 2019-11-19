@@ -12,6 +12,10 @@ namespace Rebus.Topic
     {
         private IMessageTypeMapper _messageTypeMapper;
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="messageTypeMapper"></param>
         public DefaultTopicNameConvention(IMessageTypeMapper messageTypeMapper)
         {
             _messageTypeMapper = messageTypeMapper;

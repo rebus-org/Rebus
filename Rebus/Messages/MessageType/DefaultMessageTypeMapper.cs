@@ -8,6 +8,9 @@ namespace Rebus.Messages.MessageType
     /// </summary>
     public class DefaultMessageTypeMapper : IMessageTypeMapper
     {
+        /// <summary>
+        /// Is Assembly name used
+        /// </summary>
         public bool UseTypeNameHandling => true;
 
         /// <summary>

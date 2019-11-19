@@ -14,11 +14,23 @@ namespace Rebus.Messages.MessageType
     {
         readonly HashSet<(Type Type, string Name)> mappedMessageTypes = new HashSet<(Type Type, string Name)>();
 
+        /// <summary>
+        /// Map class to custom name
+        /// </summary>
+        /// <typeparam name="T">message type</typeparam>
+        /// <param name="name">custom name</param>
+        /// <returns></returns>
         public MessageTypeMapper Map<T>(string name)
         {
             return this.Map(typeof(T), name);
         }
 
+        /// <summary>
+        /// Map class to custom name
+        /// </summary>
+        /// <param name="type">message type</param>
+        /// <param name="name">custom name</param>
+        /// <returns></returns>
         public MessageTypeMapper Map(Type type, string name)
         {
             if (mappedMessageTypes.Any(t => t.Name == name))
