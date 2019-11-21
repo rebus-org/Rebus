@@ -65,7 +65,7 @@ namespace Rebus.Messages.MessageType
             {
                 throw new FormatException($"Could not get .NET type named '{messageType}'");
             }
-            return tuple.Type;            
+            return tuple.Type;
         }
 
 
