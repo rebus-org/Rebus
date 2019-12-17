@@ -1277,6 +1277,10 @@
 
 * Add `rbs2-defer-count` header, which is initially set to 1 when a message is deferred - each subsequence deferral (of the transport message) will then increment this counter
 
+## 5.4.1
+
+* Fix bug that would erroneously return a not-so-useful message context when inside a `RebusTransactionScope`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

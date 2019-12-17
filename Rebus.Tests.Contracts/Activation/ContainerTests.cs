@@ -14,6 +14,9 @@ using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleNamedExpression
+// ReSharper disable ArgumentsStyleOther
+// ReSharper disable ArgumentsStyleStringLiteral
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
@@ -87,7 +90,7 @@ dispatched when 2nd level retries are enabled, and the initial message
 has failed too many times)
             ");
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers(wrapper, scope.TransactionContext)).ToList();
 
@@ -147,7 +150,7 @@ has failed too many times)
         {
             var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<SomeHandler>());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = handlerActivator.GetHandlers("hej", scope.TransactionContext).Result.ToList();
 
@@ -199,10 +202,9 @@ has failed too many times)
         [Test]
         public void CanGetDecoratedBus()
         {
-            IActivatedContainer container;
             var busReturnedFromConfiguration = _activationCtx.CreateBus(configure => configure
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "decorated-bus-test"))
-                    .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>()))), out container);
+                    .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>()))), out var container);
 
             var busReturnedFromContainer = container.ResolveBus();
 
@@ -353,7 +355,7 @@ has failed too many times)
         {
             var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<SecondLevelDeliveryHandler>());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var headers = new Dictionary<string, string>();
                 var body = new FailedMessage();
@@ -382,7 +384,7 @@ has failed too many times)
         {
             var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<BaseMessageHandler>());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), scope.TransactionContext)).ToList();
 
@@ -400,7 +402,7 @@ has failed too many times)
                 .Register<BaseMessageHandler>()
                 .Register<DerivedMessageHandler>());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), scope.TransactionContext))
                     .OrderBy(h => h.GetType().Name)
@@ -436,7 +438,7 @@ has failed too many times)
         {
             var handlerActivator = _activationCtx.CreateActivator();
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", scope.TransactionContext)).ToList();
 
@@ -449,7 +451,7 @@ has failed too many times)
         {
             var handlerActivator = _activationCtx.CreateActivator(handlers => handlers.Register<SomeStringHandler>());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = (await handlerActivator.GetHandlers("hej", scope.TransactionContext)).ToList();
 

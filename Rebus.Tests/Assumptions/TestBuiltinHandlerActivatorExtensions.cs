@@ -5,22 +5,21 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Handlers;
-using Rebus.Internals;
-using Rebus.Transport;
+using Rebus.Tests.Extensions;
 
 namespace Rebus.Tests.Assumptions
 {
     [TestFixture]
-    public class TestBuiltindHandlerActivatorExtensions
+    public class TestBuiltinHandlerActivatorExtensions
     {
         [Test]
         public async Task TheExtensionWorks()
         {
             var activator = new BuiltinHandlerActivator();
 
-            BuiltinHandlerActivatorExtensions.Register(activator, typeof(SomeHandler));
+            activator.Register(typeof(SomeHandler));
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var stringHandlers = await activator.GetHandlers("hej", scope.TransactionContext);
 
