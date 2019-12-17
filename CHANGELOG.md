@@ -1293,6 +1293,10 @@
 * Add `RebusTransactionScopeSuppressor`, which may be used in cases where an already active Rebus transaction scope must be temporarily suppressed
 * Also target .NET Standard 2.1 (i.e. .NET Core 3.0)
 
+## 5.4.1
+
+* Fix bug that would erroneously return a not-so-useful message context when inside a `RebusTransactionScope`
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 #pragma warning disable 1998
 
@@ -62,7 +63,7 @@ namespace Rebus.Tests.Activation
 
             for (var counter = 0; counter < count; counter++)
             {
-                using (var scope = new RebusTransactionScope())
+                using (var scope = new FakeMessageContextScope())
                 {
                     // ReSharper disable once UnusedVariable
                     var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
@@ -79,7 +80,7 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(() => new SomeHandler());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
 
@@ -92,7 +93,7 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register(context => new SomeHandler());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
 
@@ -105,7 +106,7 @@ namespace Rebus.Tests.Activation
         {
             _activator.Register((bus, context) => new SomeHandler());
 
-            using (var scope = new RebusTransactionScope())
+            using (var scope = new FakeMessageContextScope())
             {
                 var handlers = _activator.GetHandlers("hej med dig", scope.TransactionContext).Result;
 
