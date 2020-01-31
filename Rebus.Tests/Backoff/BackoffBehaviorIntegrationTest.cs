@@ -65,7 +65,7 @@ namespace Rebus.Tests.Backoff
 
                         // the rest of the time
                         TimeSpan.FromSeconds(0.5)
-                        );
+                    );
                 })
                 .Start();
 
