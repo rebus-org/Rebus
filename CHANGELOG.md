@@ -1012,7 +1012,7 @@
 ## 5.4.1
 * Fix bug that would erroneously return a not-so-useful message context when inside a `RebusTransactionScope`
 
-## 6.0.0-b21
+## 6.0.0
 * Move data bus configuration to main configurer, so now you can go `.DataBus(d => d.StoreInFileSystem(@"\\network-path\folder"))`
 * Add automatic claim check support, so you can have big messages transferred as data bus attachments by going e.g. `d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: 200*1000)`
 * Move cancellation support into the backoff strategy - thanks [nativenolde]
