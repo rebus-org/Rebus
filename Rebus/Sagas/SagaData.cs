@@ -8,7 +8,7 @@ namespace Rebus.Sagas
     public abstract class SagaData : ISagaData
     {
         /// <summary>
-        /// Saga ID used by Rebus. Do not mess with this one - - it will automatically be set by Rebus when inserting the saga data.
+        /// Saga ID used by Rebus. Do not mess with this one - it will automatically be set by Rebus when inserting the saga data.
         /// </summary>
         public Guid Id { get; set; }
 
