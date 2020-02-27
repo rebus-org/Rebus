@@ -19,7 +19,7 @@ What?
 Rebus is a lean service bus implementation for .NET. It is what ThoughtWorks in 2010 called a 
 ["message bus without smarts"](https://www.thoughtworks.com/radar/tools/message-buses-without-smarts) - a library 
 that works well as the "dumb pipes" when you need asynchronous communication in your microservices that follow
-the ["smart endpoints, dump pipes"](https://martinfowler.com/articles/microservices.html#SmartEndpointsAndDumbPipes) 
+the ["smart endpoints, dumb pipes"](https://martinfowler.com/articles/microservices.html#SmartEndpointsAndDumbPipes) 
 principle.
 
 Rebus aims to have
