@@ -350,7 +350,7 @@ namespace Rebus.Transport.FileSystem
 
             public void Complete(Guid unitOfWorkId, DateTimeOffset now, int index)
             {
-                var finalFilePath = Path.Combine(_destinationDirectoryPath, $"rebusmessage-{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.json");
+                var finalFilePath = Path.Combine(_destinationDirectoryPath, $"{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.rebusmessage.json");
                 var attempts = 0;
 
                 while (true)
