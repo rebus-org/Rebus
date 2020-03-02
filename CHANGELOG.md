@@ -1027,6 +1027,8 @@
 * Add `RebusTransactionScopeSuppressor`, which may be used in cases where an already active Rebus transaction scope must be temporarily suppressed
 * Also target .NET Standard 2.1 (i.e. .NET Core 3.0)
 
+## 6.0.1
+* Make file system transport compatible with previous versions of Rebus - thanks [jr01]
 
 ---
 
@@ -1052,6 +1054,7 @@
 [jeffreyabecker]: https://github.com/jeffreyabecker
 [jods4]: https://github.com/jods4
 [joshua5822]: https://github.com/joshua5822
+[jr01]: https://github.com/jr01
 [jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
