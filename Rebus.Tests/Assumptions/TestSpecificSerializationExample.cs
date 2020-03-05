@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
+using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -23,7 +24,7 @@ namespace Rebus.Tests.Assumptions
 
         protected override void SetUp()
         {
-            _serializer = new JsonSerializer();
+            _serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
         }
 
         [Test]

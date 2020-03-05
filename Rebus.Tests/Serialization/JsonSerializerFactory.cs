@@ -8,7 +8,7 @@ namespace Rebus.Tests.Serialization
     {
         public ISerializer GetSerializer()
         {
-            return new JsonSerializer();
+            return new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
         }
     }
 }

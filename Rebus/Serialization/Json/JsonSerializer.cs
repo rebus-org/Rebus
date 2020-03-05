@@ -37,27 +37,14 @@ namespace Rebus.Serialization.Json
 
         readonly JsonSerializerSettings _settings;
         readonly Encoding _encoding;
+        readonly IMessageTypeNameConvention _messageTypeNameConvention;
         readonly string _encodingHeaderValue;
 
-        public JsonSerializer()
-            : this(DefaultSettings, DefaultEncoding)
+        public JsonSerializer(IMessageTypeNameConvention messageTypeNameConvention, JsonSerializerSettings jsonSerializerSettings = null, Encoding encoding = null)
         {
-        }
-
-        internal JsonSerializer(Encoding encoding)
-            : this(DefaultSettings, encoding)
-        {
-        }
-
-        internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings)
-            : this(jsonSerializerSettings, DefaultEncoding)
-        {
-        }
-
-        internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings, Encoding encoding)
-        {
-            _settings = jsonSerializerSettings;
-            _encoding = encoding;
+            _messageTypeNameConvention = messageTypeNameConvention ?? throw new ArgumentNullException(nameof(messageTypeNameConvention));
+            _settings = jsonSerializerSettings ?? DefaultSettings;
+            _encoding = encoding ?? DefaultEncoding;
 
             _encodingHeaderValue = $"{JsonContentType};charset={_encoding.HeaderName}";
         }
@@ -75,7 +62,7 @@ namespace Rebus.Serialization.Json
 
             if (!headers.ContainsKey(Headers.Type))
             {
-                headers[Headers.Type] = ResolveTypeName(message);
+                headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(message.Body.GetType());
             }
 
             return new TransportMessage(headers, bytes);
@@ -137,53 +124,13 @@ namespace Rebus.Serialization.Json
             return new Message(headers, bodyObject);
         }
 
-        string ResolveTypeName(Message message)
-        {
-            return TypeToTypeNameCache.GetOrAdd(message.Body.GetType(),
-                type =>
-                {
-                    if (_settings.SerializationBinder == null)
-                    {
-                        return message.Body.GetType().GetSimpleAssemblyQualifiedName();
-                    }
-
-                    _settings.SerializationBinder.BindToName(type, out var assemblyName, out var typeName);
-
-                    return string.IsNullOrWhiteSpace(assemblyName) ? typeName : $"{typeName}, {assemblyName}";
-                });
-
-        }
-
-        readonly ConcurrentDictionary<Type, string> TypeToTypeNameCache = new ConcurrentDictionary<Type, string>();
-        
-        readonly ConcurrentDictionary<string, Type> TypeNameToTypeCache = new ConcurrentDictionary<string, Type>();
-
         Type GetTypeOrNull(TransportMessage transportMessage)
         {
             if (!transportMessage.Headers.TryGetValue(Headers.Type, out var typeName)) return null;
 
-            try
-            {
-                if (_settings.SerializationBinder == null)
-                {
-                    return TypeNameToTypeCache.GetOrAdd(typeName, Type.GetType);
-                }
+            var type = _messageTypeNameConvention.GetType(typeName) ?? throw new FormatException($"Could not get .NET type named '{typeName}'");
 
-                var parts = typeName.Split(',');
-
-                if (parts.Length == 1)
-                {
-                    return _settings.SerializationBinder.BindToType(null, parts[0]);
-                }
-
-                return _settings.SerializationBinder.BindToType(string.Join(", ", parts.Skip(1)), parts[0]);
-
-                //                throw new FormatException($"Type name '{typeName}' did not have the expected format consisting of either a type name (e.g. 'SomeType') or an assembly-qualified type name (e.g. 'SomeType, SomeAssembly')");
-            }
-            catch (Exception exception)
-            {
-                throw new FormatException($"Could not get .NET type named '{typeName}'", exception);
-            }
+            return type;
         }
 
         object Deserialize(string bodyString, Type type)

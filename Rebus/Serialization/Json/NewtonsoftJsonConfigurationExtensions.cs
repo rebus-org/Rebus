@@ -35,20 +35,7 @@ namespace Rebus.Serialization.Json
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
-            TypeNameHandling GetTypeNameHandling()
-            {
-                switch (mode)
-                {
-                    case JsonInteroperabilityMode.FullTypeInformation:
-                        return TypeNameHandling.All;
-                    case JsonInteroperabilityMode.PureJson:
-                        return TypeNameHandling.None;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Unknown {typeof(JsonInteroperabilityMode).Name} value");
-                }
-            }
-
-            var settings = new JsonSerializerSettings { TypeNameHandling = GetTypeNameHandling() };
+            var settings = new JsonSerializerSettings { TypeNameHandling = GetTypeNameHandling(mode) };
 
             RegisterSerializer(configurer, settings, Encoding.UTF8);
         }
@@ -62,26 +49,27 @@ namespace Rebus.Serialization.Json
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-            RegisterSerializer(configurer, settings, encoding);
+            RegisterSerializer(configurer, settings, encoding ?? Encoding.UTF8);
         }
 
-        /// <summary>
-        /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages in interoperable mode
-        /// </summary>
-        public static CustomTypeNamesBinderBuilder UseNewtonsoftJsonInteroperable(this StandardConfigurer<ISerializer> configurer)
+        static TypeNameHandling GetTypeNameHandling(JsonInteroperabilityMode mode)
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            
-            var serializationBinder = new CustomTypeNamesBinder();
-            configurer.Register(c => new JsonSerializer(new JsonSerializerSettings{SerializationBinder = serializationBinder}));
-            return serializationBinder.GetBuilder();
+            switch (mode)
+            {
+                case JsonInteroperabilityMode.FullTypeInformation:
+                    return TypeNameHandling.All;
+                case JsonInteroperabilityMode.PureJson:
+                    return TypeNameHandling.None;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Unknown {typeof(JsonInteroperabilityMode).Name} value");
+            }
         }
 
         static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, JsonSerializerSettings settings, Encoding encoding)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
-            configurer.Register(c => new JsonSerializer(settings, encoding ?? Encoding.UTF8));
+            configurer.Register(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>(), settings, encoding));
         }
     }
 }

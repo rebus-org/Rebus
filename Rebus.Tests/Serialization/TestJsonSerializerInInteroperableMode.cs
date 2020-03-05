@@ -6,7 +6,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Messages;
-using Rebus.Serialization.Json;
+using Rebus.Serialization.Custom;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
@@ -19,7 +19,7 @@ namespace Rebus.Tests.Serialization
     public class TestJsonSerializerInInteroperableMode : FixtureBase
     {
         [Test]
-        public async Task WorksWithCustomizedTypeName_Emoji()
+        public async Task WorksWithCustomizedTypeName_Emoji2()
         {
             var activator = Using(new BuiltinHandlerActivator());
             var gotString = new ManualResetEvent(initialState: false);
@@ -34,8 +34,11 @@ namespace Rebus.Tests.Serialization
 
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-                .Serialization(s => s.UseNewtonsoftJsonInteroperable()
-                    .AddWithCustomName<string>("😈"))
+                .Serialization(s =>
+                {
+                    s.UseCustomMessageTypeNames()
+                        .AddWithCustomName<string>("😈");
+                })
                 .Start();
 
             await activator.Bus.SendLocal("hej 🥓");
@@ -61,9 +64,8 @@ namespace Rebus.Tests.Serialization
 
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-                .Serialization(s => s.UseNewtonsoftJsonInteroperable()
-                    .AddWithShortNames(new[] { typeof(string) })
-                    .AllowFallbackToDefaultBehavior())
+                .Serialization(s => s.UseCustomMessageTypeNames()
+                    .AddWithShortNames(new[] { typeof(string) }))
                 .Start();
 
             await activator.Bus.SendLocal("hej 🥓");
@@ -89,9 +91,8 @@ namespace Rebus.Tests.Serialization
 
             Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-                .Serialization(s => s.UseNewtonsoftJsonInteroperable()
-                    .AddWithShortNames(new[] { typeof(MyLittleMessage) })
-                    .AllowFallbackToDefaultBehavior())
+                .Serialization(s => s.UseCustomMessageTypeNames()
+                        .AddWithShortNames(new[] { typeof(MyLittleMessage) }))
                 .Start();
 
             await activator.Bus.SendLocal(new MyLittleMessage());

@@ -1031,7 +1031,7 @@
 * Make file system transport compatible with previous versions of Rebus - thanks [jr01]
 
 ## 6.1.0
-* Add built-in ability to customize serialized type names when using the built-in Newtonsoft-based JSON serializer by calling `.Serialization(s => s.UseNewtonsoftJsonInteroperable().AddWith(...))`
+* Introduce `IMessageTypeNameConvention`, which defaults to simple assembly-qualified type names. Can be customized by calling `.Serialization(s => s.UseCustomMessageTypeNames().Add(...))`
 
 ---
 

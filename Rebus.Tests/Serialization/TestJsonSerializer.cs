@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using Rebus.Extensions;
 using Rebus.Messages;
-using Rebus.Serialization.Json;
+using Rebus.Serialization;
+using Rebus.Serialization.Custom;
 using Rebus.Tests.Contracts;
 using JsonSerializer = Rebus.Serialization.Json.JsonSerializer;
 #pragma warning disable 4014
@@ -23,7 +23,7 @@ namespace Rebus.Tests.Serialization
 
         protected override void SetUp()
         {
-            _serializer = new JsonSerializer();
+            _serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
         }
 
         /*
@@ -83,7 +83,7 @@ Made 434064 iterations in 00:00:01
         public async Task FormatTypeAsExpected_Default()
         {
             var expectedTypeName = typeof(SomeType).GetSimpleAssemblyQualifiedName();
-            var serializer = new JsonSerializer();
+            var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
 
             var message = new Message(new Dictionary<string, string>(), new SomeType());
             var transportMessage = await serializer.Serialize(message);
@@ -104,14 +104,11 @@ Serialized type name: {type}
         }
 
         [Test]
-        public async Task FormatTypeAsExpected_CustomDefault()
+        public async Task FormatTypeAsExpected_CustomWithFallback()
         {
-            var serializer = new JsonSerializer(new JsonSerializerSettings
-            {
-                SerializationBinder = new DefaultSerializationBinder()
-            });
+            var serializer = new JsonSerializer(new CustomTypeNameConventionBuilder().AllowFallbackToDefaultConvention().GetConvention());
 
-            const string expectedTypeName = "Rebus.Tests.Serialization.TestJsonSerializer+SomeType, Rebus.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+            var expectedTypeName = typeof(SomeType).GetSimpleAssemblyQualifiedName();
 
             var message = new Message(new Dictionary<string, string>(), new SomeType());
             var transportMessage = await serializer.Serialize(message);
@@ -134,9 +131,9 @@ Serialized type name: {type}
         [Test]
         public async Task FormatTypeAsExpected_Custom()
         {
-            var binder = new CustomTypeNamesBinder();
-            binder.GetBuilder().AddWithShortName<SomeType>();
-            var serializer = new JsonSerializer(new JsonSerializerSettings { SerializationBinder = binder });
+            var serializer = new JsonSerializer(new CustomTypeNameConventionBuilder()
+                .AddWithShortName<SomeType>()
+                .GetConvention());
 
             const string expectedTypeName = "SomeType";
 
@@ -163,7 +160,7 @@ Serialized type name: {type}
         [Test]
         public async Task WorksWithoutFullTypeNameHandlingToo()
         {
-            var simpleSerializer = new JsonSerializer(new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
+            var simpleSerializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
             var message = new RandomMessage("hei allihoppa");
             var transportMessage = await simpleSerializer.Serialize(new Message(new Dictionary<string, string>(), message));
             var roundtrippedMessage = (await simpleSerializer.Deserialize(transportMessage)).Body;

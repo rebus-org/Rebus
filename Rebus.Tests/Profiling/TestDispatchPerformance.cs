@@ -11,6 +11,7 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Invokers;
 using Rebus.Profiling;
+using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -100,7 +101,7 @@ Stats:
                     })
                     .Start();
 
-                var serializer = new JsonSerializer();
+                var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
                 var boy = new SomeMessage("hello there!");
 
                 for(var counter = 0; counter < numberOfMessages; counter++)

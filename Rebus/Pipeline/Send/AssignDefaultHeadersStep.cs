@@ -1,6 +1,7 @@
 ﻿using Rebus.Messages;
 using System;
 using System.Threading.Tasks;
+using Rebus.Serialization;
 using Rebus.Transport;
 using Rebus.Time;
 
@@ -11,6 +12,7 @@ namespace Rebus.Pipeline.Send
     /// If the <see cref="Headers.MessageId"/> header has not been set, it is set to a new GUID.
     /// If the bus is not a one-way client, the <see cref="Headers.ReturnAddress"/> header is set to the address of the transport (unless the header has already been set to something else)
     /// The <see cref="Headers.SentTime"/> header is set to <see cref="DateTimeOffset.Now"/>.
+    /// If the <see cref="Headers.Type"/> header has not been set, it is set to the simple assembly-qualified name of the send message type
     /// </summary>
     [StepDocumentation(@"Assigns these default headers to the outgoing message: 
 
@@ -20,20 +22,24 @@ namespace Rebus.Pipeline.Send
 
 3) a 'rbs2-senttime' with the current time.
 
-")]
+-4) 'rbs2-msg-type' with the message's simple assembly-qualified type name (*).
+-
+-(*) Unless explicitly set to something else")]
     public class AssignDefaultHeadersStep : IOutgoingStep
     {
+        readonly IMessageTypeNameConvention _messageTypeNameConvention;
         readonly IRebusTime _rebusTime;
-        readonly bool _hasOwnAddress;
         readonly string _senderAddress;
         readonly string _returnAddress;
+        readonly bool _hasOwnAddress;
 
         /// <summary>
         /// Constructs the step, getting the input queue address from the given <see cref="ITransport"/>
         /// </summary>
-        public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime, string defaultReturnAddressOrNull)
+        public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime, IMessageTypeNameConvention messageTypeNameConvention, string defaultReturnAddressOrNull)
         {
             _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+            _messageTypeNameConvention = messageTypeNameConvention;
             _senderAddress = transport.Address;
             _returnAddress = defaultReturnAddressOrNull ?? transport.Address;
             _hasOwnAddress = !string.IsNullOrWhiteSpace(_senderAddress);
@@ -54,7 +60,7 @@ namespace Rebus.Pipeline.Send
 
             if (_hasOwnAddress && !headers.ContainsKey(Headers.ReturnAddress))
             {
-                headers[Headers.ReturnAddress] =  _returnAddress;
+                headers[Headers.ReturnAddress] = _returnAddress;
             }
 
             headers[Headers.SentTime] = _rebusTime.Now.ToString("O");
@@ -66,6 +72,13 @@ namespace Rebus.Pipeline.Send
             else
             {
                 headers.Remove(Headers.SenderAddress);
+            }
+
+            if (!headers.ContainsKey(Headers.Type))
+            {
+                var messageType = message.Body.GetType();
+
+                headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(messageType);
             }
 
             await next();
