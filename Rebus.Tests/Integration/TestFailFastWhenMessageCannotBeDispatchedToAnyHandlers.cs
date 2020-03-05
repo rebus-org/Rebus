@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using MyDomain;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
@@ -11,10 +9,13 @@ using Rebus.Retry.FailFast;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
-// ReSharper disable ArgumentsStyleLiteral
+// ReSharper disable ArgumentsStyleNamedExpression
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
+    // ReSharper disable ArgumentsStyleLiteral
+
     [TestFixture]
     public class TestFailFastWhenMessageCannotBeDispatchedToAnyHandlers : FixtureBase
     {
@@ -97,9 +98,6 @@ namespace Rebus.Tests.Integration
         }
 
     }
-}
 
-namespace MyDomain
-{
     public class DomainException : Exception { }
 }
