@@ -2,7 +2,6 @@
 using System;
 using System.Threading.Tasks;
 using Rebus.Transport;
-using Rebus.Extensions;
 using Rebus.Time;
 
 namespace Rebus.Pipeline.Send
@@ -12,7 +11,6 @@ namespace Rebus.Pipeline.Send
     /// If the <see cref="Headers.MessageId"/> header has not been set, it is set to a new GUID.
     /// If the bus is not a one-way client, the <see cref="Headers.ReturnAddress"/> header is set to the address of the transport (unless the header has already been set to something else)
     /// The <see cref="Headers.SentTime"/> header is set to <see cref="DateTimeOffset.Now"/>.
-    /// If the <see cref="Headers.Type"/> header has not been set, it is set to the simple assembly-qualified name of the send message type
     /// </summary>
     [StepDocumentation(@"Assigns these default headers to the outgoing message: 
 
@@ -22,9 +20,7 @@ namespace Rebus.Pipeline.Send
 
 3) a 'rbs2-senttime' with the current time.
 
-4) 'rbs2-msg-type' with the message's simple assembly-qualified type name (*).
-
-(*) Unless explicitly set to something else")]
+")]
     public class AssignDefaultHeadersStep : IOutgoingStep
     {
         readonly IRebusTime _rebusTime;
@@ -50,7 +46,6 @@ namespace Rebus.Pipeline.Send
         {
             var message = context.Load<Message>();
             var headers = message.Headers;
-            var messageType = message.Body.GetType();
 
             if (!headers.ContainsKey(Headers.MessageId))
             {
@@ -71,11 +66,6 @@ namespace Rebus.Pipeline.Send
             else
             {
                 headers.Remove(Headers.SenderAddress);
-            }
-
-            if (!headers.ContainsKey(Headers.Type))
-            {
-                headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
             }
 
             await next();

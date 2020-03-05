@@ -19,7 +19,7 @@ namespace Rebus.Serialization.Json
         public static void UseNewtonsoftJson(this StandardConfigurer<ISerializer> configurer)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            var settings = new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
             RegisterSerializer(configurer, settings, Encoding.UTF8);
         }
@@ -48,7 +48,7 @@ namespace Rebus.Serialization.Json
                 }
             }
 
-            var settings = new JsonSerializerSettings {TypeNameHandling = GetTypeNameHandling()};
+            var settings = new JsonSerializerSettings { TypeNameHandling = GetTypeNameHandling() };
 
             RegisterSerializer(configurer, settings, Encoding.UTF8);
         }
@@ -63,6 +63,18 @@ namespace Rebus.Serialization.Json
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
             RegisterSerializer(configurer, settings, encoding);
+        }
+
+        /// <summary>
+        /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages in interoperable mode
+        /// </summary>
+        public static CustomTypeNamesBinderBuilder UseNewtonsoftJsonInteroperable(this StandardConfigurer<ISerializer> configurer)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            
+            var serializationBinder = new CustomTypeNamesBinder();
+            configurer.Register(c => new JsonSerializer(new JsonSerializerSettings{SerializationBinder = serializationBinder}));
+            return serializationBinder.GetBuilder();
         }
 
         static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, JsonSerializerSettings settings, Encoding encoding)

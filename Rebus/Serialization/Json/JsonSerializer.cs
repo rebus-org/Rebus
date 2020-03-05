@@ -75,7 +75,7 @@ namespace Rebus.Serialization.Json
 
             if (!headers.ContainsKey(Headers.Type))
             {
-                headers[Headers.Type] = message.Body.GetType().GetSimpleAssemblyQualifiedName();
+                headers[Headers.Type] = ResolveTypeName(message);
             }
 
             return new TransportMessage(headers, bytes);
@@ -137,15 +137,48 @@ namespace Rebus.Serialization.Json
             return new Message(headers, bodyObject);
         }
 
-        static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>();
+        string ResolveTypeName(Message message)
+        {
+            return TypeToTypeNameCache.GetOrAdd(message.Body.GetType(),
+                type =>
+                {
+                    if (_settings.SerializationBinder == null)
+                    {
+                        return message.Body.GetType().GetSimpleAssemblyQualifiedName();
+                    }
 
-        static Type GetTypeOrNull(TransportMessage transportMessage)
+                    _settings.SerializationBinder.BindToName(type, out var assemblyName, out var typeName);
+
+                    return string.IsNullOrWhiteSpace(assemblyName) ? typeName : $"{typeName}, {assemblyName}";
+                });
+
+        }
+
+        readonly ConcurrentDictionary<Type, string> TypeToTypeNameCache = new ConcurrentDictionary<Type, string>();
+        
+        readonly ConcurrentDictionary<string, Type> TypeNameToTypeCache = new ConcurrentDictionary<string, Type>();
+
+        Type GetTypeOrNull(TransportMessage transportMessage)
         {
             if (!transportMessage.Headers.TryGetValue(Headers.Type, out var typeName)) return null;
 
             try
             {
-                return TypeCache.GetOrAdd(typeName, Type.GetType);
+                if (_settings.SerializationBinder == null)
+                {
+                    return TypeNameToTypeCache.GetOrAdd(typeName, Type.GetType);
+                }
+
+                var parts = typeName.Split(',');
+
+                if (parts.Length == 1)
+                {
+                    return _settings.SerializationBinder.BindToType(null, parts[0]);
+                }
+
+                return _settings.SerializationBinder.BindToType(string.Join(", ", parts.Skip(1)), parts[0]);
+
+                //                throw new FormatException($"Type name '{typeName}' did not have the expected format consisting of either a type name (e.g. 'SomeType') or an assembly-qualified type name (e.g. 'SomeType, SomeAssembly')");
             }
             catch (Exception exception)
             {
@@ -172,9 +205,6 @@ namespace Rebus.Serialization.Json
             }
         }
 
-        static string Limit(string bodyString, int maxLength)
-        {
-            return string.Concat(bodyString.Substring(0, maxLength), " (......)");
-        }
+        static string Limit(string bodyString, int maxLength) => string.Concat(bodyString.Substring(0, maxLength), " (......)");
     }
 }
