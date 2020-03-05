@@ -19,6 +19,33 @@ namespace Rebus.Tests.Serialization
     public class TestJsonSerializerInInteroperableMode : FixtureBase
     {
         [Test]
+        public async Task WorksWithCustomizedTypeName_Emoji()
+        {
+            var activator = Using(new BuiltinHandlerActivator());
+            var gotString = new ManualResetEvent(initialState: false);
+            var serializedTypeName = "<not-set>";
+
+            activator.Handle<string>(async (bus, context, str) =>
+            {
+                serializedTypeName = context.Headers.GetValue(Headers.Type);
+                Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
+                gotString.Set();
+            });
+
+            Configure.With(activator)
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
+                .Serialization(s => s.UseNewtonsoftJsonInteroperable()
+                    .AddWithCustomName<string>("😈"))
+                .Start();
+
+            await activator.Bus.SendLocal("hej 🥓");
+
+            gotString.WaitOrDie(TimeSpan.FromSeconds(2));
+
+            Assert.That(serializedTypeName, Is.EqualTo("😈"));
+        }
+
+        [Test]
         public async Task WorksWithCustomizedTypeName_String()
         {
             var activator = Using(new BuiltinHandlerActivator());
