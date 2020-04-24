@@ -35,6 +35,7 @@ using Rebus.Retry.FailFast;
 using Rebus.Time;
 using Rebus.Topic;
 // ReSharper disable EmptyGeneralCatchClause
+// ReSharper disable ArgumentsStyleNamedExpression
 
 namespace Rebus.Config
 {
@@ -336,7 +337,7 @@ namespace Rebus.Config
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
-                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>()))
+                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>()))
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))

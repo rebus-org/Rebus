@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -10,6 +11,7 @@ using Rebus.Pipeline;
 using Rebus.Transport;
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable ArgumentsStyleOther
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace Rebus.Retry.Simple
 {
@@ -52,13 +54,14 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var transportMessage = context.Load<TransportMessage>();
-            var transactionContext = context.Load<ITransactionContext>();
+            var transportMessage = context.Load<TransportMessage>() ?? throw new RebusApplicationException("Could not find a transport message in the current incoming step context");
+            var transactionContext = context.Load<ITransactionContext>() ?? throw new RebusApplicationException("Could not find a transaction context in the current incoming step context");
+
             var messageId = transportMessage.Headers.GetValueOrNull(Headers.MessageId);
 
             if (string.IsNullOrWhiteSpace(messageId))
             {
-                await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext,
+                await MoveMessageToErrorQueue(context, transactionContext,
                     new RebusApplicationException($"Received message with empty or absent '{Headers.MessageId}' header! All messages must be" +
                                                   " supplied with an ID . If no ID is present, the message cannot be tracked" +
                                                   " between delivery attempts, and other stuff would also be much harder to" +
@@ -73,7 +76,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
                 {
                     var aggregateException = GetAggregateException(messageId);
-                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException);
+                    await MoveMessageToErrorQueue(context, transactionContext, aggregateException);
                     _errorTracker.CleanUp(messageId);
                     return;
                 }
@@ -84,7 +87,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
                 {
                     var aggregateException = GetAggregateException(messageId, secondLevelMessageId);
-                    await MoveMessageToErrorQueue(context.Load<OriginalTransportMessage>(), transactionContext, aggregateException);
+                    await MoveMessageToErrorQueue(context, transactionContext, aggregateException);
                     _errorTracker.CleanUp(messageId);
                     _errorTracker.CleanUp(secondLevelMessageId);
                     return;
@@ -141,9 +144,9 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
         }
 
-        async Task MoveMessageToErrorQueue(OriginalTransportMessage originalTransportMessage, ITransactionContext transactionContext, Exception exception)
+        async Task MoveMessageToErrorQueue(IncomingStepContext context, ITransactionContext transactionContext, Exception exception)
         {
-            var transportMessage = originalTransportMessage.TransportMessage;
+            var transportMessage = context.Load<OriginalTransportMessage>().TransportMessage.Clone();
 
             await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
         }

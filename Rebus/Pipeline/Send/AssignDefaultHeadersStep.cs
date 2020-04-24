@@ -39,7 +39,7 @@ namespace Rebus.Pipeline.Send
         public AssignDefaultHeadersStep(ITransport transport, IRebusTime rebusTime, IMessageTypeNameConvention messageTypeNameConvention, string defaultReturnAddressOrNull)
         {
             _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
-            _messageTypeNameConvention = messageTypeNameConvention;
+            _messageTypeNameConvention = messageTypeNameConvention ?? throw new ArgumentNullException(nameof(messageTypeNameConvention));
             _senderAddress = transport.Address;
             _returnAddress = defaultReturnAddressOrNull ?? transport.Address;
             _hasOwnAddress = !string.IsNullOrWhiteSpace(_senderAddress);

@@ -23,8 +23,8 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public HandleRoutingSlipsStep(ITransport transport, ISerializer serialier)
         {
-            _transport = transport;
-            _serialier = serialier;
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _serialier = serialier ?? throw new ArgumentNullException(nameof(serialier));
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace Rebus.DataBus.ClaimCheck
         /// </summary>
         public HydrateIncomingMessageStep(IDataBus dataBus)
         {
-            _dataBus = dataBus;
+            _dataBus = dataBus ?? throw new ArgumentNullException(nameof(dataBus));
         }
 
         /// <summary>
