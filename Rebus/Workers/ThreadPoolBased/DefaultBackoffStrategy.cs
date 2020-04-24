@@ -20,7 +20,7 @@ namespace Rebus.Workers.ThreadPoolBased
         public DefaultBackoffStrategy(IEnumerable<TimeSpan> backoffTimes, Options options)
         {
             if (backoffTimes == null) throw new ArgumentNullException(nameof(backoffTimes));
-            _options = options;
+            _options = options ?? throw new ArgumentNullException(nameof(options));
 
             _backoffTimes = backoffTimes.ToArray();
 
