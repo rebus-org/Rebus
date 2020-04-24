@@ -25,15 +25,17 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
         readonly IErrorTracker _errorTracker;
         readonly IFailFastChecker _failFastChecker;
         readonly IErrorHandler _errorHandler;
+        readonly ITransport _transport;
 
         /// <summary>
         /// Constructs the step, using the given error tracker
         /// </summary>
-        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler)
+        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler, ITransport transport)
         {
             _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
             _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
             _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         /// <summary>
@@ -74,6 +76,7 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
             var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
 
             transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
+            transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
 
             var transactionContext = context.Load<ITransactionContext>();
 
