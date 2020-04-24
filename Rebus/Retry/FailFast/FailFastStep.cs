@@ -7,6 +7,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
+// ReSharper disable SuggestBaseTypeForParameter
 
 // ReSharper disable ArgumentsStyleLiteral
 
@@ -23,14 +24,16 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
     {
         readonly IErrorTracker _errorTracker;
         readonly IFailFastChecker _failFastChecker;
+        readonly IErrorHandler _errorHandler;
 
         /// <summary>
         /// Constructs the step, using the given error tracker
         /// </summary>
-        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker)
+        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler)
         {
             _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
             _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         }
 
         /// <summary>
@@ -43,6 +46,13 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
             try
             {
                 await next();
+
+                var deadletterCommand = context.Load<ManualDeadletterCommand>();
+
+                if (deadletterCommand != null)
+                {
+                    await ProcessDeadletterCommand(context, deadletterCommand);
+                }
             }
             catch (Exception exception)
             {
@@ -54,6 +64,20 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
                 }
                 throw;
             }
+        }
+
+        async Task ProcessDeadletterCommand(IncomingStepContext context, ManualDeadletterCommand deadletterCommand)
+        {
+            var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
+
+            var transportMessage = originalTransportMessage.TransportMessage.Clone();
+            var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
+
+            transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
+
+            var transactionContext = context.Load<ITransactionContext>();
+
+            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, new RebusApplicationException(errorDetails));
         }
     }
 }

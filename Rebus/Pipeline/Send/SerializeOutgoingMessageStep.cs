@@ -17,7 +17,10 @@ namespace Rebus.Pipeline.Send
         /// <summary>
         /// Constructs the step, using the specified serializer to do its thing
         /// </summary>
-        public SerializeOutgoingMessageStep(ISerializer serializer) => _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+        public SerializeOutgoingMessageStep(ISerializer serializer)
+        {
+            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+        }
 
         /// <summary>
         /// Serializes the outgoing message by invoking the currently configured <see cref="ISerializer"/> on the <see cref="Message"/> found in the context,

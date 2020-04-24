@@ -30,6 +30,7 @@ using Rebus.Transport;
 using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
+// ReSharper disable ArgumentsStyleNamedExpression
 
 namespace Rebus.Config
 {
@@ -260,7 +261,7 @@ namespace Rebus.Config
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
-                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>()))
+                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>()))
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
                     .OnReceive(new HandleRoutingSlipsStep(transport, serializer))

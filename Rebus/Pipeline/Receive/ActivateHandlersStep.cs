@@ -25,7 +25,7 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public ActivateHandlersStep(IHandlerActivator handlerActivator)
         {
-            _handlerActivator = handlerActivator;
+            _handlerActivator = handlerActivator ?? throw new ArgumentNullException(nameof(handlerActivator));
         }
 
         /// <summary>

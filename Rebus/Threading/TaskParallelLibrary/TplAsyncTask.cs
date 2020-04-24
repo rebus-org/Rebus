@@ -15,17 +15,17 @@ namespace Rebus.Threading.TaskParallelLibrary
         /// </summary>
         public static TimeSpan DefaultInterval = TimeSpan.FromSeconds(10);
 
+        readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        readonly bool _prettyInsignificant;
         readonly string _description;
         readonly Func<Task> _action;
-        readonly bool _prettyInsignificant;
-        readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         readonly ManualResetEvent _finished = new ManualResetEvent(false);
         readonly ILog _log;
 
+        TimeSpan _interval;
         Task _task;
 
         bool _disposed;
-        TimeSpan _interval;
 
         /// <summary>
         /// Constructs the periodic background task with the given <paramref name="description"/>, periodically executing the given <paramref name="action"/>,
@@ -33,8 +33,9 @@ namespace Rebus.Threading.TaskParallelLibrary
         /// </summary>
         public TplAsyncTask(string description, Func<Task> action, IRebusLoggerFactory rebusLoggerFactory, bool prettyInsignificant)
         {
-            _description = description;
-            _action = action;
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _description = description ?? throw new ArgumentNullException(nameof(description));
+            _action = action ?? throw new ArgumentNullException(nameof(action));
             _prettyInsignificant = prettyInsignificant;
             _log = rebusLoggerFactory.GetLogger<TplAsyncTask>();
             Interval = DefaultInterval;
