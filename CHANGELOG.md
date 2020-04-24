@@ -1033,7 +1033,7 @@
 ## 6.1.0
 * Introduce `IMessageTypeNameConvention`, which defaults to simple assembly-qualified type names. Can be customized by calling `.Serialization(s => s.UseCustomMessageTypeNames().Add(...))`
 
-## 6.2.0
+## 6.2.1
 * Add extension method that makes it possible to manually dead-letter the message currently being handled
 
 ---

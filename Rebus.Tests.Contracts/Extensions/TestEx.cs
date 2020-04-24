@@ -13,6 +13,7 @@ using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+using Exception = System.Exception;
 
 namespace Rebus.Tests.Contracts.Extensions
 {
@@ -141,6 +142,26 @@ namespace Rebus.Tests.Contracts.Extensions
         {
             var timer = new Timer(obj => action(), null, delay, delay);
             return timer;
+        }
+
+        public static async Task<T> DequeueNext<T>(this ConcurrentQueue<T> queue, int timeoutSeconds = 5)
+        {
+            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+            {
+                try
+                {
+                    while (true)
+                    {
+                        if (queue.TryDequeue(out var item)) return item;
+
+                        await Task.Delay(TimeSpan.FromSeconds(timeoutSeconds), cancellationTokenSource.Token);
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new TimeoutException($"Could not return {typeof(T)} from queue within {timeoutSeconds} s timeout");
+                }
+            }
         }
 
         public static async Task WaitUntil<T>(this ConcurrentQueue<T> queue, Expression<Func<ConcurrentQueue<T>, bool>> criteriaExpression, int? timeoutSeconds = 5)
