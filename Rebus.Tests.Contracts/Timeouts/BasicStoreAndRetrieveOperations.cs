@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
-using Rebus.Time;
 using Rebus.Timeouts;
 
 namespace Rebus.Tests.Contracts.Timeouts
@@ -119,7 +118,8 @@ namespace Rebus.Tests.Contracts.Timeouts
             {
                 var dueTimeoutsNow = result.ToList();
 
-                Assert.That(dueTimeoutsNow.Count, Is.EqualTo(0));
+                Assert.That(dueTimeoutsNow.Count, Is.EqualTo(0), 
+                    $"Didn't expect any due messages at this point, because the time is {DateTimeOffset.Now}, and the messages were deferred to the times {theFuture} and {evenFurtherIntoTheFuture}");
             }
 
             _factory.FakeIt(theFuture);
@@ -127,10 +127,15 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1));
-                Assert.That(dueTimeoutsInTheFuture[0].Headers[Headers.MessageId], Is.EqualTo("i know u"));
+                
+                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1), 
+                    $"Expected one due message at this point, because the time is {theFuture}, and the messages were deferred to the times {theFuture} and {evenFurtherIntoTheFuture}");
 
-                await dueTimeoutsInTheFuture[0].MarkAsCompleted();
+                var dueMessage = dueTimeoutsInTheFuture[0];
+
+                Assert.That(dueMessage.Headers[Headers.MessageId], Is.EqualTo("i know u"));
+
+                await dueMessage.MarkAsCompleted();
             }
 
             _factory.FakeIt(evenFurtherIntoTheFuture);
@@ -138,10 +143,14 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsFurtherIntoInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsFurtherIntoInTheFuture.Count, Is.EqualTo(1));
-                Assert.That(dueTimeoutsFurtherIntoInTheFuture[0].Headers[Headers.MessageId], Is.EqualTo("i know u too"));
+                Assert.That(dueTimeoutsFurtherIntoInTheFuture.Count, Is.EqualTo(1),
+                    $"Expected one due message at this point, because the time is {evenFurtherIntoTheFuture}, and the messages were deferred to the times {theFuture} and {evenFurtherIntoTheFuture} (but the one deferred to {theFuture} was marked as completed)");
+                
+                var dueMessage = dueTimeoutsFurtherIntoInTheFuture[0];
+                
+                Assert.That(dueMessage.Headers[Headers.MessageId], Is.EqualTo("i know u too"));
 
-                await dueTimeoutsFurtherIntoInTheFuture[0].MarkAsCompleted();
+                await dueMessage.MarkAsCompleted();
             }
         }
 
