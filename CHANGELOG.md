@@ -1036,6 +1036,9 @@
 ## 6.2.1
 * Add extension method that makes it possible to manually dead-letter the message currently being handled
 
+## 6.3.0
+* Add ability to point out correlation properties of saga data by specifying them as strings - thanks [seankearon]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
