@@ -17,6 +17,7 @@ namespace Rebus.Tests.Contracts.Sagas
     public abstract class TestSagaCorrelation<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         TFactory _factory;
+        protected bool CorrelateUsingSagaDataPropertyNames { get; set; }
 
         protected override void SetUp()
         {
@@ -34,7 +35,7 @@ namespace Rebus.Tests.Contracts.Sagas
             var events = new ConcurrentQueue<Tuple<Guid, string>>();
             var activator = new BuiltinHandlerActivator();
 
-            activator.Register((b, context) => new MySaga(events, b));
+            activator.Register((b, context) => new MySaga(events, b, CorrelateUsingSagaDataPropertyNames));
 
             Using(activator);
 
@@ -86,21 +87,33 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             readonly ConcurrentQueue<Tuple<Guid, string>> _events;
             readonly IBus _bus;
+            private readonly bool _correlateUsingSagaDataPropertyNames;
 
-            public MySaga(ConcurrentQueue<Tuple<Guid, string>> events, IBus bus)
+            public MySaga(ConcurrentQueue<Tuple<Guid, string>> events, IBus bus, bool correlateUsingSagaDataPropertyNames)
             {
                 _events = events;
                 _bus = bus;
+                _correlateUsingSagaDataPropertyNames = correlateUsingSagaDataPropertyNames;
             }
 
             protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
             {
-                // this is silly!
-                config.Correlate<Initiate>(m => Guid.NewGuid(), d => d.Id);
+                if (!_correlateUsingSagaDataPropertyNames)
+                {
+                    // this is silly!
+                    config.Correlate<Initiate>(m => Guid.NewGuid(), d => d.Id);
 
-                config.Correlate<IntMessage>(m => m.AnInt, d => d.IntValue);
-                config.Correlate<GuidMessage>(m => m.AGuid, d => d.GuidValue);
-                config.Correlate<StringMessage>(m => m.AString, d => d.StringValue);
+                    config.Correlate<IntMessage>(m => m.AnInt, d => d.IntValue);
+                    config.Correlate<GuidMessage>(m => m.AGuid, d => d.GuidValue);
+                    config.Correlate<StringMessage>(m => m.AString, d => d.StringValue);
+                }
+                else
+                {
+                    config.Correlate<Initiate>(m => Guid.NewGuid(), nameof(MySagaData.Id));
+                    config.Correlate<IntMessage>(m => m.AnInt, nameof(MySagaData.IntValue));
+                    config.Correlate<GuidMessage>(m => m.AGuid, nameof(MySagaData.GuidValue));
+                    config.Correlate<StringMessage>(m => m.AString, nameof(MySagaData.StringValue));
+                }
             }
 
             public async Task Handle(Initiate message)
