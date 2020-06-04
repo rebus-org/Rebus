@@ -17,7 +17,6 @@ namespace Rebus.Tests.Contracts.Sagas
     public abstract class TestSagaCorrelation<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         TFactory _factory;
-        protected bool CorrelateUsingSagaDataPropertyNames { get; set; }
 
         protected override void SetUp()
         {
@@ -32,28 +31,40 @@ namespace Rebus.Tests.Contracts.Sagas
         [Test]
         public async Task YeahItWorks()
         {
-            var events = new ConcurrentQueue<Tuple<Guid, string>>();
+            var events    = new ConcurrentQueue<Tuple<Guid, string>>();
             var activator = new BuiltinHandlerActivator();
+            activator.Register((b, context) => new MySaga(events, b, useSagaDataPropertyNames: false));
+            await CheckThatItWorks(activator, events);
+        }
 
-            activator.Register((b, context) => new MySaga(events, b, CorrelateUsingSagaDataPropertyNames));
+        [Test]
+        public async Task YeahItWorksWhenUsingStringSagaDataPropertyNames()
+        {
+            var events    = new ConcurrentQueue<Tuple<Guid, string>>();
+            var activator = new BuiltinHandlerActivator();
+            activator.Register((b, context) => new MySaga(events, b, useSagaDataPropertyNames: true));
+            await CheckThatItWorks(activator, events);
+        }
 
+        private async Task CheckThatItWorks(BuiltinHandlerActivator activator, ConcurrentQueue<Tuple<Guid, string>> events)
+        {
             Using(activator);
 
             Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
-                .Sagas(s => s.Register(c => _factory.GetSagaStorage()))
-                .Options(o =>
+               .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
+               .Sagas(s => s.Register(c => _factory.GetSagaStorage()))
+               .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(1);
                 })
-                .Start();
+               .Start();
 
             await activator.Bus.SendLocal(new Initiate
             {
-                AGuid = new Guid("BAA06058-B34E-4699-8463-E0CBA73E925C"),
+                AGuid   = new Guid("BAA06058-B34E-4699-8463-E0CBA73E925C"),
                 AString = "hej",
-                AnInt = 23
+                AnInt   = 23
             });
 
             await events.WaitUntil(e => e.Count >= 4);
@@ -76,29 +87,29 @@ namespace Rebus.Tests.Contracts.Sagas
             var sagaId = events.First().Item1;
 
             Assert.That(events.Select(e => e.Item1).All(a => a == sagaId), Is.True,
-                "Not the same saga ID thoughout: {0}", string.Join(", ", events.Select(e => e.Item1)));
+                        "Not the same saga ID thoughout: {0}", string.Join(", ", events.Select(e => e.Item1)));
         }
 
         public class MySaga : Saga<MySagaData>,
-            IAmInitiatedBy<Initiate>,
-            IHandleMessages<IntMessage>,
-            IHandleMessages<StringMessage>,
-            IHandleMessages<GuidMessage>
+                              IAmInitiatedBy<Initiate>,
+                              IHandleMessages<IntMessage>,
+                              IHandleMessages<StringMessage>,
+                              IHandleMessages<GuidMessage>
         {
             readonly ConcurrentQueue<Tuple<Guid, string>> _events;
             readonly IBus _bus;
-            private readonly bool _correlateUsingSagaDataPropertyNames;
+            private readonly bool _useSagaDataPropertyNames;
 
-            public MySaga(ConcurrentQueue<Tuple<Guid, string>> events, IBus bus, bool correlateUsingSagaDataPropertyNames)
+            public MySaga(ConcurrentQueue<Tuple<Guid, string>> events, IBus bus, bool useSagaDataPropertyNames)
             {
                 _events = events;
                 _bus = bus;
-                _correlateUsingSagaDataPropertyNames = correlateUsingSagaDataPropertyNames;
+                _useSagaDataPropertyNames = useSagaDataPropertyNames;
             }
 
             protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
             {
-                if (!_correlateUsingSagaDataPropertyNames)
+                if (!_useSagaDataPropertyNames)
                 {
                     // this is silly!
                     config.Correlate<Initiate>(m => Guid.NewGuid(), d => d.Id);
