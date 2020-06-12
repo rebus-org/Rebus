@@ -109,10 +109,10 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             return new AggregateException($"{exceptions.Length} unhandled exceptions", exceptions);
         }
 
-        static string GetSecondLevelMessageId(string messageId)
-        {
-            return messageId + "-2nd-level";
-        }
+        /// <summary>
+        /// Gets the 2nd level retry surrogate message ID corresponding to <paramref name="messageId"/>
+        /// </summary>
+        public static string GetSecondLevelMessageId(string messageId) => messageId + "-2nd-level";
 
         async Task DispatchWithTrackerIdentifier(Func<Task> next, string identifierToTrackMessageBy, ITransactionContext transactionContext, string messageId, string secondLevelMessageId = null)
         {

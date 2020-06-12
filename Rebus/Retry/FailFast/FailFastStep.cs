@@ -4,6 +4,7 @@ using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Retry.Simple;
 using Rebus.Transport;
 // ReSharper disable SuggestBaseTypeForParameter
 
@@ -60,7 +61,12 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
                 var messageId = transportMessage.GetMessageId();
                 if (_failFastChecker.ShouldFailFast(messageId, exception))
                 {
-                    _errorTracker.MarkAsFinal(messageId);
+                    // if we're currently executing a 2nd level retry, it's the 2nd level surrogate message ID we must mark as final
+                    var messageIdToMarkAsFinal = context.Load<bool>(SimpleRetryStrategyStep.DispatchAsFailedMessageKey)
+                        ? SimpleRetryStrategyStep.GetSecondLevelMessageId(messageId)
+                        : messageId;
+
+                    _errorTracker.MarkAsFinal(messageIdToMarkAsFinal);
                 }
                 throw;
             }

@@ -1039,6 +1039,9 @@
 ## 6.3.0
 * Add ability to point out correlation properties of saga data by specifying them as strings - thanks [seankearon]
 
+## 6.3.1
+* Fix bug that would prevent fail-fast exceptions to cause messages to fail fast when thrown in a 2nd level retry
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

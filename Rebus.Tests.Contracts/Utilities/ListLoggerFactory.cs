@@ -2,14 +2,12 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Rebus.Logging;
 
 namespace Rebus.Tests.Contracts.Utilities
 {
     public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine>
     {
-        readonly ConcurrentQueue<LogLine> _loggedLines = new ConcurrentQueue<LogLine>();
         readonly bool _outputToConsole;
         readonly bool _detailed;
 
@@ -22,18 +20,20 @@ namespace Rebus.Tests.Contracts.Utilities
         public void Clear()
         {
             LogLine temp;
-            while (_loggedLines.TryDequeue(out temp)) { }
+            while (LogLines.TryDequeue(out temp)) { }
             Console.WriteLine("Cleared the logs");
         }
 
+        public ConcurrentQueue<LogLine> LogLines { get; } = new ConcurrentQueue<LogLine>();
+
         protected override ILog GetLogger(Type type)
         {
-            return new ListLogger(_loggedLines, type, _outputToConsole, _detailed, this);
+            return new ListLogger(LogLines, type, _outputToConsole, _detailed, this);
         }
 
         public IEnumerator<LogLine> GetEnumerator()
         {
-            return _loggedLines.GetEnumerator();
+            return LogLines.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
