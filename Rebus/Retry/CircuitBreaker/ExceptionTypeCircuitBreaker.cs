@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Rebus.Time;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Rebus.Retry.CircuitBreaker
@@ -8,17 +11,19 @@ namespace Rebus.Retry.CircuitBreaker
     {
         private readonly Type exceptionType;
         private readonly CircuitBreakerSettings settings;
-        private DateTime lastTrip;
-        private volatile int trips;
+        private readonly IRebusTime rebusTime;
+        private ConcurrentDictionary<long, DateTimeOffset> _errorDates;
 
-
-        public ExceptionTypeCircuitBreaker(Type exceptionType, CircuitBreakerSettings settings)
+        public ExceptionTypeCircuitBreaker(Type exceptionType
+            , CircuitBreakerSettings settings
+            , IRebusTime rebusTime)
         {
             this.exceptionType = exceptionType ?? throw new ArgumentNullException(nameof(exceptionType));
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            
+            this.rebusTime = rebusTime;
             State = CircuitBreakerState.Closed;
-            lastTrip = DateTime.Now;
+
+            _errorDates = new ConcurrentDictionary<long, DateTimeOffset>();
         }
 
         public CircuitBreakerState State { get; private set; }
@@ -34,27 +39,23 @@ namespace Rebus.Retry.CircuitBreaker
             if (ShouldTripCircuitBreaker(exception) == false)
                 return;
 
+            var timeStamp = rebusTime.Now;
+            _errorDates.TryAdd(timeStamp.Ticks, timeStamp);
+
+            var errorsInPeriod = _errorDates
+                .Where(x => x.Key > timeStamp.Ticks - settings.TrackingPeriod.Ticks)
+                .Take(settings.Attempts);
+
             // Do the tripping
-            var lastTrip = this.lastTrip;
-            var currentState = State;
-
-            Trip();
-
-            var timeSinceLastTrip = (DateTime.Now  - lastTrip);
-            if (timeSinceLastTrip < settings.TrackingPeriod)
+            if (errorsInPeriod.Count() >= settings.Attempts)
             {
-                if (trips >= settings.Attempts)
-                {
-                    State = CircuitBreakerState.Open;
-                }
+                State = CircuitBreakerState.Open;
             }
-            else 
-            {
-                trips = 0;
-            }
+
+            RemoveOutOfPeriodErrors(errorsInPeriod);
         }
 
-        private bool ShouldTripCircuitBreaker(Exception exception) 
+        private bool ShouldTripCircuitBreaker(Exception exception)
         {
             if (exception is AggregateException e)
             {
@@ -69,10 +70,15 @@ namespace Rebus.Retry.CircuitBreaker
             return false;
         }
 
-        private void Trip() 
+        private void RemoveOutOfPeriodErrors(IEnumerable<KeyValuePair<long, DateTimeOffset>> tripsInPeriod)
         {
-            trips++;
-            lastTrip = DateTime.Now;
+            var outDatedTimeStamps = _errorDates
+                .Except(tripsInPeriod)
+                .ToList();
+
+            foreach(var outDatedTimeStamp in outDatedTimeStamps) 
+                _errorDates.TryRemove(outDatedTimeStamp.Key, out _);
         }
+
     }
 } 

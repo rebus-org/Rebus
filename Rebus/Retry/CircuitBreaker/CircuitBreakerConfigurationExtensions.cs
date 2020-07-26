@@ -1,6 +1,7 @@
 ﻿using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
+using Rebus.Time;
 using System;
 using System.Collections.Generic;
 
@@ -58,7 +59,7 @@ namespace Rebus.Retry.CircuitBreaker
                 where TException : Exception
             {
                 var settings = new CircuitBreakerSettings(attempts, trackingPeriodInSeconds, resetIntervalInSeconds);
-                _circuitBreakerStores.Add(new ExceptionTypeCircuitBreaker(typeof(TException), settings));
+                _circuitBreakerStores.Add(new ExceptionTypeCircuitBreaker(typeof(TException), settings, new DefaultRebusTime()));
                 return this;
             }
 
