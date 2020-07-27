@@ -13,6 +13,7 @@ using Rebus.Messages;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -21,6 +22,68 @@ namespace Rebus.Tests.Routing
     [TestFixture]
     public class TestTransportMessageForwarding : FixtureBase
     {
+        [Test]
+        [Description("Test forwarding scenario where error queue is unavailable for some reason")]
+        public async Task ErrorInErrorQueue()
+        {
+            var network = new InMemNetwork();
+            var activator = Using(new BuiltinHandlerActivator());
+
+            // count send operations to error queue with this one
+            var sendToErrorQueueAttempts = 0;
+
+            // hook into send operations
+            void SendCallback(string queue)
+            {
+                if (queue != "error") return; //< don't care about other queues
+
+                sendToErrorQueueAttempts++;
+
+                // fail on the very first attempt
+                if (sendToErrorQueueAttempts == 1)
+                {
+                    throw new ApplicationException("FAILURE ON FIRST ATTEMPT!");
+                }
+            }
+            
+            Configure.With(activator)
+                .Transport(t => t.UseInMemoryTransport(network, "whatever"))
+                .Routing(r => r.AddTransportMessageForwarder(async msg => throw new AbandonedMutexException("oh no it's been abandoned")))
+                .Options(o => o.Decorate<ITransport>(c => new FailureTransportDecorator(SendCallback, c.Get<ITransport>())))
+                .Start();
+
+            await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
+
+            var failedMessage = await network.WaitForNextMessageFrom("error", timeoutSeconds: 10);
+            var receivedString = Encoding.UTF8.GetString(failedMessage.Body);
+
+            Assert.That(receivedString, Is.EqualTo("\"HEJ MED DIG MIN VEN\""));
+        }
+
+        class FailureTransportDecorator : ITransport
+        {
+            readonly Action<string> _sendCallback;
+            readonly ITransport _transport;
+
+            public FailureTransportDecorator(Action<string> sendCallback, ITransport transport)
+            {
+                _sendCallback = sendCallback;
+                _transport = transport;
+            }
+
+            public void CreateQueue(string address) => _transport.CreateQueue(address);
+
+            public Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
+            {
+                _sendCallback(destinationAddress);
+                return _transport.Send(destinationAddress, message, context);
+            }
+
+            public Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken) => _transport.Receive(context, cancellationToken);
+
+            public string Address => _transport.Address;
+        }
+
         [Test]
         public async Task CanForwardToMultipleRecipients()
         {
