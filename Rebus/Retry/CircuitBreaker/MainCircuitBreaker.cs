@@ -16,25 +16,29 @@ namespace Rebus.Retry.CircuitBreaker
 
         readonly IList<ICircuitBreaker> _circuitBreakers;
         readonly RebusBus _rebusBus;
+        readonly BusLifetimeEvents _busLifetimeEvents;
         readonly ILog _log;
+
+        int _configuredNumberOfWorkers;
 
         bool _disposed;
 
         public MainCircuitBreaker(IList<ICircuitBreaker> circuitBreakers
             , IRebusLoggerFactory rebusLoggerFactory
             , IAsyncTaskFactory asyncTaskFactory
-            , RebusBus rebusBus)
+            , RebusBus rebusBus
+            , BusLifetimeEvents busLifetimeEvents)
         {
-            _circuitBreakers = circuitBreakers ?? throw new ArgumentNullException(nameof(circuitBreakers));
-            _rebusBus = rebusBus;
+            _circuitBreakers = circuitBreakers ?? new List<ICircuitBreaker>();
             _log = rebusLoggerFactory?.GetLogger<MainCircuitBreaker>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _rebusBus = rebusBus;
+            _busLifetimeEvents = busLifetimeEvents;
 
             _resetCircuitBreakerTask = asyncTaskFactory.Create(
                 BackgroundTaskName
                 , TryReset
                 , prettyInsignificant: false
                 , intervalSeconds: 5);
-            
         }
 
         public CircuitBreakerState State => _circuitBreakers.Aggregate(CircuitBreakerState.Closed, (currentState, incomming) =>
@@ -61,20 +65,26 @@ namespace Rebus.Retry.CircuitBreaker
             if (previousState == State)
                 return;
 
-            // It Seems like state have changed?
-            // Fire event?
+            _log.Info("Circuit breaker change from {PreviousState} to {State}", previousState, State);
+            _busLifetimeEvents.RaiseCircuitBreakerChanged(State);
 
-            if (IsClosed)
+            if (IsClosed) 
+            {
+                _rebusBus.SetNumberOfWorkers(_configuredNumberOfWorkers);
                 return;
+            }
+                
 
             if (IsHalfOpen) 
             {
-                // TODO: Pick a half open strategy
+                _rebusBus.SetNumberOfWorkers(1);
+                return;
             }
 
             if (IsOpen)
             {
                 _rebusBus.SetNumberOfWorkers(0);
+                return;
             }
         }
 
@@ -86,6 +96,7 @@ namespace Rebus.Retry.CircuitBreaker
 
         public void Initialize()
         {
+            _configuredNumberOfWorkers = _rebusBus.Advanced.Workers.Count;
             _resetCircuitBreakerTask.Start();
         }
 

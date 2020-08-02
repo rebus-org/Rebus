@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Rebus.Retry.CircuitBreaker;
+using System;
 
 namespace Rebus.Bus
 {
@@ -33,6 +34,11 @@ namespace Rebus.Bus
         /// </summary>
         public event Action BusDisposed;
 
+        /// <summary>
+        /// Event that is raised when the circuit breaker is changing state. <see cref="CircuitBreakerState"/>
+        /// </summary>
+        public event Action<CircuitBreakerState> CircuitBreakerChanged;
+
         internal void RaiseBusStarting()
         {
             BusStarting?.Invoke();
@@ -56,6 +62,11 @@ namespace Rebus.Bus
         internal void RaiseWorkersStopped()
         {
             WorkersStopped?.Invoke();
+        }
+
+        internal void RaiseCircuitBreakerChanged(CircuitBreakerState state) 
+        {
+            CircuitBreakerChanged?.Invoke(state);
         }
     }
 }

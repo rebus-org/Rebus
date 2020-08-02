@@ -27,14 +27,16 @@ namespace Rebus.Retry.CircuitBreaker
 
             optionsConfigurer.Decorate<IErrorHandler>(c => 
             {
-                var innerHandler = c.Get<IErrorHandler>();
+                var innerErrorHandler = c.Get<IErrorHandler>();
                 var loggerFactory = c.Get<IRebusLoggerFactory>();
                 var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
                 var rebusBus = c.Get<RebusBus>();
-                var circuitBreaker = new MainCircuitBreaker(circuitBreakers, loggerFactory, asyncTaskFactory, rebusBus);
+                var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+                var circuitBreaker = new MainCircuitBreaker(circuitBreakers, loggerFactory, asyncTaskFactory, rebusBus, busLifetimeEvents);
+                
                 optionsConfigurer.Register<IInitializable>(x => circuitBreaker);
 
-                return new CircuitBreakerErrorHandler(circuitBreaker, innerHandler, loggerFactory);
+                return new CircuitBreakerErrorHandler(circuitBreaker, innerErrorHandler, loggerFactory);
             });
         }
 
