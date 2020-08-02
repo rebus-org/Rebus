@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Rebus.Retry.CircuitBreaker
 {
@@ -9,5 +10,7 @@ namespace Rebus.Retry.CircuitBreaker
         bool IsHalfOpen { get; }
         bool IsOpen { get; }
         void Trip(Exception exception);
+
+        Task TryReset();
     }
 }

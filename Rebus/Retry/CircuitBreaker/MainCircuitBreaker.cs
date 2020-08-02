@@ -1,25 +1,40 @@
 ﻿using Rebus.Bus;
 using Rebus.Logging;
+using Rebus.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rebus.Retry.CircuitBreaker
 {
     internal class MainCircuitBreaker : ICircuitBreaker
     {
-        private readonly IList<ICircuitBreaker> circuitBreakers;
-        private readonly RebusBus rebusBus;
-        private readonly ILog _log;
+        const string BackgroundTaskName = "CircuitBreakersResetTimer";
 
-        public MainCircuitBreaker(IList<ICircuitBreaker> circuitBreakers, IRebusLoggerFactory rebusLoggerFactory, RebusBus rebusBus)
+        readonly IAsyncTask _resetCircuitBreakerTask;
+
+        readonly IList<ICircuitBreaker> _circuitBreakers;
+        readonly RebusBus _rebusBus;
+        readonly ILog _log;
+
+        public MainCircuitBreaker(IList<ICircuitBreaker> circuitBreakers
+            , IRebusLoggerFactory rebusLoggerFactory
+            , IAsyncTaskFactory asyncTaskFactory
+            , RebusBus rebusBus)
         {
-            this.circuitBreakers = circuitBreakers ?? throw new ArgumentNullException(nameof(circuitBreakers));
-            this.rebusBus = rebusBus;
+            _circuitBreakers = circuitBreakers ?? throw new ArgumentNullException(nameof(circuitBreakers));
+            _rebusBus = rebusBus;
             _log = rebusLoggerFactory?.GetLogger<MainCircuitBreaker>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
+            _resetCircuitBreakerTask = asyncTaskFactory.Create(
+                BackgroundTaskName
+                , TryReset
+                , prettyInsignificant: false
+                , intervalSeconds: 5);
         }
 
-        public CircuitBreakerState State => circuitBreakers.Aggregate(CircuitBreakerState.Closed, (currentState, incomming) =>
+        public CircuitBreakerState State => _circuitBreakers.Aggregate(CircuitBreakerState.Closed, (currentState, incomming) =>
         {
             if (incomming.State > currentState)
                 return incomming.State;
@@ -27,7 +42,7 @@ namespace Rebus.Retry.CircuitBreaker
             return currentState;
         });
 
-        public bool IsClosed => circuitBreakers.All(x => x.State == CircuitBreakerState.Closed);
+        public bool IsClosed => _circuitBreakers.All(x => x.State == CircuitBreakerState.Closed);
 
         public bool IsHalfOpen => State == CircuitBreakerState.HalfOpen;
 
@@ -37,7 +52,7 @@ namespace Rebus.Retry.CircuitBreaker
         {
             var previousState = State;
 
-            foreach (var circuitBreaker in circuitBreakers)
+            foreach (var circuitBreaker in _circuitBreakers)
                 circuitBreaker.Trip(exception);
 
             if (previousState == State)
@@ -56,8 +71,14 @@ namespace Rebus.Retry.CircuitBreaker
 
             if (IsOpen)
             {
-                rebusBus.SetNumberOfWorkers(0);
+                _rebusBus.SetNumberOfWorkers(0);
             }
+        }
+
+        public async Task TryReset()
+        {
+            foreach (var circuitBreaker in _circuitBreakers)
+                await circuitBreaker.TryReset();
         }
     }
 }

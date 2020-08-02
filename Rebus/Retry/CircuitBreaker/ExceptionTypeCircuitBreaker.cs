@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rebus.Retry.CircuitBreaker
 {
@@ -80,5 +81,14 @@ namespace Rebus.Retry.CircuitBreaker
                 _errorDates.TryRemove(outDatedTimeStamp.Key, out _);
         }
 
+        public async Task TryReset()
+        {
+
+
+            await Task.FromResult(0);
+
+            // Missing .net 4.5 compatibility 
+            // await Task.CompletedTask;
+        }
     }
 } 
