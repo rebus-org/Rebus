@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Retry.CircuitBreaker
 {
-    internal class MainCircuitBreaker : ICircuitBreaker
+    internal class MainCircuitBreaker : ICircuitBreaker, IInitializable, IDisposable
     {
         const string BackgroundTaskName = "CircuitBreakersResetTimer";
 
@@ -17,6 +17,8 @@ namespace Rebus.Retry.CircuitBreaker
         readonly IList<ICircuitBreaker> _circuitBreakers;
         readonly RebusBus _rebusBus;
         readonly ILog _log;
+
+        bool _disposed;
 
         public MainCircuitBreaker(IList<ICircuitBreaker> circuitBreakers
             , IRebusLoggerFactory rebusLoggerFactory
@@ -32,6 +34,7 @@ namespace Rebus.Retry.CircuitBreaker
                 , TryReset
                 , prettyInsignificant: false
                 , intervalSeconds: 5);
+            
         }
 
         public CircuitBreakerState State => _circuitBreakers.Aggregate(CircuitBreakerState.Closed, (currentState, incomming) =>
@@ -79,6 +82,28 @@ namespace Rebus.Retry.CircuitBreaker
         {
             foreach (var circuitBreaker in _circuitBreakers)
                 await circuitBreaker.TryReset();
+        }
+
+        public void Initialize()
+        {
+            _resetCircuitBreakerTask.Start();
+        }
+
+        /// <summary>
+        /// Last-resort disposal of reset circuit breaker reset timer
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            try
+            {
+                _resetCircuitBreakerTask.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }

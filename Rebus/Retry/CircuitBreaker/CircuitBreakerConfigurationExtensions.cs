@@ -32,6 +32,7 @@ namespace Rebus.Retry.CircuitBreaker
                 var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
                 var rebusBus = c.Get<RebusBus>();
                 var circuitBreaker = new MainCircuitBreaker(circuitBreakers, loggerFactory, asyncTaskFactory, rebusBus);
+                optionsConfigurer.Register<IInitializable>(x => circuitBreaker);
 
                 return new CircuitBreakerErrorHandler(circuitBreaker, innerHandler, loggerFactory);
             });
