@@ -18,7 +18,7 @@ namespace Rebus.Retry.CircuitBreaker
         /// </summary>
         /// <param name="optionsConfigurer"></param>
         /// <param name="circuitBreakerBuilder"></param>
-        public static void SetCircuitBreakers(this OptionsConfigurer optionsConfigurer
+        public static void EnableCircuitBreaker(this OptionsConfigurer optionsConfigurer
             , Action<CircuitBreakerConfigurationBuilder> circuitBreakerBuilder) 
         {
             var builder = new CircuitBreakerConfigurationBuilder();
