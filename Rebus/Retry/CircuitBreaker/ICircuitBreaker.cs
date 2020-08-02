@@ -11,6 +11,6 @@ namespace Rebus.Retry.CircuitBreaker
         bool IsOpen { get; }
         void Trip(Exception exception);
 
-        Task TryReset();
+        Task Reset();
     }
 }

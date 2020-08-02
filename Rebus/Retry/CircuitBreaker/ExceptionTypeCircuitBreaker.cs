@@ -81,7 +81,7 @@ namespace Rebus.Retry.CircuitBreaker
                 _errorDates.TryRemove(outDatedTimeStamp.Key, out _);
         }
 
-        public async Task TryReset()
+        public async Task Reset()
         {
 
 

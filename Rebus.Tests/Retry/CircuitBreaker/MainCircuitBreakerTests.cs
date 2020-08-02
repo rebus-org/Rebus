@@ -106,7 +106,7 @@ namespace Rebus.Tests.Retry.CircuitBreaker
             {
             }
 
-            public async Task TryReset()
+            public async Task Reset()
             {
                 await Task.FromResult(0);
             }

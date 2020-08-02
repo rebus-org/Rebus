@@ -36,7 +36,7 @@ namespace Rebus.Retry.CircuitBreaker
 
             _resetCircuitBreakerTask = asyncTaskFactory.Create(
                 BackgroundTaskName
-                , TryReset
+                , Reset
                 , prettyInsignificant: false
                 , intervalSeconds: 5);
         }
@@ -88,10 +88,10 @@ namespace Rebus.Retry.CircuitBreaker
             }
         }
 
-        public async Task TryReset()
+        public async Task Reset()
         {
             foreach (var circuitBreaker in _circuitBreakers)
-                await circuitBreaker.TryReset();
+                await circuitBreaker.Reset();
         }
 
         public void Initialize()
