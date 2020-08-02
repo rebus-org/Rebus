@@ -84,11 +84,10 @@ namespace Rebus.Retry.CircuitBreaker
         public async Task Reset()
         {
 
-
-            await Task.FromResult(0);
-
             // Missing .net 4.5 compatibility 
             // await Task.CompletedTask;
+            await Task.FromResult(0);
+
         }
     }
 } 

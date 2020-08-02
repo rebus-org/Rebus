@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Retry.CircuitBreaker;
 using Rebus.Threading;
@@ -15,11 +16,14 @@ namespace Rebus.Tests.Retry.CircuitBreaker
         IAsyncTaskFactory taskFactory;
         IRebusLoggerFactory rebusLoggerFactory;
 
+        BusLifetimeEvents busLifeTimeEvents;
+
         [SetUp]
         public void Setup() 
         {
             rebusLoggerFactory = new ConsoleLoggerFactory(false);
             taskFactory = new SystemThreadingTimerAsyncTaskFactory(rebusLoggerFactory);
+            busLifeTimeEvents = new BusLifetimeEvents();
         }
 
         [Test]
@@ -30,7 +34,7 @@ namespace Rebus.Tests.Retry.CircuitBreaker
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
-            }, rebusLoggerFactory, taskFactory, null);
+            }, rebusLoggerFactory, taskFactory, null, busLifeTimeEvents);
 
 
             Assert.That(sut.State, Is.EqualTo(CircuitBreakerState.Closed));
@@ -47,7 +51,7 @@ namespace Rebus.Tests.Retry.CircuitBreaker
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
                 new FakeCircuitBreaker(CircuitBreakerState.HalfOpen),
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
-            }, rebusLoggerFactory, taskFactory, null);
+            }, rebusLoggerFactory, taskFactory, null, busLifeTimeEvents);
 
             Assert.That(sut.State, Is.EqualTo(CircuitBreakerState.HalfOpen));
             Assert.IsFalse(sut.IsClosed);
@@ -63,7 +67,7 @@ namespace Rebus.Tests.Retry.CircuitBreaker
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
                 new FakeCircuitBreaker(CircuitBreakerState.Open),
-            }, new ConsoleLoggerFactory(false), taskFactory, null);
+            }, new ConsoleLoggerFactory(false), taskFactory, null, busLifeTimeEvents);
 
             Assert.That(sut.State, Is.EqualTo(CircuitBreakerState.Open));
             Assert.IsFalse(sut.IsClosed);
@@ -79,7 +83,7 @@ namespace Rebus.Tests.Retry.CircuitBreaker
                 new FakeCircuitBreaker(CircuitBreakerState.HalfOpen),
                 new FakeCircuitBreaker(CircuitBreakerState.Closed),
                 new FakeCircuitBreaker(CircuitBreakerState.Open),
-            }, rebusLoggerFactory, taskFactory, null);
+            }, rebusLoggerFactory, taskFactory, null, busLifeTimeEvents);
 
             Assert.That(sut.State, Is.EqualTo(CircuitBreakerState.Open));
             Assert.IsFalse(sut.IsClosed);
