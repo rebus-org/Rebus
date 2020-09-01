@@ -22,11 +22,11 @@ namespace Rebus.Threading.TaskParallelLibrary
         /// <summary>
         /// Creates a new async task
         /// </summary>
-        public IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, int intervalSeconds = 10)
+        public IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, TimeSpan? interval = null)
         {
             return new TplAsyncTask(description, action, _rebusLoggerFactory, prettyInsignificant)
             {
-                Interval = TimeSpan.FromSeconds(intervalSeconds)
+                Interval = interval ?? TimeSpan.FromSeconds(10)
             };
         }
     }

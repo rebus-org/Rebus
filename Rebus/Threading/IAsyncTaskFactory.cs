@@ -11,6 +11,6 @@ namespace Rebus.Threading
         /// <summary>
         /// Creates a new async task
         /// </summary>
-        IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, int intervalSeconds = 10);
+        IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, TimeSpan? interval = null);
     }
 }
