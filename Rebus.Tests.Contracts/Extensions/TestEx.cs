@@ -204,14 +204,21 @@ namespace Rebus.Tests.Contracts.Extensions
 
         public static IEnumerable<TItem> InOrder<TItem>(this IEnumerable<TItem> items) => items.OrderBy(i => i);
 
-        public static Task WaitAsync(this ManualResetEvent resetEvent)
+        public static Task WaitAsync(this ManualResetEvent resetEvent, int timeoutSeconds = 5)
         {
             var completionSource = new TaskCompletionSource<object>();
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                resetEvent.WaitOne();
-                completionSource.SetResult(new object());
+                if (resetEvent.WaitOne(timeout))
+                {
+                    completionSource.SetResult(new object());
+                }
+                else
+                {
+                    completionSource.SetException(new TimeoutException($"The reset event was not signaled within timeout of {timeout}"));
+                }
             });
 
             return completionSource.Task;
