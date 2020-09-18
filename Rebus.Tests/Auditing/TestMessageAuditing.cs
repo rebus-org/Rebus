@@ -22,6 +22,7 @@ namespace Rebus.Tests.Auditing
         IBus _bus;
         BuiltinHandlerActivator _adapter;
         InMemNetwork _network;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -31,7 +32,7 @@ namespace Rebus.Tests.Auditing
 
             _network = new InMemNetwork();
             
-            _bus = Configure.With(_adapter)
+            _starter = Configure.With(_adapter)
                 .Transport(t => t.UseInMemoryTransport(_network, "test"))
                 .Subscriptions(s => s.StoreInMemory())
                 .Options(o =>
@@ -39,13 +40,17 @@ namespace Rebus.Tests.Auditing
                     o.LogPipeline(true);
                     o.EnableMessageAuditing("audit");
                 })
-                .Start();
+                .Create();
+
+            _bus = _starter.Bus;
         }
 
         [Test]
         public async Task DoesNotCopyFailedMessage()
         {
             _adapter.Handle<string>(async _ => throw new Exception("w00t!!"));
+
+            _starter.Start();
 
             await _bus.SendLocal("woohooo!!!!");
 
@@ -66,6 +71,8 @@ namespace Rebus.Tests.Auditing
                 gotTheMessage.Set();
             });
 
+            _starter.Start();
+
             await _bus.SendLocal("woohooo!!!!");
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
@@ -83,6 +90,8 @@ namespace Rebus.Tests.Auditing
         [Test]
         public async Task CopiesPublishedMessageToAuditQueue()
         {
+            _starter.Start();
+
             await _bus.Advanced.Topics.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
 
             var message = await _network.WaitForNextMessageFrom("audit");

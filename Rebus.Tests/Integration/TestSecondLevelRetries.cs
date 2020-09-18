@@ -13,6 +13,7 @@ using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -45,12 +46,9 @@ namespace Rebus.Tests.Integration
 
             Using(counter);
 
-            _activator.Handle<BaseMessage>(async baseMessage =>
-            {
-                throw new RebusApplicationException("1st level!!");
-            });
+            _activator.AddHandlerWithBusTemporarilyStopped<BaseMessage>(async baseMessage => throw new RebusApplicationException("1st level!!"));
 
-            _activator.Handle<IFailed<BaseMessage>>(async failed =>
+            _activator.AddHandlerWithBusTemporarilyStopped<IFailed<BaseMessage>>(async failed =>
             {
                 if (failed.Message is ConcreteMessage)
                 {
@@ -77,12 +75,12 @@ namespace Rebus.Tests.Integration
 
             Using(counter);
 
-            _activator.Handle<string>(async str =>
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 throw new RebusApplicationException("1st level!!");
             });
 
-            _activator.Handle<IFailed<string>>(async failed =>
+            _activator.AddHandlerWithBusTemporarilyStopped<IFailed<string>>(async failed =>
             {
                 if (failed.Message != "hej med dig!")
                 {
@@ -105,12 +103,12 @@ namespace Rebus.Tests.Integration
 
             Using(counter);
 
-            _activator.Handle<string>(async str =>
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 throw new RebusApplicationException("1st level!!");
             });
 
-            _activator.Handle<IFailed<string>>(async failed =>
+            _activator.AddHandlerWithBusTemporarilyStopped<IFailed<string>>(async failed =>
             {
                 throw new RebusApplicationException("2nd level!!");
             });
@@ -155,14 +153,14 @@ namespace Rebus.Tests.Integration
 
             Using(counter);
 
-            _activator.Handle<string>(async str =>
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 throw new RebusApplicationException("1st level!!");
             });
 
             var headersOfFailedMessage = new Dictionary<string, string>();
 
-            _activator.Handle<IFailed<string>>(async failed =>
+            _activator.AddHandlerWithBusTemporarilyStopped<IFailed<string>>(async failed =>
             {
                 if (failed.Message != "hej med dig!")
                 {

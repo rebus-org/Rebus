@@ -14,7 +14,6 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
-using Rebus.Workers;
 using Rebus.Workers.ThreadPoolBased;
 
 #pragma warning disable 1998
@@ -27,13 +26,15 @@ namespace Rebus.Tests.Backoff
         BuiltinHandlerActivator _activator;
         BackoffSnitch _snitch;
 
+        IBusStarter _starter;
+
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
             _snitch = new BackoffSnitch();
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Logging(l => l.Console(LogLevel.Info))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "busy-test"))
                 .Options(o =>
@@ -58,7 +59,7 @@ namespace Rebus.Tests.Backoff
                         return new IntroducerOfLatency(transport, receiveLatencyMs: 10);
                     });
                 })
-                .Start();
+                .Create();
         }
 
         [TestCase(100000)]
@@ -71,6 +72,8 @@ namespace Rebus.Tests.Backoff
                 await Task.Delay(1);
                 counter.Decrement();
             });
+
+            _starter.Start();
 
             var startTime = DateTime.UtcNow;
 

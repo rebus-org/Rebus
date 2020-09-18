@@ -6,6 +6,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
 #pragma warning disable 1998
@@ -38,7 +39,7 @@ namespace Rebus.Tests.Pipeline
         public void DoesNotLogWarningsUnderNormalUse()
         {
             var counter = new SharedCounter(3);
-            _activator.Handle<string>(async str => counter.Decrement());
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str => counter.Decrement());
 
             _activator.Bus.SendLocal("hej").Wait();
             _activator.Bus.SendLocal("med").Wait();

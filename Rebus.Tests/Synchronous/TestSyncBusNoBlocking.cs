@@ -10,6 +10,7 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -63,7 +64,7 @@ async implementation underneath the covers without deadlocking, even in a single
             var bus = _activator.Bus.Advanced.SyncBus;
             var gotMessage = new ManualResetEvent(false);
 
-            _activator.Handle<string>(async str => gotMessage.Set());
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str => gotMessage.Set());
 
             using (var aspNet = new AspNetSimulatorSynchronizationContext())
             {
@@ -82,7 +83,7 @@ async implementation underneath the covers without deadlocking, even in a single
             var bus = _activator.Bus.Advanced.SyncBus;
             var gotMessage = new ManualResetEvent(false);
 
-            _activator.Handle<string>(async str => gotMessage.Set());
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str => gotMessage.Set());
 
             using (var aspNet = new AspNetSimulatorSynchronizationContext())
             {

@@ -25,6 +25,7 @@ namespace Rebus.Tests.Bugs
         InMemNetwork _network;
         IBus _oneWayClient;
         BuiltinHandlerActivator _destination;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -36,9 +37,9 @@ namespace Rebus.Tests.Bugs
                 .Start();
 
             _destination = new BuiltinHandlerActivator();
-            Configure.With(Using(_destination))
+            _starter = Configure.With(Using(_destination))
                 .Transport(t => t.UseInMemoryTransport(_network, DestinationQueueName))
-                .Start();
+                .Create();
 
             _oneWayClient = Configure.With(Using(new BuiltinHandlerActivator()))
                 .Transport(t => t.UseInMemoryTransportAsOneWayClient(_network))
@@ -49,6 +50,8 @@ namespace Rebus.Tests.Bugs
         [Test]
         public async Task OneWayClientGetsExceptionWhenDeferringWithoutSettingTheRecipientHeader()
         {
+            _starter.Start();
+
             var aggregateException = Assert.Throws<AggregateException>(() =>
             {
                 _oneWayClient.DeferLocal(TimeSpan.FromSeconds(1), "hej med dig min ven!!").Wait();
@@ -70,6 +73,8 @@ namespace Rebus.Tests.Bugs
             {
                 gotTheMessage.Set();
             });
+
+            _starter.Start();
 
             var headers = new Dictionary<string, string>
             {

@@ -21,15 +21,17 @@ namespace Rebus.Tests.Addresses
 
         BuiltinHandlerActivator _activator;
 
+        IBusStarter _starter;
+
         protected override void SetUp()
         {
             _activator = new BuiltinHandlerActivator();
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), QueueName))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -45,9 +47,11 @@ namespace Rebus.Tests.Addresses
 
                 returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
                 senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
-                
+
                 messageHandled.Set();
             });
+
+            _starter.Start();
 
             await _activator.Bus.SendLocal("hej med dig");
 
@@ -70,9 +74,11 @@ namespace Rebus.Tests.Addresses
 
                 returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
                 senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
-                
+
                 messageHandled.Set();
             });
+
+            _starter.Start();
 
             await _activator.Bus.SendLocal("hej med dig", new Dictionary<string, string>
             {

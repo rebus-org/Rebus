@@ -10,6 +10,7 @@ using Rebus.Pipeline;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -36,7 +37,7 @@ namespace Rebus.Tests.Transactions
         [Test]
         public async Task HandlesExceptionOnCommitAsOrdinaryException()
         {
-            _activator.Handle<string>(async str =>
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 MessageContext.Current.TransactionContext.OnCommitted(async _ => throw new ConcurrencyException());
             });

@@ -5,12 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
@@ -23,8 +21,8 @@ namespace Rebus.Tests.Encryption
     {
         const string EncryptionKey = "UaVcj0zCA35mgrg9/pN62Rp+r629BMi9S9v0Tz4S7EM=";
         BuiltinHandlerActivator _builtinHandlerActivator;
-        IBus _bus;
         TransportTap _tap;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -32,7 +30,7 @@ namespace Rebus.Tests.Encryption
 
             Using(_builtinHandlerActivator);
 
-            _bus = Configure.With(_builtinHandlerActivator)
+            _starter = Configure.With(_builtinHandlerActivator)
                 .Transport(t =>
                 {
                     t.Decorate(c =>
@@ -48,7 +46,7 @@ namespace Rebus.Tests.Encryption
                     o.SetMaxParallelism(1);
                     o.SetNumberOfWorkers(1);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -63,7 +61,8 @@ namespace Rebus.Tests.Encryption
                 gotTheMessage.Set();
             });
 
-            await _bus.Advanced.Routing.Send("bimse", plainTextMessage);
+            var bus = _starter.Start();
+            await bus.Advanced.Routing.Send("bimse", plainTextMessage);
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(2));
 

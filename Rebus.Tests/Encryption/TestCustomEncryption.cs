@@ -22,6 +22,7 @@ namespace Rebus.Tests.Encryption
     {
         TransportTap _transportTap;
         BuiltinHandlerActivator _activator;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -29,7 +30,7 @@ namespace Rebus.Tests.Encryption
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "custom-encryption"))
                 .Options(o =>
                 {
@@ -43,7 +44,7 @@ namespace Rebus.Tests.Encryption
                         return _transportTap;
                     });
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -62,6 +63,8 @@ namespace Rebus.Tests.Encryption
 
                 gotMessage.Set();
             });
+            
+            _starter.Start();
 
             _activator.Bus.SendLocal("hej").Wait();
 

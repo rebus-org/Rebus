@@ -8,6 +8,7 @@ using Rebus.Persistence.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -35,7 +36,7 @@ namespace Rebus.Tests.Integration
             {
                 c.Routing(r => r.TypeBased().Map<SomeKindOfEvent>("publisher"));
             });
-            _client1.Handle<SomeKindOfEvent>(async e => _client1GotTheEvent.Set());
+            _client1.AddHandlerWithBusTemporarilyStopped<SomeKindOfEvent>(async e => _client1GotTheEvent.Set());
         }
 
         [Test]

@@ -30,12 +30,12 @@ namespace Rebus.Tests.Workers
         [TestCase(300000, 1, 1, WorkerFactory.TaskParallelLibrary)]
         public async Task CheckThreads(int messageCount, int workers, int parallelism, WorkerFactory workerFactory)
         {
-            var activator = StartBus(workers, parallelism, workerFactory);
+            var (activator, starter) = CreateBus(workers, parallelism, workerFactory);
 
             var counter = new SharedCounter(messageCount);
             activator.Handle<string>(async str => counter.Decrement());
 
-            var bus = activator.Bus;
+            var bus = starter.Start();
 
             await Task.WhenAll(Enumerable.Range(0, messageCount)
                 .Select(n => bus.SendLocal($"THIS IS MESSAGE {n}")));
@@ -43,13 +43,13 @@ namespace Rebus.Tests.Workers
             counter.WaitForResetEvent(timeoutSeconds: 15);
         }
 
-        BuiltinHandlerActivator StartBus(int workers, int parallelism, WorkerFactory workerFactory)
+        (BuiltinHandlerActivator, IBusStarter) CreateBus(int workers, int parallelism, WorkerFactory workerFactory)
         {
             var activator = new BuiltinHandlerActivator();
 
             Using(activator);
 
-            Configure.With(activator)
+            var starter = Configure.With(activator)
                 .Logging(l => l.ColoredConsole(minLevel: LogLevel.Info))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "threads"))
                 .Options(o =>
@@ -62,9 +62,9 @@ namespace Rebus.Tests.Workers
                         o.UseTplToReceiveMessages();
                     }
                 })
-                .Start();
+                .Create();
 
-            return activator;
+            return (activator, starter);
         }
     }
 }

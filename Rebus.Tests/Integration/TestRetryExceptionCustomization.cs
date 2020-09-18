@@ -12,6 +12,7 @@ using Rebus.Routing.Exceptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
@@ -51,10 +52,7 @@ namespace Rebus.Tests.Integration
         [Test]
         public async Task OnlyLogsOneSingleLineWhenForwarding()
         {
-            _activator.Handle<ShouldFail>(async msg =>
-            {
-                throw new RebusApplicationException("oh no!!!!");
-            });
+            _activator.AddHandlerWithBusTemporarilyStopped<ShouldFail>(async msg => throw new RebusApplicationException("oh no!!!!"));
 
             await _activator.Bus.SendLocal(new ShouldFail());
 
@@ -74,7 +72,7 @@ namespace Rebus.Tests.Integration
         {
             var deliveryAttempts = 0;
 
-            _activator.Handle<ShouldFail>(async msg =>
+            _activator.AddHandlerWithBusTemporarilyStopped<ShouldFail>(async msg =>
             {
                 Interlocked.Increment(ref deliveryAttempts);
 
@@ -93,7 +91,7 @@ namespace Rebus.Tests.Integration
         {
             var deliveryAttempts = 0;
 
-            _activator.Handle<ShouldFail>(async msg =>
+            _activator.AddHandlerWithBusTemporarilyStopped<ShouldFail>(async msg =>
             {
                 Interlocked.Increment(ref deliveryAttempts);
 
@@ -112,7 +110,7 @@ namespace Rebus.Tests.Integration
         {
             var deliveryAttempts = 0;
 
-            _activator.Handle<ShouldFail>(async msg =>
+            _activator.AddHandlerWithBusTemporarilyStopped<ShouldFail>(async msg =>
             {
                 Interlocked.Increment(ref deliveryAttempts);
 

@@ -6,6 +6,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -34,7 +35,7 @@ namespace Rebus.Tests.Synchronous
             var messageWasProperlyHandled = new ManualResetEvent(false);
             var bus = _activator.Bus.Advanced.SyncBus;
 
-            _activator.Handle<string>(async str => messageWasProperlyHandled.Set());
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str => messageWasProperlyHandled.Set());
 
             var thread = new Thread(() =>
             {
@@ -56,7 +57,7 @@ namespace Rebus.Tests.Synchronous
             var receivedMessages = new ConcurrentQueue<string>();
             var bus = _activator.Bus.Advanced.SyncBus;
 
-            _activator.Handle<string>(async msg => receivedMessages.Enqueue(msg));
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async msg => receivedMessages.Enqueue(msg));
 
             using (var context = new RebusTransactionScope())
             {

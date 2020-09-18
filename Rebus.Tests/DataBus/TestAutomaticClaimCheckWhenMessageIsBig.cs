@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.DataBus.ClaimCheck;
@@ -28,6 +27,7 @@ namespace Rebus.Tests.DataBus
         InMemorySubscriberStore _subscriberStore;
         InMemNetwork _network;
         InMemDataStore _dataStore;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -43,7 +43,7 @@ namespace Rebus.Tests.DataBus
             _network = new InMemNetwork();
             _dataStore = new InMemDataStore();
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(_network, "automatic-claim-check"))
                 .Options(o => o.LogPipeline(verbose: true))
                 .Subscriptions(s => s.StoreInMemory(_subscriberStore))
@@ -54,7 +54,7 @@ namespace Rebus.Tests.DataBus
                     d.StoreInMemory(_dataStore);
                 })
                 .Options(o => FailIfMessageSizeExceeds(o, limit))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace Rebus.Tests.DataBus
                 gotTheMessage.Set();
             });
 
-            var bus = _activator.Bus;
+            var bus = _starter.Start();
 
             // serialized to JSON encoded as UTF-8, this will be 3 bytes too big (2 bytes for the two ", and one because we add 1 to the size :))
             var bigStringThatWeKnowIsTooBig = new string('*', limit + 1);
@@ -82,14 +82,16 @@ namespace Rebus.Tests.DataBus
         {
             var receivedBuSubscriber1 = new ManualResetEvent(false);
             var receivedBuSubscriber2 = new ManualResetEvent(false);
-            
+
             GetSubscriber(receivedBuSubscriber1).Subscribe<string>();
             GetSubscriber(receivedBuSubscriber2).Subscribe<string>();
 
             // serialized to JSON encoded as UTF-8, this will be 3 bytes too big (2 bytes for the two ", and one because we add 1 to the size :))
             var bigStringThatWeKnowIsTooBig = new string('*', limit + 1);
 
-            await _activator.Bus.Publish(bigStringThatWeKnowIsTooBig);
+            var bus = _starter.Start();
+
+            await bus.Publish(bigStringThatWeKnowIsTooBig);
 
             receivedBuSubscriber1.WaitOrDie(TimeSpan.FromSeconds(2));
             receivedBuSubscriber2.WaitOrDie(TimeSpan.FromSeconds(2));
@@ -98,9 +100,9 @@ namespace Rebus.Tests.DataBus
         ISyncBus GetSubscriber(EventWaitHandle gotTheMessage)
         {
             var activator = new BuiltinHandlerActivator();
-            
+
             Using(activator);
-            
+
             activator.Handle<string>(async _ => gotTheMessage.Set());
 
             return Configure.With(activator)

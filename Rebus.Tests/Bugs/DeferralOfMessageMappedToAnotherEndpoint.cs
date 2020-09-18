@@ -28,21 +28,24 @@ namespace Rebus.Tests.Bugs
         {
             var gotTheString = new ManualResetEvent(false);
 
-            var a = CreateBus("endpoint-a", c =>
-            {
-                c.Routing(r => r.TypeBased().Map<string>("endpoint-b"));
-            });
+            var (a, aStarter) = CreateBus("endpoint-a", c =>
+             {
+                 c.Routing(r => r.TypeBased().Map<string>("endpoint-b"));
+             });
 
-            var b = CreateBus("endpoint-b");
+            var (b, bStarter) = CreateBus("endpoint-b");
 
             b.Handle<string>(async str => gotTheString.Set());
+
+            aStarter.Start();
+            bStarter.Start();
 
             await a.Bus.Defer(TimeSpan.FromSeconds(0.1), "HEJ MED DIG MIN VEEEEEEEEEEEEEEEEN");
 
             gotTheString.WaitOrDie(TimeSpan.FromSeconds(2), "Did not get the expected string within 2 s timeout");
         }
 
-        BuiltinHandlerActivator CreateBus(string queueName, Action<RebusConfigurer> additionalConfiguration = null)
+        (BuiltinHandlerActivator, IBusStarter) CreateBus(string queueName, Action<RebusConfigurer> additionalConfiguration = null)
         {
             var activator = new BuiltinHandlerActivator();
 
@@ -54,9 +57,9 @@ namespace Rebus.Tests.Bugs
 
             additionalConfiguration?.Invoke(rebusConfigurer);
 
-            rebusConfigurer.Start();
+            var starter = rebusConfigurer.Create();
 
-            return activator;
+            return (activator, starter);
         }
     }
 }

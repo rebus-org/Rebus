@@ -8,6 +8,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Workers
@@ -40,7 +41,7 @@ namespace Rebus.Tests.Workers
             // arrange
             var startedHandle = new ManualResetEvent(false);
 
-            _handlerActivator.Handle<string>(async str =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 startedHandle.Set();
 
@@ -69,7 +70,7 @@ namespace Rebus.Tests.Workers
             // arrange
             var finishedHandle = new ManualResetEvent(false);
 
-            _handlerActivator.Handle<string>(str =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(str =>
             {
                 finishedHandle.Set();
                 return Task.FromResult(0);
@@ -99,7 +100,7 @@ namespace Rebus.Tests.Workers
             var startedHandle = new ManualResetEvent(false);
             var taskTakingTime = TimeSpan.FromSeconds(5);
 
-            _handlerActivator.Handle<string>(async str =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 startedHandle.Set();
 

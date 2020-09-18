@@ -45,7 +45,7 @@ namespace Rebus.Tests.Integration
         {
             var gotMessage = false;
 
-            _adapter.Handle<string>(async str => gotMessage = true);
+            _adapter.AddHandlerWithBusTemporarilyStopped<string>(async str => gotMessage = true);
 
             var body = BodyWith("hej med dig min ven");
             var headersWithoutMessageId = new Dictionary<string, string>();
@@ -75,7 +75,7 @@ namespace Rebus.Tests.Integration
         {
             var gotMessage = false;
 
-            _adapter.Handle<string>(async str => gotMessage = true);
+            _adapter.AddHandlerWithBusTemporarilyStopped<string>(async str => gotMessage = true);
 
             var messageId = Guid.NewGuid();
 

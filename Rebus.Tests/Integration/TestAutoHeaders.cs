@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
@@ -18,7 +17,7 @@ namespace Rebus.Tests.Integration
     public class TestAutoHeaders : FixtureBase
     {
         BuiltinHandlerActivator _activator;
-        IBus _bus;
+        IBusStarter _bus;
 
         protected override void SetUp()
         {
@@ -27,7 +26,7 @@ namespace Rebus.Tests.Integration
             _bus = Configure.With(_activator)
                 .Logging(l => l.Console())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "headers"))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -79,13 +78,14 @@ namespace Rebus.Tests.Integration
             Dictionary<string, string> headers = null;
             var gotIt = new ManualResetEvent(false);
         
-            _activator.Handle<object>(async (bus, context, msg) =>
+            _activator.Handle<object>(async (_, context, msg) =>
             {
                 headers = context.TransportMessage.Headers;
                 gotIt.Set();
             });
 
-            await _bus.SendLocal(message, optionalHeaders);
+            var bus = _bus.Start();
+            await bus.SendLocal(message, optionalHeaders);
 
             gotIt.WaitOrDie(TimeSpan.FromSeconds(1));
 

@@ -5,7 +5,6 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
@@ -22,6 +21,7 @@ namespace Rebus.Tests.Assumptions
         const string QueueName = "some-queue";
         BuiltinHandlerActivator _activator;
         InMemNetwork _network;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -30,10 +30,10 @@ namespace Rebus.Tests.Assumptions
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(_network, QueueName))
                 .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -57,6 +57,8 @@ namespace Rebus.Tests.Assumptions
 did not contain the expected values");
                 }
             });
+            
+            _starter.Start();
 
             var headers = new Dictionary<string, string>
             {

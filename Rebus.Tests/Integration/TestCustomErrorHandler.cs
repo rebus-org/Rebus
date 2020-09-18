@@ -41,7 +41,7 @@ namespace Rebus.Tests.Integration
         [Test]
         public async Task ForwardsFailedMessageToCustomErrorHandler()
         {
-            _activator.Handle<string>(async str =>
+            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 Console.WriteLine("Throwing UnauthorizedAccessException");
 

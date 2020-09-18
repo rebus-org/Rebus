@@ -11,6 +11,7 @@ using Rebus.Encryption;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -57,10 +58,8 @@ namespace Rebus.Tests.Integration
         public void ItWorks()
         {
             var gotTheMessage = new ManualResetEvent(false);
-            _handlerActivator.Handle<HugeMessage>(async msg =>
-            {
-                gotTheMessage.Set();
-            });
+            
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<HugeMessage>(async msg => gotTheMessage.Set());
 
             var hugePayload = string.Concat(Enumerable.Range(0, 128)
                 .Select(i => string.Concat(Enumerable.Repeat(i.ToString(), 128))));

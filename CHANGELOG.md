@@ -1042,6 +1042,9 @@
 ## 6.3.1
 * Fix bug that would prevent fail-fast exceptions to cause messages to fail fast when thrown in a 2nd level retry
 
+## 6.4.0
+* Enforce handler registration in built-in handler activator before the bus is started. If one absolutely wants to add handlers AFTER having started the bus, it's still possible, simply by temporarily setting number of workers = 0
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

@@ -111,6 +111,8 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, IMessageContext, TMessage, Task> handlerFunction)
         {
+            if (handlerFunction == null) throw new ArgumentNullException(nameof(handlerFunction));
+            AssertHasNotBeenStarted(handlerFunction.ToString());
             _handlerInstances.Add(new Handler<TMessage>((bus, message) => handlerFunction(bus, MessageContext.Current, message), () => Bus));
             return this;
         }
@@ -120,6 +122,8 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, TMessage, Task> handlerFunction)
         {
+            if (handlerFunction == null) throw new ArgumentNullException(nameof(handlerFunction));
+            AssertHasNotBeenStarted(handlerFunction.ToString());
             _handlerInstances.Add(new Handler<TMessage>(handlerFunction, () => Bus));
             return this;
         }
@@ -129,6 +133,8 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {
+            if (handlerFunction == null) throw new ArgumentNullException(nameof(handlerFunction));
+            AssertHasNotBeenStarted(handlerFunction.ToString());
             _handlerInstances.Add(new Handler<TMessage>((bus, message) => handlerFunction(message), () => Bus));
             return this;
         }
@@ -156,7 +162,7 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<THandler> handlerFactory) where THandler : IHandleMessages
         {
-            AssertHasNotBeenStarted<THandler>();
+            AssertHasNotBeenStarted(typeof(THandler).FullName);
             _handlerFactoriesNoArguments.Add(handlerFactory);
             return this;
         }
@@ -167,7 +173,7 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<IMessageContext, THandler> handlerFactory) where THandler : IHandleMessages
         {
-            AssertHasNotBeenStarted<THandler>();
+            AssertHasNotBeenStarted(typeof(THandler).FullName);
             _handlerFactoriesMessageContextArgument.Add(handlerFactory);
             return this;
         }
@@ -178,12 +184,12 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<IBus, IMessageContext, THandler> handlerFactory) where THandler : IHandleMessages
         {
-            AssertHasNotBeenStarted<THandler>();
+            AssertHasNotBeenStarted(typeof(THandler).FullName);
             _handlerFactoriesBusAndMessageContextArguments.Add(handlerFactory);
             return this;
         }
 
-        void AssertHasNotBeenStarted<THandler>() where THandler : IHandleMessages
+        void AssertHasNotBeenStarted(string handlerDescription)
         {
             // if it's not initialized, it's definitely alright
             if (Bus == null) return;
@@ -191,7 +197,7 @@ namespace Rebus.Activation
             // if it's currently paused, then it's also alright
             if (Bus.Advanced.Workers.Count == 0) return;
 
-            throw new InvalidOperationException($@"Cannot register factory for handler {typeof(THandler)} now, because the bus has already been started!
+            throw new InvalidOperationException($@"Cannot register factory for handler {handlerDescription} now, because the bus has already been started!
 
 The reason this is not allowed, is because there's a high risk of a RACE CONDITION between an incoming message and the registrationf of a new handler.
 

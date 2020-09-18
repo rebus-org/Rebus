@@ -11,6 +11,7 @@ using Rebus.Messages;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -44,23 +45,22 @@ namespace Rebus.Tests.Integration
         {
             var gotMessage = new ManualResetEvent(false);
 
-            _handlerActivator
-                .Handle<string>(async (bus, str) =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
+            {
+                if (str == "hej med dig min ven!")
                 {
-                    if (str == "hej med dig min ven!")
-                    {
-                        Console.WriteLine("w00t!");
+                    Console.WriteLine("w00t!");
 
-                        await bus.Reply("t00t!");
-                    }
+                    await bus.Reply("t00t!");
+                }
 
-                    if (str == "t00t!")
-                    {
-                        Console.WriteLine("got t++t!!!");
+                if (str == "t00t!")
+                {
+                    Console.WriteLine("got t++t!!!");
 
-                        gotMessage.Set();
-                    }
-                });
+                    gotMessage.Set();
+                }
+            });
 
             await _bus.Send("hej med dig min ven!");
 
@@ -74,11 +74,11 @@ namespace Rebus.Tests.Integration
             var receivedInReplyToHeaderValue = "not set";
 
             _handlerActivator
-                .Handle<Request>(async (bus, request) =>
+                .AddHandlerWithBusTemporarilyStopped<Request>(async (bus, request) =>
                 {
                     await bus.Reply(new Reply());
                 })
-                .Handle<Reply>(async (bus, context, reply) =>
+                .AddHandlerWithBusTemporarilyStopped<Reply>(async (bus, context, reply) =>
                 {
                     receivedInReplyToHeaderValue = context.Headers.GetValueOrNull(Headers.InReplyTo);
                     gotMessage.Set();

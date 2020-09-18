@@ -15,6 +15,7 @@ using Rebus.Routing;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 // ReSharper disable RedundantLambdaParameterType
 #pragma warning disable 1998
@@ -50,13 +51,13 @@ namespace Rebus.Tests.Routing
                 correlationIdValues.Add(headers.GetValue(Headers.CorrelationId));
             }
 
-            StartBus("endpoint-a").Activator.Handle<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-            StartBus("endpoint-b").Activator.Handle<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-            StartBus("endpoint-c").Activator.Handle<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+            StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+            StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+            StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
 
             var routingSlipWasReturnedToSender = new ManualResetEvent(false);
 
-            var initiator = StartBus("initiator").Activator.Handle<string>(async (bus, context, message) =>
+            var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) =>
             {
                 HandleHeaders(context.Headers);
                 routingSlipWasReturnedToSender.Set();
@@ -82,14 +83,14 @@ namespace Rebus.Tests.Routing
         [Test]
         public async Task WorksGreatWithMutableMessagesToo()
         {
-            StartBus("endpoint-a").Activator.Handle<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-a"));
-            StartBus("endpoint-b").Activator.Handle<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-b"));
-            StartBus("endpoint-c").Activator.Handle<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-c"));
+            StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-a"));
+            StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-b"));
+            StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-c"));
 
             var routingSlipWasReturnedToSender = new ManualResetEvent(false);
             var collectedLines = new List<string>();
 
-            var initiator = StartBus("initiator").Activator.Handle<SomeMutableMessage>(async message =>
+            var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message =>
             {
                 collectedLines.AddRange(message.Lines);
                 routingSlipWasReturnedToSender.Set();
@@ -126,11 +127,11 @@ namespace Rebus.Tests.Routing
             var done = new ManualResetEvent(false);
             var events = new ConcurrentQueue<string>();
 
-            StartBus("endpoint-a").Activator.Handle<string>(async str => events.Enqueue("a"));
-            StartBus("endpoint-b").Activator.Handle<string>(async str => events.Enqueue("b"));
-            StartBus("endpoint-c").Activator.Handle<string>(async str => events.Enqueue("c"));
+            StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("a"));
+            StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("b"));
+            StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("c"));
                     
-            StartBus("endpoint-d").Activator.Handle<string>(async str =>
+            StartBus("endpoint-d").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
             {
                 events.Enqueue("d");
                 done.Set();

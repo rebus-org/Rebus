@@ -18,18 +18,19 @@ namespace Rebus.Tests.Contracts.Serialization.Default
         const string InputQueueName = "json";
         BuiltinHandlerActivator _builtinHandlerActivator;
         InMemNetwork _network;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
             _builtinHandlerActivator = new BuiltinHandlerActivator();
-            
+
             Using(_builtinHandlerActivator);
 
             _network = new InMemNetwork();
 
-            Configure.With(_builtinHandlerActivator)
+            _starter = Configure.With(_builtinHandlerActivator)
                 .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -47,6 +48,8 @@ namespace Rebus.Tests.Contracts.Serialization.Default
 
                 gotTheMessage.Set();
             });
+
+            _starter.Start();
 
             var headers = new Dictionary<string, string>
             {

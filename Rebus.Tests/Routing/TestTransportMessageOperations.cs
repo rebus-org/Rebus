@@ -5,6 +5,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -42,12 +43,12 @@ namespace Rebus.Tests.Routing
 
             Using(sharedCounter);
 
-            _forwarderActivator.Handle<string>(async (bus, str) =>
+            _forwarderActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
             {
                 await bus.Advanced.TransportMessage.Forward(ForwardedMessagesQueue, new Dictionary<string, string> {{"testheader", "OK"}});
             });
 
-            _receiverActivator.Handle<string>(async (bus, context, str) =>
+            _receiverActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, str) =>
             {
                 var headers = context.TransportMessage.Headers;
 
@@ -86,7 +87,7 @@ namespace Rebus.Tests.Routing
 
             var didDeferTheMessage = false;
 
-            _forwarderActivator.Handle<string>(async (bus, str) =>
+            _forwarderActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
             {
                 if (!didDeferTheMessage)
                 {

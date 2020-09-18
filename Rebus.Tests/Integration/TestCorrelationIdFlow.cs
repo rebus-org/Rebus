@@ -6,6 +6,7 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -41,17 +42,17 @@ namespace Rebus.Tests.Integration
             var correlationSequenceNumbers = new List<int>();
             var counter = new SharedCounter(1);
 
-            _activator1.Handle<string>(async (bus, ctx, str) =>
+            _activator1.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 correlationSequenceNumbers.Add(int.Parse(ctx.Headers[Headers.CorrelationSequence]));
                 await bus.Advanced.Routing.Send("bus2", "hej!");
             });
-            _activator2.Handle<string>(async (bus, ctx, str) =>
+            _activator2.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 correlationSequenceNumbers.Add(int.Parse(ctx.Headers[Headers.CorrelationSequence]));
                 await bus.Advanced.Routing.Send("bus3", "hej!");
             });
-            _activator3.Handle<string>(async (bus, ctx, str) =>
+            _activator3.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 correlationSequenceNumbers.Add(int.Parse(ctx.Headers[Headers.CorrelationSequence]));
                 counter.Decrement();
@@ -70,17 +71,17 @@ namespace Rebus.Tests.Integration
             var correlationIds = new List<string>();
             var counter = new SharedCounter(1);
 
-            _activator1.Handle<string>(async (bus, ctx, str) =>
+            _activator1.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 correlationIds.Add(ctx.Headers[Headers.CorrelationId]);
                 await bus.Advanced.Routing.Send("bus2", "hej!");
             });
-            _activator2.Handle<string>(async (bus, ctx, str) =>
+            _activator2.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 correlationIds.Add(ctx.Headers[Headers.CorrelationId]);
                 await bus.Advanced.Routing.Send("bus3", "hej!");
             });
-            _activator3.Handle<string>(async (bus, ctx, str) =>
+            _activator3.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 correlationIds.Add(ctx.Headers[Headers.CorrelationId]);
                 counter.Decrement();
@@ -100,13 +101,13 @@ namespace Rebus.Tests.Integration
             var correlationIds = new List<string>();
             var counter = new SharedCounter(1);
 
-            _activator1.Handle<string>(async (bus, ctx, str) =>
+            _activator1.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 messageIds.Add(ctx.Headers[Headers.MessageId]);
                 correlationIds.Add(ctx.Headers[Headers.CorrelationId]);
                 await bus.Advanced.Routing.Send("bus2", "hej!");
             });
-            _activator2.Handle<string>(async (bus, ctx, str) =>
+            _activator2.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 messageIds.Add(ctx.Headers[Headers.MessageId]);
                 correlationIds.Add(ctx.Headers[Headers.CorrelationId]);
@@ -127,12 +128,13 @@ namespace Rebus.Tests.Integration
             var messageIds = new List<string>();
             var counter = new SharedCounter(1);
 
-            _activator1.Handle<string>(async (bus, ctx, str) =>
+            _activator1.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 messageIds.Add(ctx.Headers[Headers.MessageId]);
                 await bus.Advanced.Routing.Send("bus2", "hej!");
             });
-            _activator2.Handle<string>(async (bus, ctx, str) =>
+
+            _activator2.AddHandlerWithBusTemporarilyStopped<string>(async (bus, ctx, str) =>
             {
                 messageIds.Add(ctx.Headers[Headers.MessageId]);
                 counter.Decrement();

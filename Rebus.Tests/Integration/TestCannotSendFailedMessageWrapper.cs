@@ -6,7 +6,6 @@ using Rebus.Config;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -23,19 +22,20 @@ a nice explanation if that happens.
     public class TestCannotSendFailedMessageWrapper : FixtureBase
     {
         BuiltinHandlerActivator _activator;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Logging(l => l.None())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "FAIL"))
                 .Options(o =>
                 {
                     o.SimpleRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);
                 })
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -45,10 +45,7 @@ a nice explanation if that happens.
 
             Exception caughtException = null;
 
-            _activator.Handle<string>(async str =>
-            {
-                throw new ArithmeticException();
-            });
+            _activator.Handle<string>(async str => throw new ArithmeticException());
 
             _activator.Handle<IFailed<string>>(async (bus, context, failed) =>
             {
@@ -60,7 +57,7 @@ a nice explanation if that happens.
                 {
                     await bus.Defer(TimeSpan.FromSeconds(1), failed);
                 }
-                catch(Exception exception)
+                catch (Exception exception)
                 {
                     // just what we wanted! :)
                     caughtException = exception;
@@ -68,7 +65,9 @@ a nice explanation if that happens.
                 }
             });
 
-            _activator.Bus.SendLocal("HOOLOOBOOLOO").Wait();
+            var buss = _starter.Start();
+            
+            buss.SendLocal("HOOLOOBOOLOO").Wait();
 
             couldNotSendMessage.WaitOrDie(TimeSpan.FromSeconds(5));
 

@@ -3,13 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Encryption;
 using Rebus.Logging;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Contracts.Sagas;
 using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
@@ -20,16 +18,26 @@ namespace Rebus.Tests.Bugs
     public class ForwardingDoesNotPreserveOriginalBody : FixtureBase
     {
         BuiltinHandlerActivator _client;
+        IBusStarter _clientStarter;
         BuiltinHandlerActivator _forwarder;
+        IBusStarter _forwarderStarter;
         BuiltinHandlerActivator _receiver;
+        IBusStarter _receiverStarter;
 
         protected override void SetUp()
         {
             var network = new InMemNetwork(outputEventsToConsole: true);
 
-            _client = CreateBus(network);
-            _forwarder = CreateBus(network, "forwarder");
-            _receiver = CreateBus(network, "receiver");
+            (_client, _clientStarter) = CreateBus(network);
+            (_forwarder, _forwarderStarter) = CreateBus(network, "forwarder");
+            (_receiver, _receiverStarter) = CreateBus(network, "receiver");
+        }
+
+        void Start()
+        {
+            _clientStarter.Start();
+            _forwarderStarter.Start();
+            _receiverStarter.Start();
         }
 
         [Test]
@@ -51,18 +59,20 @@ namespace Rebus.Tests.Bugs
                 }
             });
 
+            Start();
+
             await _client.Bus.Advanced.Routing.Send("forwarder", "hej du");
 
             gotTheExpectedStringMessage.WaitOrDie(TimeSpan.FromSeconds(2));
         }
 
-        BuiltinHandlerActivator CreateBus(InMemNetwork network, string queueName = null)
+        (BuiltinHandlerActivator, IBusStarter) CreateBus(InMemNetwork network, string queueName = null)
         {
             var activator = new BuiltinHandlerActivator();
 
             Using(activator);
 
-            Configure.With(activator)
+            var starter = Configure.With(activator)
                 .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t =>
                 {
@@ -76,9 +86,9 @@ namespace Rebus.Tests.Bugs
                     }
                 })
                 .Options(o => o.EnableEncryption("d2f6QgE0ITuV++fM+BjzVJ1O+LClb3QdUsraWl2qlB4="))
-                .Start();
+                .Create();
 
-            return activator;
+            return (activator, starter);
         }
     }
 }

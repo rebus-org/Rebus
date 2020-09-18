@@ -8,6 +8,7 @@ using Rebus.Persistence.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
+using Rebus.Tests.Extensions;
 using Rebus.Timeouts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
@@ -45,7 +46,7 @@ namespace Rebus.Tests.Integration
             var messageReceived = new ManualResetEvent(false);
             var deliveryTime = DateTime.MaxValue;
 
-            _server.Handle<string>(async s =>
+            _server.AddHandlerWithBusTemporarilyStopped<string>(async s =>
             {
                 deliveryTime = DateTime.UtcNow;
                 messageReceived.Set();
@@ -69,7 +70,7 @@ namespace Rebus.Tests.Integration
             var messageReceived = new ManualResetEvent(false);
             var deliveryTime = DateTime.MaxValue;
 
-            _server.Handle<string>(async s =>
+            _server.AddHandlerWithBusTemporarilyStopped<string>(async s =>
             {
                 deliveryTime = DateTime.UtcNow;
                 messageReceived.Set();

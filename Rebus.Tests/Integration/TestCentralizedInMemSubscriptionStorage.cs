@@ -7,7 +7,6 @@ using Rebus.Config;
 using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -19,6 +18,7 @@ namespace Rebus.Tests.Integration
         InMemNetwork _network;
         InMemorySubscriberStore _subscriberStore;
         BuiltinHandlerActivator _activator;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
@@ -29,10 +29,10 @@ namespace Rebus.Tests.Integration
 
             Using(_activator);
 
-            Configure.With(_activator)
+            _starter = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(_network, "endpoint1"))
                 .Subscriptions(s => s.StoreInMemory(_subscriberStore))
-                .Start();
+                .Create();
         }
 
         [Test]
@@ -42,7 +42,9 @@ namespace Rebus.Tests.Integration
 
             _activator.Handle<string>(async str => gotTheString.Set());
 
-            await _activator.Bus.Subscribe<string>();
+            var bus = _starter.Start();
+            
+            await bus.Subscribe<string>();
 
             await Task.Delay(500);
 

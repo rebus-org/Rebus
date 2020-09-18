@@ -4,12 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
@@ -19,20 +17,20 @@ namespace Rebus.Tests.Integration
     public class TestAsyncHandler : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.GetName("test.async.input");
-        IBus _bus;
+        IBusStarter _bus;
         BuiltinHandlerActivator _handlerActivator;
 
         protected override void SetUp()
         {
             _handlerActivator = new BuiltinHandlerActivator();
 
+            Using(_handlerActivator);
+
             _bus = Configure.With(_handlerActivator)
                 .Routing(r => r.TypeBased().Map<string>(InputQueueName))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), InputQueueName))
                 .Options(o => o.SetNumberOfWorkers(1))
-                .Start();
-
-            Using(_bus);
+                .Create();
         }
 
         [Test]
@@ -52,7 +50,8 @@ namespace Rebus.Tests.Integration
 
             Console.WriteLine(string.Join(Environment.NewLine, events));
 
-            await _bus.Send("hej med dig!");
+            var bus = _bus.Start();
+            await bus.Send("hej med dig!");
 
             finishedHandled.WaitOrDie(TimeSpan.FromSeconds(10));
 

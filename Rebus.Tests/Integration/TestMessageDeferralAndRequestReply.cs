@@ -10,6 +10,7 @@ using Rebus.Messages;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -49,7 +50,7 @@ namespace Rebus.Tests.Integration
         [Description("Defers the message with bus.Defer, which sends the message as a new message (and therefore needs to transfer the ReturnAddress in order to be able to bus.Reply later)")]
         public async Task DeferringRequestDoesNotBreakAbilityToReply_DeferWithMessageApi()
         {
-            _service.Handle<string>(async (bus, context, str) =>
+            _service.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, str) =>
             {
                 const string deferredMessageHeader = "this message was already deferred";
 
@@ -78,7 +79,7 @@ namespace Rebus.Tests.Integration
         [Description("Defers the message with bus.Advanced.TransportMessage.Defer, which defers the original transport message (and thus only needs to include a known header to spot when to bus.Reply)")]
         public async Task DeferringRequestDoesNotBreakAbilityToReply_DeferWithTransportMessageApi()
         {
-            _service.Handle<string>(async (bus, context, str) =>
+            _service.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, str) =>
             {
                 const string deferredMessageHeader = "this message was already deferred";
 
@@ -106,7 +107,7 @@ namespace Rebus.Tests.Integration
         {
             var replyCounter = new SharedCounter(1);
 
-            _client.Handle<string>(async reply =>
+            _client.AddHandlerWithBusTemporarilyStopped<string>(async reply =>
             {
                 Console.WriteLine($"CLIENT got reply '{reply}'  (elapsed: {_stopwatch.Elapsed.TotalSeconds:0.# s})");
                 replyCounter.Decrement();

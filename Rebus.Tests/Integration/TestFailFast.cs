@@ -15,6 +15,7 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 using Rebus.Retry.FailFast;
+using Rebus.Tests.Extensions;
 
 #pragma warning disable 1998
 
@@ -66,7 +67,7 @@ namespace Rebus.Tests.Integration
 
             var attemptedDeliveries = 0;
 
-            _handlerActivator.Handle<string>(async _ =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
                 throw new FailFastException("omgwtf!");
@@ -90,7 +91,7 @@ namespace Rebus.Tests.Integration
 
             var attemptedDeliveries = 0;
 
-            _handlerActivator.Handle<string>(async _ =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
                 throw new InvalidOperationException("omgwtf!");
@@ -114,7 +115,7 @@ namespace Rebus.Tests.Integration
 
             var attemptedDeliveries = 0;
 
-            _handlerActivator.Handle<string>(async _ =>
+            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
             {
                 Interlocked.Increment(ref attemptedDeliveries);
                 throw new InvalidOperationException("omgwtf!");

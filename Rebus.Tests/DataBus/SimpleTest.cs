@@ -24,21 +24,25 @@ namespace Rebus.Tests.DataBus
         IBus _senderBus;
         BuiltinHandlerActivator _receiverActivator;
         InMemDataStore _inMemDataStore;
+        IBusStarter _starter;
 
         protected override void SetUp()
         {
             _inMemNetwork = new InMemNetwork();
             _inMemDataStore = new InMemDataStore();
 
-            _senderBus = StartBus("sender").Bus;
-            _receiverActivator = StartBus("receiver");
+            var (_, senderStarter) = CreateBus("sender");
+
+            _senderBus = senderStarter.Start();
+
+            (_receiverActivator, _starter) = CreateBus("receiver");
         }
 
-        BuiltinHandlerActivator StartBus(string queueName)
+        (BuiltinHandlerActivator activator, IBusStarter starter) CreateBus(string queueName)
         {
             var activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(activator)
+            var starter = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(_inMemNetwork, queueName))
                 .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
                 .DataBus(d =>
@@ -46,9 +50,9 @@ namespace Rebus.Tests.DataBus
                     d.UseCompression(DataCompressionMode.Always);
                     d.StoreInMemory(_inMemDataStore);
                 })
-                .Start();
+                .Create();
 
-            return activator;
+            return (activator, starter);
         }
 
         [Test]
@@ -76,6 +80,8 @@ namespace Rebus.Tests.DataBus
 
                 dataSuccessfullyCopied.Set();
             });
+
+            _starter.Start();
 
             // send a message that sends the contents of a file as an attachment
             using (var source = File.OpenRead(sourceFilePath))
