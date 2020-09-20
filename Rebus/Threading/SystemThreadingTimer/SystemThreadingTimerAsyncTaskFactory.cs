@@ -23,11 +23,11 @@ namespace Rebus.Threading.SystemThreadingTimer
         /// <summary>
         /// Creates a new async task
         /// </summary>
-        public IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, TimeSpan? interval = null)
+        public IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, int intervalSeconds = 10)
         {
             return new SystemThreadingTimerAsyncTask(description, action, _rebusLoggerFactory, prettyInsignificant)
             {
-                Interval = interval ?? TimeSpan.FromSeconds(10)
+                Interval = TimeSpan.FromSeconds(intervalSeconds)
             };
         }
     }

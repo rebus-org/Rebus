@@ -48,7 +48,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
             _log = rebusLoggerFactory.GetLogger<HandleDeferredMessagesStep>();
 
-            _dueMessagesSenderBackgroundTask = asyncTaskFactory.Create(DueMessagesSenderTaskName, TimerElapsed, interval: options.DueTimeoutsPollInterval);
+            _dueMessagesSenderBackgroundTask = asyncTaskFactory.Create(DueMessagesSenderTaskName, TimerElapsed, intervalSeconds: (int)options.DueTimeoutsPollInterval.TotalSeconds);
         }
 
         /// <summary>

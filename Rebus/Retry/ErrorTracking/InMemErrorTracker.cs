@@ -50,7 +50,7 @@ namespace Rebus.Retry.ErrorTracking
             _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(
                 BackgroundTaskName,
                 CleanupOldTrackedErrors,
-                interval: TimeSpan.FromSeconds(10)
+                intervalSeconds: 10
             );
         }
 

@@ -1045,6 +1045,9 @@
 ## 6.4.0
 * Enforce handler registration in built-in handler activator before the bus is started. If one absolutely wants to add handlers AFTER having started the bus, it's still possible, simply by temporarily setting number of workers = 0
 
+## 6.4.1
+* Revert breaking change that snuck into the `IAsyncTaskFactory` interface
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
