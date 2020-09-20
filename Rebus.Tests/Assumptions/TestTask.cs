@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Contracts;
 
 namespace Rebus.Tests.Assumptions
 {
     [TestFixture]
-    public class TestTask
+    public class TestTask : FixtureBase
     {
         [Test]
         public async Task CanCancelTask()
         {
-            var cancellationTokenSource = new CancellationTokenSource();
+            var cancellationTokenSource = Using(new CancellationTokenSource());
             var cancellationToken = cancellationTokenSource.Token;
             var events = new List<string>();
 
@@ -38,7 +39,7 @@ namespace Rebus.Tests.Assumptions
             }, cancellationToken);
 
             //Console.WriteLine(task.Status);
-            await Task.Delay(2000);
+            await Task.Delay(2000, CancellationToken.None);
 
             cancellationTokenSource.Cancel();
 
