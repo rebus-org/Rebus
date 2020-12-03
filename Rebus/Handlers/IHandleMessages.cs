@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Rebus.Handlers
 {
@@ -10,6 +11,7 @@ namespace Rebus.Handlers
     /// <summary>
     /// Message handler interface. Implement this in order to get to handle messages of a specific type
     /// </summary>
+    [UsedImplicitly(ImplicitUseTargetFlags.Itself | ImplicitUseTargetFlags.WithInheritors)]
     public interface IHandleMessages<in TMessage> : IHandleMessages
     {
         /// <summary>
