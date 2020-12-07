@@ -20,6 +20,7 @@ namespace Rebus.Tests.Backoff
     public class BackoffBehaviorIntegrationTest : FixtureBase
     {
         [Test]
+        [Retry(5)]
         public async Task CheckIdleBehavior()
         {
             var activator = Using(new BuiltinHandlerActivator());
