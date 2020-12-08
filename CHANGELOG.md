@@ -1048,6 +1048,9 @@
 ## 6.4.1
 * Revert breaking change that snuck into the `IAsyncTaskFactory` interface
 
+## 6.4.2-b1
+* Add [UsedImplicitly] annotation to [IHandleMessages] so implementations doesn't show up as unused - thanks [zlepper]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1109,3 +1112,4 @@
 [trevorreeves]: https://github.com/trevorreeves
 [xenoputtss]: https://github.com/xenoputtss
 [zabulus]: https://github.com/zabulus
+[zlepper]: https://github.com/zlepper
