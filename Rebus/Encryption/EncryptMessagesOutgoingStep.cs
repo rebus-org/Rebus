@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Messages;
@@ -12,12 +13,12 @@ namespace Rebus.Encryption
     [StepDocumentation("Encrypts the body of the outgoing message, unless the special '" + EncryptionHeaders.DisableEncryptionHeader + "' header has been added to the message")]
     public class EncryptMessagesOutgoingStep : IOutgoingStep
     {
-        readonly IEncryptor _encryptor;
+        readonly IAsyncEncryptor _encryptor;
 
         /// <summary>
         /// Constructs the step with the given encryptor
         /// </summary>
-        public EncryptMessagesOutgoingStep(IEncryptor encryptor)
+        public EncryptMessagesOutgoingStep(IAsyncEncryptor encryptor)
         {
             _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
@@ -37,10 +38,13 @@ namespace Rebus.Encryption
 
             var headers = transportMessage.Headers.Clone();
             var bodyBytes = transportMessage.Body;
-            var encryptedData = _encryptor.Encrypt(bodyBytes);
+            var encryptedData = await _encryptor.Encrypt(bodyBytes);
 
             headers[EncryptionHeaders.ContentEncryption] = _encryptor.ContentEncryptionValue;
             headers[EncryptionHeaders.ContentInitializationVector] = Convert.ToBase64String(encryptedData.Iv);
+
+            if(!string.IsNullOrEmpty(encryptedData.KeyId))
+                headers[EncryptionHeaders.KeyId] = encryptedData.KeyId;
 
             context.Save(new TransportMessage(headers, encryptedData.Bytes));
 

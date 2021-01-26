@@ -16,7 +16,7 @@
         byte[] Decrypt(EncryptedData encryptedData);
         
         /// <summary>
-        /// Encrypts the given bytes and returns the encrypted data alond with the salt in the returned <see cref="EncryptedData"/>
+        /// Encrypts the given bytes and returns the encrypted data along with the salt in the returned <see cref="EncryptedData"/>
         /// </summary>
         EncryptedData Encrypt(byte[] bytes);
     }
