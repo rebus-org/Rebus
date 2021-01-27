@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
@@ -9,7 +10,6 @@ using Rebus.Encryption;
 using Rebus.Messages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
@@ -18,7 +18,7 @@ using Rebus.Transport.InMem;
 namespace Rebus.Tests.Encryption
 {
     [TestFixture]
-    public class TestCustomEncryption : FixtureBase
+    public class TestCustomAsyncEncryption : FixtureBase
     {
         TransportTap _transportTap;
         BuiltinHandlerActivator _activator;
@@ -34,7 +34,7 @@ namespace Rebus.Tests.Encryption
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "custom-encryption"))
                 .Options(o =>
                 {
-                    o.EnableCustomEncryption()
+                    o.EnableCustomAsyncEncryption()
                         .Register(c => new SillyEncryptor());
 
                     o.Decorate<ITransport>(c =>
@@ -59,14 +59,14 @@ namespace Rebus.Tests.Encryption
 
             _activator.Handle<string>(async message =>
             {
-                if (message != "hej") throw new ArgumentException("not the right message!!");
+                if (message != "hei") throw new ArgumentException("not the right message!!");
 
                 gotMessage.Set();
             });
-            
+
             _starter.Start();
 
-            _activator.Bus.SendLocal("hej").Wait();
+            _activator.Bus.SendLocal("hei").Wait();
 
             gotMessage.WaitOrDie(TimeSpan.FromSeconds(3));
 
@@ -80,16 +80,16 @@ namespace Rebus.Tests.Encryption
             Assert.That(headers[EncryptionHeaders.KeyId], Is.EqualTo("not-a-key"));
         }
 
-        class SillyEncryptor : IEncryptor
+        class SillyEncryptor : IAsyncEncryptor
         {
             public string ContentEncryptionValue => "silly";
 
-            public EncryptedData Encrypt(byte[] bytes)
+            public Task<EncryptedData> Encrypt(byte[] bytes)
             {
-                return new EncryptedData(bytes, new byte[] { 1, 2, 3 }, "not-a-key");
+                return Task.FromResult(new EncryptedData(bytes, new byte[] {1, 2, 3}, "not-a-key"));
             }
 
-            public byte[] Decrypt(EncryptedData encryptedData)
+            public Task<byte[]> Decrypt(EncryptedData encryptedData)
             {
                 if (!(encryptedData.Iv[0] == 1
                       && encryptedData.Iv[1] == 2
@@ -98,7 +98,7 @@ namespace Rebus.Tests.Encryption
                     throw new ArgumentException($"Don't know about fancy salts that do not contain the bytes 1, 2, and 3");
                 }
 
-                return encryptedData.Bytes;
+                return Task.FromResult(encryptedData.Bytes);
             }
         }
     }

@@ -11,6 +11,11 @@ namespace Rebus.Encryption
         public const string ContentEncryption = "rbs2-content-encryption";
 
         /// <summary>
+        /// Optional header element that specifies the key that the contents have been encrypted with
+        /// </summary>
+        public const string KeyId = "rbs2-encryption-keyid";
+        
+        /// <summary>
         /// When the contents have been encrypted, this header has the IV
         /// </summary>
         public const string ContentInitializationVector = "rbs2-encryption-iv";

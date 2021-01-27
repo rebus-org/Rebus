@@ -36,14 +36,22 @@ namespace Rebus.Encryption
         /// </summary>
         public static StandardConfigurer<IEncryptor> EnableCustomEncryption(this OptionsConfigurer configurer)
         {
-            configurer.Register(c => new EncryptMessagesOutgoingStep(c.Get<IEncryptor>()));
-            configurer.Register(c => new DecryptMessagesIncomingStep(c.Get<IEncryptor>()));
+            configurer.EnableCustomAsyncEncryption().Register(c => new DefaultAsyncEncryptor(c.Get<IEncryptor>()));
+            
+            return StandardConfigurer<IEncryptor>.GetConfigurerFrom(configurer);
+        }
+        
+        /// <inheritdoc cref="EnableCustomEncryption" />
+        public static StandardConfigurer<IAsyncEncryptor> EnableCustomAsyncEncryption(this OptionsConfigurer configurer)
+        {
+            configurer.Register(c => new EncryptMessagesOutgoingStep(c.Get<IAsyncEncryptor>()));
+            configurer.Register(c => new DecryptMessagesIncomingStep(c.Get<IAsyncEncryptor>()));
 
             configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
                 .OnReceive(c.Get<DecryptMessagesIncomingStep>(), PipelineRelativePosition.Before, typeof(DeserializeIncomingMessageStep))
                 .OnSend(c.Get<EncryptMessagesOutgoingStep>(), PipelineRelativePosition.After, typeof(SerializeOutgoingMessageStep)));
 
-            return StandardConfigurer<IEncryptor>.GetConfigurerFrom(configurer);
+            return StandardConfigurer<IAsyncEncryptor>.GetConfigurerFrom(configurer);
         }
     }
 }

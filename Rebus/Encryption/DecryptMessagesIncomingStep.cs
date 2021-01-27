@@ -15,18 +15,18 @@ namespace Rebus.Encryption
     [StepDocumentation("Decrypts the body of the incoming message if it has the '" + EncryptionHeaders.ContentEncryption + "' header")]
     public class DecryptMessagesIncomingStep : IIncomingStep
     {
-        readonly IEncryptor _encryptor;
+        readonly IAsyncEncryptor _encryptor;
 
         /// <summary>
         /// Constructs the step with the given encryptor
         /// </summary>
-        public DecryptMessagesIncomingStep(IEncryptor encryptor)
+        public DecryptMessagesIncomingStep(IAsyncEncryptor encryptor)
         {
             _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
 
         /// <summary>
-        /// Descrypts the incoming <see cref="TransportMessage"/> if it has the <see cref="EncryptionHeaders.ContentEncryption"/> header
+        /// Decrypts the incoming <see cref="TransportMessage"/> if it has the <see cref="EncryptionHeaders.ContentEncryption"/> header
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
@@ -38,8 +38,10 @@ namespace Rebus.Encryption
                 var headers = transportMessage.Headers.Clone();
                 var encryptedBodyBytes = transportMessage.Body;
 
+                headers.TryGetValue(EncryptionHeaders.KeyId, out var keyId);
+                
                 var iv = GetIv(headers);
-                var bodyBytes = _encryptor.Decrypt(new EncryptedData(encryptedBodyBytes, iv));
+                var bodyBytes = await _encryptor.Decrypt(new EncryptedData(encryptedBodyBytes, iv, keyId));
 
                 context.Save(new TransportMessage(headers, bodyBytes));
             }
