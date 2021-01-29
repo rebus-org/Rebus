@@ -1,0 +1,35 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master, net50 ]
+  pull_request:
+    branches: [ master, net50 ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET 2.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.1.x
+    - name: Setup .NET 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+    - name: Setup .NET 5.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore -c Release /p:EnableSourceLink=false
+    - name: Test Contracts
+      run: dotnet test Rebus.Tests.Contracts --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
+    - name: Test
+      run: dotnet test Rebus.Tests --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false

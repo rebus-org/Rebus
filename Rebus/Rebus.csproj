@@ -5,7 +5,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
-    <TargetFrameworks>net45;net46;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
     <PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
@@ -17,10 +17,10 @@
     <PostBuildEvent></PostBuildEvent>
     <Product>Rebus</Product>
     <PackageId>Rebus</PackageId>
-    
+
     <!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
- 
+
     <!-- Optional: Embed source files that are not tracked by the source control manager in the PDB -->
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
@@ -62,6 +62,9 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
     <DefineConstants>HAS_TO_HASHSET;HAS_ASYNC_LOCAL</DefineConstants>
   </PropertyGroup>
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
+        <DefineConstants>HAS_TO_HASHSET;HAS_ASYNC_LOCAL</DefineConstants>
+    </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>

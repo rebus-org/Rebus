@@ -176,8 +176,7 @@ namespace Rebus.Transport.FileSystem
             {
                 try
                 {
-                    var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Delete);
-
+                    var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.Delete);
                     using (var reader = new StreamReader(fileStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
                         leaveOpen: true, bufferSize: 4096))
                     {
@@ -200,6 +199,7 @@ namespace Rebus.Transport.FileSystem
                 {
                     // could not acquire lock on file or it was empty
                 }
+
             }
         }
 
