@@ -154,7 +154,7 @@ namespace Rebus.Tests.Contracts.Extensions
                     {
                         if (queue.TryDequeue(out var item)) return item;
 
-                        await Task.Delay(TimeSpan.FromSeconds(timeoutSeconds), cancellationTokenSource.Token);
+                        await Task.Delay(60, cancellationTokenSource.Token);
                     }
                 }
                 catch (Exception)
