@@ -32,4 +32,4 @@ jobs:
     - name: Test Contracts
       run: dotnet test Rebus.Tests.Contracts --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
     - name: Test
-      run: dotnet test Rebus.Tests --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
+      run: dotnet test Rebus.Tests --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false

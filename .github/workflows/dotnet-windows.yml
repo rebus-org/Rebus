@@ -27,8 +27,8 @@ jobs:
         dotnet-version: 5.0.x
     - name: Restore dependencies
       run:  |
-      dotnet nuget locals all --clear
-      dotnet restore
+        dotnet nuget locals all --clear
+        dotnet restore
     - name: Build
       run: dotnet build --no-restore -c Release /p:EnableSourceLink=false
     - name: Test Contracts
