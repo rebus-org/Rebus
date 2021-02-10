@@ -42,10 +42,20 @@ namespace Rebus.Tests.Synchronous
                 bus.SendLocal("ey det virker");
             });
 
-            if (Environment.Version.Major != 5) // Setting ApartmentState is not supported in Net 5.0
+            try
             {
-                thread.SetApartmentState(ApartmentState.STA);
+                if (Environment.Version.Major != 5) // Setting ApartmentState is not supported in Net 5.0
+                {
+                    thread.SetApartmentState(ApartmentState.STA);
+                }
+
             }
+            catch (NotSupportedException)
+            {
+                Console.WriteLine($"[DBG] Current Environment is {Environment.Version}");
+                // This is completely legit. On some platforms SetApartmentState is not supported.
+            }
+
             thread.Start();
 
             Assert.That(thread.Join(1000), Is.True, "thread did not finish within timeout");
