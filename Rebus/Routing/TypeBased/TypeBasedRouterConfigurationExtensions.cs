@@ -63,6 +63,37 @@ namespace Rebus.Routing.TypeBased
             }
 
             /// <summary>
+            /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <paramref name="messageType"/>
+            /// </summary>
+            public TypeBasedRouterConfigurationBuilder MapAssemblyOf(Type messageType, string destinationAddress)
+            {
+                _configurationActions.Add(r => r.MapAssemblyOf(messageType, destinationAddress));
+                return this;
+            }
+
+            /// <summary>
+            /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/> under
+            /// the namespace that type lives under. So all types within the same namespace will get mapped to that destination address, but not types under
+            /// other namespaces. This allows you to separate messages for specific queues by namespace and register them all in one go.
+            /// </summary>
+            public TypeBasedRouterConfigurationBuilder MapAssemblyNamespaceOf<TMessage>(string destinationAddress)
+            {
+                _configurationActions.Add(r => r.MapAssemblyNamespaceOf<TMessage>(destinationAddress));
+                return this;
+            }
+
+            /// <summary>
+            /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <paramref name="messageType"/> under
+            /// the namespace that type lives under. So all types within the same namespace will get mapped to that destination address, but not types under
+            /// other namespaces. This allows you to separate messages for specific queues by namespace and register them all in one go.
+            /// </summary>
+            public TypeBasedRouterConfigurationBuilder MapAssemblyNamespaceOf(Type messageType, string destinationAddress)
+            {
+                _configurationActions.Add(r => r.MapAssemblyNamespaceOf(messageType, destinationAddress));
+                return this;
+            }
+
+            /// <summary>
             /// Maps <paramref name="destinationAddress"/> as a fallback destination to use when none of the configured mappings match
             /// </summary>
             public TypeBasedRouterConfigurationBuilder MapFallback(string destinationAddress)
