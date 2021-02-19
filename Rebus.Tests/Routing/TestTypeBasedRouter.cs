@@ -63,7 +63,7 @@ namespace Rebus.Tests.Routing
         }
 
         [Test]
-        public void WorksWithMultipleRoutes ()
+        public void WorksWithMultipleRoutes()
         {
             _router
                 .Map<string>("StringDestination")
@@ -73,6 +73,35 @@ namespace Rebus.Tests.Routing
             Assert.That(GetDestinationForBody("STRING BODY"), Is.EqualTo("StringDestination"));
             Assert.That(GetDestinationForBody(DateTime.Now), Is.EqualTo("DateTimeDestination"));
             Assert.That(GetDestinationForBody(78), Is.EqualTo("IntDestination"));
+        }
+
+        [Test]
+        public void WorksWithAssemblyRouteMapping()
+        {
+            _router.MapAssemblyOf<TestNamespaceRouting.AssemblyMessageOne>("AssemblyDestination");
+
+            // All these should be mapped from the entire assembly (along with a ton more, but that's beside the point for this test)
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageOne()), Is.EqualTo("AssemblyDestination"));
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageTwo()), Is.EqualTo("AssemblyDestination"));
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.SubNamespace.AssemblyMessageSubNamespace()), Is.EqualTo("AssemblyDestination"));
+            Assert.That(GetDestinationForBody(new OtherNamespaceRouting.AssemblyMessageOtherNamespace()), Is.EqualTo("AssemblyDestination"));
+        }
+
+        [Test]
+        public void WorksWithNamespaceRouteMapping()
+        {
+            _router.MapAssemblyNamespaceOf<TestNamespaceRouting.AssemblyMessageOne>("AssemblyDestination");
+
+            // All these should be mapped from the namespace and sub-namespace
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageOne()), Is.EqualTo("AssemblyDestination"));
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageTwo()), Is.EqualTo("AssemblyDestination"));
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.SubNamespace.AssemblyMessageSubNamespace()), Is.EqualTo("AssemblyDestination"));
+
+            // This one should NOT be mapped
+            Assert.Throws<AggregateException>(() =>
+            {
+                GetDestinationForBody(new OtherNamespaceRouting.AssemblyMessageOtherNamespace());
+            });
         }
 
         [Test]
@@ -108,5 +137,32 @@ namespace Rebus.Tests.Routing
         }
 
         static Dictionary<string, string> NoHeaders => new Dictionary<string, string>();
+    }
+}
+
+// Set up some types we can use to test namespace mapping
+namespace Rebus.Tests.Routing.TestNamespaceRouting
+{
+    // Set up some types we can use to test assembly mapping
+    class AssemblyMessageOne
+    {
+    }
+
+    class AssemblyMessageTwo
+    {
+    }
+
+    namespace SubNamespace
+    {
+        class AssemblyMessageSubNamespace
+        {
+        }
+    }
+}
+
+namespace Rebus.Tests.Routing.OtherNamespaceRouting
+{
+    class AssemblyMessageOtherNamespace
+    {
     }
 }

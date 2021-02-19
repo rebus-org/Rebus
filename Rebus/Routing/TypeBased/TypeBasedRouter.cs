@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Logging;
@@ -41,7 +42,32 @@ namespace Rebus.Routing.TypeBased
         /// </summary>
         public TypeBasedRouter MapAssemblyOf(Type messageType, string destinationAddress)
         {
-            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes())
+            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass))
+            {
+                SaveMapping(typeToMap, destinationAddress);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/> under
+        /// the namespace that type lives under. So all types within the same namespace will get mapped to that destination address, but not types under
+        /// other namespaces. This allows you to separate messages for specific queues by namespace and register them all in one go.
+        /// </summary>
+        public TypeBasedRouter MapAssemblyNamespaceOf<TMessage>(string destinationAddress)
+        {
+            MapAssemblyNamespaceOf(typeof (TMessage), destinationAddress);
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <paramref name="messageType"/> under
+        /// the namespace that type lives under. So all types within the same namespace will get mapped to that destination address, but not types under
+        /// other namespaces. This allows you to separate messages for specific queues by namespace and register them all in one go.
+        /// </summary>
+        public TypeBasedRouter MapAssemblyNamespaceOf(Type messageType, string destinationAddress)
+        {
+            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass && t.Namespace != null && t.Namespace.StartsWith(messageType.Namespace ?? string.Empty)))
             {
                 SaveMapping(typeToMap, destinationAddress);
             }
