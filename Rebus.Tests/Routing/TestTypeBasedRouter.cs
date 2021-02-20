@@ -88,6 +88,26 @@ namespace Rebus.Tests.Routing
         }
 
         [Test]
+        public void WorksWithAssemblyRouteMappingAndDerivedClasses()
+        {
+            _router.MapAssemblyDerivedFrom<TestNamespaceRouting.AssemblyMessageBaseClass>("AssemblyDestination");
+
+            // All these should be mapped from the entire assembly (along with a ton more, but that's beside the point for this test)
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageOne()), Is.EqualTo("AssemblyDestination"));
+            Assert.That(GetDestinationForBody(new TestNamespaceRouting.SubNamespace.AssemblyMessageSubNamespace()), Is.EqualTo("AssemblyDestination"));
+
+            // These ones should NOT be mapped
+            Assert.Throws<AggregateException>(() =>
+            {
+                GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageTwo());
+            });
+            Assert.Throws<AggregateException>(() =>
+            {
+                GetDestinationForBody(new OtherNamespaceRouting.AssemblyMessageOtherNamespace());
+            });
+        }
+
+        [Test]
         public void WorksWithNamespaceRouteMapping()
         {
             _router.MapAssemblyNamespaceOf<TestNamespaceRouting.AssemblyMessageOne>("AssemblyDestination");
@@ -143,8 +163,11 @@ namespace Rebus.Tests.Routing
 // Set up some types we can use to test namespace mapping
 namespace Rebus.Tests.Routing.TestNamespaceRouting
 {
-    // Set up some types we can use to test assembly mapping
-    class AssemblyMessageOne
+    class AssemblyMessageBaseClass
+    {
+    }
+
+    class AssemblyMessageOne : AssemblyMessageBaseClass
     {
     }
 
@@ -154,7 +177,7 @@ namespace Rebus.Tests.Routing.TestNamespaceRouting
 
     namespace SubNamespace
     {
-        class AssemblyMessageSubNamespace
+        class AssemblyMessageSubNamespace : AssemblyMessageBaseClass
         {
         }
     }
