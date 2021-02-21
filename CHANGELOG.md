@@ -1055,6 +1055,9 @@
 * Make the number of saga data conflict resolution attempts configurable
 * Additional endpoint mapping methods - thanks [kendallb]
 
+## 7.0.0-b1
+* Remove .NET 4.5 and other unnecessary targets
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

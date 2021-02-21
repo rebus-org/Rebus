@@ -122,8 +122,7 @@ namespace Rebus.Tests.Pipeline
                     return new DefaultPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline));
 
                 case ThingToCheck.NewPipelineInvoker:
-                    //return new NewDefaultPipelineInvoker();
-                    return new CompiledPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline));
+                    return new DefaultPipelineInvokerNew(new DefaultPipeline(initialIncomingSteps: pipeline));
 
                 default:
                     throw new NotSupportedException("cannot do that yet");
