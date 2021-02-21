@@ -1053,6 +1053,7 @@
 
 ## 6.4.3
 * Make the number of saga data conflict resolution attempts configurable
+* Additional endpoint mapping methods - thanks [kendallb]
 
 ---
 
@@ -1080,6 +1081,7 @@
 [joshua5822]: https://github.com/joshua5822
 [jr01]: https://github.com/jr01
 [jsvahn]: https://github.com/jsvahn
+[kendallb]: https://github.com/kendallb
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
 [Liero]: https://github.com/Liero
