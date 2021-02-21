@@ -93,6 +93,21 @@ which will stuff the resulting `IBus` in the container as a singleton and use th
 message handlers. Check out the Configuration section on [the official Rebus documentation wiki][REBUS_WIKI] for
 more information on how to do this.
 
+If you want to be more specific about what types you map in an assembly, such as if the assembly is shared with other code you can map all the types under a specific namespace like this:
+
+```csharp
+Configure.With(someContainerAdapter)
+    .(...)
+    .Routing(r => r.TypeBased().MapAssemblyNamespaceOf<SomeMessageType>("namespaceInputQueue"))
+    .(...);
+
+// have IBus injected in application services for the duration of the application lifetime    
+
+// let the container dispose the bus when your application exits
+myFavoriteIocContainer.Dispose();
+```
+
+
 License
 ====
 
