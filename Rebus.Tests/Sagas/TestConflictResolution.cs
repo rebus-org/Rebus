@@ -11,6 +11,7 @@ using Rebus.Logging;
 using Rebus.Persistence.InMem;
 using Rebus.Pipeline;
 using Rebus.Sagas;
+using Rebus.Sagas.Conflicts;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
@@ -40,7 +41,11 @@ namespace Rebus.Tests.Sagas
                     o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(10);
                 })
-                .Sagas(s => s.StoreInMemory())
+                .Sagas(s =>
+                {
+                    s.StoreInMemory();
+                    s.SetMaxConflictResolutionAttempts(value: 100);
+                })
                 .Timeouts(t => t.StoreInMemory())
                 .Start();
         }
