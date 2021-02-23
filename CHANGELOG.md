@@ -1051,7 +1051,7 @@
 ## 6.4.2
 * Add [UsedImplicitly] annotation to [IHandleMessages] so implementations doesn't show up as unused - thanks [zlepper]
 
-## 6.5.0
+## 6.5.1
 * Make the number of saga data conflict resolution attempts configurable
 * Additional endpoint mapping methods - thanks [kendallb]
 
