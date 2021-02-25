@@ -138,7 +138,10 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
             catch (Exception exception)
             {
-                _errorTracker.RegisterError(identifierToTrackMessageBy, exception);
+                if (secondLevelMessageId == null || !(exception is FailFastException))
+                {
+                    _errorTracker.RegisterError(identifierToTrackMessageBy, exception);
+                }
 
                 transactionContext.Abort();
             }
