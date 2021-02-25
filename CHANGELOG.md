@@ -1055,6 +1055,9 @@
 * Make the number of saga data conflict resolution attempts configurable
 * Additional endpoint mapping methods - thanks [kendallb]
 
+## 6.5.3
+* `isCompliant: true` makes Rebus much more CLS compliant
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
