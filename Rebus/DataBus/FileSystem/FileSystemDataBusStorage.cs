@@ -223,7 +223,7 @@ namespace Rebus.DataBus.FileSystem
             }
             catch (IOException)
             {
-                // this exception is most likely caused by a locked file because someone else is updating the 
+                // this exception is most likely caused by a locked file because someone else is updating the
                 // last read time  - that's ok :)
             }
             catch (Exception exception)
@@ -261,7 +261,7 @@ namespace Rebus.DataBus.FileSystem
         void EnsureDirectoryIsWritable()
         {
             var now = DateTime.Now;
-            var filePath = Path.Combine(_directoryPath, $"write-test-{now:yyyyMMdd}-{now:HHmmss}-DELETE-ME.tmp");
+            var filePath = Path.Combine(_directoryPath, $"write-test-{Guid.NewGuid()}-DELETE-ME.tmp");
 
             try
             {
