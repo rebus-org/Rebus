@@ -1058,6 +1058,9 @@
 ## 6.5.3
 * `isCompliant: true` makes Rebus much more CLS compliant
 
+## 6.5.4
+* Use GUID in file name when doing read/write test in file system data bus storage to avoid colliding with other processes starting up - thanks [kendallb]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
