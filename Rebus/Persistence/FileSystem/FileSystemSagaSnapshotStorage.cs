@@ -37,35 +37,14 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public void Initialize()
         {
-            if (Directory.Exists(_snapshotDirectory)) return;
-
-            _log.Info("Saga snapshot directory {directoryPath} does not exist - creating it!", _snapshotDirectory);
-
-            Directory.CreateDirectory(_snapshotDirectory);
-
-            var writabilityCheckFilePath = Path.Combine(_snapshotDirectory, "rebus.writability.check.txt");
-
-            try
+            if (!Directory.Exists(_snapshotDirectory))
             {
-                File.WriteAllText(writabilityCheckFilePath, "RBS2!1");
+                _log.Info("Saga snapshot directory {directoryPath} does not exist - creating it!", _snapshotDirectory);
+                Directory.CreateDirectory(_snapshotDirectory);
             }
-            catch (Exception exception)
-            {
-                var message = $"Could not write dummy file to saga snapshot directory '{_snapshotDirectory}' - is it writable for the {Environment.UserDomainName} / {Environment.UserName} account?";
 
-                throw new IOException(message, exception);
-            }
-            finally
-            {
-                try
-                {
-                    File.Delete(writabilityCheckFilePath);
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
+            _log.Info("Checking that the current process has read/write access to directory {directoryPath}", _snapshotDirectory);
+            FileSystemHelpers.EnsureDirectoryIsWritable(_snapshotDirectory);
         }
 
         /// <summary>
