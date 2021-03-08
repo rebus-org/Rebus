@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
+using Rebus.Persistence.FileSystem;
 using Rebus.Serialization;
 using Rebus.Time;
 // ReSharper disable UnusedVariable
@@ -56,7 +57,7 @@ namespace Rebus.DataBus.FileSystem
             }
 
             _log.Info("Checking that the current process has read/write access to directory {directoryPath}", _directoryPath);
-            EnsureDirectoryIsWritable();
+            FileSystemHelpers.EnsureDirectoryIsWritable(_directoryPath);
         }
 
         /// <summary>
@@ -255,37 +256,6 @@ namespace Rebus.DataBus.FileSystem
             catch (Exception exception)
             {
                 throw new RebusApplicationException(exception, $"Could not read metadata for data with ID {id}");
-            }
-        }
-
-        void EnsureDirectoryIsWritable()
-        {
-            var now = DateTime.Now;
-            var filePath = Path.Combine(_directoryPath, $"write-test-{Guid.NewGuid()}-DELETE-ME.tmp");
-
-            try
-            {
-                const string contents =
-                    @"Wrote this file to be sure that this Rebus endpoint has read/write access to this directory.
-
-This file can be safely deleted.";
-
-                File.WriteAllText(filePath, contents, Encoding.UTF8);
-
-                File.ReadAllText(filePath, Encoding.UTF8);
-
-            }
-            catch (Exception exception)
-            {
-                throw new IOException($"Write/Read test failed for directory path '{_directoryPath}'", exception);
-            }
-            finally
-            {
-                try
-                {
-                    File.Delete(filePath);
-                }
-                catch { }
             }
         }
     }
