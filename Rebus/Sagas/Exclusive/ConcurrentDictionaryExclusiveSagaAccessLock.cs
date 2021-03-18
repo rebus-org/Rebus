@@ -9,15 +9,13 @@ namespace Rebus.Sagas.Exclusive
     /// </summary>
     class ConcurrentDictionaryExclusiveSagaAccessLock : IExclusiveSagaAccessLock
     {
-        const string DummyValue = "dummy";
-        
         static readonly Task<bool> TrueResult = Task.FromResult(true);
         static readonly Task<bool> FalseResult = Task.FromResult(false);
 
-        readonly ConcurrentDictionary<string, string> _locks = new ConcurrentDictionary<string, string>();
+        readonly ConcurrentDictionary<int, byte> _locks = new ConcurrentDictionary<int, byte>();
 
-        public Task<bool> AquireLockAsync(string key, CancellationToken cancellationToken) => _locks.TryAdd(key, DummyValue) ? TrueResult : FalseResult;
+        public Task<bool> AquireLockAsync(int key, CancellationToken cancellationToken) => _locks.TryAdd(key, 1) ? TrueResult : FalseResult;
 
-        public Task<bool> ReleaseLockAsync(string key) => _locks.TryRemove(key, out var dummy) ? TrueResult : FalseResult;
+        public Task<bool> ReleaseLockAsync(int key) => _locks.TryRemove(key, out var dummy) ? TrueResult : FalseResult;
     }
 }

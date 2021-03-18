@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -152,13 +151,13 @@ namespace Rebus.Tests.Sagas
         {
             readonly SemaphoreSlim _mutex = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
-            public async Task<bool> AquireLockAsync(string key, CancellationToken cancellationToken)
+            public async Task<bool> AquireLockAsync(int key, CancellationToken cancellationToken)
             {
                 await _mutex.WaitAsync(cancellationToken);
                 return true;
             }
 
-            public async Task<bool> ReleaseLockAsync(string key)
+            public async Task<bool> ReleaseLockAsync(int key)
             {
                 _mutex.Release();
                 return true;

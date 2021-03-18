@@ -81,15 +81,14 @@ Elapsed: {elapsed.TotalSeconds:0.0}
         static IEnumerable<IIncomingStep> GetSteps()
         {
             var handler = new ConcurrentDictionaryExclusiveSagaAccessLock();
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 10, CancellationToken.None);
             yield return new NewEnforceExclusiveSagaAccessIncomingStep(10, CancellationToken.None);
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 20, CancellationToken.None);
             yield return new NewEnforceExclusiveSagaAccessIncomingStep(20, CancellationToken.None);
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 50, CancellationToken.None);
             yield return new NewEnforceExclusiveSagaAccessIncomingStep(50, CancellationToken.None);
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 100, CancellationToken.None);
             yield return new NewEnforceExclusiveSagaAccessIncomingStep(100, CancellationToken.None);
         }
     }
-
 }

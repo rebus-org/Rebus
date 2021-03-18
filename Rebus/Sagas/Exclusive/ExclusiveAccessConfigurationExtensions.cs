@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Rebus.Config;
+using Rebus.Injection;
 using Rebus.Pipeline;
 
 namespace Rebus.Sagas.Exclusive
@@ -13,7 +14,7 @@ namespace Rebus.Sagas.Exclusive
         /// <summary>
         /// Forces exclusive access
         /// </summary>
-        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer)
+        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer, int maxLockBuckets = 1000)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
@@ -23,7 +24,16 @@ namespace Rebus.Sagas.Exclusive
                 {
                     var pipeline = c.Get<IPipeline>();
                     var cancellationToken = c.Get<CancellationToken>();
-                    var step = new NewEnforceExclusiveSagaAccessIncomingStep(1000, cancellationToken);
+                    IIncomingStep step;
+                    try
+                    {
+                        var locker = c.Get<IExclusiveSagaAccessLock>();
+                        step = new EnforceExclusiveSagaAccessIncomingStep(locker, maxLockBuckets, cancellationToken);
+                    }
+                    catch (ResolutionException)
+                    {
+                        step = new NewEnforceExclusiveSagaAccessIncomingStep(maxLockBuckets, cancellationToken);
+                    }
 
                     return new PipelineStepInjector(pipeline)
                         .OnReceive(step, PipelineRelativePosition.Before, typeof(LoadSagaDataStep));
@@ -33,7 +43,7 @@ namespace Rebus.Sagas.Exclusive
         /// <summary>
         /// Forces exclusive using a lockhandler defined by <see cref="IExclusiveSagaAccessLock"/>
         /// </summary>
-        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer, IExclusiveSagaAccessLock locker)
+        public static void EnforceExclusiveAccess(this StandardConfigurer<ISagaStorage> configurer, IExclusiveSagaAccessLock locker, int maxLockBuckets = 1000)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
@@ -43,7 +53,7 @@ namespace Rebus.Sagas.Exclusive
                 {
                     var pipeline = c.Get<IPipeline>();
                     var cancellationToken = c.Get<CancellationToken>();
-                    var step = new EnforceExclusiveSagaAccessIncomingStep(locker, cancellationToken);
+                    var step = new EnforceExclusiveSagaAccessIncomingStep(locker, maxLockBuckets, cancellationToken);
 
                     return new PipelineStepInjector(pipeline)
                         .OnReceive(step, PipelineRelativePosition.Before, typeof(LoadSagaDataStep));
