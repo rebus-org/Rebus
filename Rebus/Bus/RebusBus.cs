@@ -43,11 +43,12 @@ namespace Rebus.Bus
         readonly string _busName;
         readonly ITopicNameConvention _topicNameConvention;
         readonly IRebusTime _rebusTime;
+        readonly IExclusiveAccessLock _exclusiveAccessLock;
 
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus, ITopicNameConvention topicNameConvention, IRebusTime rebusTime)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus, ITopicNameConvention topicNameConvention, IRebusTime rebusTime, IExclusiveAccessLock exclusiveAccessLock)
         {
             _workerFactory = workerFactory;
             _router = router;
@@ -60,6 +61,7 @@ namespace Rebus.Bus
             _log = rebusLoggerFactory.GetLogger<RebusBus>();
             _topicNameConvention = topicNameConvention;
             _rebusTime = rebusTime;
+            _exclusiveAccessLock = exclusiveAccessLock;
 
             var defaultBusName = $"Rebus {Interlocked.Increment(ref _busIdCounter)}";
 
@@ -168,9 +170,9 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
+        /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>.
         /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
-        /// which can be enabled by going 
+        /// which can be enabled by going
         /// <code>
         /// Configure.With(...)
         ///     .(...)
@@ -186,9 +188,9 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Subscribes to the topic defined by the assembly-qualified name of <paramref name="eventType"/>. 
+        /// Subscribes to the topic defined by the assembly-qualified name of <paramref name="eventType"/>.
         /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
-        /// which can be enabled by going 
+        /// which can be enabled by going
         /// <code>
         /// Configure.With(...)
         ///     .(...)
@@ -226,7 +228,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Publishes the event message on the topic defined by the assembly-qualified name of the type of the message.
         /// While this kind of pub/sub can work universally with the general topic-based routing, it works especially well with type-based routing,
-        /// which can be enabled by going 
+        /// which can be enabled by going
         /// <code>
         /// Configure.With(...)
         ///     .(...)

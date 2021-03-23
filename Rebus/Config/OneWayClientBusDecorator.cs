@@ -98,6 +98,8 @@ namespace Rebus.Config
             public IDataBus DataBus => _innerAdvancedApi.DataBus;
 
             public ISyncBus SyncBus => _innerAdvancedApi.SyncBus;
+
+            public IExclusiveAccessLock ExclusiveAccessLock => _innerAdvancedApi.ExclusiveAccessLock;
         }
 
         class OneWayClientWorkersApi : IWorkersApi

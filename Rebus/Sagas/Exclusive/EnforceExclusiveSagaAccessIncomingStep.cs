@@ -1,93 +1,55 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Rebus.Messages;
+using Rebus.Bus.Advanced;
 using Rebus.Pipeline;
-using Rebus.Pipeline.Receive;
-using Rebus.Transport;
-// ReSharper disable ForCanBeConvertedToForeach
 
 namespace Rebus.Sagas.Exclusive
 {
     [StepDocumentation("Enforces exclusive access to saga data in the rest of the pipeline by acquiring locks for the relevant correlation properties.")]
-    class EnforceExclusiveSagaAccessIncomingStep : IIncomingStep
+    class EnforceExclusiveSagaAccessIncomingStep : EnforceExclusiveSagaAccessIncomingStepBase
     {
-        readonly IExclusiveSagaAccessLock _lockHandler;
-        readonly CancellationToken _cancellationToken;
-        readonly SagaHelper _sagaHelper = new SagaHelper();
+        readonly IExclusiveAccessLock _lockHandler;
+        readonly string _lockPrefix;
+        private readonly TimeSpan _lockSleepMinDelay;
+        private readonly TimeSpan _lockSleepMaxDelay;
+        private readonly Random _random;
 
-        public EnforceExclusiveSagaAccessIncomingStep(IExclusiveSagaAccessLock lockHandler, CancellationToken cancellationToken)
+        public EnforceExclusiveSagaAccessIncomingStep(IExclusiveAccessLock lockHandler, int maxLockBuckets,
+            string lockPrefix, CancellationToken cancellationToken, TimeSpan? lockSleepMinDelay = null,
+            TimeSpan? lockSleepMaxDelay = null)
+            : base(maxLockBuckets, cancellationToken)
         {
             _lockHandler = lockHandler;
-            _cancellationToken = cancellationToken;
+            _lockPrefix = lockPrefix;
+            _lockSleepMinDelay = lockSleepMinDelay ?? TimeSpan.FromMilliseconds(10);
+            _lockSleepMaxDelay = lockSleepMaxDelay ?? TimeSpan.FromMilliseconds(20);
+            _random = new Random(DateTime.Now.GetHashCode());
         }
 
-        public async Task Process(IncomingStepContext context, Func<Task> next)
+        protected override async Task<bool> AcquireLockAsync(int lockId)
         {
-            var handlerInvokersForSagas = context.Load<HandlerInvokers>()
-                .Where(l => l.HasSaga)
-                .ToList();
-
-            if (!handlerInvokersForSagas.Any())
+            // We are done if we can get the lock
+            if (await _lockHandler.AcquireLockAsync(LockKey(lockId), _cancellationToken).ConfigureAwait(false))
             {
-                await next();
-                return;
+                return true;
             }
 
-            var message = context.Load<Message>();
-            var transactionContext = context.Load<ITransactionContext>();
-            var messageContext = new MessageContext(transactionContext);
-
-            var messageBody = message.Body;
-
-            var correlationProperties = handlerInvokersForSagas
-                .Select(h => h.Saga)
-                .SelectMany(saga => _sagaHelper.GetCorrelationProperties(messageBody, saga).ForMessage(messageBody)
-                    .Select(correlationProperty => new { saga, correlationProperty }))
-                    .ToList();
-
-            var locksToObtain = correlationProperties
-                .Select(a => new
-                {
-                    SagaDataType = a.saga.GetSagaDataType().FullName,
-                    CorrelationPropertyName = a.correlationProperty.PropertyName,
-                    CorrelationPropertyValue = a.correlationProperty.ValueFromMessage(messageContext, messageBody)
-                })
-                .Select(a => a.ToString())
-                .OrderBy(str => str) // enforce consistent ordering to avoid deadlocks
-                .ToArray();
-
-            try
-            {
-                await WaitForLocks(locksToObtain);
-                await next();
-            }
-            finally
-            {
-                await ReleaseLocks(locksToObtain);
-            }
+            // If we did not get the lock, we need to sleep and jitter the sleep period to avoid all
+            // the locked threads waking up at the same time.
+            var sleepRange = _lockSleepMaxDelay.TotalMilliseconds - _lockSleepMinDelay.TotalMilliseconds;
+            var sleepTime = _lockSleepMinDelay + TimeSpan.FromMilliseconds(_random.NextDouble() * sleepRange);
+            await Task.Delay(sleepTime, _cancellationToken).ConfigureAwait(false);
+            return false;
         }
 
-        async Task WaitForLocks(string[] lockIds)
+        protected override Task<bool> ReleaseLockAsync(int lockId)
         {
-            for (var index = 0; index < lockIds.Length; index++)
-            {
-                while (!await _lockHandler.AquireLockAsync(lockIds[index], _cancellationToken))
-                {
-                    await Task.Yield();
-                }
-            }
+            return _lockHandler.ReleaseLockAsync(LockKey(lockId));
         }
 
-        async Task ReleaseLocks(string[] lockIds)
-        {
-            for (var index = 0; index < lockIds.Length; index++)
-            {
-                await _lockHandler.ReleaseLockAsync(lockIds[index]);
-            }
-        }
+        string LockKey(int lockId) => $"{_lockPrefix}{lockId}";
 
-        public override string ToString() => "EnforceExclusiveSagaAccessIncomingStep";
+        public override string ToString() => $"EnforceExclusiveSagaAccessIncomingStep({_maxLockBuckets})";
     }
 }

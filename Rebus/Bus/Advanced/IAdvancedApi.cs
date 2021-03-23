@@ -36,5 +36,10 @@ namespace Rebus.Bus.Advanced
         /// Exposes a synchronous version of <see cref="IBus"/> that essentially mimics all APIs only providing them in a synchronous version
         /// </summary>
         ISyncBus SyncBus { get; }
+
+        /// <summary>
+        /// Exposes the <see cref="IExclusiveAccessLock"/> API for managing exclusive access locks
+        /// </summary>
+        IExclusiveAccessLock ExclusiveAccessLock { get; }
     }
 }

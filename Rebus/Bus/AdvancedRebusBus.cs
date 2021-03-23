@@ -41,6 +41,8 @@ namespace Rebus.Bus
             public IDataBus DataBus => _rebusBus._dataBus;
 
             public ISyncBus SyncBus => new SyncApi(_rebusBus);
+
+            public IExclusiveAccessLock ExclusiveAccessLock => _rebusBus._exclusiveAccessLock;
         }
 
         class TransportMessageApi : ITransportMessageApi
