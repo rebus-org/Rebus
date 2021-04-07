@@ -1064,6 +1064,9 @@
 ## 6.5.5
 * Perform directory read/write access check in file system saga persister too - thanks [kendallb]
 
+## vnext
+* Improve dispatch speed by using the nifty type-to-index trick
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
