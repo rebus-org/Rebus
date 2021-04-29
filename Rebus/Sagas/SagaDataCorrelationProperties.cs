@@ -33,14 +33,9 @@ namespace Rebus.Sagas
             var messageType = body.GetType();
 
             var potentialCorrelationProperties = new [] {messageType}.Concat(messageType.GetBaseTypes())
-                .SelectMany(type =>
-                {
-                    CorrelationProperty[] potentialCorrelationproperties;
-
-                    return _correlationProperties.TryGetValue(type, out potentialCorrelationproperties)
-                        ? potentialCorrelationproperties
-                        : new CorrelationProperty[0];
-                })
+                .SelectMany(type => _correlationProperties.TryGetValue(type, out var potentialCorrelationproperties)
+                    ? potentialCorrelationproperties
+                    : new CorrelationProperty[0])
                 .ToList();
 
             if (!potentialCorrelationProperties.Any())

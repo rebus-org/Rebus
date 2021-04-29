@@ -66,7 +66,6 @@ namespace Rebus.Tests.Integration
             }
 
             await messageCounts.WaitUntil(d => d.Count >= messageCount, timeoutSeconds: 10);
-
             // wait 1 extra second for unexpected messages to arrive...
             await Task.Delay(TimeSpan.FromSeconds(1));
 

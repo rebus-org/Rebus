@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -42,10 +43,12 @@ namespace Rebus.Tests.Synchronous
                 bus.SendLocal("ey det virker");
             });
 
-            if (Environment.Version.Major != 5) // Setting ApartmentState is not supported in Net 5.0
+            // Setting ApartmentState is not supported in Net 5.0 and on Linux/OSX
+            if (Environment.Version.Major !>= 5 && !(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)))
             {
                 thread.SetApartmentState(ApartmentState.STA);
             }
+
             thread.Start();
 
             Assert.That(thread.Join(1000), Is.True, "thread did not finish within timeout");
