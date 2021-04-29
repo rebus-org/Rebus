@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Logging;
@@ -41,9 +42,90 @@ namespace Rebus.Routing.TypeBased
         /// </summary>
         public TypeBasedRouter MapAssemblyOf(Type messageType, string destinationAddress)
         {
-            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes())
+            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass))
             {
                 SaveMapping(typeToMap, destinationAddress);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TDerivedFrom"/>
+        /// and derived from <typeparamref name="TDerivedFrom"/>
+        /// </summary>
+        public TypeBasedRouter MapAssemblyDerivedFrom<TDerivedFrom>(string destinationAddress)
+        {
+            MapAssemblyDerivedFrom(typeof(TDerivedFrom), destinationAddress);
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <paramref name="derivedFrom"/>
+        /// and optionally derived from <paramref name="derivedFrom"/>
+        /// </summary>
+        public TypeBasedRouter MapAssemblyDerivedFrom(Type derivedFrom, string destinationAddress)
+        {
+            foreach (var typeToMap in derivedFrom.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass))
+            {
+                if (derivedFrom == null || typeToMap != derivedFrom && derivedFrom.IsAssignableFrom(typeToMap))
+                {
+                    SaveMapping(typeToMap, destinationAddress);
+                }
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/> under
+        /// the namespace that type lives under. So all types within the same namespace will get mapped to that destination address, but not types under
+        /// other namespaces. This allows you to separate messages for specific queues by namespace and register them all in one go.
+        /// </summary>
+        public TypeBasedRouter MapAssemblyNamespaceOf<TMessage>(string destinationAddress)
+        {
+            MapAssemblyNamespaceOf(typeof(TMessage), destinationAddress);
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <paramref name="messageType"/> under
+        /// the namespace that type lives under. So all types within the same namespace will get mapped to that destination address, but not types under
+        /// other namespaces. This allows you to separate messages for specific queues by namespace and register them all in one go.
+        /// </summary>
+        public TypeBasedRouter MapAssemblyNamespaceOf(Type messageType, string destinationAddress)
+        {
+            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass && t.Namespace != null && t.Namespace.StartsWith(messageType.Namespace ?? string.Empty)))
+            {
+                SaveMapping(typeToMap, destinationAddress);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/> under
+        /// the namespace that type lives under and derived from <typeparamref name="TDerivedFrom"/>. So all types within the same namespace will
+        /// get mapped to that destination address, but not types under other namespaces. This allows you to separate messages for specific queues by
+        /// namespace and register them all in one go.
+        /// </summary>
+        public TypeBasedRouter MapAssemblyNamespaceOfDerivedFrom<TMessage, TDerivedFrom>(string destinationAddress)
+        {
+            MapAssemblyNamespaceOfDerivedFrom(typeof(TMessage), typeof(TDerivedFrom), destinationAddress);
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <paramref name="messageType"/> under
+        /// the namespace that type lives under and derived from <paramref name="derivedFrom"/>. So all types within the same namespace will
+        /// get mapped to that destination address, but not types under other namespaces. This allows you to separate messages for specific queues by
+        /// namespace and register them all in one go.
+        /// </summary>
+        public TypeBasedRouter MapAssemblyNamespaceOfDerivedFrom(Type messageType, Type derivedFrom, string destinationAddress)
+        {
+            foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass && t.Namespace != null && t.Namespace.StartsWith(messageType.Namespace ?? string.Empty)))
+            {
+                if (derivedFrom == null || typeToMap != derivedFrom && derivedFrom.IsAssignableFrom(typeToMap))
+                {
+                    SaveMapping(typeToMap, destinationAddress);
+                }
             }
             return this;
         }
@@ -140,9 +222,7 @@ namespace Rebus.Routing.TypeBased
 
         string GetDestinationAddressForMessageType(Type messageType)
         {
-            string destinationAddress;
-
-            if (!_messageTypeAddresses.TryGetValue(messageType, out destinationAddress))
+            if (!_messageTypeAddresses.TryGetValue(messageType, out var destinationAddress))
             {
                 if (_fallbackAddress != null) return _fallbackAddress;
 

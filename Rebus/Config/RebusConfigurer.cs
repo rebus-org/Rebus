@@ -337,13 +337,13 @@ namespace Rebus.Config
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
-                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>(), c.Get<ITransport>()))
+                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>(), transport))
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
                     .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
                     .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
-                    .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
+                    .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory, options))
                     .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
                     .OnSend(new AssignDefaultHeadersStep(transport, rebusTime, messageTypeNameConvention, options.DefaultReturnAddressOrNull))
