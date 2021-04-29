@@ -7,7 +7,6 @@ using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Transport;
 // ReSharper disable ForCanBeConvertedToForeach
-#pragma warning disable 1998
 
 namespace Rebus.Sagas.Exclusive
 {

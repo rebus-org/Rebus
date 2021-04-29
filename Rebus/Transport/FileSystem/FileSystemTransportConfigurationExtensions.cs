@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Rebus.Config;
 using Rebus.Time;
 // ReSharper disable UnusedMember.Global
@@ -16,6 +17,11 @@ namespace Rebus.Transport.FileSystem
         /// </summary>
         public static FileSystemTransportOptions UseFileSystem(this StandardConfigurer<ITransport> configurer, string baseDirectory, string inputQueueName)
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                throw new PlatformNotSupportedException(
+                    "Since file lock currently cannot be created safely in C# on linux, this FileSystemTransport is not supported");
+            }
             if (baseDirectory == null) throw new ArgumentNullException(nameof(baseDirectory));
             if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
 
@@ -43,7 +49,6 @@ namespace Rebus.Transport.FileSystem
             if (baseDirectory == null) throw new ArgumentNullException(nameof(baseDirectory));
 
             configurer.Register(context => new FileSystemTransport(baseDirectory, null, new FileSystemTransportOptions(), context.Get<IRebusTime>()));
-            
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
     }

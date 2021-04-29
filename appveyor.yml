@@ -13,3 +13,7 @@ build_script:
   - dotnet build Rebus                  -c Release /p:EnableSourceLink=false
   - dotnet build Rebus.Tests.Contracts  -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
   - dotnet build Rebus.Tests            -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
+
+test_script:
+  - dotnet test Rebus.Tests.Contracts --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
+  - dotnet test Rebus.Tests --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false

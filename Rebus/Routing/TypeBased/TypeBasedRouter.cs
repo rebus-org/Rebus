@@ -222,9 +222,7 @@ namespace Rebus.Routing.TypeBased
 
         string GetDestinationAddressForMessageType(Type messageType)
         {
-            string destinationAddress;
-
-            if (!_messageTypeAddresses.TryGetValue(messageType, out destinationAddress))
+            if (!_messageTypeAddresses.TryGetValue(messageType, out var destinationAddress))
             {
                 if (_fallbackAddress != null) return _fallbackAddress;
 

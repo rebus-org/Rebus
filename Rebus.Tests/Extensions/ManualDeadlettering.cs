@@ -90,7 +90,7 @@ namespace Rebus.Tests.Extensions
 
             await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
 
-            var caughtException = await caughtExceptions.DequeueNext(timeoutSeconds: 2);
+            var caughtException = await caughtExceptions.DequeueNext(timeoutSeconds: 5);
 
             Console.WriteLine(caughtException);
 

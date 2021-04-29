@@ -486,7 +486,7 @@
 * Updated SimpleInjector dependency to 3.0.1
 * Added saga auditing mechanism that can output mutations to the log
 * Added file system transport
-* Updated Azure Service Bus dependency to 3.0.1 
+* Updated Azure Service Bus dependency to 3.0.1
 * Updated Azure Storage dep to 5.0.0
 
 ## 0.98.1
@@ -1051,9 +1051,21 @@
 ## 6.4.2
 * Add [UsedImplicitly] annotation to [IHandleMessages] so implementations doesn't show up as unused - thanks [zlepper]
 
-## 6.5.0
+## 6.5.2
 * Make the number of saga data conflict resolution attempts configurable
 * Additional endpoint mapping methods - thanks [kendallb]
+
+## 6.5.3
+* `isCompliant: true` makes Rebus much more CLS compliant
+
+## 6.5.4
+* Use GUID in file name when doing read/write test in file system data bus storage to avoid colliding with other processes starting up - thanks [kendallb]
+
+## 6.5.5
+* Perform directory read/write access check in file system saga persister too - thanks [kendallb]
+
+## vnext
+* Improve dispatch speed by using the nifty type-to-index trick
 
 ## 7.0.0-b1
 * Remove .NET 4.5 and other unnecessary targets
