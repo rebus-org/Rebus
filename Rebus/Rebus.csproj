@@ -52,6 +52,15 @@
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);JETBRAINS_ANNOTATIONS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>HAS_ASYNC_LOCAL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <DefineConstants>HAS_TO_HASHSET;HAS_ASYNC_LOCAL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
+    <DefineConstants>HAS_TO_HASHSET;HAS_ASYNC_LOCAL</DefineConstants>
+  </PropertyGroup>
   <ItemGroup Condition="'$(EnableSourceLink)' != 'false'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
