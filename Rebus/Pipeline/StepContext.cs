@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline
@@ -15,15 +15,23 @@ namespace Rebus.Pipeline
         public const string StepContextKey = "stepContext";
 
         readonly ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+        readonly object[] _fastItems = new object[100];
 
         /// <summary>
-        /// Saves the given instance in the bag with a key derived from the (possibly explicitly specified) type <typeparamref name="T"/> (by calling <see cref="Type.FullName"/>).
-        /// Any instances currently stored under that key will be overwritten.
+        /// Saves the given instance in the bag with a key derived from the (possibly explicitly specified) type <typeparamref name="T"/>
+        /// Any instances currently stored under that type will be overwritten.
         /// </summary>
         public T Save<T>(T instance)
         {
-            return Save(typeof(T).FullName, instance);
+            _fastItems[TypedId<T>.Id] = instance;
+            return instance;
         }
+
+        /// <summary>
+        /// Loads the instance stored under the type <typeparamref name="T"/> using it as a key.
+        /// Returns null if none could be found.
+        /// </summary>
+        public T Load<T>() => (T)_fastItems[TypedId<T>.Id];
 
         /// <summary>
         /// Saves the given instance in the bag with the specified key. Any instances currently stored under that key will be overwritten.
@@ -35,23 +43,23 @@ namespace Rebus.Pipeline
         }
 
         /// <summary>
-        /// Loads the instance stored under the key that is stored under a key as determined by calling <see cref="Type.FullName"/> on the specified type <typeparamref name="T"/>.
-        /// Returns null if none could be found.
-        /// </summary>
-        public T Load<T>()
-        {
-            return Load<T>(typeof(T).FullName);
-        }
-
-        /// <summary>
         /// Loads the instance stored under the specified key. Returns null if none could be found.
         /// </summary>
-        public T Load<T>(string key)
+        public T Load<T>(string key) => _items.TryGetValue(key, out var instance) ? (T)instance : default(T);
+
+        /// <summary>
+        /// Index-per-type counter that is incremented every time accessing <see cref="TypedId{TKey}"/> causes a new type to be generated
+        /// </summary>
+        static int _index;
+
+        /// <summary>
+        /// Static type with static ID field that can automatically work as a type-to-index mapping
+        /// </summary>
+        // ReSharper disable once UnusedTypeParameter
+        static class TypedId<TKey>
         {
-            object instance;
-            return _items.TryGetValue(key, out instance)
-                ? (T)instance
-                : default(T);
+            // ReSharper disable once StaticMemberInGenericType
+            internal static readonly int Id = Interlocked.Increment(ref _index);
         }
     }
 }

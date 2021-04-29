@@ -39,12 +39,10 @@
     <DocumentationFile>bin\Release\Rebus.Tests.Contracts.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Properties\AssemblyInfo.cs" />
     <None Include="..\artwork\little_rebusbus2_copy-500x500.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj" />
