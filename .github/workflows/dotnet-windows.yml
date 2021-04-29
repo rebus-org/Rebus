@@ -2,9 +2,10 @@ name: .NET windows
 
 on:
   push:
-    branches: [ master, net50 ]
-  pull_request:
-    branches: [ master, net50 ]
+    branches: [ master, release/7 ]
+    paths-ignore:
+    - '**.md'
+    - '.github/**'
 
 jobs:
   build:

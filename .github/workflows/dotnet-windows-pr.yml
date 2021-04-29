@@ -1,7 +1,7 @@
-name: .NET Ubuntu
+name: .NET windows PR
 
 on:
-  push:
+  pull_request:
     branches: [ master, release/7 ]
     paths-ignore:
     - '**.md'
@@ -10,7 +10,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -27,10 +27,12 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run:  |
+        dotnet nuget locals all --clear
+        dotnet restore
     - name: Build
       run: dotnet build --no-restore -c Release /p:EnableSourceLink=false
     - name: Test Contracts
       run: dotnet test Rebus.Tests.Contracts --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
     - name: Test
-      run: dotnet test Rebus.Tests --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
+      run: dotnet test Rebus.Tests --no-build --verbosity normal -c Release /p:WarningLevel=3 /p:EnableSourceLink=false
