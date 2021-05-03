@@ -15,7 +15,7 @@
     <RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Product>Rebus</Product>
-    <PackageId>Rebus</PackageId>
+    <PackageId>Microting.Rebus</PackageId>
 
     <!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
