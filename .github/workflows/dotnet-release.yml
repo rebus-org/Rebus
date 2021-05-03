@@ -75,5 +75,7 @@ jobs:
       run: dotnet build --configuration Release
     - name: Pack
       run: dotnet pack Rebus7.sln -c Release -o ./artifacts -p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
-    - name: Push generated package to GitHub registry
+    - name: Push generated Rebus package to GitHub registry
       run: dotnet nuget push /home/runner/work/Rebus/Rebus/artifacts/Microting.Rebus.${{ steps.get_version.outputs.VERSION }}.nupkg -k ${{secrets.NUGET_SECRET_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
+    - name: Push generated Rebus.Tests.Contracts package to GitHub registry
+      run: dotnet nuget push /home/runner/work/Rebus/Rebus/artifacts/Microting.Rebus.Tests.Contracts.${{ steps.get_version.outputs.VERSION }}.nupkg -k ${{secrets.NUGET_SECRET_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
