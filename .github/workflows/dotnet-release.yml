@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
-      
+
 jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
@@ -76,4 +76,4 @@ jobs:
     - name: Pack
       run: dotnet pack Rebus7.sln -c Release -o ./artifacts -p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
     - name: Push generated package to GitHub registry
-      run: dotnet nuget push /home/runner/work/Rebus/Rebus/artifacts/Microting.eForm.${{ steps.get_version.outputs.VERSION }}.nupkg -k ${{secrets.NUGET_SECRET_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
+      run: dotnet nuget push /home/runner/work/Rebus/Rebus/artifacts/Microting.Rebus.${{ steps.get_version.outputs.VERSION }}.nupkg -k ${{secrets.NUGET_SECRET_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
