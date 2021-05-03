@@ -2,11 +2,9 @@ name: .NET Release
 
 on:
   push:
-    branches: [ master, release/7 ]
-    paths-ignore:
-    - '**.md'
-    - '.github/**'
-
+    tags:
+      - 'v*.*.*'
+      
 jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
