@@ -11,9 +11,7 @@ using Rebus.Extensions;
 namespace Rebus.Serialization.Json
 {
     /// <summary>
-    /// Implementation of <see cref="ISerializer"/> that uses Newtonsoft JSON.NET internally, with some pretty robust settings
-    /// (i.e. full type info is included in the serialized format in order to support deserializing "unknown" types like
-    /// implementations of interfaces, etc)
+    /// Implementation of <see cref="ISerializer"/> that uses .NET System.Text.Json internally
     /// </summary>
     class SystemJsonSerializer : ISerializer
     {
