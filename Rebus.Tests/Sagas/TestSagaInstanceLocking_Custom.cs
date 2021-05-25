@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
-using Rebus.Bus.Advanced;
 using Rebus.Config;
-using Rebus.ExclusiveLocks;
 using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Persistence.InMem;
@@ -49,11 +48,10 @@ namespace Rebus.Tests.Sagas
             Configure.With(sagaActivator)
                 .Logging(l => l.Use(loggerFactory))
                 .Transport(t => t.UseInMemoryTransport(network, "lock-test"))
-                .Locking(l => l.UseCustomerLocker(new CustomLocker()))
                 .Sagas(s =>
                 {
                     s.StoreInMemory();
-                    s.EnforceExclusiveAccessViaLocker();
+                    s.EnforceExclusiveAccess(new CustomLocker());
                 })
                 .Routing(t => t.TypeBased().Map<ProcessThisThingRequest>("processor"))
                 .Options(o =>
@@ -150,19 +148,14 @@ namespace Rebus.Tests.Sagas
             }
         }
 
-        class CustomLocker : IExclusiveAccessLock
+        class CustomLocker : IExclusiveSagaAccessLock
         {
             readonly SemaphoreSlim _mutex = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
-            public async Task<bool> AcquireLockAsync(string key, CancellationToken cancellationToken)
+            public async Task<bool> AquireLockAsync(string key, CancellationToken cancellationToken)
             {
                 await _mutex.WaitAsync(cancellationToken);
                 return true;
-            }
-
-            public Task<bool> IsLockAcquiredAsync(string key, CancellationToken cancellationToken)
-            {
-                return Task.FromResult(_mutex.CurrentCount > 0);
             }
 
             public async Task<bool> ReleaseLockAsync(string key)

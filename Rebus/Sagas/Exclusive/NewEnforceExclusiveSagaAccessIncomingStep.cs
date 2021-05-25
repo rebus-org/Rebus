@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,16 +11,18 @@ using Rebus.Transport;
 
 namespace Rebus.Sagas.Exclusive
 {
-    abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
+    class NewEnforceExclusiveSagaAccessIncomingStep : IIncomingStep, IDisposable
     {
+        readonly CancellationToken _cancellationToken;
         readonly SagaHelper _sagaHelper = new SagaHelper();
-        protected readonly int _maxLockBuckets;
-        protected readonly CancellationToken _cancellationToken;
+        readonly SemaphoreSlim[] _locks;
 
-        protected EnforceExclusiveSagaAccessIncomingStepBase(int maxLockBuckets, CancellationToken cancellationToken)
+        public NewEnforceExclusiveSagaAccessIncomingStep(int lockBuckets, CancellationToken cancellationToken)
         {
-            _maxLockBuckets = maxLockBuckets;
             _cancellationToken = cancellationToken;
+            _locks = Enumerable.Range(0, lockBuckets)
+                .Select(n => new SemaphoreSlim(1, 1))
+                .ToArray();
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -54,10 +57,10 @@ namespace Rebus.Sagas.Exclusive
                     CorrelationPropertyValue = a.correlationProperty.ValueFromMessage(messageContext, messageBody)
                 })
                 .Select(a => a.ToString())
-                .Select(lockId => Math.Abs(lockId.GetHashCode()) % _maxLockBuckets)
+                .Select(lockId => Math.Abs(lockId.GetHashCode()) % _locks.Length)
                 .Distinct() // avoid accidentally acquiring the same lock twice, because a bucket got hit more than once
-                .OrderBy(str => str) // enforce consistent ordering to avoid deadlocks
-                .ToArray();
+                .OrderBy(bucket => bucket) // enforce consistent ordering to avoid deadlocks
+                .ToList();
 
             try
             {
@@ -66,30 +69,49 @@ namespace Rebus.Sagas.Exclusive
             }
             finally
             {
-                await ReleaseLocks(locksToObtain);
+                ReleaseLocks(locksToObtain);
             }
         }
 
-        protected abstract Task<bool> AcquireLockAsync(int lockId);
-
-        protected abstract Task<bool> ReleaseLockAsync(int lockId);
-
-        async Task WaitForLocks(int[] lockIds)
+        async Task WaitForLocks(List<int> lockIds)
         {
-            for (var index = 0; index < lockIds.Length; index++)
+            for (var index = 0; index < lockIds.Count; index++)
             {
-                while (!await AcquireLockAsync(lockIds[index]))
+                var id = lockIds[index];
+                await _locks[id].WaitAsync(_cancellationToken);
+            }
+        }
+
+        void ReleaseLocks(List<int> lockIds)
+        {
+            for (var index = 0; index < lockIds.Count; index++)
+            {
+                var id = lockIds[index];
+                _locks[id].Release();
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"NewEnforceExclusiveSagaAccessIncomingStep({_locks.Length})";
+        }
+
+        bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            try
+            {
+                foreach (var disposable in _locks)
                 {
-                    await Task.Yield();
+                    disposable.Dispose();
                 }
             }
-        }
-
-        async Task ReleaseLocks(int[] lockIds)
-        {
-            for (var index = 0; index < lockIds.Length; index++)
+            finally
             {
-                await ReleaseLockAsync(lockIds[index]);
+                _disposed = true;
             }
         }
     }
