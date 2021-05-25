@@ -168,9 +168,9 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
+        /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>.
         /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
-        /// which can be enabled by going 
+        /// which can be enabled by going
         /// <code>
         /// Configure.With(...)
         ///     .(...)
@@ -186,9 +186,9 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Subscribes to the topic defined by the assembly-qualified name of <paramref name="eventType"/>. 
+        /// Subscribes to the topic defined by the assembly-qualified name of <paramref name="eventType"/>.
         /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
-        /// which can be enabled by going 
+        /// which can be enabled by going
         /// <code>
         /// Configure.With(...)
         ///     .(...)
@@ -226,7 +226,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Publishes the event message on the topic defined by the assembly-qualified name of the type of the message.
         /// While this kind of pub/sub can work universally with the general topic-based routing, it works especially well with type-based routing,
-        /// which can be enabled by going 
+        /// which can be enabled by going
         /// <code>
         /// Configure.With(...)
         ///     .(...)

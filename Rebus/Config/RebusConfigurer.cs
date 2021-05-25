@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading;
 using Rebus.Activation;
 using Rebus.Bus;
+using Rebus.Bus.Advanced;
 using Rebus.Compression;
 using Rebus.DataBus;
 using Rebus.DataBus.ClaimCheck;
+using Rebus.ExclusiveLocks;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
@@ -59,6 +61,16 @@ namespace Rebus.Config
             {
                 _injectionist.Register(c => (IContainerAdapter)handlerActivator);
             }
+        }
+
+        /// <summary>
+        /// Configures how Rebus configures exclusive locking saga data by allowing for choosing which implementation of <see cref="IExclusiveAccessLock"/> to use
+        /// </summary>
+        public RebusConfigurer Locking(Action<StandardConfigurer<IExclusiveAccessLock>> configurer)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            configurer(new StandardConfigurer<IExclusiveAccessLock>(_injectionist, _options));
+            return this;
         }
 
         /// <summary>
@@ -363,6 +375,8 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ITopicNameConvention>(c => new DefaultTopicNameConvention());
 
             PossiblyRegisterDefault<IMessageTypeNameConvention>(c => new SimpleAssemblyQualifiedMessageTypeNameConvention());
+
+            PossiblyRegisterDefault<IExclusiveAccessLock>(c => new ConcurrentDictionaryExclusiveAccessLock());
 
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
             Action startAction = null;
