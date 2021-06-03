@@ -1064,8 +1064,11 @@
 ## 6.5.5
 * Perform directory read/write access check in file system saga persister too - thanks [kendallb]
 
-## vnext
+## 6.6.0
 * Improve dispatch speed by using the nifty type-to-index trick
+* Add serializer implementation for System.Text.Json, available via `.Serialization(s => s.UseSystemJson())` - thanks [mathiasnohall]
+
+
 
 ---
 
@@ -1099,6 +1102,7 @@
 [Liero]: https://github.com/Liero
 [madstt]: https://github.com/madstt
 [maeserichar]: https://github.com/maeserichar
+[mathiasnohall]: https://github.com/mathiasnohall
 [mattwhetton]: https://github.com/mattwhetton
 [maxx1337]: https://github.com/maxx1337
 [mclausen]: https://github.com/mclausen
