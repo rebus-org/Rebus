@@ -1068,7 +1068,8 @@
 * Improve dispatch speed by using the nifty type-to-index trick
 * Add serializer implementation for System.Text.Json, available via `.Serialization(s => s.UseSystemJson())` - thanks [mathiasnohall]
 
-
+## 6.6.1
+* Make it possible to set the `rbs2-senttime` header explicitly (i.e. it is no longer overwritten by the default headers step)
 
 ---
 

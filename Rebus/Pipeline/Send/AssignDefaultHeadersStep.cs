@@ -11,7 +11,7 @@ namespace Rebus.Pipeline.Send
     /// Outgoing step that sets default headers of the outgoing message.
     /// If the <see cref="Headers.MessageId"/> header has not been set, it is set to a new GUID.
     /// If the bus is not a one-way client, the <see cref="Headers.ReturnAddress"/> header is set to the address of the transport (unless the header has already been set to something else)
-    /// The <see cref="Headers.SentTime"/> header is set to <see cref="DateTimeOffset.Now"/>.
+    /// If the <see cref="Headers.SentTime"/> header has not been set, it is set to <see cref="DateTimeOffset.Now"/>.
     /// If the <see cref="Headers.Type"/> header has not been set, it is set to the simple assembly-qualified name of the send message type
     /// </summary>
     [StepDocumentation(@"Assigns these default headers to the outgoing message: 
@@ -20,7 +20,7 @@ namespace Rebus.Pipeline.Send
 
 2) a 'rbs2-return-address' (unless the bus is a one-way client) (*).
 
-3) a 'rbs2-senttime' with the current time.
+3) a 'rbs2-senttime' with the current time (*).
 
 -4) 'rbs2-msg-type' with the message's simple assembly-qualified type name (*).
 -
@@ -63,7 +63,10 @@ namespace Rebus.Pipeline.Send
                 headers[Headers.ReturnAddress] = _returnAddress;
             }
 
-            headers[Headers.SentTime] = _rebusTime.Now.ToString("O");
+            if (!headers.ContainsKey(Headers.SentTime))
+            {
+                headers[Headers.SentTime] = _rebusTime.Now.ToString("O");
+            }
 
             if (_hasOwnAddress)
             {
