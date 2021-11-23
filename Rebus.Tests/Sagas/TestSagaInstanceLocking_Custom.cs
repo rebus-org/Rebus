@@ -49,11 +49,10 @@ namespace Rebus.Tests.Sagas
             Configure.With(sagaActivator)
                 .Logging(l => l.Use(loggerFactory))
                 .Transport(t => t.UseInMemoryTransport(network, "lock-test"))
-                .Locking(l => l.UseCustomerLocker(new CustomLocker()))
                 .Sagas(s =>
                 {
                     s.StoreInMemory();
-                    s.EnforceExclusiveAccessViaLocker();
+                    s.EnforceExclusiveAccess(new CustomLocker());
                 })
                 .Routing(t => t.TypeBased().Map<ProcessThisThingRequest>("processor"))
                 .Options(o =>
