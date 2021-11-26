@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{63AB64A3-A453-4663-BDB6-530F2136609D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Tests", "Rebus.Tests\Rebus.Tests.csproj", "{959C65AB-D21A-4582-BC4F-06D1425FF274}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rebus.Tests", "Rebus.Tests\Rebus.Tests.csproj", "{959C65AB-D21A-4582-BC4F-06D1425FF274}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{1692C59F-82DB-43D3-9982-C883B99E38B2}"
 	ProjectSection(SolutionItems) = preProject
@@ -14,17 +14,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{1692C5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".stuff", ".stuff", "{1ABDD7C1-1F8D-402D-8692-3E4B66962DE0}"
 	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
 		CHANGELOG.md = CHANGELOG.md
 		CONTRIBUTING.md = CONTRIBUTING.md
 		LICENSE.md = LICENSE.md
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Tests.Contracts", "Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj", "{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rebus.Tests.Contracts", "Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj", "{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EAB8CED5-4383-48F3-AB54-E57278CDD93B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus", "Rebus\Rebus.csproj", "{319215F6-B626-4271-8EDA-E31B876F65C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rebus", "Rebus\Rebus.csproj", "{319215F6-B626-4271-8EDA-E31B876F65C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,5 +53,8 @@ Global
 		{959C65AB-D21A-4582-BC4F-06D1425FF274} = {EAB8CED5-4383-48F3-AB54-E57278CDD93B}
 		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB} = {63AB64A3-A453-4663-BDB6-530F2136609D}
 		{319215F6-B626-4271-8EDA-E31B876F65C0} = {63AB64A3-A453-4663-BDB6-530F2136609D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FEDAD2E7-01F9-45C3-AA52-85FE700C676B}
 	EndGlobalSection
 EndGlobal
