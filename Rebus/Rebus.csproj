@@ -1,70 +1,66 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Authors>mookid8000</Authors>
-    <PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
-    <Copyright>Copyright 2012</Copyright>
-    <PackageTags>rebus queue messaging service bus</PackageTags>
-    <PackageDescription>Rebus is a lean service bus for .NET</PackageDescription>
-    <RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PostBuildEvent></PostBuildEvent>
-    <Product>Rebus</Product>
-    <PackageId>Rebus</PackageId>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<Authors>mookid8000</Authors>
+		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
+		<Copyright>Copyright 2012</Copyright>
+		<PackageTags>rebus queue messaging service bus</PackageTags>
+		<PackageDescription>Rebus is a lean service bus for .NET</PackageDescription>
+		<RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PostBuildEvent></PostBuildEvent>
+		<Product>Rebus</Product>
+		<PackageId>Rebus</PackageId>
 
-    <!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-    <!-- Optional: Embed source files that are not tracked by the source control manager in the PDB -->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<!-- Optional: Embed source files that are not tracked by the source control manager in the PDB -->
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-    <!-- Optional: Include the PDB in the built .nupkg -->
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
-    <Company>Rebus FM</Company>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Rebus.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>portable</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>RELEASE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Release\Rebus.xml</DocumentationFile>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(EnableSourceLink)' != 'false'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="all" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="system.text.json" Version="6.0.0" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-  </ItemGroup>
-  <!--<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="System.Reflection.Emit.LightWeight" Version="4.3.0" />
-    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-  </ItemGroup>-->
-  <ItemGroup>
-    <None Include="..\artwork\little_rebusbus2_copy-500x500.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
+		<!-- Optional: Include the PDB in the built .nupkg -->
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
+		<Company>Rebus FM</Company>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<OutputPath>bin\Debug\</OutputPath>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<DocumentationFile>bin\Debug\Rebus.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<DebugType>portable</DebugType>
+		<Optimize>true</Optimize>
+		<OutputPath>bin\Release\</OutputPath>
+		<DefineConstants>RELEASE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<DocumentationFile>bin\Release\Rebus.xml</DocumentationFile>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(EnableSourceLink)' != 'false'">
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="all" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="system.text.json" Version="6.0.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\artwork\little_rebusbus2_copy-500x500.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
 </Project>

@@ -2,14 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
  <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>net4.8</TargetFrameworks>
+	 <LangVersion>latest</LangVersion>
   </PropertyGroup>
- <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
-   <LangVersion>latest</LangVersion>
- </PropertyGroup>
- <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-   <LangVersion>latest</LangVersion>
- </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj" />
     <ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj" />
