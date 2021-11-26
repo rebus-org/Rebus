@@ -7,6 +7,7 @@ using Rebus.Bus;
 using Rebus.Compression;
 using Rebus.DataBus;
 using Rebus.DataBus.ClaimCheck;
+using Rebus.Exceptions;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
@@ -189,14 +190,6 @@ namespace Rebus.Config
         /// </summary>
         public IBus Start()
         {
-#if HAS_CONFIGURATION_MANAGER
-            // force the silly configuration subsystem to initialize itself as a service to users, thus
-            // avoiding the oft-encountered stupid Entity Framework initialization exception
-            // complaining that something in Rebus' transaction context is not serializable
-            System.Configuration.ConfigurationManager.GetSection("system.xml/xmlReader");
-            // if you want to know more about this issue, check this out: https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/mitigation-deserialization-of-objects-across-app-domains
-#endif
-
             VerifyRequirements();
 
             _injectionist.Register(c => _options);
@@ -228,11 +221,7 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>()));
 
-            PossiblyRegisterDefault<IPipelineInvoker>(c =>
-            {
-                var pipeline = c.Get<IPipeline>();
-                return new DefaultPipelineInvokerNew(pipeline);
-            });
+            PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvokerNew(c.Get<IPipeline>()));
 
             PossiblyRegisterDefault<IBackoffStrategy>(c =>
             {
@@ -353,8 +342,6 @@ namespace Rebus.Config
                     .OnSend(new ValidateOutgoingMessageStep())
                     .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
             });
-
-            RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
 
             PossiblyRegisterDefault(c => new BusLifetimeEvents());
 
@@ -484,7 +471,7 @@ namespace Rebus.Config
 
             if (!_injectionist.Has<ITransport>())
             {
-                throw new Rebus.Exceptions.RebusConfigurationException(
+                throw new RebusConfigurationException(
                     "No transport has been configured! You need to call .Transport(t => t.Use***) in order" +
                     " to select which kind of queueing system you want to use to transport messages. If" +
                     " you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");

@@ -6,6 +6,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -27,14 +28,13 @@ namespace Rebus.Tests.Profiling
         {
             Default,
             DefaultNew,
-            Compiled,
             Action,
         }
 
-        [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Irrelevant for now")]
-        [TestCase(100000, 10, PipelineInvokerMode.Compiled, Ignore = "Irrelevant for now")]
-        [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Irrelevant for now")]
+        [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Mostly fun to run when playing around with optimizing the pipeline invoker")]
+        [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Mostly fun to run when playing around with optimizing the pipeline invoker")]
         [TestCase(100000, 10, PipelineInvokerMode.DefaultNew)]
+        //[TestCase(10000, 10, PipelineInvokerMode.DefaultNew)]
         public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
         {
             Console.WriteLine($"Running {numberOfSamples} samples with {numberOfMessages} msgs and mode {pipelineInvokerMode}");
@@ -67,73 +67,67 @@ Stats:
 
         static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats, PipelineInvokerMode pipelineInvokerMode)
         {
-            using (var adapter = new BuiltinHandlerActivator())
+            using var adapter = new BuiltinHandlerActivator();
+
+            var network = new InMemNetwork();
+
+            Configure.With(adapter)
+                .Logging(l => l.Console(LogLevel.Warn))
+                .Transport(t => t.UseInMemoryTransport(network, "perftest"))
+                .Serialization(s => s.UseSystemTextJson())
+                .Options(o =>
+                {
+                    o.SetNumberOfWorkers(0);
+                    o.SetMaxParallelism(1);
+
+                    o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
+
+                    IPipelineInvoker GetPipelineInvoker(IResolutionContext c) => pipelineInvokerMode switch
+                    {
+                        PipelineInvokerMode.Default => new DefaultPipelineInvoker(c.Get<IPipeline>()),
+                        PipelineInvokerMode.DefaultNew => new DefaultPipelineInvokerNew(c.Get<IPipeline>()),
+                        PipelineInvokerMode.Action => new ActionPipelineInvoker(c.Get<IPipeline>()),
+
+                        _ => throw new ArgumentOutOfRangeException(nameof(pipelineInvokerMode), pipelineInvokerMode, "Unknown pipeline invoker mode")
+                    };
+
+                    o.Register(GetPipelineInvoker);
+                })
+                .Start();
+
+            var serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+            //var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+            var boy = new SomeMessage("hello there!");
+
+            for (var counter = 0; counter < numberOfMessages; counter++)
             {
-                var network = new InMemNetwork();
+                var headers = new Dictionary<string, string> { { Headers.MessageId, Guid.NewGuid().ToString() } };
+                var message = new Message(headers, boy);
+                var transportMessage = serializer.Serialize(message).Result;
+                var inMemTransportMessage = transportMessage.ToInMemTransportMessage();
 
-                Configure.With(adapter)
-                    .Logging(l => l.Console(LogLevel.Warn))
-                    .Transport(t => t.UseInMemoryTransport(network, "perftest"))
-                    .Options(o =>
-                    {
-                        o.SetNumberOfWorkers(0);
-                        o.SetMaxParallelism(1);
+                network.Deliver("perftest", inMemTransportMessage);
+            };
 
-                        o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
+            var numberOfReceivedMessages = 0;
+            var gotAllMessages = new ManualResetEvent(false);
 
-                        switch (pipelineInvokerMode)
-                        {
-                            case PipelineInvokerMode.Default:
-                                o.Register<IPipelineInvoker>(c => new DefaultPipelineInvoker(c.Get<IPipeline>()));
-                                break;
-                            case PipelineInvokerMode.DefaultNew:
-                                o.Register<IPipelineInvoker>(c => new DefaultPipelineInvokerNew(c.Get<IPipeline>()));
-                                break;
-                            case PipelineInvokerMode.Compiled:
-                                o.Register<IPipelineInvoker>(c => new CompiledPipelineInvoker(c.Get<IPipeline>()));
-                                break;
-                            case PipelineInvokerMode.Action:
-                                o.Register<IPipelineInvoker>(c => new ActionPipelineInvoker(c.Get<IPipeline>()));
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException($"Unknown pipeline invoker: {pipelineInvokerMode}");
-                        }
-                    })
-                    .Start();
+            adapter.Handle<SomeMessage>(async m =>
+            {
+                Interlocked.Increment(ref numberOfReceivedMessages);
 
-                var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
-                var boy = new SomeMessage("hello there!");
-
-                for(var counter = 0; counter < numberOfMessages; counter++)
+                if (Volatile.Read(ref numberOfReceivedMessages) == numberOfMessages)
                 {
-                    var headers = new Dictionary<string, string> { { Headers.MessageId, Guid.NewGuid().ToString() } };
-                    var message = new Message(headers, boy);
-                    var transportMessage = serializer.Serialize(message).Result;
-                    var inMemTransportMessage = transportMessage.ToInMemTransportMessage();
+                    gotAllMessages.Set();
+                }
+            });
 
-                    network.Deliver("perftest", inMemTransportMessage);
-                };
+            var stopwatch = Stopwatch.StartNew();
 
-                var numberOfReceivedMessages = 0;
-                var gotAllMessages = new ManualResetEvent(false);
+            adapter.Bus.Advanced.Workers.SetNumberOfWorkers(1);
+            gotAllMessages.WaitOrDie(TimeSpan.FromSeconds(30));
 
-                adapter.Handle<SomeMessage>(async m =>
-                {
-                    Interlocked.Increment(ref numberOfReceivedMessages);
-
-                    if (Volatile.Read(ref numberOfReceivedMessages) == numberOfMessages)
-                    {
-                        gotAllMessages.Set();
-                    }
-                });
-
-                var stopwatch = Stopwatch.StartNew();
-
-                adapter.Bus.Advanced.Workers.SetNumberOfWorkers(1);
-                gotAllMessages.WaitOrDie(TimeSpan.FromSeconds(30));
-
-                return stopwatch.Elapsed;
-            }
+            return stopwatch.Elapsed;
         }
 
         class SomeMessage

@@ -72,7 +72,7 @@ Stats:
                     })
                     .Start();
 
-                var serializer = new SystemJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+                var serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
                 var boy = new SomeMessage("hello there!");
 
                 for(var counter = 0; counter < numberOfMessages; counter++)

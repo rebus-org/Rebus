@@ -1,6 +1,4 @@
-﻿#if NETSTANDARD
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +11,7 @@ namespace Rebus.Serialization.Json
     /// <summary>
     /// Implementation of <see cref="ISerializer"/> that uses .NET System.Text.Json internally
     /// </summary>
-    class SystemJsonSerializer : ISerializer
+    class SystemTextJsonSerializer : ISerializer
     {
         /// <summary>
         /// Proper content type when a message has been serialized with this serializer (or another compatible JSON serializer) and it uses the standard UTF8 encoding
@@ -33,7 +31,7 @@ namespace Rebus.Serialization.Json
         readonly IMessageTypeNameConvention _messageTypeNameConvention;
         readonly string _encodingHeaderValue;
 
-        public SystemJsonSerializer(IMessageTypeNameConvention messageTypeNameConvention, JsonSerializerOptions jsonSerializerSettings = null, Encoding encoding = null)
+        public SystemTextJsonSerializer(IMessageTypeNameConvention messageTypeNameConvention, JsonSerializerOptions jsonSerializerSettings = null, Encoding encoding = null)
         {
             _messageTypeNameConvention = messageTypeNameConvention ?? throw new ArgumentNullException(nameof(messageTypeNameConvention));
             _settings = jsonSerializerSettings;
@@ -145,4 +143,3 @@ namespace Rebus.Serialization.Json
         static string Limit(string bodyString, int maxLength) => string.Concat(bodyString.Substring(0, maxLength), " (......)");
     }
 }
-#endif

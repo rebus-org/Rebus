@@ -1,5 +1,4 @@
-﻿#pragma warning disable 1998
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace Rebus.Pipeline.Invokers
@@ -9,7 +8,7 @@ namespace Rebus.Pipeline.Invokers
     /// </summary>
     class DefaultPipelineInvokerNew : IPipelineInvoker
     {
-        static readonly Task<int> Noop = Task.FromResult(0);
+        static readonly Task Noop = Task.CompletedTask;
 
         readonly Func<IncomingStepContext, Task> _processIncoming;
         readonly Func<OutgoingStepContext, Task> _processOutgoing;
@@ -28,11 +27,11 @@ namespace Rebus.Pipeline.Invokers
             {
                 Task InvokerFunction(int index)
                 {
-                    if (index == incomingSteps.Length) return Noop;
-
                     Task InvokeNext() => InvokerFunction(index + 1);
 
-                    return incomingSteps[index].Process(context, InvokeNext);
+                    return index == incomingSteps.Length 
+                        ? Noop 
+                        : incomingSteps[index].Process(context, InvokeNext);
                 }
 
                 return InvokerFunction(0);
@@ -44,11 +43,11 @@ namespace Rebus.Pipeline.Invokers
             {
                 Task InvokerFunction(int index)
                 {
-                    if (index == outgoingSteps.Length) return Noop;
-
                     Task InvokeNext() => InvokerFunction(index + 1);
 
-                    return outgoingSteps[index].Process(context, InvokeNext);
+                    return index == outgoingSteps.Length 
+                        ? Noop 
+                        : outgoingSteps[index].Process(context, InvokeNext);
                 }
 
                 return InvokerFunction(0);

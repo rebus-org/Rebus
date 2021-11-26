@@ -1071,8 +1071,10 @@
 ## 6.6.1
 * Make it possible to set the `rbs2-senttime` header explicitly (i.e. it is no longer overwritten by the default headers step)
 
-## 6.7.0
-* Change locking interface to be more generic. Sorry, but if you were using the `IExclusiveSagaAccessLock` interface somehow, this is a breaking change. Otherwise, you should be good 🙂  - thanks [kendallb]
+## 7.0.0-b01
+* Change locking interface to be more generic - thanks [kendallb]
+* Only target .NET Standard 2.0
+* Update Newtonsoft JSON dep to 13.0.1
 
 ---
 

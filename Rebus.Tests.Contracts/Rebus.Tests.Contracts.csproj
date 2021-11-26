@@ -2,15 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
  <PropertyGroup>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rebus.Tests.Contracts</RootNamespace>
-    <AssemblyName>Rebus.Tests.Contracts</AssemblyName>
-    <TargetFrameworks>net45;net46;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>mookid8000</Authors>
-    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
-    <Copyright>Copyright 2012-2019</Copyright>
+    <Copyright>Copyright 2012</Copyright>
     <PackageTags>rebus tests contracts</PackageTags>
     <PackageIconUrl></PackageIconUrl>
     <PackageDescription>Contains contract tests for Rebus services - valuable, if you e.g. want to implement your own Rebus transport, subscription storage, etc.</PackageDescription>
@@ -48,8 +43,8 @@
     <ProjectReference Include="..\Rebus\Rebus.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
-    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NUnit" Version="3.13.2" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46'">
     <Reference Include="Microsoft.CSharp" />
