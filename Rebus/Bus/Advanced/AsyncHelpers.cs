@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable AsyncVoidLambda
 
 namespace Rebus.Bus.Advanced
 {
@@ -33,8 +34,8 @@ namespace Rebus.Bus.Advanced
         /// </summary>
         class CustomSynchronizationContext : SynchronizationContext
         {
-            readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _items = new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
-            readonly AutoResetEvent _workItemsWaiting = new AutoResetEvent(false);
+            readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _items = new();
+            readonly AutoResetEvent _workItemsWaiting = new(initialState: false);
             readonly Func<Task> _task;
 
             ExceptionDispatchInfo _caughtException;
@@ -43,8 +44,7 @@ namespace Rebus.Bus.Advanced
 
             public CustomSynchronizationContext(Func<Task> task)
             {
-                if (task == null) throw new ArgumentNullException(nameof(task), "Please remember to pass a Task to be executed");
-                _task = task;
+                _task = task ?? throw new ArgumentNullException(nameof(task), "Please remember to pass a Task to be executed");
             }
 
             public override void Post(SendOrPostCallback function, object state)
@@ -58,7 +58,7 @@ namespace Rebus.Bus.Advanced
             /// </summary>
             public void Run()
             {
-                Post(async _ =>
+                async void RunFunction(object _)
                 {
                     try
                     {
@@ -71,15 +71,15 @@ namespace Rebus.Bus.Advanced
                     }
                     finally
                     {
-                        Post(state => _done = true, null);
+                        Post(_ => _done = true, null);
                     }
-                }, null);
+                }
+
+                Post(RunFunction, state: null);
 
                 while (!_done)
                 {
-                    Tuple<SendOrPostCallback, object> task;
-
-                    if (_items.TryDequeue(out task))
+                    if (_items.TryDequeue(out var task))
                     {
                         task.Item1(task.Item2);
 
@@ -94,15 +94,9 @@ namespace Rebus.Bus.Advanced
                 }
             }
 
-            public override void Send(SendOrPostCallback d, object state)
-            {
-                throw new NotSupportedException("Cannot send to same thread");
-            }
+            public override void Send(SendOrPostCallback d, object state) => throw new NotSupportedException("Cannot send to same thread");
 
-            public override SynchronizationContext CreateCopy()
-            {
-                return this;
-            }
+            public override SynchronizationContext CreateCopy() => this;
         }
     }
 }

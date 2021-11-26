@@ -18,13 +18,13 @@ namespace Rebus.Activation
     /// </summary>
     public class BuiltinHandlerActivator : IContainerAdapter, IDisposable
     {
-        readonly List<object> _handlerInstances = new List<object>();
-        readonly List<Delegate> _handlerFactoriesNoArguments = new List<Delegate>();
-        readonly List<Delegate> _handlerFactoriesMessageContextArgument = new List<Delegate>();
-        readonly List<Delegate> _handlerFactoriesBusAndMessageContextArguments = new List<Delegate>();
+        readonly List<object> _handlerInstances = new();
+        readonly List<Delegate> _handlerFactoriesNoArguments = new();
+        readonly List<Delegate> _handlerFactoriesMessageContextArgument = new();
+        readonly List<Delegate> _handlerFactoriesBusAndMessageContextArguments = new();
 
-        readonly ConcurrentDictionary<Type, Func<IMessageContext, IHandleMessages>[]> _cachedHandlerFactories = new ConcurrentDictionary<Type, Func<IMessageContext, IHandleMessages>[]>();
-        readonly ConcurrentDictionary<Type, IHandleMessages[]> _cachedHandlers = new ConcurrentDictionary<Type, IHandleMessages[]>();
+        readonly ConcurrentDictionary<Type, Func<IMessageContext, IHandleMessages>[]> _cachedHandlerFactories = new();
+        readonly ConcurrentDictionary<Type, IHandleMessages[]> _cachedHandlers = new();
 
         /// <summary>
         /// Returns all relevant handler instances for the given message by looking up compatible registered functions and instance factory methods.
@@ -40,11 +40,11 @@ namespace Rebus.Activation
                 throw new InvalidOperationException("Attempted to resolve handler with message context, but no current context could be found on MessageContext.Current");
             }
 
-            var handlerFactories = _cachedHandlerFactories.GetOrAdd(typeof(TMessage), type =>
+            var handlerFactories = _cachedHandlerFactories.GetOrAdd(typeof(TMessage), _ =>
             {
                 var noArgumentsInvokers = _handlerFactoriesNoArguments
                     .OfType<Func<IHandleMessages<TMessage>>>()
-                    .Select(factory => (Func<IMessageContext, IHandleMessages>)(context => factory()));
+                    .Select(factory => (Func<IMessageContext, IHandleMessages>)(_ => factory()));
 
                 var contextArgumentInvokers = _handlerFactoriesMessageContextArgument
                     .OfType<Func<IMessageContext, IHandleMessages<TMessage>>>()
@@ -58,7 +58,7 @@ namespace Rebus.Activation
             });
 
             // ReSharper disable once CoVariantArrayConversion
-            var instances = (IHandleMessages<TMessage>[])_cachedHandlers.GetOrAdd(typeof(TMessage), type => _handlerInstances
+            var instances = (IHandleMessages<TMessage>[])_cachedHandlers.GetOrAdd(typeof(TMessage), _ => _handlerInstances
                 .OfType<IHandleMessages<TMessage>>().ToArray());
 
             var result = new IHandleMessages<TMessage>[handlerFactories.Length + instances.Length];
@@ -68,7 +68,7 @@ namespace Rebus.Activation
                 result[index] = (IHandleMessages<TMessage>)handlerFactories[index](messageContext);
             }
 
-            transactionContext.OnDisposed(context =>
+            transactionContext.OnDisposed(_ =>
             {
                 for (var index = 0; index < handlerFactories.Length; index++)
                 {
@@ -135,7 +135,7 @@ namespace Rebus.Activation
         {
             if (handlerFunction == null) throw new ArgumentNullException(nameof(handlerFunction));
             AssertHasNotBeenStarted(handlerFunction.ToString());
-            _handlerInstances.Add(new Handler<TMessage>((bus, message) => handlerFunction(message), () => Bus));
+            _handlerInstances.Add(new Handler<TMessage>((_, message) => handlerFunction(message), () => Bus));
             return this;
         }
 
