@@ -88,17 +88,16 @@ namespace Rebus.Compression
             
             metadata[MetadataKeys.ContentEncoding] = "gzip";
 
-            using (var destination = new MemoryStream())
+            using var destination = new MemoryStream();
+            
+            using (var gzipStream = new GZipStream(destination, CompressionLevel.Optimal, true))
             {
-                using (var gzipStream = new GZipStream(destination, CompressionLevel.Optimal, true))
-                {
-                    await source.CopyToAsync(gzipStream);
-                }
-
-                destination.Position = 0;
-
-                await _innerDataBusStorage.Save(id, destination, metadata);
+                await source.CopyToAsync(gzipStream);
             }
+
+            destination.Position = 0;
+
+            await _innerDataBusStorage.Save(id, destination, metadata);
         }
     }
 }
