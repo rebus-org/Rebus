@@ -16,15 +16,13 @@ namespace Rebus.Compression
         {
             if (uncompressedBytes == null) throw new ArgumentNullException(nameof(uncompressedBytes));
 
-            using (var targetStream = new MemoryStream())
+            using var targetStream = new MemoryStream();
+            using (var sourceStream = new MemoryStream(uncompressedBytes))
+            using (var zipStream = new GZipStream(targetStream, CompressionLevel.Optimal))
             {
-                using (var sourceStream = new MemoryStream(uncompressedBytes))
-                using (var zipStream = new GZipStream(targetStream, CompressionLevel.Optimal))
-                {
-                    sourceStream.CopyTo(zipStream);
-                }
-                return targetStream.ToArray();
+                sourceStream.CopyTo(zipStream);
             }
+            return targetStream.ToArray();
         }
 
         /// <summary>
@@ -34,15 +32,13 @@ namespace Rebus.Compression
         {
             if (compressedBytes == null) throw new ArgumentNullException(nameof(compressedBytes));
 
-            using (var targetStream = new MemoryStream())
+            using var targetStream = new MemoryStream();
+            using (var sourceStream = new MemoryStream(compressedBytes))
+            using (var zipStream = new GZipStream(sourceStream, CompressionMode.Decompress))
             {
-                using (var sourceStream = new MemoryStream(compressedBytes))
-                using (var zipStream = new GZipStream(sourceStream, CompressionMode.Decompress))
-                {
-                    zipStream.CopyTo(targetStream);
-                }
-                return targetStream.ToArray();
+                zipStream.CopyTo(targetStream);
             }
+            return targetStream.ToArray();
         }
     }
 }

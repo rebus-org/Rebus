@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -14,16 +15,20 @@ namespace Rebus.Bus
         /// <summary>
         /// Gets whether the message's <see cref="Headers.ReturnAddress"/> header is set to something
         /// </summary>
-        public static bool HasReturnAddress(this Message message)
+        public static bool HasReturnAddress([NotNull] this Message message)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
             return message.Headers.ContainsKey(Headers.ReturnAddress);
         }
 
         /// <summary>
         /// Uses the transport's input queue address as the <see cref="Headers.ReturnAddress"/> on the message
         /// </summary>
-        public static void SetReturnAddressFromTransport(this Message message, ITransport transport)
+        public static void SetReturnAddressFromTransport([NotNull] this Message message, [NotNull] ITransport transport)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (transport == null) throw new ArgumentNullException(nameof(transport));
+
             var returnAddress = transport.Address;
 
             if (string.IsNullOrWhiteSpace(returnAddress))

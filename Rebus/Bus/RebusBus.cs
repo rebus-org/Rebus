@@ -30,7 +30,7 @@ namespace Rebus.Bus
     {
         static int _busIdCounter;
 
-        readonly List<IWorker> _workers = new List<IWorker>();
+        readonly List<IWorker> _workers = new();
         readonly BusLifetimeEvents _busLifetimeEvents;
         readonly IDataBus _dataBus;
         readonly IWorkerFactory _workerFactory;
@@ -411,11 +411,10 @@ namespace Rebus.Bus
             }
             else
             {
-                using (var context = new TransactionContextWithOwningBus(this))
-                {
-                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
-                    await context.Complete();
-                }
+                using var context = new TransactionContextWithOwningBus(this);
+                
+                await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
+                await context.Complete();
             }
         }
 
@@ -432,11 +431,10 @@ namespace Rebus.Bus
 
             if (transactionContext == null)
             {
-                using (var context = new TransactionContextWithOwningBus(this))
-                {
-                    await _transport.Send(destinationAddress, transportMessage, context);
-                    await context.Complete();
-                }
+                using var context = new TransactionContextWithOwningBus(this);
+                
+                await _transport.Send(destinationAddress, transportMessage, context);
+                await context.Complete();
             }
             else
             {
