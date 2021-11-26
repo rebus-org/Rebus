@@ -7,7 +7,6 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Invokers;
-using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 
 namespace Rebus.Tests.Pipeline
@@ -83,16 +82,22 @@ namespace Rebus.Tests.Pipeline
                 100000 iterations took 0,1 s - that's 840440,7 iterations/s
                 100000 iterations took 0,1 s - that's 935068,8 iterations/s
 
+            New pipeline invoker:
+                10000 iterations took 0,3 s - that's 34597,6 iterations/s
+                10000 iterations took 0,3 s - that's 36511,5 iterations/s
+                10000 iterations took 0,3 s - that's 34906,0 iterations/s
+                10000 iterations took 0,3 s - that's 34974,8 iterations/s
+                10000 iterations took 0,3 s - that's 33611,9 iterations/s
+
          * */
 
         [Repeat(5)]
-        [TestCase(ThingToCheck.NoChange)]
-        [TestCase(ThingToCheck.NewPipelineInvoker)]
-        public async Task ComparePerf(ThingToCheck whatToCheck)
+        [TestCase(ThingToCheck.NoChange, 10000)]
+        [TestCase(ThingToCheck.NewPipelineInvoker, 10000)]
+        public async Task ComparePerf(ThingToCheck whatToCheck, int iterations)
         {
             await Task.FromResult(false);
 
-            var iterations = 100000;
             var pipeline = CreateFakePipeline(10).ToArray();
             var invoker = GetInvoker(whatToCheck, pipeline);
 
@@ -114,27 +119,16 @@ namespace Rebus.Tests.Pipeline
             Console.WriteLine($"{iterations} iterations took {elapsed.TotalSeconds:0.0} s - that's {iterations / elapsed.TotalSeconds:0.0} iterations/s");
         }
 
-        static IPipelineInvoker GetInvoker(ThingToCheck whatToCheck, IIncomingStep[] pipeline)
+        static IPipelineInvoker GetInvoker(ThingToCheck whatToCheck, IIncomingStep[] pipeline) => whatToCheck switch
         {
-            switch (whatToCheck)
-            {
-                case ThingToCheck.NoChange:
-                    return new DefaultPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline));
+            ThingToCheck.NoChange => new DefaultPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline)),
+            
+            ThingToCheck.NewPipelineInvoker => new DefaultPipelineInvokerNew(new DefaultPipeline(initialIncomingSteps: pipeline)),
+            
+            _ => throw new NotSupportedException("cannot do that yet")
+        };
 
-                case ThingToCheck.NewPipelineInvoker:
-                    //return new NewDefaultPipelineInvoker();
-                    //return new CompiledPipelineInvoker(new DefaultPipeline(initialIncomingSteps: pipeline));
-
-                default:
-                    throw new NotSupportedException("cannot do that yet");
-            }
-        }
-
-        static IEnumerable<IIncomingStep> CreateFakePipeline(int numerOfSteps)
-        {
-            return Enumerable.Range(0, numerOfSteps)
-                .Select(n => new FakeStep(n));
-        }
+        static IEnumerable<IIncomingStep> CreateFakePipeline(int numerOfSteps) => Enumerable.Range(0, numerOfSteps).Select(n => new FakeStep(n));
 
         class FakeStep : IIncomingStep
         {
