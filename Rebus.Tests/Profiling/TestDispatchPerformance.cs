@@ -31,10 +31,10 @@ namespace Rebus.Tests.Profiling
             Action,
         }
 
-        [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Mostly fun to run when playing around with optimizing the pipeline invoker")]
-        [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Mostly fun to run when playing around with optimizing the pipeline invoker")]
-        [TestCase(100000, 10, PipelineInvokerMode.DefaultNew)]
-        //[TestCase(10000, 10, PipelineInvokerMode.DefaultNew)]
+        [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+        [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+        [TestCase(100000, 10, PipelineInvokerMode.DefaultNew, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+        [TestCase(100, 10, PipelineInvokerMode.DefaultNew)]
         public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
         {
             Console.WriteLine($"Running {numberOfSamples} samples with {numberOfMessages} msgs and mode {pipelineInvokerMode}");

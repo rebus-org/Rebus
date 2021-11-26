@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Rebus.Pipeline.Invokers
@@ -25,34 +26,33 @@ namespace Rebus.Pipeline.Invokers
 
             Task ProcessIncoming(IncomingStepContext context)
             {
-                Task InvokerFunction(int index)
+                Task InvokerFunction(int index = 0)
                 {
                     Task InvokeNext() => InvokerFunction(index + 1);
 
-                    return index == incomingSteps.Length 
-                        ? Noop 
+                    return index == incomingSteps.Length
+                        ? Noop
                         : incomingSteps[index].Process(context, InvokeNext);
                 }
 
-                return InvokerFunction(0);
+                return InvokerFunction();
             }
-
-            _processIncoming = ProcessIncoming;
 
             Task ProcessOutgoing(OutgoingStepContext context)
             {
-                Task InvokerFunction(int index)
+                Task InvokerFunction(int index = 0)
                 {
                     Task InvokeNext() => InvokerFunction(index + 1);
 
-                    return index == outgoingSteps.Length 
-                        ? Noop 
+                    return index == outgoingSteps.Length
+                        ? Noop
                         : outgoingSteps[index].Process(context, InvokeNext);
                 }
 
-                return InvokerFunction(0);
+                return InvokerFunction();
             }
 
+            _processIncoming = ProcessIncoming;
             _processOutgoing = ProcessOutgoing;
         }
 
