@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.ExclusiveLocks;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
@@ -80,16 +81,16 @@ Elapsed: {elapsed.TotalSeconds:0.0}
 
         static IEnumerable<IIncomingStep> GetSteps()
         {
-            var handler = new ConcurrentDictionaryExclusiveSagaAccessLock();
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
-            yield return new NewEnforceExclusiveSagaAccessIncomingStep(10, CancellationToken.None);
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
-            yield return new NewEnforceExclusiveSagaAccessIncomingStep(20, CancellationToken.None);
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
-            yield return new NewEnforceExclusiveSagaAccessIncomingStep(50, CancellationToken.None);
-            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, CancellationToken.None);
-            yield return new NewEnforceExclusiveSagaAccessIncomingStep(100, CancellationToken.None);
+            var handler = new ConcurrentDictionaryExclusiveAccessLock();
+            var lockPrefix = "lock_";
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 10, lockPrefix, CancellationToken.None);
+            yield return new SemaphoreSlimExclusiveSagaAccessIncomingStep(10, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 20, lockPrefix, CancellationToken.None);
+            yield return new SemaphoreSlimExclusiveSagaAccessIncomingStep(20, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 50, lockPrefix, CancellationToken.None);
+            yield return new SemaphoreSlimExclusiveSagaAccessIncomingStep(50, CancellationToken.None);
+            yield return new EnforceExclusiveSagaAccessIncomingStep(handler, 100, lockPrefix, CancellationToken.None);
+            yield return new SemaphoreSlimExclusiveSagaAccessIncomingStep(100, CancellationToken.None);
         }
     }
-
 }

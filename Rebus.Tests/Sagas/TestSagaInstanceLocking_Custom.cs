@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
+using Rebus.Bus.Advanced;
 using Rebus.Config;
+using Rebus.ExclusiveLocks;
 using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Persistence.InMem;
@@ -148,14 +149,19 @@ namespace Rebus.Tests.Sagas
             }
         }
 
-        class CustomLocker : IExclusiveSagaAccessLock
+        class CustomLocker : IExclusiveAccessLock
         {
             readonly SemaphoreSlim _mutex = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
-            public async Task<bool> AquireLockAsync(string key, CancellationToken cancellationToken)
+            public async Task<bool> AcquireLockAsync(string key, CancellationToken cancellationToken)
             {
                 await _mutex.WaitAsync(cancellationToken);
                 return true;
+            }
+
+            public Task<bool> IsLockAcquiredAsync(string key, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(_mutex.CurrentCount > 0);
             }
 
             public async Task<bool> ReleaseLockAsync(string key)
