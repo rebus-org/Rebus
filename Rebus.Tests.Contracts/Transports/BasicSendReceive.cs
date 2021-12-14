@@ -13,13 +13,6 @@ namespace Rebus.Tests.Contracts.Transports
 {
     public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
-        public record TransportBehavior(bool ReturnsNullWhenQueueIsEmpty = true);
-
-        /// <summary>
-        /// Gets the intended behavior for cases where transports are allowed to deviate
-        /// </summary>
-        protected abstract TransportBehavior Behavior { get; }
-
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
         TTransportFactory _factory;
@@ -27,7 +20,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         protected override void SetUp()
         {
-            _cancellationToken = Using(new CancellationTokenSource()).Token;
+            _cancellationToken = Using(new CancellationTokenSource(delay: TimeSpan.FromSeconds(20))).Token;
             _factory = new TTransportFactory();
         }
 
@@ -68,28 +61,12 @@ namespace Rebus.Tests.Contracts.Transports
         {
             var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
 
-            if (Behavior.ReturnsNullWhenQueueIsEmpty)
+            await WithContext(async context =>
             {
-                Console.WriteLine("Assume transport returns NULL when queue is empty");
-                await WithContext(async context =>
-                {
-                    var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
+                var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
 
-                    Assert.That(transportMessage, Is.Null);
-                });
-            }
-            else
-            {
-                Console.WriteLine("Assume transport blocks until cancelled when queue is empty");
-                await WithContext(async context =>
-                {
-                    using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-
-                    var exception = Assert.ThrowsAsync<OperationCanceledException>(() => emptyQueue.Receive(context, cancellationTokenSource.Token));
-
-                    Console.WriteLine(exception);
-                });
-            }
+                Assert.That(transportMessage, Is.Null);
+            });
         }
 
         [Test]

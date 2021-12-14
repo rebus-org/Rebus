@@ -6,6 +6,5 @@ namespace Rebus.Tests.Transport.InMem
     [TestFixture]
     public class InMemTransportBasicSendReceive : BasicSendReceive<InMemTransportFactory>
     {
-        protected override TransportBehavior Behavior => new TransportBehavior(ReturnsNullWhenQueueIsEmpty: true);
     }
 }
