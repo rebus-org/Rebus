@@ -14,20 +14,30 @@ namespace Rebus.Tests.Contracts.Extensions
         {
             var stopwatch = Stopwatch.StartNew();
             var timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            var source = new CancellationTokenSource();
+
+            using var source = new CancellationTokenSource(timeout);
 
             while (stopwatch.Elapsed < timeout)
             {
-                TransportMessage receivedTransportMessage;
+                var receivedTransportMessage = default(TransportMessage);
 
                 using (var scope = new RebusTransactionScope())
                 {
-                    receivedTransportMessage = await transport.Receive(scope.TransactionContext, source.Token);
+                    try
+                    {
+                        receivedTransportMessage = await transport.Receive(scope.TransactionContext, source.Token);
+                    }
+                    catch (OperationCanceledException) when (source.IsCancellationRequested)
+                    {
+                    }
 
                     await scope.CompleteAsync();
                 }
 
-                if (receivedTransportMessage != null) return receivedTransportMessage;
+                if (receivedTransportMessage != null)
+                {
+                    return receivedTransportMessage;
+                }
             }
 
             throw new AssertionException($"Did not receive transport message from {transport} within {timeout} timeout");

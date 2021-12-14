@@ -127,6 +127,7 @@ async implementation underneath the covers without deadlocking, even in a single
             readonly Thread _workerThread;
 
             ExceptionDispatchInfo _caughtException;
+            bool _disposed;
 
             public AspNetSimulatorSynchronizationContext()
             {
@@ -153,9 +154,7 @@ async implementation underneath the covers without deadlocking, even in a single
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        Tuple<SendOrPostCallback, object> item;
-
-                        if (!_continuations.TryDequeue(out item))
+                        if (!_continuations.TryDequeue(out var item))
                         {
                             Thread.Sleep(100);
                             continue;
@@ -177,16 +176,26 @@ async implementation underneath the covers without deadlocking, even in a single
 
             public void Dispose()
             {
-                Console.WriteLine("Stopping message loop...");
+                if (_disposed) return;
 
-                _cancellationTokenSource?.Cancel();
-
-                if (!_workerThread.Join(1000))
+                try
                 {
-                    Console.WriteLine("Worker thread did not stop within 1 s");
-                }
+                    Console.WriteLine("Stopping message loop...");
 
-                _caughtException?.Throw();
+                    _cancellationTokenSource.Cancel();
+
+                    if (!_workerThread.Join(1000))
+                    {
+                        Console.WriteLine("Worker thread did not stop within 1 s");
+                    }
+
+                    _caughtException?.Throw();
+                }
+                finally
+                {
+                    _disposed = true;
+                    _cancellationTokenSource.Dispose();
+                }
             }
         }
 

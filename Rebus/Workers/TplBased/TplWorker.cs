@@ -26,6 +26,8 @@ namespace Rebus.Workers.TplBased
         readonly Options _options;
         readonly ILog _log;
 
+        bool _disposed;
+
         public TplWorker(string workerName, RebusBus owningBus, ITransport transport,
             IRebusLoggerFactory rebusLoggerFactory, IPipelineInvoker pipelineInvoker,
             ParallelOperationsManager parallelOperationsManager, Options options, IBackoffStrategy backoffStrategy,
@@ -189,12 +191,22 @@ namespace Rebus.Workers.TplBased
 
         public void Dispose()
         {
-            Stop();
+            if (_disposed) return;
 
-            if (!_workerStopped.WaitOne(_options.WorkerShutdownTimeout))
+            try
             {
-                _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!",
-                    Name, _options.WorkerShutdownTimeout.TotalSeconds);
+                Stop();
+
+                if (!_workerStopped.WaitOne(_options.WorkerShutdownTimeout))
+                {
+                    _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!",
+                        Name, _options.WorkerShutdownTimeout.TotalSeconds);
+                }
+            }
+            finally
+            {
+                _disposed = true;
+                _cancellationTokenSource.Dispose();
             }
         }
     }

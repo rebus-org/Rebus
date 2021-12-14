@@ -26,6 +26,8 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly Thread _workerThread;
         readonly ILog _log;
 
+        bool _disposed;
+
         internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory,
             IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus,
             Options options, IBackoffStrategy backoffStrategy, CancellationToken busDisposalCancellationToken)
@@ -199,12 +201,22 @@ namespace Rebus.Workers.ThreadPoolBased
 
         public void Dispose()
         {
-            Stop();
+            if (_disposed) return;
 
-            if (!_workerShutDown.WaitOne(_options.WorkerShutdownTimeout))
+            try
             {
-                _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!",
-                    Name, _options.WorkerShutdownTimeout.TotalSeconds);
+                Stop();
+
+                if (!_workerShutDown.WaitOne(_options.WorkerShutdownTimeout))
+                {
+                    _log.Warn("The {workerName} worker did not shut down within {shutdownTimeoutSeconds} seconds!",
+                        Name, _options.WorkerShutdownTimeout.TotalSeconds);
+                }
+            }
+            finally
+            {
+                _disposed = true;
+                _cancellationTokenSource.Dispose();
             }
         }
     }

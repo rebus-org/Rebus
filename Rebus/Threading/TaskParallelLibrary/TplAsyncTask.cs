@@ -22,6 +22,7 @@ namespace Rebus.Threading.TaskParallelLibrary
         readonly ILog _log;
 
         TimeSpan _interval;
+        bool _disposed;
         Task _task;
 
         /// <summary>
@@ -100,23 +101,31 @@ namespace Rebus.Threading.TaskParallelLibrary
         /// Stops the background task
         /// </summary>
         public void Dispose()
-        {           
+        {
             // Did we stop already?
-            if (_tokenSource.IsCancellationRequested) return;
+            if (_disposed) return;
 
-            // if it was never started, we don't do anything
-            if (_task == null) return;
-
-            LogStartStop("Stopping periodic task {taskDescription}", _description);
-
-            _tokenSource.Cancel();
-
-            // Note: Wait throws if the task failed, but the way the task is written above,
-            //       it always completes (errors are logged and swallowed).
-            if (!_task.Wait(5000 /*ms*/))
+            try
             {
-                _log.Warn("Periodic task {taskDescription} did not finish within 5 second timeout!", _description);
-            }            
+                // if it was never started, we don't do anything
+                if (_task == null) return;
+
+                LogStartStop("Stopping periodic task {taskDescription}", _description);
+
+                _tokenSource.Cancel();
+
+                // Note: Wait throws if the task failed, but the way the task is written above,
+                //       it always completes (errors are logged and swallowed).
+                if (!_task.Wait(millisecondsTimeout: 5000))
+                {
+                    _log.Warn("Periodic task {taskDescription} did not finish within 5 second timeout!", _description);
+                }
+            }
+            finally
+            {
+                _disposed = true;
+                _tokenSource.Dispose();
+            }
         }
 
         void LogStartStop(string message, params object[] objs)
