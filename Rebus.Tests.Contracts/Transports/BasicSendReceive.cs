@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
+#pragma warning disable CS1998
 
 namespace Rebus.Tests.Contracts.Transports
 {
@@ -55,17 +56,35 @@ namespace Rebus.Tests.Contracts.Transports
             });
         }
 
+        public bool TransportReturnsNullWhenQueueIsEmpty { get; set; } = true;
+
         [Test]
-        public async Task EmptyQueueReturnsNull()
+        public async Task WhenQueueIsEmpty_ReturnsNull_Or_WaitsForCancellation()
         {
             var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
 
-            await WithContext(async context =>
+            if (TransportReturnsNullWhenQueueIsEmpty)
             {
-                var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
+                Console.WriteLine("Assume transport returns NULL when queue is empty");
+                await WithContext(async context =>
+                {
+                    var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
 
-                Assert.That(transportMessage, Is.Null);
-            });
+                    Assert.That(transportMessage, Is.Null);
+                });
+            }
+            else
+            {
+                Console.WriteLine("Assume transport blocks until cancelled when queue is empty");
+                await WithContext(async context =>
+                {
+                    using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                    
+                    var exception = Assert.ThrowsAsync<OperationCanceledException>(() => emptyQueue.Receive(context, cancellationTokenSource.Token));
+
+                    Console.WriteLine(exception);
+                });
+            }
         }
 
         [Test]
