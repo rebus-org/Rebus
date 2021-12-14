@@ -13,6 +13,13 @@ namespace Rebus.Tests.Contracts.Transports
 {
     public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
+        public record TransportBehavior(bool ReturnsNullWhenQueueIsEmpty = true);
+
+        /// <summary>
+        /// Gets the intended behavior for cases where transports are allowed to deviate
+        /// </summary>
+        protected abstract TransportBehavior Behavior { get; }
+
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
         TTransportFactory _factory;
@@ -35,7 +42,7 @@ namespace Rebus.Tests.Contracts.Transports
         public async Task HasOneWayClient()
         {
             var receiverQueue = TestConfig.GetName("receiver");
-            
+
             var client = _factory.CreateOneWayClient();
             var receiver = _factory.Create(receiverQueue);
 
@@ -56,14 +63,12 @@ namespace Rebus.Tests.Contracts.Transports
             });
         }
 
-        public bool TransportReturnsNullWhenQueueIsEmpty { get; set; } = true;
-
         [Test]
         public async Task WhenQueueIsEmpty_ReturnsNull_Or_WaitsForCancellation()
         {
             var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
 
-            if (TransportReturnsNullWhenQueueIsEmpty)
+            if (Behavior.ReturnsNullWhenQueueIsEmpty)
             {
                 Console.WriteLine("Assume transport returns NULL when queue is empty");
                 await WithContext(async context =>
@@ -79,7 +84,7 @@ namespace Rebus.Tests.Contracts.Transports
                 await WithContext(async context =>
                 {
                     using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                    
+
                     var exception = Assert.ThrowsAsync<OperationCanceledException>(() => emptyQueue.Receive(context, cancellationTokenSource.Token));
 
                     Console.WriteLine(exception);
@@ -198,10 +203,10 @@ namespace Rebus.Tests.Contracts.Transports
             if (commitAndExpectTheMessagesToBeSent)
             {
                 var receivedMessages = allMessages.OrderBy(s => s).ToArray();
-                
+
                 Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
-                
-                Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }), 
+
+                Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }),
                     $@"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
             }
             else
