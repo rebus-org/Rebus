@@ -27,7 +27,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         protected override void SetUp()
         {
-            _cancellationToken = Using(new CancellationTokenSource()).Token);
+            _cancellationToken = Using(new CancellationTokenSource()).Token;
             _factory = new TTransportFactory();
         }
 
