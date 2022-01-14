@@ -2,22 +2,21 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Rebus.Tests.Extensions
-{
-    static class TestExtensions
-    {
-        public static string ToJson(this object obj) => JsonConvert.SerializeObject(obj, Formatting.Indented);
+namespace Rebus.Tests.Extensions;
 
-        public static string PrettifyJson(this string json)
+static class TestExtensions
+{
+    public static string ToJson(this object obj) => JsonConvert.SerializeObject(obj, Formatting.Indented);
+
+    public static string PrettifyJson(this string json)
+    {
+        try
         {
-            try
-            {
-                return JObject.Parse(json).ToString(Formatting.Indented);
-            }
-            catch (Exception exception)
-            {
-                throw new FormatException($"Could not prettify JSON text '{json}'", exception);
-            }
+            return JObject.Parse(json).ToString(Formatting.Indented);
+        }
+        catch (Exception exception)
+        {
+            throw new FormatException($"Could not prettify JSON text '{json}'", exception);
         }
     }
 }

@@ -3,39 +3,38 @@ using System.Collections.Concurrent;
 using System.Threading;
 using NUnit.Framework;
 
-namespace Rebus.Tests.Assumptions
+namespace Rebus.Tests.Assumptions;
+
+[TestFixture]
+public class TestConcurrentDictionary
 {
-    [TestFixture]
-    public class TestConcurrentDictionary
+    [Test]
+    public void NizzleName()
     {
-        [Test]
-        public void NizzleName()
+        var dictionary = new ConcurrentDictionary<string, string>();
+
+        ThreadPool.QueueUserWorkItem(__ =>
         {
-            var dictionary = new ConcurrentDictionary<string, string>();
-
-            ThreadPool.QueueUserWorkItem(__ =>
+            dictionary.GetOrAdd("bimse", _ =>
             {
-                dictionary.GetOrAdd("bimse", _ =>
-                {
-                    Console.WriteLine("waiting");
-                    Thread.Sleep(1000);
-                    Console.WriteLine("done");
-                    return "hej";
-                });
+                Console.WriteLine("waiting");
+                Thread.Sleep(1000);
+                Console.WriteLine("done");
+                return "hej";
             });
+        });
 
-            ThreadPool.QueueUserWorkItem(__ =>
+        ThreadPool.QueueUserWorkItem(__ =>
+        {
+            dictionary.GetOrAdd("bimse", _ =>
             {
-                dictionary.GetOrAdd("bimse", _ =>
-                {
-                    Console.WriteLine("waiting");
-                    Thread.Sleep(1000);
-                    Console.WriteLine("done");
-                    return "hej";
-                });
+                Console.WriteLine("waiting");
+                Thread.Sleep(1000);
+                Console.WriteLine("done");
+                return "hej";
             });
+        });
 
-            Thread.Sleep(3000);
-        }
+        Thread.Sleep(3000);
     }
 }

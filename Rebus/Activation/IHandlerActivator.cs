@@ -3,16 +3,15 @@ using System.Threading.Tasks;
 using Rebus.Handlers;
 using Rebus.Transport;
 
-namespace Rebus.Activation
+namespace Rebus.Activation;
+
+/// <summary>
+/// Responsible for creating handlers for a given message type
+/// </summary>
+public interface IHandlerActivator
 {
     /// <summary>
-    /// Responsible for creating handlers for a given message type
+    /// Must return all relevant handler instances for the given message
     /// </summary>
-    public interface IHandlerActivator
-    {
-        /// <summary>
-        /// Must return all relevant handler instances for the given message
-        /// </summary>
-        Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext);
-    }
+    Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext);
 }

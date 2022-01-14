@@ -11,83 +11,81 @@ using Rebus.Persistence.InMem;
 
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Bugs
+namespace Rebus.Tests.Bugs;
+
+[TestFixture]
+public class AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId : FixtureBase
 {
-    [TestFixture]
-    public class AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId : FixtureBase
+    BuiltinHandlerActivator _activator;
+    IBusStarter _busStarter;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        IBusStarter _busStarter;
+        _activator = Using(new BuiltinHandlerActivator());
 
-        protected override void SetUp()
+        _busStarter = Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-is-preserved"))
+            .Sagas(s => s.StoreInMemory())
+            .Create();
+    }
+
+    [Test]
+    public async Task ItHasBeenFixed()
+    {
+        var counter = new SharedCounter(1);
+        var fields = new Fields();
+
+        _activator.Register(() => new MySaga(counter, fields));
+
+        _busStarter.Start();
+
+        await _activator.Bus.SendLocal(new MyMessageWithGuid {SagaId = Guid.NewGuid()});
+
+        counter.WaitForResetEvent();
+
+        Assert.That(fields.InitialSagaId, Is.EqualTo(fields.SagaIdPropertyFromMessage));
+    }
+
+    class Fields
+    {
+        public Guid InitialSagaId { get; set; }
+        public Guid SagaIdPropertyFromMessage { get; set; }
+    }
+
+    class MySaga : Saga<MySagaState>, IAmInitiatedBy<MyMessageWithGuid>
+    {
+        readonly SharedCounter _counter;
+        readonly Fields _fields;
+
+        public MySaga(SharedCounter counter, Fields fields)
         {
-            _activator = Using(new BuiltinHandlerActivator());
-
-            _busStarter = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-is-preserved"))
-                .Sagas(s => s.StoreInMemory())
-                .Create();
+            _counter = counter;
+            _fields = fields;
         }
 
-        [Test]
-        public async Task ItHasBeenFixed()
+        protected override void CorrelateMessages(ICorrelationConfig<MySagaState> config)
         {
-            var counter = new SharedCounter(1);
-            var fields = new Fields();
-
-            _activator.Register(() => new MySaga(counter, fields));
-
-            _busStarter.Start();
-
-            await _activator.Bus.SendLocal(new MyMessageWithGuid {SagaId = Guid.NewGuid()});
-
-            counter.WaitForResetEvent();
-
-            Assert.That(fields.InitialSagaId, Is.EqualTo(fields.SagaIdPropertyFromMessage));
+            // correlate with saga ID
+            config.Correlate<MyMessageWithGuid>(m => m.SagaId, d => d.Id);
         }
 
-        class Fields
+        public async Task Handle(MyMessageWithGuid message)
         {
-            public Guid InitialSagaId { get; set; }
-            public Guid SagaIdPropertyFromMessage { get; set; }
-        }
+            _fields.SagaIdPropertyFromMessage = message.SagaId;
+            _fields.InitialSagaId = Data.Id;
 
-        class MySaga : Saga<MySagaState>, IAmInitiatedBy<MyMessageWithGuid>
-        {
-            readonly SharedCounter _counter;
-            readonly Fields _fields;
-
-            public MySaga(SharedCounter counter, Fields fields)
-            {
-                _counter = counter;
-                _fields = fields;
-            }
-
-            protected override void CorrelateMessages(ICorrelationConfig<MySagaState> config)
-            {
-                // correlate with saga ID
-                config.Correlate<MyMessageWithGuid>(m => m.SagaId, d => d.Id);
-            }
-
-            public async Task Handle(MyMessageWithGuid message)
-            {
-                _fields.SagaIdPropertyFromMessage = message.SagaId;
-                _fields.InitialSagaId = Data.Id;
-
-                _counter.Decrement();
-            }
-        }
-
-        class MySagaState : ISagaData
-        {
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
-        }
-
-        class MyMessageWithGuid
-        {
-            public Guid SagaId { get; set; }
+            _counter.Decrement();
         }
     }
 
+    class MySagaState : ISagaData
+    {
+        public Guid Id { get; set; }
+        public int Revision { get; set; }
+    }
+
+    class MyMessageWithGuid
+    {
+        public Guid SagaId { get; set; }
+    }
 }

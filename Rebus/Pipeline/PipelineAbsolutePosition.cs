@@ -1,18 +1,17 @@
-﻿namespace Rebus.Pipeline
+﻿namespace Rebus.Pipeline;
+
+/// <summary>
+/// Indicates an absolute position in the pipeline
+/// </summary>
+public enum PipelineAbsolutePosition
 {
     /// <summary>
-    /// Indicates an absolute position in the pipeline
+    /// Denotes the front of the pipeline
     /// </summary>
-    public enum PipelineAbsolutePosition
-    {
-        /// <summary>
-        /// Denotes the front of the pipeline
-        /// </summary>
-        Front, 
+    Front, 
  
-        /// <summary>
-        /// Denotes the back of the pipeline
-        /// </summary>
-        Back
-    }
+    /// <summary>
+    /// Denotes the back of the pipeline
+    /// </summary>
+    Back
 }

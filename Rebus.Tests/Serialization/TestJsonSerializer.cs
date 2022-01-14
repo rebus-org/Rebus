@@ -14,27 +14,27 @@ using Rebus.Tests.Contracts;
 using JsonSerializer = Rebus.Serialization.Json.JsonSerializer;
 #pragma warning disable 4014
 
-namespace Rebus.Tests.Serialization
+namespace Rebus.Tests.Serialization;
+
+[TestFixture]
+public class TestJsonSerializer : FixtureBase
 {
-    [TestFixture]
-    public class TestJsonSerializer : FixtureBase
+    JsonSerializer _serializer;
+
+    protected override void SetUp()
     {
-        JsonSerializer _serializer;
+        _serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+    }
 
-        protected override void SetUp()
-        {
-            _serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
-        }
-
-        /*
-         Initial:
+    /*
+     Initial:
 Made 23133 iterations in 00:00:01
 Made 81106 iterations in 00:00:01
 Made 104869 iterations in 00:00:01
 Made 111535 iterations in 00:00:01
 Made 104705 iterations in 00:00:01
 
-        With type cache:
+    With type cache:
 Made 44492 iterations in 00:00:01
 Made 284389 iterations in 00:00:01
 Made 286152 iterations in 00:00:01
@@ -42,7 +42,7 @@ Made 276416 iterations in 00:00:01
 Made 274822 iterations in 00:00:01
 
 
-        On Dell box at the office:
+    On Dell box at the office:
 Made 373190 iterations in 00:00:01
 Made 394550 iterations in 00:00:01
 Made 426973 iterations in 00:00:01
@@ -50,188 +50,187 @@ Made 436008 iterations in 00:00:01
 Made 434064 iterations in 00:00:01
 
 */
-        [Test]
-        [Repeat(5)]
-        public async Task MeasureRate()
+    [Test]
+    [Repeat(5)]
+    public async Task MeasureRate()
+    {
+        var iterations = 0L;
+        var keepRunning = true;
+        var duration = TimeSpan.FromSeconds(1);
+
+        Task.Run(async () =>
         {
-            var iterations = 0L;
-            var keepRunning = true;
-            var duration = TimeSpan.FromSeconds(1);
+            await Task.Delay(duration);
 
-            Task.Run(async () =>
-            {
-                await Task.Delay(duration);
+            Volatile.Write(ref keepRunning, false);
+        });
 
-                Volatile.Write(ref keepRunning, false);
-            });
+        var headers = new Dictionary<string, string>();
+        var message = new Message(headers, new RandomMessage("hello thereø how's it goin?"));
+        var transportMessage = await _serializer.Serialize(message);
 
-            var headers = new Dictionary<string, string>();
-            var message = new Message(headers, new RandomMessage("hello thereø how's it goin?"));
-            var transportMessage = await _serializer.Serialize(message);
+        while (Volatile.Read(ref keepRunning))
+        {
+            await _serializer.Deserialize(transportMessage);
 
-            while (Volatile.Read(ref keepRunning))
-            {
-                await _serializer.Deserialize(transportMessage);
-
-                iterations++;
-            }
-
-            Console.WriteLine($"Made {iterations} iterations in {duration}");
+            iterations++;
         }
 
-        [Test]
-        public async Task FormatTypeAsExpected_Default()
-        {
-            var expectedTypeName = typeof(SomeType).GetSimpleAssemblyQualifiedName();
-            var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+        Console.WriteLine($"Made {iterations} iterations in {duration}");
+    }
 
-            var message = new Message(new Dictionary<string, string>(), new SomeType());
-            var transportMessage = await serializer.Serialize(message);
+    [Test]
+    public async Task FormatTypeAsExpected_Default()
+    {
+        var expectedTypeName = typeof(SomeType).GetSimpleAssemblyQualifiedName();
+        var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
 
-            var type = transportMessage.Headers.GetValue(Headers.Type);
+        var message = new Message(new Dictionary<string, string>(), new SomeType());
+        var transportMessage = await serializer.Serialize(message);
 
-            Console.WriteLine($@"
+        var type = transportMessage.Headers.GetValue(Headers.Type);
+
+        Console.WriteLine($@"
 
 Serialized type name: {type}
   Expected type name: {expectedTypeName}
 
 ");
 
-            var roundtrippedMessage = await serializer.Deserialize(transportMessage);
+        var roundtrippedMessage = await serializer.Deserialize(transportMessage);
 
-            Assert.That(type, Is.EqualTo(expectedTypeName));
-            Assert.That(roundtrippedMessage.Body, Is.TypeOf<SomeType>());
-        }
+        Assert.That(type, Is.EqualTo(expectedTypeName));
+        Assert.That(roundtrippedMessage.Body, Is.TypeOf<SomeType>());
+    }
 
-        [Test]
-        public async Task FormatTypeAsExpected_CustomWithFallback()
-        {
-            var serializer = new JsonSerializer(new CustomTypeNameConventionBuilder().AllowFallbackToDefaultConvention().GetConvention());
+    [Test]
+    public async Task FormatTypeAsExpected_CustomWithFallback()
+    {
+        var serializer = new JsonSerializer(new CustomTypeNameConventionBuilder().AllowFallbackToDefaultConvention().GetConvention());
 
-            var expectedTypeName = typeof(SomeType).GetSimpleAssemblyQualifiedName();
+        var expectedTypeName = typeof(SomeType).GetSimpleAssemblyQualifiedName();
 
-            var message = new Message(new Dictionary<string, string>(), new SomeType());
-            var transportMessage = await serializer.Serialize(message);
+        var message = new Message(new Dictionary<string, string>(), new SomeType());
+        var transportMessage = await serializer.Serialize(message);
 
-            var type = transportMessage.Headers.GetValue(Headers.Type);
+        var type = transportMessage.Headers.GetValue(Headers.Type);
 
-            Console.WriteLine($@"
-
-Serialized type name: {type}
-  Expected type name: {expectedTypeName}
-
-");
-
-            var roundtrippedMessage = await serializer.Deserialize(transportMessage);
-
-            Assert.That(type, Is.EqualTo(expectedTypeName));
-            Assert.That(roundtrippedMessage.Body, Is.TypeOf<SomeType>());
-        }
-
-        [Test]
-        public async Task FormatTypeAsExpected_Custom()
-        {
-            var serializer = new JsonSerializer(new CustomTypeNameConventionBuilder()
-                .AddWithShortName<SomeType>()
-                .GetConvention());
-
-            const string expectedTypeName = "SomeType";
-
-            var message = new Message(new Dictionary<string, string>(), new SomeType());
-            var transportMessage = await serializer.Serialize(message);
-
-            var type = transportMessage.Headers.GetValue(Headers.Type);
-
-            Console.WriteLine($@"
+        Console.WriteLine($@"
 
 Serialized type name: {type}
   Expected type name: {expectedTypeName}
 
 ");
 
-            var roundtrippedMessage = await serializer.Deserialize(transportMessage);
+        var roundtrippedMessage = await serializer.Deserialize(transportMessage);
 
-            Assert.That(type, Is.EqualTo(expectedTypeName));
-            Assert.That(roundtrippedMessage.Body, Is.TypeOf<SomeType>());
-        }
+        Assert.That(type, Is.EqualTo(expectedTypeName));
+        Assert.That(roundtrippedMessage.Body, Is.TypeOf<SomeType>());
+    }
 
-        class SomeType { }
+    [Test]
+    public async Task FormatTypeAsExpected_Custom()
+    {
+        var serializer = new JsonSerializer(new CustomTypeNameConventionBuilder()
+            .AddWithShortName<SomeType>()
+            .GetConvention());
 
-        [Test]
-        public async Task WorksWithoutFullTypeNameHandlingToo()
+        const string expectedTypeName = "SomeType";
+
+        var message = new Message(new Dictionary<string, string>(), new SomeType());
+        var transportMessage = await serializer.Serialize(message);
+
+        var type = transportMessage.Headers.GetValue(Headers.Type);
+
+        Console.WriteLine($@"
+
+Serialized type name: {type}
+  Expected type name: {expectedTypeName}
+
+");
+
+        var roundtrippedMessage = await serializer.Deserialize(transportMessage);
+
+        Assert.That(type, Is.EqualTo(expectedTypeName));
+        Assert.That(roundtrippedMessage.Body, Is.TypeOf<SomeType>());
+    }
+
+    class SomeType { }
+
+    [Test]
+    public async Task WorksWithoutFullTypeNameHandlingToo()
+    {
+        var simpleSerializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
+        var message = new RandomMessage("hei allihoppa");
+        var transportMessage = await simpleSerializer.Serialize(new Message(new Dictionary<string, string>(), message));
+        var roundtrippedMessage = (await simpleSerializer.Deserialize(transportMessage)).Body;
+        Assert.That(roundtrippedMessage, Is.TypeOf<RandomMessage>());
+    }
+
+    class RandomMessage
+    {
+        public RandomMessage(string greeting)
         {
-            var simpleSerializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None });
-            var message = new RandomMessage("hei allihoppa");
-            var transportMessage = await simpleSerializer.Serialize(new Message(new Dictionary<string, string>(), message));
-            var roundtrippedMessage = (await simpleSerializer.Deserialize(transportMessage)).Body;
-            Assert.That(roundtrippedMessage, Is.TypeOf<RandomMessage>());
+            Greeting = greeting;
         }
 
-        class RandomMessage
+        public string Greeting { get; }
+    }
+
+    [Test]
+    public async Task CutsLongJsonIncludedInDeserializationExceptionIfItIsTooLong()
+    {
+        var embeddedObjects = Enumerable.Range(0, 300)
+            .Select(n => new EmbeddedObject($"HEJ MED DIG MIN VEN - DET HER ER BESKED {n}"));
+
+        var someMessage = new SomeMessage(embeddedObjects.ToList());
+
+        var headers = new Dictionary<string, string>();
+        var message = new Message(headers, someMessage);
+
+        var transportMessage = await _serializer.Serialize(message);
+
+        var jsonText = Encoding.UTF8.GetString(transportMessage.Body);
+
+        Console.WriteLine();
+        Console.WriteLine($"JSON text length: {jsonText.Length}");
+        Console.WriteLine();
+
+        BreakMessage(transportMessage);
+
+        var aggregateException = Assert.Throws<AggregateException>(() =>
         {
-            public RandomMessage(string greeting)
-            {
-                Greeting = greeting;
-            }
+            _serializer.Deserialize(transportMessage).Wait();
+        });
 
-            public string Greeting { get; }
-        }
+        Console.WriteLine(aggregateException);
+    }
 
-        [Test]
-        public async Task CutsLongJsonIncludedInDeserializationExceptionIfItIsTooLong()
+    static void BreakMessage(TransportMessage transportMessage)
+    {
+        for (var index = 1000; index < 2000; index++)
         {
-            var embeddedObjects = Enumerable.Range(0, 300)
-                .Select(n => new EmbeddedObject($"HEJ MED DIG MIN VEN - DET HER ER BESKED {n}"));
-
-            var someMessage = new SomeMessage(embeddedObjects.ToList());
-
-            var headers = new Dictionary<string, string>();
-            var message = new Message(headers, someMessage);
-
-            var transportMessage = await _serializer.Serialize(message);
-
-            var jsonText = Encoding.UTF8.GetString(transportMessage.Body);
-
-            Console.WriteLine();
-            Console.WriteLine($"JSON text length: {jsonText.Length}");
-            Console.WriteLine();
-
-            BreakMessage(transportMessage);
-
-            var aggregateException = Assert.Throws<AggregateException>(() =>
-            {
-                _serializer.Deserialize(transportMessage).Wait();
-            });
-
-            Console.WriteLine(aggregateException);
+            transportMessage.Body[index] = 84;
         }
+    }
 
-        static void BreakMessage(TransportMessage transportMessage)
+    class SomeMessage
+    {
+        public SomeMessage(List<EmbeddedObject> objects)
         {
-            for (var index = 1000; index < 2000; index++)
-            {
-                transportMessage.Body[index] = 84;
-            }
+            Objects = objects;
         }
 
-        class SomeMessage
+        public List<EmbeddedObject> Objects { get; }
+    }
+
+    class EmbeddedObject
+    {
+        public EmbeddedObject(string text)
         {
-            public SomeMessage(List<EmbeddedObject> objects)
-            {
-                Objects = objects;
-            }
-
-            public List<EmbeddedObject> Objects { get; }
+            Text = text;
         }
 
-        class EmbeddedObject
-        {
-            public EmbeddedObject(string text)
-            {
-                Text = text;
-            }
-
-            public string Text { get; }
-        }
+        public string Text { get; }
     }
 }

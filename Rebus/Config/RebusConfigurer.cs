@@ -38,456 +38,455 @@ using Rebus.Topic;
 // ReSharper disable EmptyGeneralCatchClause
 // ReSharper disable ArgumentsStyleNamedExpression
 
-namespace Rebus.Config
+namespace Rebus.Config;
+
+/// <summary>
+/// Basic skeleton of the fluent configuration builder. Contains a method for each aspect that can be configured
+/// </summary>
+public class RebusConfigurer
 {
-    /// <summary>
-    /// Basic skeleton of the fluent configuration builder. Contains a method for each aspect that can be configured
-    /// </summary>
-    public class RebusConfigurer
+    readonly Injectionist _injectionist = new Injectionist();
+    readonly Options _options = new Options();
+
+    bool _hasBeenStarted;
+
+    internal RebusConfigurer(IHandlerActivator handlerActivator)
     {
-        readonly Injectionist _injectionist = new Injectionist();
-        readonly Options _options = new Options();
+        if (handlerActivator == null) throw new ArgumentNullException(nameof(handlerActivator));
 
-        bool _hasBeenStarted;
+        _injectionist.Register(c => handlerActivator);
 
-        internal RebusConfigurer(IHandlerActivator handlerActivator)
+        if (handlerActivator is IContainerAdapter)
         {
-            if (handlerActivator == null) throw new ArgumentNullException(nameof(handlerActivator));
+            _injectionist.Register(c => (IContainerAdapter)handlerActivator);
+        }
+    }
 
-            _injectionist.Register(c => handlerActivator);
+    /// <summary>
+    /// Configures how Rebus logs stuff that happens
+    /// </summary>
+    public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new RebusLoggingConfigurer(_injectionist));
+        return this;
+    }
 
-            if (handlerActivator is IContainerAdapter)
+    /// <summary>
+    /// Configures how Rebus sends/receives messages by allowing for choosing which implementation of <see cref="ITransport"/> to use
+    /// </summary>
+    public RebusConfigurer Transport(Action<StandardConfigurer<ITransport>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<ITransport>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
+    /// Enables the data bus and configures which implementation of <see cref="IDataBusStorage"/> to use.
+    /// </summary>
+    public RebusConfigurer DataBus(Action<StandardConfigurer<IDataBusStorage>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+        configurer(new StandardConfigurer<IDataBusStorage>(_injectionist, _options));
+
+        if (_injectionist.Has<IDataBusStorage>())
+        {
+            if (!_injectionist.Has<IDataBusStorageManagement>())
             {
-                _injectionist.Register(c => (IContainerAdapter)handlerActivator);
-            }
-        }
-
-        /// <summary>
-        /// Configures how Rebus logs stuff that happens
-        /// </summary>
-        public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
-        {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new RebusLoggingConfigurer(_injectionist));
-            return this;
-        }
-
-        /// <summary>
-        /// Configures how Rebus sends/receives messages by allowing for choosing which implementation of <see cref="ITransport"/> to use
-        /// </summary>
-        public RebusConfigurer Transport(Action<StandardConfigurer<ITransport>> configurer)
-        {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new StandardConfigurer<ITransport>(_injectionist, _options));
-            return this;
-        }
-
-        /// <summary>
-        /// Enables the data bus and configures which implementation of <see cref="IDataBusStorage"/> to use.
-        /// </summary>
-        public RebusConfigurer DataBus(Action<StandardConfigurer<IDataBusStorage>> configurer)
-        {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-
-            configurer(new StandardConfigurer<IDataBusStorage>(_injectionist, _options));
-
-            if (_injectionist.Has<IDataBusStorage>())
-            {
-                if (!_injectionist.Has<IDataBusStorageManagement>())
-                {
-                    _injectionist.Register<IDataBusStorageManagement>(c => new DisabledDataBusStorageManagement());
-                }
-
-                _injectionist.Register<IDataBus>(c =>
-                {
-                    var dataBusStorage = c.Get<IDataBusStorage>();
-                    var dataBusStorageManagement = c.Get<IDataBusStorageManagement>();
-
-                    return new DefaultDataBus(dataBusStorage, dataBusStorageManagement);
-                });
-
-                _injectionist.Decorate<IPipeline>(c =>
-                {
-                    var dataBusStorage = c.Get<IDataBusStorage>();
-                    var pipeline = c.Get<IPipeline>();
-
-                    var step = new DataBusIncomingStep(dataBusStorage);
-
-                    return new PipelineStepInjector(pipeline)
-                        .OnReceive(step, PipelineRelativePosition.After, typeof(DeserializeIncomingMessageStep));
-                });
+                _injectionist.Register<IDataBusStorageManagement>(c => new DisabledDataBusStorageManagement());
             }
 
-            return this;
+            _injectionist.Register<IDataBus>(c =>
+            {
+                var dataBusStorage = c.Get<IDataBusStorage>();
+                var dataBusStorageManagement = c.Get<IDataBusStorageManagement>();
+
+                return new DefaultDataBus(dataBusStorage, dataBusStorageManagement);
+            });
+
+            _injectionist.Decorate<IPipeline>(c =>
+            {
+                var dataBusStorage = c.Get<IDataBusStorage>();
+                var pipeline = c.Get<IPipeline>();
+
+                var step = new DataBusIncomingStep(dataBusStorage);
+
+                return new PipelineStepInjector(pipeline)
+                    .OnReceive(step, PipelineRelativePosition.After, typeof(DeserializeIncomingMessageStep));
+            });
         }
 
-        /// <summary>
-        /// Configures how Rebus routes messages by allowing for choosing which implementation of <see cref="IRouter"/> to use
-        /// </summary>
-        public RebusConfigurer Routing(Action<StandardConfigurer<IRouter>> configurer)
+        return this;
+    }
+
+    /// <summary>
+    /// Configures how Rebus routes messages by allowing for choosing which implementation of <see cref="IRouter"/> to use
+    /// </summary>
+    public RebusConfigurer Routing(Action<StandardConfigurer<IRouter>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<IRouter>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures how Rebus persists saga data by allowing for choosing which implementation of <see cref="ISagaStorage"/> to use
+    /// </summary>
+    public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<ISagaStorage>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures how Rebus persists subscriptions by allowing for choosing which implementation of <see cref="ISubscriptionStorage"/> to use
+    /// </summary>
+    public RebusConfigurer Subscriptions(Action<StandardConfigurer<ISubscriptionStorage>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures how Rebus serializes messages by allowing for choosing which implementation of <see cref="ISerializer"/> to use
+    /// </summary>
+    public RebusConfigurer Serialization(Action<StandardConfigurer<ISerializer>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<ISerializer>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures how Rebus defers messages to the future by allowing for choosing which implementation of <see cref="ITimeoutManager"/> to use
+    /// </summary>
+    public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<ITimeoutManager>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures additional options about how Rebus works
+    /// </summary>
+    public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new OptionsConfigurer(_options, _injectionist));
+        return this;
+    }
+
+    /// <summary>
+    /// Finishes the setup of the bus, using default implementations for the options that have not explicitly been set.
+    /// The only requirement, is that you must call <see cref="Transport"/> and select which transport to use - everything
+    /// else can run with a default option. It should be noted though, that several of the defaults (e.g. in-mem persistence
+    /// options for saga storage, subscriptions, and timeouts) are not meant for production use, and should probably be
+    /// replaced by something that is actually persistent.
+    /// </summary>
+    public IBus Start()
+    {
+        VerifyRequirements();
+
+        _injectionist.Register(c => _options);
+        _injectionist.Register(c => new CancellationTokenSource());
+        _injectionist.Register(c => c.Get<CancellationTokenSource>().Token);
+
+        PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
+
+        PossiblyRegisterDefault<IRebusTime>(c => new DefaultRebusTime());
+
+        //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
+        PossiblyRegisterDefault<IAsyncTaskFactory>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new StandardConfigurer<IRouter>(_injectionist, _options));
-            return this;
-        }
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            return new TplAsyncTaskFactory(rebusLoggerFactory);
+        });
 
-        /// <summary>
-        /// Configures how Rebus persists saga data by allowing for choosing which implementation of <see cref="ISagaStorage"/> to use
-        /// </summary>
-        public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
+        PossiblyRegisterDefault<IRouter>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new StandardConfigurer<ISagaStorage>(_injectionist, _options));
-            return this;
-        }
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            return new TypeBasedRouter(rebusLoggerFactory);
+        });
 
-        /// <summary>
-        /// Configures how Rebus persists subscriptions by allowing for choosing which implementation of <see cref="ISubscriptionStorage"/> to use
-        /// </summary>
-        public RebusConfigurer Subscriptions(Action<StandardConfigurer<ISubscriptionStorage>> configurer)
+        PossiblyRegisterDefault<ISubscriptionStorage>(c => new DisabledSubscriptionStorage());
+
+        PossiblyRegisterDefault<ISagaStorage>(c => new DisabledSagaStorage());
+
+        PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
+
+        PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>()));
+
+        PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvokerNew(c.Get<IPipeline>()));
+
+        PossiblyRegisterDefault<IBackoffStrategy>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist, _options));
-            return this;
-        }
+            var backoffTimes = new[]
+            {
+                // 10 s
+                Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 10),
 
-        /// <summary>
-        /// Configures how Rebus serializes messages by allowing for choosing which implementation of <see cref="ISerializer"/> to use
-        /// </summary>
-        public RebusConfigurer Serialization(Action<StandardConfigurer<ISerializer>> configurer)
+                // on and on
+                Enumerable.Repeat(TimeSpan.FromMilliseconds(250), 1)
+            };
+
+            var options = c.Get<Options>();
+
+            return new DefaultBackoffStrategy(backoffTimes.SelectMany(e => e), options);
+        });
+
+        PossiblyRegisterDefault<IWorkerFactory>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new StandardConfigurer<ISerializer>(_injectionist, _options));
-            return this;
-        }
+            var transport = c.Get<ITransport>();
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            var pipelineInvoker = c.Get<IPipelineInvoker>();
+            var options = c.Get<Options>();
+            var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+            var backoffStrategy = c.Get<IBackoffStrategy>();
+            var cancellationToken = c.Get<CancellationToken>();
 
-        /// <summary>
-        /// Configures how Rebus defers messages to the future by allowing for choosing which implementation of <see cref="ITimeoutManager"/> to use
-        /// </summary>
-        public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
+            return new ThreadPoolWorkerFactory(
+                transport: transport,
+                rebusLoggerFactory: rebusLoggerFactory,
+                pipelineInvoker: pipelineInvoker,
+                options: options,
+                busGetter: c.Get<RebusBus>,
+                busLifetimeEvents: busLifetimeEvents,
+                backoffStrategy: backoffStrategy,
+                busDisposalCancellationToken: cancellationToken
+            );
+        });
+
+        //PossiblyRegisterDefault<IWorkerFactory>(c =>
+        //{
+        //    var transport = c.Get<ITransport>();
+        //    var loggerFactory = c.Get<IRebusLoggerFactory>();
+        //    var pipelineInvoker = c.Get<IPipelineInvoker>();
+        //    var options = c.Get<Options>();
+        //    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+        //    var backoffStrategy = c.Get<IBackoffStrategy>();
+        //    return new TplWorkerFactory(transport, loggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
+        //});
+
+        PossiblyRegisterDefault<IErrorTracker>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new StandardConfigurer<ITimeoutManager>(_injectionist, _options));
-            return this;
-        }
+            var transport = c.Get<ITransport>();
+            var settings = c.Get<SimpleRetryStrategySettings>();
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+            var rebusTime = c.Get<IRebusTime>();
+            return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, transport, rebusTime);
+        });
 
-        /// <summary>
-        /// Configures additional options about how Rebus works
-        /// </summary>
-        public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
+        PossiblyRegisterDefault<IErrorHandler>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer(new OptionsConfigurer(_options, _injectionist));
-            return this;
-        }
+            var settings = c.Get<SimpleRetryStrategySettings>();
+            var transport = c.Get<ITransport>();
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
+        });
 
-        /// <summary>
-        /// Finishes the setup of the bus, using default implementations for the options that have not explicitly been set.
-        /// The only requirement, is that you must call <see cref="Transport"/> and select which transport to use - everything
-        /// else can run with a default option. It should be noted though, that several of the defaults (e.g. in-mem persistence
-        /// options for saga storage, subscriptions, and timeouts) are not meant for production use, and should probably be
-        /// replaced by something that is actually persistent.
-        /// </summary>
-        public IBus Start()
+        PossiblyRegisterDefault<IFailFastChecker>(c => new FailFastChecker());
+
+        PossiblyRegisterDefault<IRetryStrategy>(c =>
         {
-            VerifyRequirements();
+            var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            var errorTracker = c.Get<IErrorTracker>();
+            var errorHandler = c.Get<IErrorHandler>();
+            var cancellationToken = c.Get<CancellationToken>();
+            return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, cancellationToken);
+        });
 
-            _injectionist.Register(c => _options);
-            _injectionist.Register(c => new CancellationTokenSource());
-            _injectionist.Register(c => c.Get<CancellationTokenSource>().Token);
+        PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
 
-            PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
+        PossiblyRegisterDefault(c =>
+        {
+            var transport = c.Get<ITransport>();
+            var timeoutManager = c.Get<ITimeoutManager>();
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+            return new HandleDeferredMessagesStep(timeoutManager, transport, _options, rebusLoggerFactory, asyncTaskFactory);
+        });
 
-            PossiblyRegisterDefault<IRebusTime>(c => new DefaultRebusTime());
+        PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
 
-            //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
-            PossiblyRegisterDefault<IAsyncTaskFactory>(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new TplAsyncTaskFactory(rebusLoggerFactory);
-            });
+        PossiblyRegisterDefault<IPipeline>(c =>
+        {
+            var serializer = c.Get<ISerializer>();
+            var transport = c.Get<ITransport>();
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            var options = c.Get<Options>();
+            var rebusTime = c.Get<IRebusTime>();
+            var messageTypeNameConvention = c.Get<IMessageTypeNameConvention>();
 
-            PossiblyRegisterDefault<IRouter>(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new TypeBasedRouter(rebusLoggerFactory);
-            });
+            return new DefaultPipeline()
+                .OnReceive(c.Get<IRetryStrategyStep>())
+                .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>(), transport))
+                .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
+                .OnReceive(new DeserializeIncomingMessageStep(serializer))
+                .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
+                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
+                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory, options))
+                .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
-            PossiblyRegisterDefault<ISubscriptionStorage>(c => new DisabledSubscriptionStorage());
+                .OnSend(new AssignDefaultHeadersStep(transport, rebusTime, messageTypeNameConvention, options.DefaultReturnAddressOrNull))
+                .OnSend(new FlowCorrelationIdStep())
+                .OnSend(new AutoHeadersOutgoingStep())
+                .OnSend(new SerializeOutgoingMessageStep(serializer))
+                .OnSend(new ValidateOutgoingMessageStep())
+                .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
+        });
 
-            PossiblyRegisterDefault<ISagaStorage>(c => new DisabledSagaStorage());
+        PossiblyRegisterDefault(c => new BusLifetimeEvents());
 
-            PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
+        PossiblyRegisterDefault<IDataBus>(c => new DisabledDataBus());
 
-            PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>()));
+        PossiblyRegisterDefault<ITopicNameConvention>(c => new DefaultTopicNameConvention());
 
-            PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvokerNew(c.Get<IPipeline>()));
+        PossiblyRegisterDefault<IMessageTypeNameConvention>(c => new SimpleAssemblyQualifiedMessageTypeNameConvention());
 
-            PossiblyRegisterDefault<IBackoffStrategy>(c =>
-            {
-                var backoffTimes = new[]
-                {
-                    // 10 s
-                    Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 10),
+        // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
+        Action startAction = null;
 
-                    // on and on
-                    Enumerable.Repeat(TimeSpan.FromMilliseconds(250), 1)
-                };
+        PossiblyRegisterDefault(c => new RebusBus(
+            c.Get<IWorkerFactory>(),
+            c.Get<IRouter>(),
+            c.Get<ITransport>(),
+            c.Get<IPipelineInvoker>(),
+            c.Get<ISubscriptionStorage>(),
+            _options,
+            c.Get<IRebusLoggerFactory>(),
+            c.Get<BusLifetimeEvents>(),
+            c.Get<IDataBus>(),
+            c.Get<ITopicNameConvention>(),
+            c.Get<IRebusTime>()
+        ));
 
-                var options = c.Get<Options>();
+        // since an error during resolution does not give access to disposable instances, we need to do this
+        var disposableInstancesTrackedFromInitialResolution = new ConcurrentStack<IDisposable>();
 
-                return new DefaultBackoffStrategy(backoffTimes.SelectMany(e => e), options);
-            });
-
-            PossiblyRegisterDefault<IWorkerFactory>(c =>
-            {
-                var transport = c.Get<ITransport>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var pipelineInvoker = c.Get<IPipelineInvoker>();
-                var options = c.Get<Options>();
-                var busLifetimeEvents = c.Get<BusLifetimeEvents>();
-                var backoffStrategy = c.Get<IBackoffStrategy>();
-                var cancellationToken = c.Get<CancellationToken>();
-
-                return new ThreadPoolWorkerFactory(
-                    transport: transport,
-                    rebusLoggerFactory: rebusLoggerFactory,
-                    pipelineInvoker: pipelineInvoker,
-                    options: options,
-                    busGetter: c.Get<RebusBus>,
-                    busLifetimeEvents: busLifetimeEvents,
-                    backoffStrategy: backoffStrategy,
-                    busDisposalCancellationToken: cancellationToken
-                );
-            });
-
-            //PossiblyRegisterDefault<IWorkerFactory>(c =>
-            //{
-            //    var transport = c.Get<ITransport>();
-            //    var loggerFactory = c.Get<IRebusLoggerFactory>();
-            //    var pipelineInvoker = c.Get<IPipelineInvoker>();
-            //    var options = c.Get<Options>();
-            //    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
-            //    var backoffStrategy = c.Get<IBackoffStrategy>();
-            //    return new TplWorkerFactory(transport, loggerFactory, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
-            //});
-
-            PossiblyRegisterDefault<IErrorTracker>(c =>
-            {
-                var transport = c.Get<ITransport>();
-                var settings = c.Get<SimpleRetryStrategySettings>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                var rebusTime = c.Get<IRebusTime>();
-                return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, transport, rebusTime);
-            });
-
-            PossiblyRegisterDefault<IErrorHandler>(c =>
-            {
-                var settings = c.Get<SimpleRetryStrategySettings>();
-                var transport = c.Get<ITransport>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
-            });
-
-            PossiblyRegisterDefault<IFailFastChecker>(c => new FailFastChecker());
-
-            PossiblyRegisterDefault<IRetryStrategy>(c =>
-            {
-                var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var errorTracker = c.Get<IErrorTracker>();
-                var errorHandler = c.Get<IErrorHandler>();
-                var cancellationToken = c.Get<CancellationToken>();
-                return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, cancellationToken);
-            });
-
-            PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
-
-            PossiblyRegisterDefault(c =>
-            {
-                var transport = c.Get<ITransport>();
-                var timeoutManager = c.Get<ITimeoutManager>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                return new HandleDeferredMessagesStep(timeoutManager, transport, _options, rebusLoggerFactory, asyncTaskFactory);
-            });
-
-            PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
-
-            PossiblyRegisterDefault<IPipeline>(c =>
-            {
-                var serializer = c.Get<ISerializer>();
-                var transport = c.Get<ITransport>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var options = c.Get<Options>();
-                var rebusTime = c.Get<IRebusTime>();
-                var messageTypeNameConvention = c.Get<IMessageTypeNameConvention>();
-
-                return new DefaultPipeline()
-                    .OnReceive(c.Get<IRetryStrategyStep>())
-                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>(), transport))
-                    .OnReceive(c.Get<HandleDeferredMessagesStep>())
-                    .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
-                    .OnReceive(new DeserializeIncomingMessageStep(serializer))
-                    .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
-                    .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
-                    .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory, options))
-                    .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
-
-                    .OnSend(new AssignDefaultHeadersStep(transport, rebusTime, messageTypeNameConvention, options.DefaultReturnAddressOrNull))
-                    .OnSend(new FlowCorrelationIdStep())
-                    .OnSend(new AutoHeadersOutgoingStep())
-                    .OnSend(new SerializeOutgoingMessageStep(serializer))
-                    .OnSend(new ValidateOutgoingMessageStep())
-                    .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
-            });
-
-            PossiblyRegisterDefault(c => new BusLifetimeEvents());
-
-            PossiblyRegisterDefault<IDataBus>(c => new DisabledDataBus());
-
-            PossiblyRegisterDefault<ITopicNameConvention>(c => new DefaultTopicNameConvention());
-
-            PossiblyRegisterDefault<IMessageTypeNameConvention>(c => new SimpleAssemblyQualifiedMessageTypeNameConvention());
-
-            // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
-            Action startAction = null;
-
-            PossiblyRegisterDefault(c => new RebusBus(
-                c.Get<IWorkerFactory>(),
-                c.Get<IRouter>(),
-                c.Get<ITransport>(),
-                c.Get<IPipelineInvoker>(),
-                c.Get<ISubscriptionStorage>(),
-                _options,
-                c.Get<IRebusLoggerFactory>(),
-                c.Get<BusLifetimeEvents>(),
-                c.Get<IDataBus>(),
-                c.Get<ITopicNameConvention>(),
-                c.Get<IRebusTime>()
-            ));
-
-            // since an error during resolution does not give access to disposable instances, we need to do this
-            var disposableInstancesTrackedFromInitialResolution = new ConcurrentStack<IDisposable>();
-
-            PossiblyRegisterDefault<IBus>(c =>
-            {
-                try
-                {
-                    var bus = c.Get<RebusBus>();
-                    var cancellationTokenSource = c.Get<CancellationTokenSource>();
-
-                    c.Get<BusLifetimeEvents>().BusDisposing += () => cancellationTokenSource.Cancel();
-
-                    bus.Disposed += () =>
-                    {
-                        var disposableInstances = c.TrackedInstances.OfType<IDisposable>().Reverse();
-
-                        foreach (var disposableInstance in disposableInstances)
-                        {
-                            disposableInstance.Dispose();
-                        }
-                    };
-
-                    var initializableInstances = c.TrackedInstances.OfType<IInitializable>();
-
-                    foreach (var initializableInstance in initializableInstances)
-                    {
-                        initializableInstance.Initialize();
-                    }
-
-                    // and then we set the startAction
-                    startAction = () => bus.Start(_options.NumberOfWorkers);
-
-                    return bus;
-                }
-                catch
-                {
-                    // stash'em here quick!
-                    foreach (var disposable in c.TrackedInstances.OfType<IDisposable>())
-                    {
-                        disposableInstancesTrackedFromInitialResolution.Push(disposable);
-                    }
-                    throw;
-                }
-            });
-
-            _injectionist.Decorate<IHandlerActivator>(c =>
-            {
-                var handlerActivator = c.Get<IHandlerActivator>();
-                var subscriptionStorage = c.Get<ISubscriptionStorage>();
-                var internalHandlersContributor = new InternalHandlersContributor(handlerActivator, subscriptionStorage);
-                return internalHandlersContributor;
-            });
-
-            _injectionist.Decorate<ISerializer>(c =>
-            {
-                var serializer = c.Get<ISerializer>();
-                var zipper = new Zipper();
-                var unzippingSerializerDecorator = new UnzippingSerializerDecorator(serializer, zipper);
-                return unzippingSerializerDecorator;
-            });
-
+        PossiblyRegisterDefault<IBus>(c =>
+        {
             try
             {
-                var busResolutionResult = _injectionist.Get<IBus>();
-                var busInstance = busResolutionResult.Instance;
+                var bus = c.Get<RebusBus>();
+                var cancellationTokenSource = c.Get<CancellationTokenSource>();
 
-                // if there is a container adapter among the tracked instances, hand it the bus instance
-                var containerAdapter = busResolutionResult.TrackedInstances
-                    .OfType<IContainerAdapter>()
-                    .FirstOrDefault();
+                c.Get<BusLifetimeEvents>().BusDisposing += () => cancellationTokenSource.Cancel();
 
-                containerAdapter?.SetBus(busInstance);
+                bus.Disposed += () =>
+                {
+                    var disposableInstances = c.TrackedInstances.OfType<IDisposable>().Reverse();
 
-                // and NOW we are ready to start the bus if there is a startAction
-                startAction?.Invoke();
+                    foreach (var disposableInstance in disposableInstances)
+                    {
+                        disposableInstance.Dispose();
+                    }
+                };
 
-                _hasBeenStarted = true;
+                var initializableInstances = c.TrackedInstances.OfType<IInitializable>();
 
-                return busInstance;
+                foreach (var initializableInstance in initializableInstances)
+                {
+                    initializableInstance.Initialize();
+                }
+
+                // and then we set the startAction
+                startAction = () => bus.Start(_options.NumberOfWorkers);
+
+                return bus;
             }
             catch
             {
-                while (disposableInstancesTrackedFromInitialResolution.TryPop(out var disposable))
+                // stash'em here quick!
+                foreach (var disposable in c.TrackedInstances.OfType<IDisposable>())
                 {
-                    try
-                    {
-                        disposable.Dispose();
-                    }
-                    catch { } //< disposables must never throw, but sometimes they do
+                    disposableInstancesTrackedFromInitialResolution.Push(disposable);
                 }
                 throw;
             }
-        }
+        });
 
-        void VerifyRequirements()
+        _injectionist.Decorate<IHandlerActivator>(c =>
         {
-            if (_hasBeenStarted)
+            var handlerActivator = c.Get<IHandlerActivator>();
+            var subscriptionStorage = c.Get<ISubscriptionStorage>();
+            var internalHandlersContributor = new InternalHandlersContributor(handlerActivator, subscriptionStorage);
+            return internalHandlersContributor;
+        });
+
+        _injectionist.Decorate<ISerializer>(c =>
+        {
+            var serializer = c.Get<ISerializer>();
+            var zipper = new Zipper();
+            var unzippingSerializerDecorator = new UnzippingSerializerDecorator(serializer, zipper);
+            return unzippingSerializerDecorator;
+        });
+
+        try
+        {
+            var busResolutionResult = _injectionist.Get<IBus>();
+            var busInstance = busResolutionResult.Instance;
+
+            // if there is a container adapter among the tracked instances, hand it the bus instance
+            var containerAdapter = busResolutionResult.TrackedInstances
+                .OfType<IContainerAdapter>()
+                .FirstOrDefault();
+
+            containerAdapter?.SetBus(busInstance);
+
+            // and NOW we are ready to start the bus if there is a startAction
+            startAction?.Invoke();
+
+            _hasBeenStarted = true;
+
+            return busInstance;
+        }
+        catch
+        {
+            while (disposableInstancesTrackedFromInitialResolution.TryPop(out var disposable))
             {
-                throw new InvalidOperationException("This configurer has already had .Start() called on it - this is not allowed, because it cannot be guaranteed that configuration extensions make their registrations in a way that allows for being called more than once. If you need to create multiple bus instances, please wrap the configuration from Configure.With(...) and on in a function that you can call multiple times.");
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch { } //< disposables must never throw, but sometimes they do
             }
-
-            if (!_injectionist.Has<ITransport>())
-            {
-                throw new RebusConfigurationException(
-                    "No transport has been configured! You need to call .Transport(t => t.Use***) in order" +
-                    " to select which kind of queueing system you want to use to transport messages. If" +
-                    " you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");
-            }
+            throw;
         }
+    }
 
-        void PossiblyRegisterDefault<TService>(Func<IResolutionContext, TService> factoryMethod)
+    void VerifyRequirements()
+    {
+        if (_hasBeenStarted)
         {
-            if (_injectionist.Has<TService>()) return;
-
-            _injectionist.Register(factoryMethod);
+            throw new InvalidOperationException("This configurer has already had .Start() called on it - this is not allowed, because it cannot be guaranteed that configuration extensions make their registrations in a way that allows for being called more than once. If you need to create multiple bus instances, please wrap the configuration from Configure.With(...) and on in a function that you can call multiple times.");
         }
 
-        void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
+        if (!_injectionist.Has<ITransport>())
         {
-            _injectionist.Decorate(factoryMethod);
+            throw new RebusConfigurationException(
+                "No transport has been configured! You need to call .Transport(t => t.Use***) in order" +
+                " to select which kind of queueing system you want to use to transport messages. If" +
+                " you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");
         }
+    }
+
+    void PossiblyRegisterDefault<TService>(Func<IResolutionContext, TService> factoryMethod)
+    {
+        if (_injectionist.Has<TService>()) return;
+
+        _injectionist.Register(factoryMethod);
+    }
+
+    void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
+    {
+        _injectionist.Decorate(factoryMethod);
     }
 }

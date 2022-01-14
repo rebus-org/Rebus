@@ -4,21 +4,21 @@ using System.IO;
 using System.Threading.Tasks;
 using Rebus.DataBus;
 
-namespace Rebus.Persistence.Throwing
+namespace Rebus.Persistence.Throwing;
+
+class DisabledDataBus : IDataBus
 {
-    class DisabledDataBus : IDataBus
-    {
-        public Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null) => throw GetException();
+    public Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null) => throw GetException();
 
-        public Task<Stream> OpenRead(string dataBusAttachmentId) => throw GetException();
+    public Task<Stream> OpenRead(string dataBusAttachmentId) => throw GetException();
 
-        public Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => throw GetException();
+    public Task<Dictionary<string, string>> GetMetadata(string dataBusAttachmentId) => throw GetException();
 
-        public Task Delete(string dataBusAttachmentId) => throw GetException();
+    public Task Delete(string dataBusAttachmentId) => throw GetException();
 
-        public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null) => throw GetException();
+    public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null) => throw GetException();
 
-        static InvalidOperationException GetException() => new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .DataBus(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .DataBus(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)
@@ -33,5 +33,4 @@ Configure.With(..)
     .Start();
 
 to use a central SQL Server.");
-    }
 }

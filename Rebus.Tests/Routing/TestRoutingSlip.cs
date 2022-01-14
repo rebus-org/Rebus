@@ -20,220 +20,219 @@ using Rebus.Transport.InMem;
 // ReSharper disable RedundantLambdaParameterType
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Routing
+namespace Rebus.Tests.Routing;
+
+[TestFixture]
+public class TestRoutingSlip : FixtureBase
 {
-    [TestFixture]
-    public class TestRoutingSlip : FixtureBase
+    readonly InMemNetwork _network = new InMemNetwork();
+    readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory(true);
+
+    protected override void SetUp()
     {
-        readonly InMemNetwork _network = new InMemNetwork();
-        readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory(true);
+        _listLoggerFactory.Clear();
+        _network.Reset();
+    }
 
-        protected override void SetUp()
+    [Test]
+    public async Task CheckHeaders()
+    {
+        var seqValues = new List<string>();
+        var travelogueValues = new List<string>();
+        var correlationIdValues = new List<string>();
+
+        void HandleHeaders(Dictionary<string, string> headers)
         {
-            _listLoggerFactory.Clear();
-            _network.Reset();
-        }
-
-        [Test]
-        public async Task CheckHeaders()
-        {
-            var seqValues = new List<string>();
-            var travelogueValues = new List<string>();
-            var correlationIdValues = new List<string>();
-
-            void HandleHeaders(Dictionary<string, string> headers)
-            {
-                Console.WriteLine($@"Headers:
+            Console.WriteLine($@"Headers:
 {string.Join(Environment.NewLine, headers.Select(kvp => $"    {kvp.Key}: {kvp.Value}"))}
 ");
-                seqValues.Add(headers.GetValue(Headers.CorrelationSequence));
-                travelogueValues.Add(headers.GetValue(Headers.RoutingSlipTravelogue));
-                correlationIdValues.Add(headers.GetValue(Headers.CorrelationId));
-            }
-
-            StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-            StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-            StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-
-            var routingSlipWasReturnedToSender = new ManualResetEvent(false);
-
-            var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) =>
-            {
-                HandleHeaders(context.Headers);
-                routingSlipWasReturnedToSender.Set();
-            });
-
-            var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c").ReturnToSender();
-
-            await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, "HEJ MED DIG DU");
-
-            routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
-
-            Assert.That(seqValues, Is.EqualTo(new[] { "0", "1", "2", "3" }));
-            Assert.That(travelogueValues, Is.EqualTo(new[]
-            {
-                "",
-                "endpoint-a",
-                "endpoint-a;endpoint-b",
-                "endpoint-a;endpoint-b;endpoint-c",
-            }));
-            Assert.That(correlationIdValues, Is.EqualTo(Enumerable.Repeat(correlationIdValues.First(), 4)));
+            seqValues.Add(headers.GetValue(Headers.CorrelationSequence));
+            travelogueValues.Add(headers.GetValue(Headers.RoutingSlipTravelogue));
+            correlationIdValues.Add(headers.GetValue(Headers.CorrelationId));
         }
 
-        [Test]
-        public async Task WorksGreatWithMutableMessagesToo()
+        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+
+        var routingSlipWasReturnedToSender = new ManualResetEvent(false);
+
+        var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) =>
         {
-            StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-a"));
-            StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-b"));
-            StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-c"));
+            HandleHeaders(context.Headers);
+            routingSlipWasReturnedToSender.Set();
+        });
 
-            var routingSlipWasReturnedToSender = new ManualResetEvent(false);
-            var collectedLines = new List<string>();
+        var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c").ReturnToSender();
 
-            var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message =>
-            {
-                collectedLines.AddRange(message.Lines);
-                routingSlipWasReturnedToSender.Set();
-            });
+        await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, "HEJ MED DIG DU");
 
-            var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c").ReturnToSender();
+        routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
 
-            await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, new SomeMutableMessage());
-
-            routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
-
-            Assert.That(collectedLines, Is.EqualTo(new[]
-            {
-                "Handled by endpoint-a",
-                "Handled by endpoint-b",
-                "Handled by endpoint-c",
-            }));
-        }
-
-        class SomeMutableMessage
+        Assert.That(seqValues, Is.EqualTo(new[] { "0", "1", "2", "3" }));
+        Assert.That(travelogueValues, Is.EqualTo(new[]
         {
-            readonly List<string> _lines = new List<string>();
+            "",
+            "endpoint-a",
+            "endpoint-a;endpoint-b",
+            "endpoint-a;endpoint-b;endpoint-c",
+        }));
+        Assert.That(correlationIdValues, Is.EqualTo(Enumerable.Repeat(correlationIdValues.First(), 4)));
+    }
 
-            public SomeMutableMessage(IEnumerable<string> lines = null) => _lines.AddRange(lines ?? Enumerable.Empty<string>());
+    [Test]
+    public async Task WorksGreatWithMutableMessagesToo()
+    {
+        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-a"));
+        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-b"));
+        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message => message.AddLine("Handled by endpoint-c"));
 
-            public IReadOnlyCollection<string> Lines => _lines;
+        var routingSlipWasReturnedToSender = new ManualResetEvent(false);
+        var collectedLines = new List<string>();
 
-            public void AddLine(string line) => _lines.Add(line);
-        }
-
-        [Test]
-        public async Task CanRouteMessageAsExpected_NeverReturn()
+        var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<SomeMutableMessage>(async message =>
         {
-            var done = new ManualResetEvent(false);
-            var events = new ConcurrentQueue<string>();
+            collectedLines.AddRange(message.Lines);
+            routingSlipWasReturnedToSender.Set();
+        });
 
-            StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("a"));
-            StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("b"));
-            StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("c"));
+        var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c").ReturnToSender();
+
+        await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, new SomeMutableMessage());
+
+        routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
+
+        Assert.That(collectedLines, Is.EqualTo(new[]
+        {
+            "Handled by endpoint-a",
+            "Handled by endpoint-b",
+            "Handled by endpoint-c",
+        }));
+    }
+
+    class SomeMutableMessage
+    {
+        readonly List<string> _lines = new List<string>();
+
+        public SomeMutableMessage(IEnumerable<string> lines = null) => _lines.AddRange(lines ?? Enumerable.Empty<string>());
+
+        public IReadOnlyCollection<string> Lines => _lines;
+
+        public void AddLine(string line) => _lines.Add(line);
+    }
+
+    [Test]
+    public async Task CanRouteMessageAsExpected_NeverReturn()
+    {
+        var done = new ManualResetEvent(false);
+        var events = new ConcurrentQueue<string>();
+
+        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("a"));
+        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("b"));
+        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("c"));
                     
-            StartBus("endpoint-d").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
-            {
-                events.Enqueue("d");
-                done.Set();
-            });
+        StartBus("endpoint-d").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
+        {
+            events.Enqueue("d");
+            done.Set();
+        });
 
-            var initiator = StartBus("initiator");
+        var initiator = StartBus("initiator");
 
-            var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c", "endpoint-d");
+        var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c", "endpoint-d");
 
-            await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, "YO!!");
+        await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, "YO!!");
 
-            done.WaitOrDie(TimeSpan.FromSeconds(3));
+        done.WaitOrDie(TimeSpan.FromSeconds(3));
 
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
 
-            Assert.That(events, Is.EqualTo(new[] { "a", "b", "c", "d" }));
+        Assert.That(events, Is.EqualTo(new[] { "a", "b", "c", "d" }));
 
-            var warningLinesOrWorse = _listLoggerFactory.Where(l => l.Level >= LogLevel.Warn).ToList();
-            Assert.That(warningLinesOrWorse.Any, Is.False, $@"Did NOT expect any warnings or errors in the log - got these lines with WARN level or above:
+        var warningLinesOrWorse = _listLoggerFactory.Where(l => l.Level >= LogLevel.Warn).ToList();
+        Assert.That(warningLinesOrWorse.Any, Is.False, $@"Did NOT expect any warnings or errors in the log - got these lines with WARN level or above:
 
 {string.Join(Environment.NewLine, warningLinesOrWorse)}
 
 
 They should not have been there
 ");
-        }
-
-        [Test]
-        public async Task CanRouteMessageAsExpected_ReturnToSender()
-        {
-            var a = StartBus("endpoint-a");
-            var b = StartBus("endpoint-b");
-            var c = StartBus("endpoint-c");
-
-            var routingSlipWasReturnedToSender = new ManualResetEvent(false);
-
-            var initiator = StartBus("initiator", (SomeMessage message) => routingSlipWasReturnedToSender.Set());
-
-            var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c")
-                .ReturnToSender();
-
-            await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, new SomeMessage("hello there!"));
-
-            routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
-
-            Assert.That(a.Events, Contains.Item(@"Handled string ""hello there!"" in endpoint-a"));
-            Assert.That(b.Events, Contains.Item(@"Handled string ""hello there!"" in endpoint-b"));
-            Assert.That(c.Events, Contains.Item(@"Handled string ""hello there!"" in endpoint-c"));
-        }
-
-        class SomeMessage
-        {
-            public SomeMessage(string text)
-            {
-                Text = text;
-            }
-
-            public string Text { get; }
-        }
-
-        RoutingSlipDestination StartBus(string queueName, Action<SomeMessage> someMessageHandler = null)
-        {
-            var activator = new BuiltinHandlerActivator();
-            var events = new ConcurrentQueue<string>();
-
-            Using(activator);
-
-            if (someMessageHandler == null)
-            {
-                activator.Handle<SomeMessage>(async message =>
-                {
-                    var text = $@"Handled string ""{message.Text}"" in {queueName}";
-                    Console.WriteLine(text);
-                    events.Enqueue(text);
-                });
-            }
-            else
-            {
-                activator.Handle<SomeMessage>(async message => someMessageHandler(message));
-            }
-
-            Configure.With(activator)
-                .Logging(l => l.Use(_listLoggerFactory))
-                .Transport(t => t.UseInMemoryTransport(_network, queueName))
-                .Start();
-
-            return new RoutingSlipDestination(activator.Bus, activator, events);
-        }
-
-        class RoutingSlipDestination
-        {
-            public IBus Bus { get; }
-            public BuiltinHandlerActivator Activator { get; }
-            public ConcurrentQueue<string> Events { get; }
-
-            public RoutingSlipDestination(IBus bus, BuiltinHandlerActivator activator, ConcurrentQueue<string> events)
-            {
-                Bus = bus;
-                Activator = activator;
-                Events = events;
-            }
-        }
-
     }
+
+    [Test]
+    public async Task CanRouteMessageAsExpected_ReturnToSender()
+    {
+        var a = StartBus("endpoint-a");
+        var b = StartBus("endpoint-b");
+        var c = StartBus("endpoint-c");
+
+        var routingSlipWasReturnedToSender = new ManualResetEvent(false);
+
+        var initiator = StartBus("initiator", (SomeMessage message) => routingSlipWasReturnedToSender.Set());
+
+        var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c")
+            .ReturnToSender();
+
+        await initiator.Bus.Advanced.Routing.SendRoutingSlip(itinerary, new SomeMessage("hello there!"));
+
+        routingSlipWasReturnedToSender.WaitOrDie(TimeSpan.FromSeconds(3));
+
+        Assert.That(a.Events, Contains.Item(@"Handled string ""hello there!"" in endpoint-a"));
+        Assert.That(b.Events, Contains.Item(@"Handled string ""hello there!"" in endpoint-b"));
+        Assert.That(c.Events, Contains.Item(@"Handled string ""hello there!"" in endpoint-c"));
+    }
+
+    class SomeMessage
+    {
+        public SomeMessage(string text)
+        {
+            Text = text;
+        }
+
+        public string Text { get; }
+    }
+
+    RoutingSlipDestination StartBus(string queueName, Action<SomeMessage> someMessageHandler = null)
+    {
+        var activator = new BuiltinHandlerActivator();
+        var events = new ConcurrentQueue<string>();
+
+        Using(activator);
+
+        if (someMessageHandler == null)
+        {
+            activator.Handle<SomeMessage>(async message =>
+            {
+                var text = $@"Handled string ""{message.Text}"" in {queueName}";
+                Console.WriteLine(text);
+                events.Enqueue(text);
+            });
+        }
+        else
+        {
+            activator.Handle<SomeMessage>(async message => someMessageHandler(message));
+        }
+
+        Configure.With(activator)
+            .Logging(l => l.Use(_listLoggerFactory))
+            .Transport(t => t.UseInMemoryTransport(_network, queueName))
+            .Start();
+
+        return new RoutingSlipDestination(activator.Bus, activator, events);
+    }
+
+    class RoutingSlipDestination
+    {
+        public IBus Bus { get; }
+        public BuiltinHandlerActivator Activator { get; }
+        public ConcurrentQueue<string> Events { get; }
+
+        public RoutingSlipDestination(IBus bus, BuiltinHandlerActivator activator, ConcurrentQueue<string> events)
+        {
+            Bus = bus;
+            Activator = activator;
+            Events = events;
+        }
+    }
+
 }

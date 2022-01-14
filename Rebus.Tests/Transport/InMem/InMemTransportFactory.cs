@@ -2,26 +2,25 @@
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Transport.InMem
+namespace Rebus.Tests.Transport.InMem;
+
+public class InMemTransportFactory : ITransportFactory
 {
-    public class InMemTransportFactory : ITransportFactory
+    readonly InMemNetwork _network = new InMemNetwork();
+
+    public ITransport CreateOneWayClient()
     {
-        readonly InMemNetwork _network = new InMemNetwork();
+        return Create(null);
+    }
 
-        public ITransport CreateOneWayClient()
-        {
-            return Create(null);
-        }
+    public ITransport Create(string inputQueueAddress)
+    {
+        var transport = new InMemTransport(_network, inputQueueAddress);
+        transport.Initialize();
+        return transport;
+    }
 
-        public ITransport Create(string inputQueueAddress)
-        {
-            var transport = new InMemTransport(_network, inputQueueAddress);
-            transport.Initialize();
-            return transport;
-        }
-
-        public void CleanUp()
-        {
-        }
+    public void CleanUp()
+    {
     }
 }

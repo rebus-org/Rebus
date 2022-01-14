@@ -12,46 +12,46 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Time;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Encryption
+namespace Rebus.Tests.Encryption;
+
+[TestFixture]
+[Description("Verifies that deferred messages are stored in encrypted form when encryption is enabled. For this to work, it is crucial that the 'DecryptIncomingMessagesStep' is executed AFTER the 'HandleDeferredMessagesStep', which has fortunately always been the case.")]
+public class TestTimeoutManagerStorageAndEncryption : FixtureBase
 {
-    [TestFixture]
-    [Description("Verifies that deferred messages are stored in encrypted form when encryption is enabled. For this to work, it is crucial that the 'DecryptIncomingMessagesStep' is executed AFTER the 'HandleDeferredMessagesStep', which has fortunately always been the case.")]
-    public class TestTimeoutManagerStorageAndEncryption : FixtureBase
+    InMemoryTimeoutManager _timeoutManager;
+    IBus _bus;
+
+    protected override void SetUp()
     {
-        InMemoryTimeoutManager _timeoutManager;
-        IBus _bus;
+        var activator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
-        {
-            var activator = new BuiltinHandlerActivator();
+        Using(activator);
 
-            Using(activator);
+        _timeoutManager = new InMemoryTimeoutManager(new FakeRebusTime());
 
-            _timeoutManager = new InMemoryTimeoutManager(new FakeRebusTime());
+        _bus = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "encryption-and-timeouts-together"))
+            .Timeouts(t => t.Register(c => _timeoutManager))
+            .Options(o => o.EnableEncryption("l7ex7hFMWSMhgti20ZSDHtE7qNDj5TSmls6vYNxA4Cg="))
+            .Options(o => o.LogPipeline())
+            .Start();
+    }
 
-            _bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "encryption-and-timeouts-together"))
-                .Timeouts(t => t.Register(c => _timeoutManager))
-                .Options(o => o.EnableEncryption("l7ex7hFMWSMhgti20ZSDHtE7qNDj5TSmls6vYNxA4Cg="))
-                .Options(o => o.LogPipeline())
-                .Start();
-        }
+    [Test]
+    public async Task EncryptedMessageIsEncryptedInTimeoutStorage()
+    {
+        const string knownMessage = "HEJ MED DIG DIN FRÆKKE DRENG";
+        var longEnoughToNotCare = TimeSpan.FromSeconds(1000);
 
-        [Test]
-        public async Task EncryptedMessageIsEncryptedInTimeoutStorage()
-        {
-            const string knownMessage = "HEJ MED DIG DIN FRÆKKE DRENG";
-            var longEnoughToNotCare = TimeSpan.FromSeconds(1000);
+        await _bus.DeferLocal(longEnoughToNotCare, knownMessage);
 
-            await _bus.DeferLocal(longEnoughToNotCare, knownMessage);
+        // wait for deferred message to be received and put into storage
+        while (!_timeoutManager.Any()) await Task.Delay(10);
 
-            // wait for deferred message to be received and put into storage
-            while (!_timeoutManager.Any()) await Task.Delay(10);
+        var deferredMessage = _timeoutManager.First();
+        var messageBodyString = Encoding.UTF8.GetString(deferredMessage.Body);
 
-            var deferredMessage = _timeoutManager.First();
-            var messageBodyString = Encoding.UTF8.GetString(deferredMessage.Body);
-
-            Console.WriteLine($@"Here's the message contents as it looks to those who happen to be able to look into the timeout storage:
+        Console.WriteLine($@"Here's the message contents as it looks to those who happen to be able to look into the timeout storage:
 
 {messageBodyString}
 
@@ -61,7 +61,6 @@ Hopefully, it does NOT look anything like this:
 
 ");
 
-            Assert.That(messageBodyString, !Contains.Substring(knownMessage));
-        }
+        Assert.That(messageBodyString, !Contains.Substring(knownMessage));
     }
 }

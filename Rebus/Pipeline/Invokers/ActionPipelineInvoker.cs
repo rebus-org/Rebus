@@ -3,79 +3,78 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Rebus.Pipeline.Invokers
+namespace Rebus.Pipeline.Invokers;
+
+/// <summary>
+/// Action-based pipeline invoker that recursively composes actions to invoke the pipelines
+/// </summary>
+class ActionPipelineInvoker : IPipelineInvoker
 {
-    /// <summary>
-    /// Action-based pipeline invoker that recursively composes actions to invoke the pipelines
-    /// </summary>
-    class ActionPipelineInvoker : IPipelineInvoker
+    static readonly Task CompletedTask = Task.FromResult(0);
+
+    readonly Func<IncomingStepContext, Task> _invokeReceivePipeline;
+    readonly Func<OutgoingStepContext, Task> _invokeSendPipeline;
+
+    public ActionPipelineInvoker(IPipeline pipeline)
     {
-        static readonly Task CompletedTask = Task.FromResult(0);
+        _invokeReceivePipeline = GenerateReceiveFunction(
+            pipeline.ReceivePipeline()
+        );
 
-        readonly Func<IncomingStepContext, Task> _invokeReceivePipeline;
-        readonly Func<OutgoingStepContext, Task> _invokeSendPipeline;
+        _invokeSendPipeline = GenerateSendFunction(
+            pipeline.SendPipeline()
+        );
+    }
 
-        public ActionPipelineInvoker(IPipeline pipeline)
+    public Task Invoke(IncomingStepContext context)
+    {
+        return _invokeReceivePipeline(context);
+    }
+
+    public Task Invoke(OutgoingStepContext context)
+    {
+        return _invokeSendPipeline(context);
+    }
+
+    static Func<IncomingStepContext, Task> GenerateReceiveFunction(IReadOnlyList<IIncomingStep> steps)
+    {
+        if (!steps.Any())
         {
-            _invokeReceivePipeline = GenerateReceiveFunction(
-                pipeline.ReceivePipeline()
-            );
-
-            _invokeSendPipeline = GenerateSendFunction(
-                pipeline.SendPipeline()
-            );
+            Task CompletedFunction(IncomingStepContext context) => CompletedTask;
+            return CompletedFunction;
         }
 
-        public Task Invoke(IncomingStepContext context)
+        var head = steps.First();
+        var tail = steps.Skip(1).ToList();
+        var invokeTail = GenerateReceiveFunction(tail);
+
+        Task ReceiveFunction(IncomingStepContext context)
         {
-            return _invokeReceivePipeline(context);
+            Task NextFunction() => invokeTail(context);
+            return head.Process(context, NextFunction);
         }
 
-        public Task Invoke(OutgoingStepContext context)
+        return ReceiveFunction;
+    }
+
+    static Func<OutgoingStepContext, Task> GenerateSendFunction(IReadOnlyList<IOutgoingStep> steps)
+    {
+        if (!steps.Any())
         {
-            return _invokeSendPipeline(context);
+            Task CompletedFunction(OutgoingStepContext context) => CompletedTask;
+            return CompletedFunction;
         }
 
-        static Func<IncomingStepContext, Task> GenerateReceiveFunction(IReadOnlyList<IIncomingStep> steps)
+        var head = steps.First();
+        var tail = steps.Skip(1).ToList();
+        var invokeTail = GenerateSendFunction(tail);
+
+        Task SendFunction(OutgoingStepContext context)
         {
-            if (!steps.Any())
-            {
-                Task CompletedFunction(IncomingStepContext context) => CompletedTask;
-                return CompletedFunction;
-            }
-
-            var head = steps.First();
-            var tail = steps.Skip(1).ToList();
-            var invokeTail = GenerateReceiveFunction(tail);
-
-            Task ReceiveFunction(IncomingStepContext context)
-            {
-                Task NextFunction() => invokeTail(context);
-                return head.Process(context, NextFunction);
-            }
-
-            return ReceiveFunction;
+            Task NextFunction() => invokeTail(context);
+            return head.Process(context, NextFunction);
         }
 
-        static Func<OutgoingStepContext, Task> GenerateSendFunction(IReadOnlyList<IOutgoingStep> steps)
-        {
-            if (!steps.Any())
-            {
-                Task CompletedFunction(OutgoingStepContext context) => CompletedTask;
-                return CompletedFunction;
-            }
-
-            var head = steps.First();
-            var tail = steps.Skip(1).ToList();
-            var invokeTail = GenerateSendFunction(tail);
-
-            Task SendFunction(OutgoingStepContext context)
-            {
-                Task NextFunction() => invokeTail(context);
-                return head.Process(context, NextFunction);
-            }
-
-            return SendFunction;
-        }
+        return SendFunction;
     }
 }

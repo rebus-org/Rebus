@@ -11,66 +11,65 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestAsyncHandler : FixtureBase
 {
-    [TestFixture]
-    public class TestAsyncHandler : FixtureBase
+    static readonly string InputQueueName = TestConfig.GetName("test.async.input");
+    IBusStarter _bus;
+    BuiltinHandlerActivator _handlerActivator;
+
+    protected override void SetUp()
     {
-        static readonly string InputQueueName = TestConfig.GetName("test.async.input");
-        IBusStarter _bus;
-        BuiltinHandlerActivator _handlerActivator;
+        _handlerActivator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
+        Using(_handlerActivator);
+
+        _bus = Configure.With(_handlerActivator)
+            .Routing(r => r.TypeBased().Map<string>(InputQueueName))
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), InputQueueName))
+            .Options(o => o.SetNumberOfWorkers(1))
+            .Create();
+    }
+
+    [Test]
+    public async Task YeahItWorks()
+    {
+        var events = new List<string>();
+        var finishedHandled = new ManualResetEvent(false);
+
+        _handlerActivator.Handle<string>(async str =>
         {
-            _handlerActivator = new BuiltinHandlerActivator();
+            await AppendEvent(events, "1");
+            await AppendEvent(events, "2");
+            await AppendEvent(events, "3");
+            await AppendEvent(events, "4");
+            finishedHandled.Set();
+        });
 
-            Using(_handlerActivator);
+        Console.WriteLine(string.Join(Environment.NewLine, events));
 
-            _bus = Configure.With(_handlerActivator)
-                .Routing(r => r.TypeBased().Map<string>(InputQueueName))
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), InputQueueName))
-                .Options(o => o.SetNumberOfWorkers(1))
-                .Create();
-        }
+        var bus = _bus.Start();
+        await bus.Send("hej med dig!");
 
-        [Test]
-        public async Task YeahItWorks()
-        {
-            var events = new List<string>();
-            var finishedHandled = new ManualResetEvent(false);
+        finishedHandled.WaitOrDie(TimeSpan.FromSeconds(10));
 
-            _handlerActivator.Handle<string>(async str =>
-            {
-                await AppendEvent(events, "1");
-                await AppendEvent(events, "2");
-                await AppendEvent(events, "3");
-                await AppendEvent(events, "4");
-                finishedHandled.Set();
-            });
+        Assert.That(events.Count, Is.EqualTo(4));
+        Assert.That(events[0], Does.StartWith("event=1"));
+        Assert.That(events[1], Does.StartWith("event=2"));
+        Assert.That(events[2], Does.StartWith("event=3"));
+        Assert.That(events[3], Does.StartWith("event=4"));
+    }
 
-            Console.WriteLine(string.Join(Environment.NewLine, events));
+    static async Task AppendEvent(ICollection<string> events, string eventNumber)
+    {
+        var text = $"event={eventNumber};thread={Thread.CurrentThread.ManagedThreadId};time={DateTime.UtcNow:mm:ss};context={AmbientTransactionContext.Current}";
 
-            var bus = _bus.Start();
-            await bus.Send("hej med dig!");
+        Console.WriteLine(text);
 
-            finishedHandled.WaitOrDie(TimeSpan.FromSeconds(10));
+        events.Add(text);
 
-            Assert.That(events.Count, Is.EqualTo(4));
-            Assert.That(events[0], Does.StartWith("event=1"));
-            Assert.That(events[1], Does.StartWith("event=2"));
-            Assert.That(events[2], Does.StartWith("event=3"));
-            Assert.That(events[3], Does.StartWith("event=4"));
-        }
-
-        static async Task AppendEvent(ICollection<string> events, string eventNumber)
-        {
-            var text = $"event={eventNumber};thread={Thread.CurrentThread.ManagedThreadId};time={DateTime.UtcNow:mm:ss};context={AmbientTransactionContext.Current}";
-
-            Console.WriteLine(text);
-
-            events.Add(text);
-
-            await Task.Delay(10);
-        }
+        await Task.Delay(10);
     }
 }

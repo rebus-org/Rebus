@@ -8,31 +8,30 @@ using Rebus.Tests.Contracts.Utilities;
 using Rebus.Tests.Time;
 using Rebus.Timeouts;
 
-namespace Rebus.Tests.Persistence.Filesystem
+namespace Rebus.Tests.Persistence.Filesystem;
+
+public class FilesystemTimeoutManagerFactory : ITimeoutManagerFactory
 {
-    public class FilesystemTimeoutManagerFactory : ITimeoutManagerFactory
+    readonly string _basePath = Path.Combine(TestConfig.DirectoryPath(), $"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
+    readonly FakeRebusTime _fakeRebusTime = new FakeRebusTime();
+
+    public ITimeoutManager Create()
     {
-        readonly string _basePath = Path.Combine(TestConfig.DirectoryPath(), $"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
-        readonly FakeRebusTime _fakeRebusTime = new FakeRebusTime();
+        return new FileSystemTimeoutManager(_basePath, new ConsoleLoggerFactory(false), _fakeRebusTime);
+    }
 
-        public ITimeoutManager Create()
-        {
-            return new FileSystemTimeoutManager(_basePath, new ConsoleLoggerFactory(false), _fakeRebusTime);
-        }
+    public void Cleanup()
+    {
+        DeleteHelper.DeleteDirectory(_basePath);
+    }
 
-        public void Cleanup()
-        {
-            DeleteHelper.DeleteDirectory(_basePath);
-        }
+    public string GetDebugInfo()
+    {
+        return "could not provide debug info for this particular timeout manager.... implement if needed :)";
+    }
 
-        public string GetDebugInfo()
-        {
-            return "could not provide debug info for this particular timeout manager.... implement if needed :)";
-        }
-
-        public void FakeIt(DateTimeOffset fakeTime)
-        {
-            _fakeRebusTime.FakeIt(fakeTime);
-        }
+    public void FakeIt(DateTimeOffset fakeTime)
+    {
+        _fakeRebusTime.FakeIt(fakeTime);
     }
 }

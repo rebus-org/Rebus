@@ -5,31 +5,30 @@ using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Subscriptions;
 
-namespace Rebus.Tests.Persistence.Filesystem
+namespace Rebus.Tests.Persistence.Filesystem;
+
+public class JsonFileSubscriptionStorageFactory : ISubscriptionStorageFactory
 {
-    public class JsonFileSubscriptionStorageFactory : ISubscriptionStorageFactory
+    readonly string _xmlDataFilePath = Path.Combine(TestConfig.DirectoryPath(), "subscriptions.json");
+
+    public ISubscriptionStorage Create()
     {
-        readonly string _xmlDataFilePath = Path.Combine(TestConfig.DirectoryPath(), "subscriptions.json");
+        CleanupOldDataFile();
 
-        public ISubscriptionStorage Create()
-        {
-            CleanupOldDataFile();
+        Console.WriteLine("Using JSON file at {0}", _xmlDataFilePath);
 
-            Console.WriteLine("Using JSON file at {0}", _xmlDataFilePath);
+        var storage = new JsonFileSubscriptionStorage(_xmlDataFilePath);
 
-            var storage = new JsonFileSubscriptionStorage(_xmlDataFilePath);
+        return storage;
+    }
 
-            return storage;
-        }
+    public void Cleanup()
+    {
+        CleanupOldDataFile();
+    }
 
-        public void Cleanup()
-        {
-            CleanupOldDataFile();
-        }
-
-        void CleanupOldDataFile()
-        {
-            if (File.Exists(_xmlDataFilePath)) File.Delete(_xmlDataFilePath);
-        }
+    void CleanupOldDataFile()
+    {
+        if (File.Exists(_xmlDataFilePath)) File.Delete(_xmlDataFilePath);
     }
 }

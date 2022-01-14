@@ -3,16 +3,16 @@ using System.Collections.Concurrent;
 using System.Linq;
 // ReSharper disable ArgumentsStyleNamedExpression
 
-namespace Rebus.Serialization.Custom
-{
-    class CustomTypeNameConvention : IMessageTypeNameConvention
-    {
-        static string CodeExample(Type type = null, string name = null)
-        {
-            string TypeText() => type?.Name ?? "SomeType";
-            string NameText() => name ?? "SomeTypeName";
+namespace Rebus.Serialization.Custom;
 
-            return $@"Configure.With(...)
+class CustomTypeNameConvention : IMessageTypeNameConvention
+{
+    static string CodeExample(Type type = null, string name = null)
+    {
+        string TypeText() => type?.Name ?? "SomeType";
+        string NameText() => name ?? "SomeTypeName";
+
+        return $@"Configure.With(...)
     .(...)
     .Serialization(s => {{
         s.UseCustomMessageTypeNames()
@@ -20,28 +20,28 @@ namespace Rebus.Serialization.Custom
             .AddWithCustomName<{TypeText()}>(""{NameText()}"");
     }})
     .Start();";
-        }
+    }
 
-        readonly SimpleAssemblyQualifiedMessageTypeNameConvention _defaultConvention = new SimpleAssemblyQualifiedMessageTypeNameConvention();
-        readonly ConcurrentDictionary<Type, string> _typeToName;
-        readonly ConcurrentDictionary<string, Type> _nameToType;
-        readonly bool _allowFallback;
+    readonly SimpleAssemblyQualifiedMessageTypeNameConvention _defaultConvention = new SimpleAssemblyQualifiedMessageTypeNameConvention();
+    readonly ConcurrentDictionary<Type, string> _typeToName;
+    readonly ConcurrentDictionary<string, Type> _nameToType;
+    readonly bool _allowFallback;
 
-        public CustomTypeNameConvention(ConcurrentDictionary<Type, string> typeToName, ConcurrentDictionary<string, Type> nameToType, bool allowFallback)
-        {
-            _typeToName = typeToName;
-            _nameToType = nameToType;
-            _allowFallback = allowFallback;
-        }
+    public CustomTypeNameConvention(ConcurrentDictionary<Type, string> typeToName, ConcurrentDictionary<string, Type> nameToType, bool allowFallback)
+    {
+        _typeToName = typeToName;
+        _nameToType = nameToType;
+        _allowFallback = allowFallback;
+    }
 
-        public string GetTypeName(Type type)
-        {
-            return _typeToName.TryGetValue(type, out var result)
-                ? result
-                : _allowFallback
-                    ? _defaultConvention.GetTypeName(type)
-                    : throw new ArgumentException(
-                        $@"Cannot get type name for {type}, because only the following types have been mapped:
+    public string GetTypeName(Type type)
+    {
+        return _typeToName.TryGetValue(type, out var result)
+            ? result
+            : _allowFallback
+                ? _defaultConvention.GetTypeName(type)
+                : throw new ArgumentException(
+                    $@"Cannot get type name for {type}, because only the following types have been mapped:
 
 {GetListOfMappedTypes()}
 
@@ -52,16 +52,16 @@ Please add the type {type} with one of the .AddWith(...) methods in the serializ
 or enable fallback to the default convention by calling .AllowFallbackToDefaultConvention() on the builder.
 ");
 
-        }
+    }
 
-        public Type GetType(string name)
-        {
-            return _nameToType.TryGetValue(name, out var result)
-                ? result
-                : _allowFallback
-                    ? _defaultConvention.GetType(name)
-                    : throw new ArgumentException(
-                        $@"Cannot get type corresponding to the name '{name}', because only the following types have been mapped:
+    public Type GetType(string name)
+    {
+        return _nameToType.TryGetValue(name, out var result)
+            ? result
+            : _allowFallback
+                ? _defaultConvention.GetType(name)
+                : throw new ArgumentException(
+                    $@"Cannot get type corresponding to the name '{name}', because only the following types have been mapped:
 
 {GetListOfMappedTypes()}
 
@@ -71,13 +71,12 @@ Please add a type with the name '{name}' with one of the .AddWith(...) methods i
 
 or enable fallback to the default convention by calling .AllowFallbackToDefaultConvention() on the builder.
 ");
-        }
+    }
 
-        string GetListOfMappedTypes()
-        {
-            return _typeToName.Any()
-                ? string.Join(Environment.NewLine, _typeToName.Select(kvp => $"    {kvp.Key} = '{kvp.Value}'"))
-                : "(none)";
-        }
+    string GetListOfMappedTypes()
+    {
+        return _typeToName.Any()
+            ? string.Join(Environment.NewLine, _typeToName.Select(kvp => $"    {kvp.Key} = '{kvp.Value}'"))
+            : "(none)";
     }
 }

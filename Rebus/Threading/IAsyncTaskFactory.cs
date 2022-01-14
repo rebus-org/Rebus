@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Rebus.Threading
+namespace Rebus.Threading;
+
+/// <summary>
+/// Factory that is capable of creating lightweight async tasks for doing background work
+/// </summary>
+public interface IAsyncTaskFactory
 {
     /// <summary>
-    /// Factory that is capable of creating lightweight async tasks for doing background work
+    /// Creates a new async task
     /// </summary>
-    public interface IAsyncTaskFactory
-    {
-        /// <summary>
-        /// Creates a new async task
-        /// </summary>
-        IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, int intervalSeconds = 10);
-    }
+    IAsyncTask Create(string description, Func<Task> action, bool prettyInsignificant = false, int intervalSeconds = 10);
 }

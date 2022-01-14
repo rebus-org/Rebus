@@ -18,156 +18,155 @@ using Rebus.Transport.InMem;
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable ArgumentsStyleNamedExpression
 
-namespace Rebus.Tests.Integration
-{
-    [TestFixture]
-    [Description(@"Let's just see if we can implement this funny thing:
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+[Description(@"Let's just see if we can implement this funny thing:
 
 A little app gets messages sent, and each message has an attachment.
 
 The app automatically cleans up each attachment after having read it.
 
 That's it.")]
-    public class TestInMemDataBusCleanup : FixtureBase
+public class TestInMemDataBusCleanup : FixtureBase
+{
+    InMemNetwork _network;
+    BuiltinHandlerActivator _activator;
+    InMemDataStore _inMemDataStore;
+
+    protected override void SetUp()
     {
-        InMemNetwork _network;
-        BuiltinHandlerActivator _activator;
-        InMemDataStore _inMemDataStore;
+        _inMemDataStore = new InMemDataStore();
+        _network = new InMemNetwork();
 
-        protected override void SetUp()
+        _activator = Using(new BuiltinHandlerActivator());
+    }
+
+    [TestCase(5)]
+    [TestCase(10)]
+    [TestCase(20)]
+    public async Task ItWorks_KeepLastFiveAttachments(int messageCount)
+    {
+        var counter = Using(new SharedCounter(initialValue: messageCount));
+
+        _activator.Handle<MessageWithAttachment>(async (bus, message) =>
         {
-            _inMemDataStore = new InMemDataStore();
-            _network = new InMemNetwork();
+            var dataBus = bus.Advanced.DataBus;
+            var attachmentId = message.AttachmentId;
 
-            _activator = Using(new BuiltinHandlerActivator());
-        }
-
-        [TestCase(5)]
-        [TestCase(10)]
-        [TestCase(20)]
-        public async Task ItWorks_KeepLastFiveAttachments(int messageCount)
-        {
-            var counter = Using(new SharedCounter(initialValue: messageCount));
-
-            _activator.Handle<MessageWithAttachment>(async (bus, message) =>
+            // ensure this attachment exists
+            using (var source = await dataBus.OpenRead(attachmentId))
+            using (var reader = new StreamReader(source, Encoding.UTF8))
             {
-                var dataBus = bus.Advanced.DataBus;
-                var attachmentId = message.AttachmentId;
-
-                // ensure this attachment exists
-                using (var source = await dataBus.OpenRead(attachmentId))
-                using (var reader = new StreamReader(source, Encoding.UTF8))
-                {
-                    Console.WriteLine($"Got message: {await reader.ReadToEndAsync()}");
-                }
-
-                // delete all attachments written before this
-                var metadata = await dataBus.GetMetadata(attachmentId);
-                var saveTime = metadata[MetadataKeys.SaveTime].ToDateTimeOffset();
-
-                foreach (var id in dataBus.Query(saveTime: new TimeRange(to: saveTime)))
-                {
-                    Console.WriteLine($"*** Deleting attachment with ID {id} ***");
-                    await dataBus.Delete(id);
-                }
-
-                counter.Decrement();
-            });
-
-            StartBus();
-
-            for (var idx = 0; idx < messageCount; idx++)
-            {
-                await SendMessageWithAttachedText($"This is message {idx}");
-                await Task.Delay(100);
+                Console.WriteLine($"Got message: {await reader.ReadToEndAsync()}");
             }
 
-            counter.WaitForResetEvent(timeoutSeconds: 5);
+            // delete all attachments written before this
+            var metadata = await dataBus.GetMetadata(attachmentId);
+            var saveTime = metadata[MetadataKeys.SaveTime].ToDateTimeOffset();
 
-            var attachments = _inMemDataStore.AttachmentIds.ToList();
+            foreach (var id in dataBus.Query(saveTime: new TimeRange(to: saveTime)))
+            {
+                Console.WriteLine($"*** Deleting attachment with ID {id} ***");
+                await dataBus.Delete(id);
+            }
 
-            Assert.That(attachments.Count, Is.EqualTo(1), $@"Expected 1 single attachment (because the handling of each attachment would delete all previous attachments), but found the following IDs:
+            counter.Decrement();
+        });
+
+        StartBus();
+
+        for (var idx = 0; idx < messageCount; idx++)
+        {
+            await SendMessageWithAttachedText($"This is message {idx}");
+            await Task.Delay(100);
+        }
+
+        counter.WaitForResetEvent(timeoutSeconds: 5);
+
+        var attachments = _inMemDataStore.AttachmentIds.ToList();
+
+        Assert.That(attachments.Count, Is.EqualTo(1), $@"Expected 1 single attachment (because the handling of each attachment would delete all previous attachments), but found the following IDs:
 
 {string.Join(Environment.NewLine, attachments.Select(id => $"    {id}"))}
 
 ");
-        }
+    }
 
-        [Test]
-        public async Task ItWorks_DeleteEveryAttachment()
+    [Test]
+    public async Task ItWorks_DeleteEveryAttachment()
+    {
+        var counter = Using(new SharedCounter(initialValue: 3));
+
+        _activator.Handle<MessageWithAttachment>(async (bus, message) =>
         {
-            var counter = Using(new SharedCounter(initialValue: 3));
+            var dataBus = bus.Advanced.DataBus;
+            var attachmentId = message.AttachmentId;
 
-            _activator.Handle<MessageWithAttachment>(async (bus, message) =>
+            using (var source = await dataBus.OpenRead(attachmentId))
+            using (var reader = new StreamReader(source, Encoding.UTF8))
             {
-                var dataBus = bus.Advanced.DataBus;
-                var attachmentId = message.AttachmentId;
+                Console.WriteLine($"Got message: {await reader.ReadToEndAsync()}");
+            }
 
-                using (var source = await dataBus.OpenRead(attachmentId))
-                using (var reader = new StreamReader(source, Encoding.UTF8))
-                {
-                    Console.WriteLine($"Got message: {await reader.ReadToEndAsync()}");
-                }
+            // now clean up
+            await dataBus.Delete(attachmentId);
 
-                // now clean up
-                await dataBus.Delete(attachmentId);
+            counter.Decrement();
+        });
 
-                counter.Decrement();
-            });
+        StartBus();
 
-            StartBus();
+        await SendMessageWithAttachedText("HEJ");
+        await SendMessageWithAttachedText("MED");
+        await SendMessageWithAttachedText("DIG");
 
-            await SendMessageWithAttachedText("HEJ");
-            await SendMessageWithAttachedText("MED");
-            await SendMessageWithAttachedText("DIG");
+        counter.WaitForResetEvent(timeoutSeconds: 5);
 
-            counter.WaitForResetEvent(timeoutSeconds: 5);
+        var attachments = _inMemDataStore.AttachmentIds.ToList();
 
-            var attachments = _inMemDataStore.AttachmentIds.ToList();
-
-            Assert.That(attachments.Count, Is.EqualTo(0), $@"Expected 0 attachments, but found the following IDs:
+        Assert.That(attachments.Count, Is.EqualTo(0), $@"Expected 0 attachments, but found the following IDs:
 
 {string.Join(Environment.NewLine, attachments.Select(id => $"    {id}"))}
 
 ");
 
-        }
+    }
 
-        async Task SendMessageWithAttachedText(string text)
+    async Task SendMessageWithAttachedText(string text)
+    {
+        using (var source = new MemoryStream(Encoding.UTF8.GetBytes(text)))
         {
-            using (var source = new MemoryStream(Encoding.UTF8.GetBytes(text)))
+            var attachment = await _activator.Bus.Advanced.DataBus.CreateAttachment(source);
+            var attachmentId = attachment.Id;
+
+            Console.WriteLine($"*** Sending message with attachment ID {attachmentId} ***");
+
+            await _activator.Bus.SendLocal(new MessageWithAttachment(attachmentId));
+        }
+    }
+
+    void StartBus()
+    {
+        Configure.With(_activator)
+            .Logging(l => l.None())
+            .Transport(t => t.UseInMemoryTransport(_network, "test-queue"))
+            .DataBus(d => d.StoreInMemory(_inMemDataStore))
+            .Options(o =>
             {
-                var attachment = await _activator.Bus.Advanced.DataBus.CreateAttachment(source);
-                var attachmentId = attachment.Id;
+                o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
+                o.SetMaxParallelism(maxParallelism: 1);
+            })
+            .Start();
+    }
 
-                Console.WriteLine($"*** Sending message with attachment ID {attachmentId} ***");
+    class MessageWithAttachment
+    {
+        public string AttachmentId { get; }
 
-                await _activator.Bus.SendLocal(new MessageWithAttachment(attachmentId));
-            }
-        }
-
-        void StartBus()
+        public MessageWithAttachment(string attachmentId)
         {
-            Configure.With(_activator)
-                .Logging(l => l.None())
-                .Transport(t => t.UseInMemoryTransport(_network, "test-queue"))
-                .DataBus(d => d.StoreInMemory(_inMemDataStore))
-                .Options(o =>
-                {
-                    o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
-                    o.SetMaxParallelism(maxParallelism: 1);
-                })
-                .Start();
-        }
-
-        class MessageWithAttachment
-        {
-            public string AttachmentId { get; }
-
-            public MessageWithAttachment(string attachmentId)
-            {
-                AttachmentId = attachmentId;
-            }
+            AttachmentId = attachmentId;
         }
     }
 }

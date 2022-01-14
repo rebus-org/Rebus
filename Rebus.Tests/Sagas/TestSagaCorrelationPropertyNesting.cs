@@ -11,89 +11,88 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Sagas
+namespace Rebus.Tests.Sagas;
+
+[TestFixture]
+public class TestSagaCorrelationPropertyNesting : FixtureBase
 {
-    [TestFixture]
-    public class TestSagaCorrelationPropertyNesting : FixtureBase
+    [Test]
+    public async Task ItWorks()
     {
-        [Test]
-        public async Task ItWorks()
+        var activator = Using(new BuiltinHandlerActivator());
+        var messagesBySagaId = new ConcurrentDictionary<Guid, int>();
+        var counter = new SharedCounter(5);
+
+        activator.Register(() => new MySaga(messagesBySagaId, counter));
+
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-property-nesting"))
+            .Sagas(s => s.StoreInMemory())
+            .Start();
+
+        await activator.Bus.SendLocal(new MyMsg("hej1"));
+        await activator.Bus.SendLocal(new MyMsg("hej1"));
+        await activator.Bus.SendLocal(new MyMsg("hej2"));
+        await activator.Bus.SendLocal(new MyMsg("hej2"));
+        await activator.Bus.SendLocal(new MyMsg("hej2"));
+
+        counter.WaitForResetEvent();
+
+        Console.WriteLine(string.Join(Environment.NewLine, messagesBySagaId));
+
+        Assert.That(messagesBySagaId.Count, Is.EqualTo(2));
+        Assert.That(messagesBySagaId.Count(kvp => kvp.Value == 2), Is.EqualTo(1));
+        Assert.That(messagesBySagaId.Count(kvp => kvp.Value == 3), Is.EqualTo(1));
+    }
+
+    class MySaga : Saga<MySagaData>, IAmInitiatedBy<MyMsg>
+    {
+        readonly ConcurrentDictionary<Guid, int> _messagesBySagaId;
+        readonly SharedCounter _counter;
+
+        public MySaga(ConcurrentDictionary<Guid, int> messagesBySagaId, SharedCounter counter)
         {
-            var activator = Using(new BuiltinHandlerActivator());
-            var messagesBySagaId = new ConcurrentDictionary<Guid, int>();
-            var counter = new SharedCounter(5);
-
-            activator.Register(() => new MySaga(messagesBySagaId, counter));
-
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-property-nesting"))
-                .Sagas(s => s.StoreInMemory())
-                .Start();
-
-            await activator.Bus.SendLocal(new MyMsg("hej1"));
-            await activator.Bus.SendLocal(new MyMsg("hej1"));
-            await activator.Bus.SendLocal(new MyMsg("hej2"));
-            await activator.Bus.SendLocal(new MyMsg("hej2"));
-            await activator.Bus.SendLocal(new MyMsg("hej2"));
-
-            counter.WaitForResetEvent();
-
-            Console.WriteLine(string.Join(Environment.NewLine, messagesBySagaId));
-
-            Assert.That(messagesBySagaId.Count, Is.EqualTo(2));
-            Assert.That(messagesBySagaId.Count(kvp => kvp.Value == 2), Is.EqualTo(1));
-            Assert.That(messagesBySagaId.Count(kvp => kvp.Value == 3), Is.EqualTo(1));
+            _messagesBySagaId = messagesBySagaId;
+            _counter = counter;
         }
 
-        class MySaga : Saga<MySagaData>, IAmInitiatedBy<MyMsg>
+        protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
         {
-            readonly ConcurrentDictionary<Guid, int> _messagesBySagaId;
-            readonly SharedCounter _counter;
+            config.Correlate<MyMsg>(m => m.CorrId, d => d.Child.Property);
+        }
 
-            public MySaga(ConcurrentDictionary<Guid, int> messagesBySagaId, SharedCounter counter)
+        public async Task Handle(MyMsg message)
+        {
+            await Task.FromResult(false);
+
+            if (Data.Child == null)
             {
-                _messagesBySagaId = messagesBySagaId;
-                _counter = counter;
+                Data.Child = new Child { Property = message.CorrId };
             }
 
-            protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
-            {
-                config.Correlate<MyMsg>(m => m.CorrId, d => d.Child.Property);
-            }
+            _messagesBySagaId.AddOrUpdate(Data.Id, 1, (_, count) => count + 1);
 
-            public async Task Handle(MyMsg message)
-            {
-                await Task.FromResult(false);
-
-                if (Data.Child == null)
-                {
-                    Data.Child = new Child { Property = message.CorrId };
-                }
-
-                _messagesBySagaId.AddOrUpdate(Data.Id, 1, (_, count) => count + 1);
-
-                _counter.Decrement();
-            }
+            _counter.Decrement();
         }
+    }
 
-        class MySagaData : SagaData
+    class MySagaData : SagaData
+    {
+        public Child Child { get; set; }
+    }
+
+    class Child
+    {
+        public string Property { get; set; }
+    }
+
+    class MyMsg
+    {
+        public MyMsg(string corrId)
         {
-            public Child Child { get; set; }
+            CorrId = corrId;
         }
 
-        class Child
-        {
-            public string Property { get; set; }
-        }
-
-        class MyMsg
-        {
-            public MyMsg(string corrId)
-            {
-                CorrId = corrId;
-            }
-
-            public string CorrId { get;  }
-        }
+        public string CorrId { get;  }
     }
 }

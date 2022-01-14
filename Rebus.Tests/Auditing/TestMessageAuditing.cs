@@ -14,99 +14,98 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Auditing
+namespace Rebus.Tests.Auditing;
+
+[TestFixture]
+public class TestMessageAuditing : FixtureBase
 {
-    [TestFixture]
-    public class TestMessageAuditing : FixtureBase
+    IBus _bus;
+    BuiltinHandlerActivator _adapter;
+    InMemNetwork _network;
+    IBusStarter _starter;
+
+    protected override void SetUp()
     {
-        IBus _bus;
-        BuiltinHandlerActivator _adapter;
-        InMemNetwork _network;
-        IBusStarter _starter;
+        _adapter = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
-        {
-            _adapter = new BuiltinHandlerActivator();
+        Using(_adapter);
 
-            Using(_adapter);
-
-            _network = new InMemNetwork();
+        _network = new InMemNetwork();
             
-            _starter = Configure.With(_adapter)
-                .Transport(t => t.UseInMemoryTransport(_network, "test"))
-                .Subscriptions(s => s.StoreInMemory())
-                .Options(o =>
-                {
-                    o.LogPipeline(true);
-                    o.EnableMessageAuditing("audit");
-                })
-                .Create();
-
-            _bus = _starter.Bus;
-        }
-
-        [Test]
-        public async Task DoesNotCopyFailedMessage()
-        {
-            _adapter.Handle<string>(async _ => throw new Exception("w00t!!"));
-
-            _starter.Start();
-
-            await _bus.SendLocal("woohooo!!!!");
-
-            await Task.Delay(TimeSpan.FromSeconds(3));
-
-            var message = _network.GetNextOrNull("audit");
-
-            Assert.That(message, Is.Null, "Apparently, a message copy was received anyway!!");
-        }
-
-        [Test]
-        public async Task CopiesProperlyHandledMessageToAuditQueue()
-        {
-            var gotTheMessage = new ManualResetEvent(false);
-
-            _adapter.Handle<string>(async _ =>
+        _starter = Configure.With(_adapter)
+            .Transport(t => t.UseInMemoryTransport(_network, "test"))
+            .Subscriptions(s => s.StoreInMemory())
+            .Options(o =>
             {
-                gotTheMessage.Set();
-            });
+                o.LogPipeline(true);
+                o.EnableMessageAuditing("audit");
+            })
+            .Create();
 
-            _starter.Start();
+        _bus = _starter.Bus;
+    }
 
-            await _bus.SendLocal("woohooo!!!!");
+    [Test]
+    public async Task DoesNotCopyFailedMessage()
+    {
+        _adapter.Handle<string>(async _ => throw new Exception("w00t!!"));
 
-            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
+        _starter.Start();
 
-            var message = await _network.WaitForNextMessageFrom("audit");
+        await _bus.SendLocal("woohooo!!!!");
 
-            PrintHeaders(message);
+        await Task.Delay(TimeSpan.FromSeconds(3));
 
-            Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
-            Assert.That(message.Headers.ContainsKey(AuditHeaders.HandleTime));
-            Assert.That(message.Headers.ContainsKey(Headers.Intent));
-            Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
-        }
+        var message = _network.GetNextOrNull("audit");
 
-        [Test]
-        public async Task CopiesPublishedMessageToAuditQueue()
+        Assert.That(message, Is.Null, "Apparently, a message copy was received anyway!!");
+    }
+
+    [Test]
+    public async Task CopiesProperlyHandledMessageToAuditQueue()
+    {
+        var gotTheMessage = new ManualResetEvent(false);
+
+        _adapter.Handle<string>(async _ =>
         {
-            _starter.Start();
+            gotTheMessage.Set();
+        });
 
-            await _bus.Advanced.Topics.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
+        _starter.Start();
 
-            var message = await _network.WaitForNextMessageFrom("audit");
+        await _bus.SendLocal("woohooo!!!!");
 
-            PrintHeaders(message);
+        gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
 
-            Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
-            Assert.That(message.Headers.ContainsKey(Headers.Intent));
-            Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PublishSubscribe));
-        }
+        var message = await _network.WaitForNextMessageFrom("audit");
 
-        static void PrintHeaders(TransportMessage message)
-        {
-            Console.WriteLine(@"Headers:
+        PrintHeaders(message);
+
+        Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
+        Assert.That(message.Headers.ContainsKey(AuditHeaders.HandleTime));
+        Assert.That(message.Headers.ContainsKey(Headers.Intent));
+        Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
+    }
+
+    [Test]
+    public async Task CopiesPublishedMessageToAuditQueue()
+    {
+        _starter.Start();
+
+        await _bus.Advanced.Topics.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
+
+        var message = await _network.WaitForNextMessageFrom("audit");
+
+        PrintHeaders(message);
+
+        Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
+        Assert.That(message.Headers.ContainsKey(Headers.Intent));
+        Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PublishSubscribe));
+    }
+
+    static void PrintHeaders(TransportMessage message)
+    {
+        Console.WriteLine(@"Headers:
 {0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => $"    {kvp.Key}: {kvp.Value}")));
-        }
     }
 }

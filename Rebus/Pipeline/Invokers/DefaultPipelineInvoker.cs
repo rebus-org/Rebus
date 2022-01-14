@@ -2,75 +2,74 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Rebus.Pipeline.Invokers
+namespace Rebus.Pipeline.Invokers;
+
+/// <summary>
+/// give me a pipeline and I'll invoke it
+/// </summary>
+class DefaultPipelineInvoker : IPipelineInvoker
 {
+    static readonly Task<int> Noop = Task.FromResult(0);
+    static readonly Func<Task> TerminationStep = () => Noop;
+
+    readonly Func<IncomingStepContext, Task> _processIncoming;
+    readonly Func<OutgoingStepContext, Task> _processOutgoing;
+
     /// <summary>
-    /// give me a pipeline and I'll invoke it
+    /// Constructs the invoker
     /// </summary>
-    class DefaultPipelineInvoker : IPipelineInvoker
+    public DefaultPipelineInvoker(IPipeline pipeline)
     {
-        static readonly Task<int> Noop = Task.FromResult(0);
-        static readonly Func<Task> TerminationStep = () => Noop;
+        if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
 
-        readonly Func<IncomingStepContext, Task> _processIncoming;
-        readonly Func<OutgoingStepContext, Task> _processOutgoing;
+        var incomingSteps = pipeline.ReceivePipeline();
+        var outgoingSteps = pipeline.SendPipeline();
 
-        /// <summary>
-        /// Constructs the invoker
-        /// </summary>
-        public DefaultPipelineInvoker(IPipeline pipeline)
+        Task ProcessIncoming(IncomingStepContext context)
         {
-            if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
+            var step = TerminationStep;
 
-            var incomingSteps = pipeline.ReceivePipeline();
-            var outgoingSteps = pipeline.SendPipeline();
-
-            Task ProcessIncoming(IncomingStepContext context)
+            for (var index = incomingSteps.Length - 1; index >= 0; index--)
             {
-                var step = TerminationStep;
+                var nextStep = step;
+                var stepToInvoke = incomingSteps[index];
 
-                for (var index = incomingSteps.Length - 1; index >= 0; index--)
-                {
-                    var nextStep = step;
-                    var stepToInvoke = incomingSteps[index];
+                Task Next() => stepToInvoke.Process(context, nextStep);
 
-                    Task Next() => stepToInvoke.Process(context, nextStep);
-
-                    step = Next;
-                }
-
-                return step();
+                step = Next;
             }
 
-            Task ProcessOutgoing(OutgoingStepContext context)
-            {
-                var step = TerminationStep;
-
-                for (var index = outgoingSteps.Length - 1; index >= 0; index--)
-                {
-                    var nextStep = step;
-                    var stepToInvoke = outgoingSteps[index];
-
-                    Task Next() => stepToInvoke.Process(context, nextStep);
-
-                    step = Next;
-                }
-
-                return step();
-            }
-
-            _processIncoming = ProcessIncoming;
-            _processOutgoing = ProcessOutgoing;
+            return step();
         }
 
-        /// <summary>
-        /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
-        /// </summary>
-        public Task Invoke(IncomingStepContext context) => _processIncoming(context);
+        Task ProcessOutgoing(OutgoingStepContext context)
+        {
+            var step = TerminationStep;
 
-        /// <summary>
-        /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
-        /// </summary>
-        public Task Invoke(OutgoingStepContext context) => _processOutgoing(context);
+            for (var index = outgoingSteps.Length - 1; index >= 0; index--)
+            {
+                var nextStep = step;
+                var stepToInvoke = outgoingSteps[index];
+
+                Task Next() => stepToInvoke.Process(context, nextStep);
+
+                step = Next;
+            }
+
+            return step();
+        }
+
+        _processIncoming = ProcessIncoming;
+        _processOutgoing = ProcessOutgoing;
     }
+
+    /// <summary>
+    /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
+    /// </summary>
+    public Task Invoke(IncomingStepContext context) => _processIncoming(context);
+
+    /// <summary>
+    /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
+    /// </summary>
+    public Task Invoke(OutgoingStepContext context) => _processOutgoing(context);
 }

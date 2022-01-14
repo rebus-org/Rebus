@@ -11,58 +11,57 @@ using Rebus.Transport.InMem;
 // ReSharper disable UnusedVariable
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Startup
+namespace Rebus.Tests.Startup;
+
+[TestFixture]
+public class TestDelayedStart : FixtureBase
 {
-    [TestFixture]
-    public class TestDelayedStart : FixtureBase
+    [Test]
+    public async Task CanDelayStartingTheBus()
     {
-        [Test]
-        public async Task CanDelayStartingTheBus()
+        var network = new InMemNetwork();
+        var activator = new BuiltinHandlerActivator();
+
+        Using(activator);
+
+        var messageWasReceived = false;
+        var counter = new SharedCounter(1);
+
+        var sender = CreateSender(network);
+
+        activator.Handle<string>(async str =>
         {
-            var network = new InMemNetwork();
-            var activator = new BuiltinHandlerActivator();
+            messageWasReceived = true;
+            counter.Decrement();
+        });
 
-            Using(activator);
+        var starter = Configure.With(activator)
+            .Logging(l => l.Console())
+            .Transport(t => t.UseInMemoryTransport(network, "whatever dude"))
+            .Create();
 
-            var messageWasReceived = false;
-            var counter = new SharedCounter(1);
+        await sender.Send("HEJ MED DIG MIN VEN!!");
 
-            var sender = CreateSender(network);
+        await Task.Delay(TimeSpan.FromSeconds(1));
 
-            activator.Handle<string>(async str =>
-            {
-                messageWasReceived = true;
-                counter.Decrement();
-            });
+        Assert.That(messageWasReceived, Is.False,
+            "Did not expect to have received the message yet, because the bus was not started");
 
-            var starter = Configure.With(activator)
-                .Logging(l => l.Console())
-                .Transport(t => t.UseInMemoryTransport(network, "whatever dude"))
-                .Create();
+        var bus = starter.Start();
 
-            await sender.Send("HEJ MED DIG MIN VEN!!");
+        counter.WaitForResetEvent();
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
+        Assert.That(messageWasReceived, Is.True, "Expected that the message would have been received by now");
+    }
 
-            Assert.That(messageWasReceived, Is.False,
-                "Did not expect to have received the message yet, because the bus was not started");
+    IBus CreateSender(InMemNetwork network)
+    {
+        var activator = Using(new BuiltinHandlerActivator());
 
-            var bus = starter.Start();
-
-            counter.WaitForResetEvent();
-
-            Assert.That(messageWasReceived, Is.True, "Expected that the message would have been received by now");
-        }
-
-        IBus CreateSender(InMemNetwork network)
-        {
-            var activator = Using(new BuiltinHandlerActivator());
-
-            return Configure.With(activator)
-                .Logging(l => l.Console())
-                .Transport(t => t.UseInMemoryTransportAsOneWayClient(network))
-                .Routing(r => r.TypeBased().Map<string>("whatever dude"))
-                .Start();
-        }
+        return Configure.With(activator)
+            .Logging(l => l.Console())
+            .Transport(t => t.UseInMemoryTransportAsOneWayClient(network))
+            .Routing(r => r.TypeBased().Map<string>("whatever dude"))
+            .Start();
     }
 }

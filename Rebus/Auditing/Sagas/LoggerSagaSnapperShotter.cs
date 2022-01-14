@@ -5,28 +5,27 @@ using Rebus.Logging;
 using Rebus.Sagas;
 #pragma warning disable 1998
 
-namespace Rebus.Auditing.Sagas
+namespace Rebus.Auditing.Sagas;
+
+class LoggerSagaSnapperShotter : ISagaSnapshotStorage
 {
-    class LoggerSagaSnapperShotter : ISagaSnapshotStorage
+    readonly ILog _log;
+
+    public LoggerSagaSnapperShotter(IRebusLoggerFactory rebusLoggerFactory)
     {
-        readonly ILog _log;
+        _log = rebusLoggerFactory.GetLogger<LoggerSagaSnapperShotter>();
+    }
 
-        public LoggerSagaSnapperShotter(IRebusLoggerFactory rebusLoggerFactory)
+    public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
+    {
+        var logData = new
         {
-            _log = rebusLoggerFactory.GetLogger<LoggerSagaSnapperShotter>();
-        }
-
-        public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
-        {
-            var logData = new
-            {
-                Data = sagaData,
-                Metadata = sagaAuditMetadata
-            };
+            Data = sagaData,
+            Metadata = sagaAuditMetadata
+        };
             
-            var jsonText = JsonConvert.SerializeObject(logData, Formatting.None);
+        var jsonText = JsonConvert.SerializeObject(logData, Formatting.None);
 
-            _log.Info("{jsonText}", jsonText);
-        }
+        _log.Info("{jsonText}", jsonText);
     }
 }

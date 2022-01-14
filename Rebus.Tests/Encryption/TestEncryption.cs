@@ -14,66 +14,65 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Encryption
+namespace Rebus.Tests.Encryption;
+
+[TestFixture]
+public class TestEncryption : FixtureBase
 {
-    [TestFixture]
-    public class TestEncryption : FixtureBase
+    const string EncryptionKey = "UaVcj0zCA35mgrg9/pN62Rp+r629BMi9S9v0Tz4S7EM=";
+    BuiltinHandlerActivator _builtinHandlerActivator;
+    TransportTap _tap;
+    IBusStarter _starter;
+
+    protected override void SetUp()
     {
-        const string EncryptionKey = "UaVcj0zCA35mgrg9/pN62Rp+r629BMi9S9v0Tz4S7EM=";
-        BuiltinHandlerActivator _builtinHandlerActivator;
-        TransportTap _tap;
-        IBusStarter _starter;
+        _builtinHandlerActivator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
-        {
-            _builtinHandlerActivator = new BuiltinHandlerActivator();
+        Using(_builtinHandlerActivator);
 
-            Using(_builtinHandlerActivator);
-
-            _starter = Configure.With(_builtinHandlerActivator)
-                .Transport(t =>
-                {
-                    t.Decorate(c =>
-                    {
-                        _tap = new TransportTap(c.Get<ITransport>());
-                        return _tap;
-                    });
-                    t.UseInMemoryTransport(new InMemNetwork(), "bimse");
-                })
-                .Options(o =>
-                {
-                    o.EnableEncryption(EncryptionKey);
-                    o.SetMaxParallelism(1);
-                    o.SetNumberOfWorkers(1);
-                })
-                .Create();
-        }
-
-        [Test]
-        public async Task SentMessageIsBasicallyUnreadable()
-        {
-            const string plainTextMessage = "hej med dig min ven!!!";
-
-            var gotTheMessage = new ManualResetEvent(false);
-
-            _builtinHandlerActivator.Handle<string>(async str =>
+        _starter = Configure.With(_builtinHandlerActivator)
+            .Transport(t =>
             {
-                gotTheMessage.Set();
-            });
+                t.Decorate(c =>
+                {
+                    _tap = new TransportTap(c.Get<ITransport>());
+                    return _tap;
+                });
+                t.UseInMemoryTransport(new InMemNetwork(), "bimse");
+            })
+            .Options(o =>
+            {
+                o.EnableEncryption(EncryptionKey);
+                o.SetMaxParallelism(1);
+                o.SetNumberOfWorkers(1);
+            })
+            .Create();
+    }
 
-            var bus = _starter.Start();
-            await bus.Advanced.Routing.Send("bimse", plainTextMessage);
+    [Test]
+    public async Task SentMessageIsBasicallyUnreadable()
+    {
+        const string plainTextMessage = "hej med dig min ven!!!";
 
-            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(2));
+        var gotTheMessage = new ManualResetEvent(false);
 
-            var sentMessage = _tap.SentMessages.Single();
-            var receivedMessage = _tap.ReceivedMessages.Single();
+        _builtinHandlerActivator.Handle<string>(async str =>
+        {
+            gotTheMessage.Set();
+        });
 
-            var sentMessageBodyAsString = Encoding.UTF8.GetString(sentMessage.Body);
-            var receivedMessageBodyAsString = Encoding.UTF8.GetString(receivedMessage.Body);
+        var bus = _starter.Start();
+        await bus.Advanced.Routing.Send("bimse", plainTextMessage);
 
-            Assert.That(sentMessageBodyAsString, Does.Not.Contain(plainTextMessage));
-            Assert.That(receivedMessageBodyAsString, Does.Not.Contain(plainTextMessage));
-        }
+        gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(2));
+
+        var sentMessage = _tap.SentMessages.Single();
+        var receivedMessage = _tap.ReceivedMessages.Single();
+
+        var sentMessageBodyAsString = Encoding.UTF8.GetString(sentMessage.Body);
+        var receivedMessageBodyAsString = Encoding.UTF8.GetString(receivedMessage.Body);
+
+        Assert.That(sentMessageBodyAsString, Does.Not.Contain(plainTextMessage));
+        Assert.That(receivedMessageBodyAsString, Does.Not.Contain(plainTextMessage));
     }
 }

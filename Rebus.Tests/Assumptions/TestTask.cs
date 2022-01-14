@@ -5,51 +5,50 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts;
 
-namespace Rebus.Tests.Assumptions
+namespace Rebus.Tests.Assumptions;
+
+[TestFixture]
+public class TestTask : FixtureBase
 {
-    [TestFixture]
-    public class TestTask : FixtureBase
+    [Test]
+    public async Task CanCancelTask()
     {
-        [Test]
-        public async Task CanCancelTask()
+        var cancellationTokenSource = Using(new CancellationTokenSource());
+        var cancellationToken = cancellationTokenSource.Token;
+        var events = new List<string>();
+
+        var task = Task.Run(async () =>
         {
-            var cancellationTokenSource = Using(new CancellationTokenSource());
-            var cancellationToken = cancellationTokenSource.Token;
-            var events = new List<string>();
-
-            var task = Task.Run(async () =>
+            try
             {
-                try
+                events.Add("task started");
+
+                while (true)
                 {
-                    events.Add("task started");
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    while (true)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        events.Add("waiting...");
-                        await Task.Delay(1000, cancellationToken);
-                    }
-
+                    events.Add("waiting...");
+                    await Task.Delay(1000, cancellationToken);
                 }
-                catch (Exception exception)
-                {
-                    events.Add(exception.ToString());
-                }
-            }, cancellationToken);
 
-            //Console.WriteLine(task.Status);
-            await Task.Delay(2000, CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                events.Add(exception.ToString());
+            }
+        }, cancellationToken);
 
-            cancellationTokenSource.Cancel();
+        //Console.WriteLine(task.Status);
+        await Task.Delay(2000, CancellationToken.None);
 
-            Console.WriteLine(task.Status);
+        cancellationTokenSource.Cancel();
 
-            await task;
+        Console.WriteLine(task.Status);
 
-            Console.WriteLine(task.Status);
+        await task;
 
-            Console.WriteLine(string.Join(Environment.NewLine, events));
-        }
+        Console.WriteLine(task.Status);
+
+        Console.WriteLine(string.Join(Environment.NewLine, events));
     }
 }

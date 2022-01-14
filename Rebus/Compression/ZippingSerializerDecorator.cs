@@ -4,49 +4,48 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Serialization;
 
-namespace Rebus.Compression
+namespace Rebus.Compression;
+
+class ZippingSerializerDecorator : ZipDecoratorBase, ISerializer
 {
-    class ZippingSerializerDecorator : ZipDecoratorBase, ISerializer
+    readonly ISerializer _serializer;
+    readonly Zipper _zipper;
+    readonly int _bodySizeThresholdBytes;
+
+    public ZippingSerializerDecorator(ISerializer serializer, Zipper zipper, int bodySizeThresholdBytes)
     {
-        readonly ISerializer _serializer;
-        readonly Zipper _zipper;
-        readonly int _bodySizeThresholdBytes;
+        if (bodySizeThresholdBytes < 0) throw new ArgumentOutOfRangeException(nameof(bodySizeThresholdBytes), bodySizeThresholdBytes, "Body size threshold must be >= 0");
+        _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+        _zipper = zipper ?? throw new ArgumentNullException(nameof(zipper));
+        _bodySizeThresholdBytes = bodySizeThresholdBytes;
+    }
 
-        public ZippingSerializerDecorator(ISerializer serializer, Zipper zipper, int bodySizeThresholdBytes)
+    public async Task<TransportMessage> Serialize(Message message)
+    {
+        if (message == null) throw new ArgumentNullException(nameof(message));
+
+        var transportMessage = await _serializer.Serialize(message);
+        var body = transportMessage.Body;
+
+        if (body.Length < _bodySizeThresholdBytes)
         {
-            if (bodySizeThresholdBytes < 0) throw new ArgumentOutOfRangeException(nameof(bodySizeThresholdBytes), bodySizeThresholdBytes, "Body size threshold must be >= 0");
-            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-            _zipper = zipper ?? throw new ArgumentNullException(nameof(zipper));
-            _bodySizeThresholdBytes = bodySizeThresholdBytes;
+            return transportMessage;
         }
 
-        public async Task<TransportMessage> Serialize(Message message)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
+        var headers = transportMessage.Headers.Clone();
+        var compressedBody = _zipper.Zip(transportMessage.Body);
 
-            var transportMessage = await _serializer.Serialize(message);
-            var body = transportMessage.Body;
+        headers[Headers.ContentEncoding] = GzipEncodingHeader;
 
-            if (body.Length < _bodySizeThresholdBytes)
-            {
-                return transportMessage;
-            }
+        var compressedTransportMessage = new TransportMessage(headers, compressedBody);
 
-            var headers = transportMessage.Headers.Clone();
-            var compressedBody = _zipper.Zip(transportMessage.Body);
+        return compressedTransportMessage;
+    }
 
-            headers[Headers.ContentEncoding] = GzipEncodingHeader;
+    public async Task<Message> Deserialize(TransportMessage transportMessage)
+    {
+        if (transportMessage == null) throw new ArgumentNullException(nameof(transportMessage));
 
-            var compressedTransportMessage = new TransportMessage(headers, compressedBody);
-
-            return compressedTransportMessage;
-        }
-
-        public async Task<Message> Deserialize(TransportMessage transportMessage)
-        {
-            if (transportMessage == null) throw new ArgumentNullException(nameof(transportMessage));
-
-            return await _serializer.Deserialize(transportMessage);
-        }
+        return await _serializer.Deserialize(transportMessage);
     }
 }

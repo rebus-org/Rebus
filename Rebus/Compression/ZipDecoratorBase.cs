@@ -1,7 +1,6 @@
-﻿namespace Rebus.Compression
+﻿namespace Rebus.Compression;
+
+abstract class ZipDecoratorBase
 {
-    abstract class ZipDecoratorBase
-    {
-        public const string GzipEncodingHeader = "gzip";
-    }
+    public const string GzipEncodingHeader = "gzip";
 }

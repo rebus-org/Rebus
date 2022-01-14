@@ -12,73 +12,72 @@ using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestTypeBasedRouting : FixtureBase
 {
-    [TestFixture]
-    public class TestTypeBasedRouting : FixtureBase
+    ManualResetEvent _client1GotTheEvent;
+    BuiltinHandlerActivator _client1;
+    BuiltinHandlerActivator _publisher;
+
+    protected override void SetUp()
     {
-        ManualResetEvent _client1GotTheEvent;
-        BuiltinHandlerActivator _client1;
-        BuiltinHandlerActivator _publisher;
-
-        protected override void SetUp()
+        var network = new InMemNetwork();
+        var subscriberStore = new InMemorySubscriberStore();
+        _publisher = GetEndpoint(network, "publisher", c =>
         {
-            var network = new InMemNetwork();
-            var subscriberStore = new InMemorySubscriberStore();
-            _publisher = GetEndpoint(network, "publisher", c =>
-            {
-                c.Subscriptions(s => s.StoreInMemory(subscriberStore));
-                c.Routing(r => r.TypeBased());
-            });
+            c.Subscriptions(s => s.StoreInMemory(subscriberStore));
+            c.Routing(r => r.TypeBased());
+        });
 
-            _client1GotTheEvent = new ManualResetEvent(false);
-            _client1 = GetEndpoint(network, "client1", c =>
-            {
-                c.Routing(r => r.TypeBased().Map<SomeKindOfEvent>("publisher"));
-            });
-            _client1.AddHandlerWithBusTemporarilyStopped<SomeKindOfEvent>(async e => _client1GotTheEvent.Set());
-        }
-
-        [Test]
-        public async Task TypeBasedRoutingAndExtensionMethodsAndEverythingWorksAsItShould()
+        _client1GotTheEvent = new ManualResetEvent(false);
+        _client1 = GetEndpoint(network, "client1", c =>
         {
-            await _client1.Bus.Subscribe<SomeKindOfEvent>();
+            c.Routing(r => r.TypeBased().Map<SomeKindOfEvent>("publisher"));
+        });
+        _client1.AddHandlerWithBusTemporarilyStopped<SomeKindOfEvent>(async e => _client1GotTheEvent.Set());
+    }
 
-            await Task.Delay(1000);
+    [Test]
+    public async Task TypeBasedRoutingAndExtensionMethodsAndEverythingWorksAsItShould()
+    {
+        await _client1.Bus.Subscribe<SomeKindOfEvent>();
 
-            await _publisher.Bus.Publish(new SomeKindOfEvent());
+        await Task.Delay(1000);
 
-            _client1GotTheEvent.WaitOrDie(TimeSpan.FromSeconds(2));
-        }
+        await _publisher.Bus.Publish(new SomeKindOfEvent());
 
-        [Test]
-        public async Task TypeBasedRoutingAndExtensionMethodsAndEverythingWorksAsItShouldAlsoWhenTypeIsNotInferred()
-        {
-            await _client1.Bus.Subscribe<SomeKindOfEvent>();
+        _client1GotTheEvent.WaitOrDie(TimeSpan.FromSeconds(2));
+    }
 
-            await Task.Delay(1000);
+    [Test]
+    public async Task TypeBasedRoutingAndExtensionMethodsAndEverythingWorksAsItShouldAlsoWhenTypeIsNotInferred()
+    {
+        await _client1.Bus.Subscribe<SomeKindOfEvent>();
 
-            object someKindOfEvent = new SomeKindOfEvent();
+        await Task.Delay(1000);
 
-            await _publisher.Bus.Publish(someKindOfEvent);
+        object someKindOfEvent = new SomeKindOfEvent();
 
-            _client1GotTheEvent.WaitOrDie(TimeSpan.FromSeconds(2), "Looks like the publish topic was not correctly inferred!");
-        }
+        await _publisher.Bus.Publish(someKindOfEvent);
 
-        class SomeKindOfEvent { }
+        _client1GotTheEvent.WaitOrDie(TimeSpan.FromSeconds(2), "Looks like the publish topic was not correctly inferred!");
+    }
 
-        BuiltinHandlerActivator GetEndpoint(InMemNetwork network, string queueName, Action<RebusConfigurer> additionalConfiguration = null)
-        {
-            var activator = Using(new BuiltinHandlerActivator());
+    class SomeKindOfEvent { }
 
-            var configurer = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(network, queueName));
+    BuiltinHandlerActivator GetEndpoint(InMemNetwork network, string queueName, Action<RebusConfigurer> additionalConfiguration = null)
+    {
+        var activator = Using(new BuiltinHandlerActivator());
 
-            additionalConfiguration?.Invoke(configurer);
+        var configurer = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(network, queueName));
 
-            configurer.Start();
+        additionalConfiguration?.Invoke(configurer);
 
-            return activator;
-        }
+        configurer.Start();
+
+        return activator;
     }
 }

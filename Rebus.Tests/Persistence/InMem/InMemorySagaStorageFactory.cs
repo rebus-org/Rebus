@@ -3,26 +3,25 @@ using Rebus.Persistence.InMem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 
-namespace Rebus.Tests.Persistence.InMem
+namespace Rebus.Tests.Persistence.InMem;
+
+[TestFixture]
+public class InMemBasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<InMemorySagaStorageFactory> { }
+
+[TestFixture]
+public class ConcurrencyHandling : ConcurrencyHandling<InMemorySagaStorageFactory> { }
+
+[TestFixture]
+public class SagaIntegrationTests : SagaIntegrationTests<InMemorySagaStorageFactory> { }
+
+public class InMemorySagaStorageFactory : ISagaStorageFactory
 {
-    [TestFixture]
-    public class InMemBasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<InMemorySagaStorageFactory> { }
-
-    [TestFixture]
-    public class ConcurrencyHandling : ConcurrencyHandling<InMemorySagaStorageFactory> { }
-
-    [TestFixture]
-    public class SagaIntegrationTests : SagaIntegrationTests<InMemorySagaStorageFactory> { }
-
-    public class InMemorySagaStorageFactory : ISagaStorageFactory
+    public ISagaStorage GetSagaStorage()
     {
-        public ISagaStorage GetSagaStorage()
-        {
-            return new InMemorySagaStorage();
-        }
+        return new InMemorySagaStorage();
+    }
 
-        public void CleanUp()
-        {
-        }
+    public void CleanUp()
+    {
     }
 }

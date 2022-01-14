@@ -19,40 +19,40 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Profiling
+namespace Rebus.Tests.Profiling;
+
+[TestFixture]
+public class TestDispatchPerformance : FixtureBase
 {
-    [TestFixture]
-    public class TestDispatchPerformance : FixtureBase
+    public enum PipelineInvokerMode
     {
-        public enum PipelineInvokerMode
-        {
-            Default,
-            DefaultNew,
-            Action,
-        }
+        Default,
+        DefaultNew,
+        Action,
+    }
 
-        [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Fun to enable when optimizing the pipeline invoker")]
-        [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Fun to enable when optimizing the pipeline invoker")]
-        [TestCase(100000, 10, PipelineInvokerMode.DefaultNew, Ignore = "Fun to enable when optimizing the pipeline invoker")]
-        [TestCase(100, 10, PipelineInvokerMode.DefaultNew)]
-        public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
-        {
-            Console.WriteLine($"Running {numberOfSamples} samples with {numberOfMessages} msgs and mode {pipelineInvokerMode}");
+    [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+    [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+    [TestCase(100000, 10, PipelineInvokerMode.DefaultNew, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+    [TestCase(100, 10, PipelineInvokerMode.DefaultNew)]
+    public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
+    {
+        Console.WriteLine($"Running {numberOfSamples} samples with {numberOfMessages} msgs and mode {pipelineInvokerMode}");
 
-            var profilerStats = new PipelineStepProfilerStats();
+        var profilerStats = new PipelineStepProfilerStats();
 
-            var results = Enumerable.Range(1, numberOfSamples)
-                .Select(i =>
-                {
-                    Console.Write($"Performing sample {i}: ");
-                    var result = RunTest(numberOfMessages, profilerStats, pipelineInvokerMode);
-                    Console.WriteLine($"{result.TotalSeconds:0.#####}");
-                    return result;
-                })
-                .Select(t => t.TotalSeconds)
-                .ToList();
+        var results = Enumerable.Range(1, numberOfSamples)
+            .Select(i =>
+            {
+                Console.Write($"Performing sample {i}: ");
+                var result = RunTest(numberOfMessages, profilerStats, pipelineInvokerMode);
+                Console.WriteLine($"{result.TotalSeconds:0.#####}");
+                return result;
+            })
+            .Select(t => t.TotalSeconds)
+            .ToList();
 
-            Console.WriteLine($@"{numberOfSamples} runs
+        Console.WriteLine($@"{numberOfSamples} runs
 Avg s: {results.Average():0.00###}
 Avg msg/s: {numberOfMessages / results.Average():0}
 
@@ -63,81 +63,80 @@ Pipeline invoker: {pipelineInvokerMode}
 
 Stats:
 {string.Join(Environment.NewLine, profilerStats.GetAndResetStats().Select(s => $"    {s}"))}");
-        }
+    }
 
-        static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats, PipelineInvokerMode pipelineInvokerMode)
-        {
-            using var adapter = new BuiltinHandlerActivator();
+    static TimeSpan RunTest(int numberOfMessages, PipelineStepProfilerStats profilerStats, PipelineInvokerMode pipelineInvokerMode)
+    {
+        using var adapter = new BuiltinHandlerActivator();
 
-            var network = new InMemNetwork();
+        var network = new InMemNetwork();
 
-            Configure.With(adapter)
-                .Logging(l => l.Console(LogLevel.Warn))
-                .Transport(t => t.UseInMemoryTransport(network, "perftest"))
-                .Serialization(s => s.UseSystemTextJson())
-                .Options(o =>
+        Configure.With(adapter)
+            .Logging(l => l.Console(LogLevel.Warn))
+            .Transport(t => t.UseInMemoryTransport(network, "perftest"))
+            .Serialization(s => s.UseSystemTextJson())
+            .Options(o =>
+            {
+                o.SetNumberOfWorkers(0);
+                o.SetMaxParallelism(1);
+
+                o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
+
+                IPipelineInvoker GetPipelineInvoker(IResolutionContext c) => pipelineInvokerMode switch
                 {
-                    o.SetNumberOfWorkers(0);
-                    o.SetMaxParallelism(1);
+                    PipelineInvokerMode.Default => new DefaultPipelineInvoker(c.Get<IPipeline>()),
+                    PipelineInvokerMode.DefaultNew => new DefaultPipelineInvokerNew(c.Get<IPipeline>()),
+                    PipelineInvokerMode.Action => new ActionPipelineInvoker(c.Get<IPipeline>()),
 
-                    o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
+                    _ => throw new ArgumentOutOfRangeException(nameof(pipelineInvokerMode), pipelineInvokerMode, "Unknown pipeline invoker mode")
+                };
 
-                    IPipelineInvoker GetPipelineInvoker(IResolutionContext c) => pipelineInvokerMode switch
-                    {
-                        PipelineInvokerMode.Default => new DefaultPipelineInvoker(c.Get<IPipeline>()),
-                        PipelineInvokerMode.DefaultNew => new DefaultPipelineInvokerNew(c.Get<IPipeline>()),
-                        PipelineInvokerMode.Action => new ActionPipelineInvoker(c.Get<IPipeline>()),
+                o.Register(GetPipelineInvoker);
+            })
+            .Start();
 
-                        _ => throw new ArgumentOutOfRangeException(nameof(pipelineInvokerMode), pipelineInvokerMode, "Unknown pipeline invoker mode")
-                    };
+        var serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+        //var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+        var boy = new SomeMessage("hello there!");
 
-                    o.Register(GetPipelineInvoker);
-                })
-                .Start();
-
-            var serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
-            //var serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
-            var boy = new SomeMessage("hello there!");
-
-            for (var counter = 0; counter < numberOfMessages; counter++)
-            {
-                var headers = new Dictionary<string, string> { { Headers.MessageId, Guid.NewGuid().ToString() } };
-                var message = new Message(headers, boy);
-                var transportMessage = serializer.Serialize(message).Result;
-                var inMemTransportMessage = transportMessage.ToInMemTransportMessage();
-
-                network.Deliver("perftest", inMemTransportMessage);
-            };
-
-            var numberOfReceivedMessages = 0;
-            var gotAllMessages = new ManualResetEvent(false);
-
-            adapter.Handle<SomeMessage>(async m =>
-            {
-                Interlocked.Increment(ref numberOfReceivedMessages);
-
-                if (Volatile.Read(ref numberOfReceivedMessages) == numberOfMessages)
-                {
-                    gotAllMessages.Set();
-                }
-            });
-
-            var stopwatch = Stopwatch.StartNew();
-
-            adapter.Bus.Advanced.Workers.SetNumberOfWorkers(1);
-            gotAllMessages.WaitOrDie(TimeSpan.FromSeconds(30));
-
-            return stopwatch.Elapsed;
-        }
-
-        class SomeMessage
+        for (var counter = 0; counter < numberOfMessages; counter++)
         {
-            public SomeMessage(string text)
+            var headers = new Dictionary<string, string> { { Headers.MessageId, Guid.NewGuid().ToString() } };
+            var message = new Message(headers, boy);
+            var transportMessage = serializer.Serialize(message).Result;
+            var inMemTransportMessage = transportMessage.ToInMemTransportMessage();
+
+            network.Deliver("perftest", inMemTransportMessage);
+        };
+
+        var numberOfReceivedMessages = 0;
+        var gotAllMessages = new ManualResetEvent(false);
+
+        adapter.Handle<SomeMessage>(async m =>
+        {
+            Interlocked.Increment(ref numberOfReceivedMessages);
+
+            if (Volatile.Read(ref numberOfReceivedMessages) == numberOfMessages)
             {
-                Text = text;
+                gotAllMessages.Set();
             }
+        });
 
-            public string Text { get; }
+        var stopwatch = Stopwatch.StartNew();
+
+        adapter.Bus.Advanced.Workers.SetNumberOfWorkers(1);
+        gotAllMessages.WaitOrDie(TimeSpan.FromSeconds(30));
+
+        return stopwatch.Elapsed;
+    }
+
+    class SomeMessage
+    {
+        public SomeMessage(string text)
+        {
+            Text = text;
         }
+
+        public string Text { get; }
     }
 }

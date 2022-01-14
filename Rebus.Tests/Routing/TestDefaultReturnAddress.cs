@@ -11,44 +11,43 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Routing
+namespace Rebus.Tests.Routing;
+
+[TestFixture]
+public class TestDefaultReturnAddress : FixtureBase
 {
-    [TestFixture]
-    public class TestDefaultReturnAddress : FixtureBase
+    [Test]
+    public async Task AssignsDefaultReturnAddressOnSentMessage()
     {
-        [Test]
-        public async Task AssignsDefaultReturnAddressOnSentMessage()
+        var network = new InMemNetwork();
+
+        var sender = Using(new BuiltinHandlerActivator());
+
+        Configure.With(sender)
+            .Transport(t => t.UseInMemoryTransport(network, "queue-a"))
+            .Routing(r => r.TypeBased().Map<string>("queue-b"))
+            .Options(o => o.SetDefaultReturnAddress("a totally different queue name"))
+            .Start();
+
+        var receiver = Using(new BuiltinHandlerActivator());
+
+        var returnAddress = "";
+        var done = new ManualResetEvent(false);
+
+        receiver.Handle<string>(async (bus, context, message) =>
         {
-            var network = new InMemNetwork();
+            returnAddress = context.Headers[Headers.ReturnAddress];
+            done.Set();
+        });
 
-            var sender = Using(new BuiltinHandlerActivator());
+        Configure.With(receiver)
+            .Transport(t => t.UseInMemoryTransport(network, "queue-b"))
+            .Start();
 
-            Configure.With(sender)
-                .Transport(t => t.UseInMemoryTransport(network, "queue-a"))
-                .Routing(r => r.TypeBased().Map<string>("queue-b"))
-                .Options(o => o.SetDefaultReturnAddress("a totally different queue name"))
-                .Start();
+        await sender.Bus.Send("HEJ MED DIG MIN VEEEEN!");
 
-            var receiver = Using(new BuiltinHandlerActivator());
+        done.WaitOrDie(TimeSpan.FromSeconds(2));
 
-            var returnAddress = "";
-            var done = new ManualResetEvent(false);
-
-            receiver.Handle<string>(async (bus, context, message) =>
-            {
-                returnAddress = context.Headers[Headers.ReturnAddress];
-                done.Set();
-            });
-
-            Configure.With(receiver)
-                .Transport(t => t.UseInMemoryTransport(network, "queue-b"))
-                .Start();
-
-            await sender.Bus.Send("HEJ MED DIG MIN VEEEEN!");
-
-            done.WaitOrDie(TimeSpan.FromSeconds(2));
-
-            Assert.That(returnAddress, Is.EqualTo("a totally different queue name"), "Expected a totally different queue name here");
-        }
+        Assert.That(returnAddress, Is.EqualTo("a totally different queue name"), "Expected a totally different queue name here");
     }
 }

@@ -14,52 +14,51 @@ using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleNamedExpression
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestDeferAndExplicitRouting : FixtureBase
 {
-    [TestFixture]
-    public class TestDeferAndExplicitRouting : FixtureBase
+    readonly InMemNetwork _inMemNetwork = new InMemNetwork();
+
+    protected override void SetUp() => _inMemNetwork.Reset();
+
+    [Test]
+    public async Task GreatName()
     {
-        readonly InMemNetwork _inMemNetwork = new InMemNetwork();
+        var messageWasReceived = new ManualResetEvent(false);
 
-        protected override void SetUp() => _inMemNetwork.Reset();
+        // create three receivers
+        CreateBus("receiver1");
+        CreateBus("receiver2");
+        CreateBus("receiver3", activator => activator.Handle<string>(async s => messageWasReceived.Set()));
 
-        [Test]
-        public async Task GreatName()
+        var sender = CreateBus("sender", configureRouting: router =>
         {
-            var messageWasReceived = new ManualResetEvent(false);
+            // configure ordinary endpoint mappings for the two first receivers
+            router
+                .Map<string>("receiver1")
+                .MapFallback("receiver2");
+        });
 
-            // create three receivers
-            CreateBus("receiver1");
-            CreateBus("receiver2");
-            CreateBus("receiver3", activator => activator.Handle<string>(async s => messageWasReceived.Set()));
+        // defer and explicitly route the message to receiver3
+        await sender.Advanced.Routing.Defer("receiver3", TimeSpan.FromSeconds(1), "HEJ MED DIG MIN VEN!!!!!");
 
-            var sender = CreateBus("sender", configureRouting: router =>
-            {
-                // configure ordinary endpoint mappings for the two first receivers
-                router
-                    .Map<string>("receiver1")
-                    .MapFallback("receiver2");
-            });
+        messageWasReceived.WaitOrDie(TimeSpan.FromSeconds(3));
+    }
 
-            // defer and explicitly route the message to receiver3
-            await sender.Advanced.Routing.Defer("receiver3", TimeSpan.FromSeconds(1), "HEJ MED DIG MIN VEN!!!!!");
+    IBus CreateBus(string inputQueueName, Action<BuiltinHandlerActivator> configureActivator = null, Action<TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder> configureRouting = null)
+    {
+        var activator = new BuiltinHandlerActivator();
 
-            messageWasReceived.WaitOrDie(TimeSpan.FromSeconds(3));
-        }
+        Using(activator);
 
-        IBus CreateBus(string inputQueueName, Action<BuiltinHandlerActivator> configureActivator = null, Action<TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder> configureRouting = null)
-        {
-            var activator = new BuiltinHandlerActivator();
+        configureActivator?.Invoke(activator);
 
-            Using(activator);
-
-            configureActivator?.Invoke(activator);
-
-            return Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(_inMemNetwork, inputQueueName))
-                .Timeouts(t => t.StoreInMemory())
-                .Routing(r => configureRouting?.Invoke(r.TypeBased()))
-                .Start();
-        }
+        return Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(_inMemNetwork, inputQueueName))
+            .Timeouts(t => t.StoreInMemory())
+            .Routing(r => configureRouting?.Invoke(r.TypeBased()))
+            .Start();
     }
 }

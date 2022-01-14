@@ -7,32 +7,31 @@ using Rebus.Config;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Integration.ManyMessages
+namespace Rebus.Tests.Integration.ManyMessages;
+
+public class InMemoryBusFactory : IBusFactory
 {
-    public class InMemoryBusFactory : IBusFactory
+    readonly List<IDisposable> _stuffToDispose = new List<IDisposable>();
+    readonly InMemNetwork _network = new InMemNetwork();
+
+    public IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler)
     {
-        readonly List<IDisposable> _stuffToDispose = new List<IDisposable>();
-        readonly InMemNetwork _network = new InMemNetwork();
+        var builtinHandlerActivator = new BuiltinHandlerActivator();
 
-        public IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler)
-        {
-            var builtinHandlerActivator = new BuiltinHandlerActivator();
+        builtinHandlerActivator.Handle(handler);
 
-            builtinHandlerActivator.Handle(handler);
+        var bus = Configure.With(builtinHandlerActivator)
+            .Transport(t => t.UseInMemoryTransport(_network,  inputQueueAddress))
+            .Start();
 
-            var bus = Configure.With(builtinHandlerActivator)
-                .Transport(t => t.UseInMemoryTransport(_network,  inputQueueAddress))
-                .Start();
+        _stuffToDispose.Add(bus);
 
-            _stuffToDispose.Add(bus);
+        return bus;
+    }
 
-            return bus;
-        }
-
-        public void Cleanup()
-        {
-            _stuffToDispose.ForEach(d => d.Dispose());
-            _stuffToDispose.Clear();
-        }
+    public void Cleanup()
+    {
+        _stuffToDispose.ForEach(d => d.Dispose());
+        _stuffToDispose.Clear();
     }
 }

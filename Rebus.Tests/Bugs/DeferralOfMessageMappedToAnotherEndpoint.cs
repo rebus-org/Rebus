@@ -11,55 +11,54 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Bugs
+namespace Rebus.Tests.Bugs;
+
+[TestFixture]
+public class DeferralOfMessageMappedToAnotherEndpoint : FixtureBase
 {
-    [TestFixture]
-    public class DeferralOfMessageMappedToAnotherEndpoint : FixtureBase
+    readonly InMemNetwork _network = new InMemNetwork();
+
+    protected override void SetUp()
     {
-        readonly InMemNetwork _network = new InMemNetwork();
+        _network.Reset();
+    }
 
-        protected override void SetUp()
+    [Test]
+    public async Task EndpointMappingsAreUsedWhenDeferringMessages()
+    {
+        var gotTheString = new ManualResetEvent(false);
+
+        var (a, aStarter) = CreateBus("endpoint-a", c =>
         {
-            _network.Reset();
-        }
+            c.Routing(r => r.TypeBased().Map<string>("endpoint-b"));
+        });
 
-        [Test]
-        public async Task EndpointMappingsAreUsedWhenDeferringMessages()
-        {
-            var gotTheString = new ManualResetEvent(false);
+        var (b, bStarter) = CreateBus("endpoint-b");
 
-            var (a, aStarter) = CreateBus("endpoint-a", c =>
-             {
-                 c.Routing(r => r.TypeBased().Map<string>("endpoint-b"));
-             });
+        b.Handle<string>(async str => gotTheString.Set());
 
-            var (b, bStarter) = CreateBus("endpoint-b");
+        aStarter.Start();
+        bStarter.Start();
 
-            b.Handle<string>(async str => gotTheString.Set());
+        await a.Bus.Defer(TimeSpan.FromSeconds(0.1), "HEJ MED DIG MIN VEEEEEEEEEEEEEEEEN");
 
-            aStarter.Start();
-            bStarter.Start();
+        gotTheString.WaitOrDie(TimeSpan.FromSeconds(2), "Did not get the expected string within 2 s timeout");
+    }
 
-            await a.Bus.Defer(TimeSpan.FromSeconds(0.1), "HEJ MED DIG MIN VEEEEEEEEEEEEEEEEN");
+    (BuiltinHandlerActivator, IBusStarter) CreateBus(string queueName, Action<RebusConfigurer> additionalConfiguration = null)
+    {
+        var activator = new BuiltinHandlerActivator();
 
-            gotTheString.WaitOrDie(TimeSpan.FromSeconds(2), "Did not get the expected string within 2 s timeout");
-        }
+        Using(activator);
 
-        (BuiltinHandlerActivator, IBusStarter) CreateBus(string queueName, Action<RebusConfigurer> additionalConfiguration = null)
-        {
-            var activator = new BuiltinHandlerActivator();
+        var rebusConfigurer = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(_network, queueName))
+            .Timeouts(t => t.StoreInMemory());
 
-            Using(activator);
+        additionalConfiguration?.Invoke(rebusConfigurer);
 
-            var rebusConfigurer = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(_network, queueName))
-                .Timeouts(t => t.StoreInMemory());
+        var starter = rebusConfigurer.Create();
 
-            additionalConfiguration?.Invoke(rebusConfigurer);
-
-            var starter = rebusConfigurer.Create();
-
-            return (activator, starter);
-        }
+        return (activator, starter);
     }
 }

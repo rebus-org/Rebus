@@ -11,86 +11,85 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Synchronous
+namespace Rebus.Tests.Synchronous;
+
+[TestFixture]
+public class TestSyncBus : FixtureBase
 {
-    [TestFixture]
-    public class TestSyncBus : FixtureBase
+    BuiltinHandlerActivator _activator;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
+        _activator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
+        Using(_activator);
+
+        Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "sync-tjek"))
+            .Start();
+    }
+
+    [Test]
+    public void CanDoItSyncWithoutBlocking()
+    {
+        var messageWasProperlyHandled = new ManualResetEvent(false);
+        var bus = _activator.Bus.Advanced.SyncBus;
+
+        _activator.AddHandlerWithBusTemporarilyStopped<string>(async str => messageWasProperlyHandled.Set());
+
+        var thread = new Thread(() =>
         {
-            _activator = new BuiltinHandlerActivator();
+            bus.SendLocal("ey det virker");
+        });
 
-            Using(_activator);
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
 
-            Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "sync-tjek"))
-                .Start();
-        }
+        Assert.That(thread.Join(1000), Is.True, "thread did not finish within timeout");
 
-        [Test]
-        public void CanDoItSyncWithoutBlocking()
+        messageWasProperlyHandled.WaitOrDie(timeout: TimeSpan.FromSeconds(2));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void SendOperationsEnlistInTheSameTransactionContext(bool commitTransaction)
+    {
+        var receivedMessages = new ConcurrentQueue<string>();
+        var bus = _activator.Bus.Advanced.SyncBus;
+
+        _activator.AddHandlerWithBusTemporarilyStopped<string>(async msg => receivedMessages.Enqueue(msg));
+
+        using (var context = new RebusTransactionScope())
         {
-            var messageWasProperlyHandled = new ManualResetEvent(false);
-            var bus = _activator.Bus.Advanced.SyncBus;
-
-            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str => messageWasProperlyHandled.Set());
-
-            var thread = new Thread(() =>
-            {
-                bus.SendLocal("ey det virker");
-            });
-
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-
-            Assert.That(thread.Join(1000), Is.True, "thread did not finish within timeout");
-
-            messageWasProperlyHandled.WaitOrDie(timeout: TimeSpan.FromSeconds(2));
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public void SendOperationsEnlistInTheSameTransactionContext(bool commitTransaction)
-        {
-            var receivedMessages = new ConcurrentQueue<string>();
-            var bus = _activator.Bus.Advanced.SyncBus;
-
-            _activator.AddHandlerWithBusTemporarilyStopped<string>(async msg => receivedMessages.Enqueue(msg));
-
-            using (var context = new RebusTransactionScope())
-            {
-                bus.SendLocal("hej med dig min ven");
-                bus.SendLocal("her er endnu en besked");
-
-                if (commitTransaction)
-                {
-                    context.Complete();
-                }
-            }
-
-            Thread.Sleep(500);
+            bus.SendLocal("hej med dig min ven");
+            bus.SendLocal("her er endnu en besked");
 
             if (commitTransaction)
             {
-                Assert.That(receivedMessages, Contains.Item("hej med dig min ven"));
-                Assert.That(receivedMessages, Contains.Item("her er endnu en besked"));
-            }
-            else
-            {
-                Assert.That(receivedMessages.Count, Is.EqualTo(0));
+                context.Complete();
             }
         }
 
-        [Test]
-        public void CheckException()
+        Thread.Sleep(500);
+
+        if (commitTransaction)
         {
-            var bus = _activator.Bus.Advanced.SyncBus;
-
-            var argumentException = Assert.Throws<ArgumentException>(() => bus.Send("THIS MESSAGE IS NOT MAPPED TO ANYTHING"));
-
-            Console.WriteLine(argumentException);
+            Assert.That(receivedMessages, Contains.Item("hej med dig min ven"));
+            Assert.That(receivedMessages, Contains.Item("her er endnu en besked"));
         }
+        else
+        {
+            Assert.That(receivedMessages.Count, Is.EqualTo(0));
+        }
+    }
+
+    [Test]
+    public void CheckException()
+    {
+        var bus = _activator.Bus.Advanced.SyncBus;
+
+        var argumentException = Assert.Throws<ArgumentException>(() => bus.Send("THIS MESSAGE IS NOT MAPPED TO ANYTHING"));
+
+        Console.WriteLine(argumentException);
     }
 }

@@ -1,10 +1,9 @@
 ﻿using NUnit.Framework;
 using Rebus.Tests.Contracts.Subscriptions;
 
-namespace Rebus.Tests.Persistence.Filesystem
+namespace Rebus.Tests.Persistence.Filesystem;
+
+[TestFixture]
+public class JsonFileSubscriptionStorageBasicSubscriptionOperations : BasicSubscriptionOperations<JsonFileSubscriptionStorageFactory>
 {
-    [TestFixture]
-    public class JsonFileSubscriptionStorageBasicSubscriptionOperations : BasicSubscriptionOperations<JsonFileSubscriptionStorageFactory>
-    {
-    }
 }

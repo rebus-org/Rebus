@@ -11,120 +11,119 @@ using Rebus.Timeouts;
 // ReSharper disable InconsistentlySynchronizedField
 #pragma warning disable 1998
 
-namespace Rebus.Persistence.InMem
+namespace Rebus.Persistence.InMem;
+
+/// <summary>
+/// Implementation of <see cref="ITimeoutManager"/> that "persists" timeouts in memory.
+/// </summary>
+public class InMemoryTimeoutManager : ITimeoutManager, IEnumerable<InMemoryTimeoutManager.DeferredMessage>
 {
+    readonly IRebusTime _rebusTime;
+    readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
+
     /// <summary>
-    /// Implementation of <see cref="ITimeoutManager"/> that "persists" timeouts in memory.
+    /// Creates the in-mem timeout manager
     /// </summary>
-    public class InMemoryTimeoutManager : ITimeoutManager, IEnumerable<InMemoryTimeoutManager.DeferredMessage>
+    public InMemoryTimeoutManager(IRebusTime rebusTime)
     {
-        readonly IRebusTime _rebusTime;
-        readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
+        _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+    }
 
-        /// <summary>
-        /// Creates the in-mem timeout manager
-        /// </summary>
-        public InMemoryTimeoutManager(IRebusTime rebusTime)
+    /// <summary>
+    /// Stores the message with the given headers and body data, delaying it until the specified <paramref name="approximateDueTime"/>
+    /// </summary>
+    public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
+    {
+        if (headers == null) throw new ArgumentNullException(nameof(headers));
+        if (body == null) throw new ArgumentNullException(nameof(body));
+
+        lock (_deferredMessages)
         {
-            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+            _deferredMessages
+                .AddOrUpdate(headers.GetValue(Headers.MessageId),
+                    id => new DeferredMessage(approximateDueTime, headers, body),
+                    (id, existing) => existing);
         }
+    }
 
-        /// <summary>
-        /// Stores the message with the given headers and body data, delaying it until the specified <paramref name="approximateDueTime"/>
-        /// </summary>
-        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
+    /// <summary>
+    /// Gets due messages as of now, given the approximate due time that they were stored with when <see cref="ITimeoutManager.Defer"/> was called
+    /// </summary>
+    public async Task<DueMessagesResult> GetDueMessages()
+    {
+        lock (_deferredMessages)
         {
-            if (headers == null) throw new ArgumentNullException(nameof(headers));
-            if (body == null) throw new ArgumentNullException(nameof(body));
+            var keyValuePairsToRemove = _deferredMessages
+                .Where(v => _rebusTime.Now >= v.Value.DueTime)
+                .ToHashSet();
 
-            lock (_deferredMessages)
-            {
-                _deferredMessages
-                    .AddOrUpdate(headers.GetValue(Headers.MessageId),
-                        id => new DeferredMessage(approximateDueTime, headers, body),
-                        (id, existing) => existing);
-            }
-        }
-
-        /// <summary>
-        /// Gets due messages as of now, given the approximate due time that they were stored with when <see cref="ITimeoutManager.Defer"/> was called
-        /// </summary>
-        public async Task<DueMessagesResult> GetDueMessages()
-        {
-            lock (_deferredMessages)
-            {
-                var keyValuePairsToRemove = _deferredMessages
-                    .Where(v => _rebusTime.Now >= v.Value.DueTime)
-                    .ToHashSet();
-
-                var result = new DueMessagesResult(keyValuePairsToRemove
-                        .Select(kvp =>
-                        {
-                            var dueMessage = new DueMessage(kvp.Value.Headers, kvp.Value.Body,
-                                async () => keyValuePairsToRemove.Remove(kvp));
-
-                            return dueMessage;
-                        }),
-                    async () =>
+            var result = new DueMessagesResult(keyValuePairsToRemove
+                    .Select(kvp =>
                     {
-                        // put back if the result was not completed
-                        foreach (var kvp in keyValuePairsToRemove)
-                        {
-                            _deferredMessages[kvp.Key] = kvp.Value;
-                        }
-                    });
+                        var dueMessage = new DueMessage(kvp.Value.Headers, kvp.Value.Body,
+                            async () => keyValuePairsToRemove.Remove(kvp));
 
-                foreach (var kvp in keyValuePairsToRemove)
+                        return dueMessage;
+                    }),
+                async () =>
                 {
-                    DeferredMessage _;
-                    _deferredMessages.TryRemove(kvp.Key, out _);
-                }
+                    // put back if the result was not completed
+                    foreach (var kvp in keyValuePairsToRemove)
+                    {
+                        _deferredMessages[kvp.Key] = kvp.Value;
+                    }
+                });
 
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Represents a message whose delivery has been deferred into the future
-        /// </summary>
-        public class DeferredMessage
-        {
-            /// <summary>
-            /// Gets the time of when delivery of this message is due
-            /// </summary>
-            public DateTimeOffset DueTime { get; }
-
-            /// <summary>
-            /// Gets the message's headers
-            /// </summary>
-            public Dictionary<string, string> Headers { get; }
-
-            /// <summary>
-            /// Gets the message's body
-            /// </summary>
-            public byte[] Body { get; }
-
-            internal DeferredMessage(DateTimeOffset dueTime, Dictionary<string, string> headers, byte[] body)
+            foreach (var kvp in keyValuePairsToRemove)
             {
-                DueTime = dueTime;
-                Headers = headers;
-                Body = body;
+                DeferredMessage _;
+                _deferredMessages.TryRemove(kvp.Key, out _);
             }
+
+            return result;
         }
+    }
+
+    /// <summary>
+    /// Represents a message whose delivery has been deferred into the future
+    /// </summary>
+    public class DeferredMessage
+    {
+        /// <summary>
+        /// Gets the time of when delivery of this message is due
+        /// </summary>
+        public DateTimeOffset DueTime { get; }
 
         /// <summary>
-        /// Gets an enumerator that allows for iterating through all stored deferred messages
+        /// Gets the message's headers
         /// </summary>
-        public IEnumerator<DeferredMessage> GetEnumerator()
-        {
-            var deferredMessages = _deferredMessages.Values.ToList();
+        public Dictionary<string, string> Headers { get; }
 
-            return deferredMessages.GetEnumerator();
-        }
+        /// <summary>
+        /// Gets the message's body
+        /// </summary>
+        public byte[] Body { get; }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        internal DeferredMessage(DateTimeOffset dueTime, Dictionary<string, string> headers, byte[] body)
         {
-            return GetEnumerator();
+            DueTime = dueTime;
+            Headers = headers;
+            Body = body;
         }
+    }
+
+    /// <summary>
+    /// Gets an enumerator that allows for iterating through all stored deferred messages
+    /// </summary>
+    public IEnumerator<DeferredMessage> GetEnumerator()
+    {
+        var deferredMessages = _deferredMessages.Values.ToList();
+
+        return deferredMessages.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

@@ -17,131 +17,130 @@ using Rebus.Transport.InMem;
 
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Routing
+namespace Rebus.Tests.Routing;
+
+[TestFixture]
+public class TestHeaderBasedRouting : FixtureBase
 {
-    [TestFixture]
-    public class TestHeaderBasedRouting : FixtureBase
+    const string SpecialHeaderKey = "forward";
+
+    ConcurrentQueue<DoneWork> _doneWork;
+    InMemNetwork _network;
+
+    readonly Dictionary<string, string> _forwardHeaders = new Dictionary<string, string>
     {
-        const string SpecialHeaderKey = "forward";
+        {SpecialHeaderKey, ""}
+    };
 
-        ConcurrentQueue<DoneWork> _doneWork;
-        InMemNetwork _network;
+    protected override void SetUp()
+    {
+        _doneWork = new ConcurrentQueue<DoneWork>();
+        _network = new InMemNetwork();
+    }
 
-        readonly Dictionary<string, string> _forwardHeaders = new Dictionary<string, string>
+    [TestCase(100)]
+    public async Task CanDistributeWork(int numberOfMessages)
+    {
+        var transportConfigurer = GetTransportConfigurer();
+
+        var workers = new[] {"worker1", "worker2", "worker3", "worker4"}
+            .Select(TestConfig.GetName)
+            .ToArray();
+
+        var distributorQueueName = TestConfig.GetName("distributor");
+
+        foreach (var name in workers)
         {
-            {SpecialHeaderKey, ""}
-        };
-
-        protected override void SetUp()
-        {
-            _doneWork = new ConcurrentQueue<DoneWork>();
-            _network = new InMemNetwork();
+            StartWorker(name, transportConfigurer);
         }
 
-        [TestCase(100)]
-        public async Task CanDistributeWork(int numberOfMessages)
-        {
-            var transportConfigurer = GetTransportConfigurer();
-
-            var workers = new[] {"worker1", "worker2", "worker3", "worker4"}
-                .Select(TestConfig.GetName)
-                .ToArray();
-
-            var distributorQueueName = TestConfig.GetName("distributor");
-
-            foreach (var name in workers)
+        var distributor = Configure.With(Using(new BuiltinHandlerActivator()))
+            .Logging(l => l.Console(LogLevel.Info))
+            .Transport(t =>
             {
-                StartWorker(name, transportConfigurer);
-            }
+                transportConfigurer(t, distributorQueueName);
+            })
+            .Routing(r =>
+            {
+                var nextDestinationIndex = 0;
 
-            var distributor = Configure.With(Using(new BuiltinHandlerActivator()))
-                .Logging(l => l.Console(LogLevel.Info))
-                .Transport(t =>
+                r.AddTransportMessageForwarder(async transportMessage =>
                 {
-                    transportConfigurer(t, distributorQueueName);
-                })
-                .Routing(r =>
-                {
-                    var nextDestinationIndex = 0;
+                    var headers = transportMessage.Headers;
 
-                    r.AddTransportMessageForwarder(async transportMessage =>
+                    if (headers.ContainsKey(SpecialHeaderKey))
                     {
-                        var headers = transportMessage.Headers;
+                        var index = Interlocked.Increment(ref nextDestinationIndex) % workers.Length;
 
-                        if (headers.ContainsKey(SpecialHeaderKey))
-                        {
-                            var index = Interlocked.Increment(ref nextDestinationIndex) % workers.Length;
+                        return ForwardAction.ForwardTo(workers[index]);
+                    }
 
-                            return ForwardAction.ForwardTo(workers[index]);
-                        }
-
-                        return ForwardAction.None;
-                    });
-                })
-                .Options(o =>
-                {
-                    o.LogPipeline(verbose: true);
-                })
-                .Start();
+                    return ForwardAction.None;
+                });
+            })
+            .Options(o =>
+            {
+                o.LogPipeline(verbose: true);
+            })
+            .Start();
             
-            await Task.WhenAll(
-                Enumerable.Range(0, numberOfMessages)
-                    .Select(id => new Work { WorkId = id })
-                    .Select(work => distributor.SendLocal(work, _forwardHeaders))
-                );
+        await Task.WhenAll(
+            Enumerable.Range(0, numberOfMessages)
+                .Select(id => new Work { WorkId = id })
+                .Select(work => distributor.SendLocal(work, _forwardHeaders))
+        );
 
-            await _doneWork.WaitUntil(w => w.Count == numberOfMessages, timeoutSeconds: 20);
+        await _doneWork.WaitUntil(w => w.Count == numberOfMessages, timeoutSeconds: 20);
 
-            var workByWorker = _doneWork.GroupBy(w => w.Worker).ToList();
+        var workByWorker = _doneWork.GroupBy(w => w.Worker).ToList();
 
-            Console.WriteLine(@"Done work:
+        Console.WriteLine(@"Done work:
 
 {0}
 
 ", string.Join(Environment.NewLine, workByWorker.Select(g => $"    {g.Key}: {g.Count()}")));
 
-            Assert.That(workByWorker.Count, Is.EqualTo(workers.Length), "Expected that all workers got to do some work!");
-        }
+        Assert.That(workByWorker.Count, Is.EqualTo(workers.Length), "Expected that all workers got to do some work!");
+    }
 
-        Action<StandardConfigurer<ITransport>, string> GetTransportConfigurer()
+    Action<StandardConfigurer<ITransport>, string> GetTransportConfigurer()
+    {
+        return (configurer, queueName) =>
         {
-            return (configurer, queueName) =>
+            configurer.UseInMemoryTransport(_network, queueName);
+        };
+    }
+
+    void StartWorker(string queueName, Action<StandardConfigurer<ITransport>, string> transportConfigurer)
+    {
+        var handlerActivator = Using(new BuiltinHandlerActivator());
+
+        handlerActivator.Handle<Work>(async work =>
+        {
+            _doneWork.Enqueue(new DoneWork { Work = work, Worker = queueName });
+        });
+
+        Configure.With(handlerActivator)
+            .Transport(t =>
             {
-                configurer.UseInMemoryTransport(_network, queueName);
-            };
-        }
-
-        void StartWorker(string queueName, Action<StandardConfigurer<ITransport>, string> transportConfigurer)
-        {
-            var handlerActivator = Using(new BuiltinHandlerActivator());
-
-            handlerActivator.Handle<Work>(async work =>
+                transportConfigurer(t, queueName);
+            })
+            .Options(o =>
             {
-                _doneWork.Enqueue(new DoneWork { Work = work, Worker = queueName });
-            });
+                o.SetNumberOfWorkers(1);
+                o.SetMaxParallelism(1);
+            })
+            .Start();
+    }
 
-            Configure.With(handlerActivator)
-                .Transport(t =>
-                {
-                    transportConfigurer(t, queueName);
-                })
-                .Options(o =>
-                {
-                    o.SetNumberOfWorkers(1);
-                    o.SetMaxParallelism(1);
-                })
-                .Start();
-        }
+    class Work
+    {
+        public int WorkId { get; set; }
+    }
 
-        class Work
-        {
-            public int WorkId { get; set; }
-        }
-
-        class DoneWork
-        {
-            public Work Work { get; set; }
-            public string Worker { get; set; }
-        }
+    class DoneWork
+    {
+        public Work Work { get; set; }
+        public string Worker { get; set; }
     }
 }

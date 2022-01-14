@@ -1,70 +1,69 @@
 using System;
 using System.Linq.Expressions;
 
-namespace Rebus.Reflection
+namespace Rebus.Reflection;
+
+class Reflect
 {
-    class Reflect
+    public static string Path<T>(Expression<Func<T, object>> expression)
     {
-        public static string Path<T>(Expression<Func<T, object>> expression)
+        return GetPropertyName(expression);
+    }
+
+    public static object Value(object obj, string path)
+    {
+        var dots = path.Split('.');
+
+        foreach(var dot in dots)
         {
-            return GetPropertyName(expression);
+            var propertyInfo = obj.GetType().GetProperty(dot);
+            if (propertyInfo == null) return null;
+            obj = propertyInfo.GetValue(obj, Array.Empty<object>());
+            if (obj == null) break;
         }
 
-        public static object Value(object obj, string path)
+        return obj;
+    }
+
+    static string GetPropertyName(Expression expression)
+    {
+        if (expression == null) return "";
+
+        if (expression is LambdaExpression)
         {
-            var dots = path.Split('.');
-
-            foreach(var dot in dots)
-            {
-                var propertyInfo = obj.GetType().GetProperty(dot);
-                if (propertyInfo == null) return null;
-                obj = propertyInfo.GetValue(obj, Array.Empty<object>());
-                if (obj == null) break;
-            }
-
-            return obj;
+            expression = ((LambdaExpression) expression).Body;
         }
 
-        static string GetPropertyName(Expression expression)
+        if (expression is UnaryExpression)
         {
-            if (expression == null) return "";
+            expression = ((UnaryExpression)expression).Operand;
+        }
 
-            if (expression is LambdaExpression)
+        if (expression is MemberExpression)
+        {
+            dynamic memberExpression = expression;
+
+            var lambdaExpression = (Expression)memberExpression.Expression;
+
+            string prefix;
+            if (lambdaExpression != null)
             {
-                expression = ((LambdaExpression) expression).Body;
+                prefix = GetPropertyName(lambdaExpression);
+                if (!string.IsNullOrEmpty(prefix))
+                {
+                    prefix += ".";
+                }
+            }
+            else
+            {
+                prefix = "";
             }
 
-            if (expression is UnaryExpression)
-            {
-                expression = ((UnaryExpression)expression).Operand;
-            }
-
-            if (expression is MemberExpression)
-            {
-                dynamic memberExpression = expression;
-
-                var lambdaExpression = (Expression)memberExpression.Expression;
-
-                string prefix;
-                if (lambdaExpression != null)
-                {
-                    prefix = GetPropertyName(lambdaExpression);
-                    if (!string.IsNullOrEmpty(prefix))
-                    {
-                        prefix += ".";
-                    }
-                }
-                else
-                {
-                    prefix = "";
-                }
-
-                var propertyName = memberExpression.Member.Name;
+            var propertyName = memberExpression.Member.Name;
                 
-                return prefix + propertyName;
-            }
-
-            return "";
+            return prefix + propertyName;
         }
+
+        return "";
     }
 }

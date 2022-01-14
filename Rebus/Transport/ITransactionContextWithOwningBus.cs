@@ -1,16 +1,15 @@
 ﻿using Rebus.Bus;
 
-namespace Rebus.Transport
+namespace Rebus.Transport;
+
+/// <summary>
+/// Extends <see cref="ITransactionContext"/> with an "owning bus", which makes it possible for a bus instance to avoid enlisting
+/// its work in an ongoing transaction if it detects that it's another bus' context
+/// </summary>
+interface ITransactionContextWithOwningBus : ITransactionContext
 {
     /// <summary>
-    /// Extends <see cref="ITransactionContext"/> with an "owning bus", which makes it possible for a bus instance to avoid enlisting
-    /// its work in an ongoing transaction if it detects that it's another bus' context
+    /// Gets the owning bus instance
     /// </summary>
-    interface ITransactionContextWithOwningBus : ITransactionContext
-    {
-        /// <summary>
-        /// Gets the owning bus instance
-        /// </summary>
-        IBus OwningBus { get; }
-    }
+    IBus OwningBus { get; }
 }

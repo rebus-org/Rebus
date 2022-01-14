@@ -3,32 +3,31 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Time;
 
-namespace Rebus.DataBus.FileSystem
+namespace Rebus.DataBus.FileSystem;
+
+/// <summary>
+/// Provides extensions methods for configuring the file system storage for the data bus
+/// </summary>
+public static class FileSystemDataBusExtensions
 {
     /// <summary>
-    /// Provides extensions methods for configuring the file system storage for the data bus
+    /// Configures the data bus to store data in the file system
     /// </summary>
-    public static class FileSystemDataBusExtensions
+    public static void StoreInFileSystem(this StandardConfigurer<IDataBusStorage> configurer, string directoryPath)
     {
-        /// <summary>
-        /// Configures the data bus to store data in the file system
-        /// </summary>
-        public static void StoreInFileSystem(this StandardConfigurer<IDataBusStorage> configurer, string directoryPath)
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        if (directoryPath == null) throw new ArgumentNullException(nameof(directoryPath));
+
+        configurer.OtherService<FileSystemDataBusStorage>().Register(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            if (directoryPath == null) throw new ArgumentNullException(nameof(directoryPath));
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            var rebusTime = c.Get<IRebusTime>();
 
-            configurer.OtherService<FileSystemDataBusStorage>().Register(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var rebusTime = c.Get<IRebusTime>();
+            return new FileSystemDataBusStorage(directoryPath, rebusLoggerFactory, rebusTime);
+        });
 
-                return new FileSystemDataBusStorage(directoryPath, rebusLoggerFactory, rebusTime);
-            });
+        configurer.Register(c => c.Get<FileSystemDataBusStorage>());
 
-            configurer.Register(c => c.Get<FileSystemDataBusStorage>());
-
-            configurer.OtherService<IDataBusStorageManagement>().Register(c => c.Get<FileSystemDataBusStorage>());
-        }
+        configurer.OtherService<IDataBusStorageManagement>().Register(c => c.Get<FileSystemDataBusStorage>());
     }
 }

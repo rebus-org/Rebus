@@ -15,188 +15,187 @@ using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestSagasAndPolymorphicCorrelation : FixtureBase
 {
-    [TestFixture]
-    public class TestSagasAndPolymorphicCorrelation : FixtureBase
+    BuiltinHandlerActivator _activator;
+    IBusStarter _busStarter;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        IBusStarter _busStarter;
+        _activator = Using(new BuiltinHandlerActivator());
 
-        protected override void SetUp()
+        _busStarter = Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "polycorrrewwllll"))
+            .Sagas(s => s.StoreInMemory())
+            .Options(o =>
+            {
+                o.SetNumberOfWorkers(1);
+                o.SetMaxParallelism(1);
+
+                o.SimpleRetryStrategy(maxDeliveryAttempts: 1, secondLevelRetriesEnabled: true);
+
+                o.LogPipeline(verbose: true);
+            })
+            .Create();
+    }
+
+    [Test]
+    public async Task WorksWithFailedAndInterfacesToo()
+    {
+        var counter = new SharedCounter(3);
+
+        _activator.Register(() => new SomeSagas(counter));
+
+        _busStarter.Start();
+
+        await _activator.Bus.SendLocal(new SomeMessageThatFails("bimse"));
+
+        // be sure that the failed message has been processed as an IFailed<SomeMessageThatFails>
+        await Task.Delay(2000);
+
+        await _activator.Bus.SendLocal(new Impl("bimse"));
+        await _activator.Bus.SendLocal(new Impl("bimse"));
+
+        counter.WaitForResetEvent(100);
+    }
+
+    class SomeSagas : Saga<SomeSagaDatas>, IAmInitiatedBy<SomeMessageThatFails>, IAmInitiatedBy<IFailed<SomeMessageThatFails>>, IHandleMessages<IAnInterface>
+    {
+        readonly SharedCounter _counter;
+
+        public SomeSagas(SharedCounter counter)
         {
-            _activator = Using(new BuiltinHandlerActivator());
-
-            _busStarter = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "polycorrrewwllll"))
-                .Sagas(s => s.StoreInMemory())
-                .Options(o =>
-                {
-                    o.SetNumberOfWorkers(1);
-                    o.SetMaxParallelism(1);
-
-                    o.SimpleRetryStrategy(maxDeliveryAttempts: 1, secondLevelRetriesEnabled: true);
-
-                    o.LogPipeline(verbose: true);
-                })
-                .Create();
+            _counter = counter;
         }
 
-        [Test]
-        public async Task WorksWithFailedAndInterfacesToo()
+        protected override void CorrelateMessages(ICorrelationConfig<SomeSagaDatas> config)
         {
-            var counter = new SharedCounter(3);
-
-            _activator.Register(() => new SomeSagas(counter));
-
-            _busStarter.Start();
-
-            await _activator.Bus.SendLocal(new SomeMessageThatFails("bimse"));
-
-            // be sure that the failed message has been processed as an IFailed<SomeMessageThatFails>
-            await Task.Delay(2000);
-
-            await _activator.Bus.SendLocal(new Impl("bimse"));
-            await _activator.Bus.SendLocal(new Impl("bimse"));
-
-            counter.WaitForResetEvent(100);
+            config.Correlate<SomeMessageThatFails>(m => m.CorrelationId, d => d.CorrelationId);
+            config.Correlate<IFailed<SomeMessageThatFails>>(m => m.Message.CorrelationId, d => d.CorrelationId);
+            config.Correlate<IAnInterface>(m => m.CorrelationId, d => d.CorrelationId);
         }
 
-        class SomeSagas : Saga<SomeSagaDatas>, IAmInitiatedBy<SomeMessageThatFails>, IAmInitiatedBy<IFailed<SomeMessageThatFails>>, IHandleMessages<IAnInterface>
+        public async Task Handle(SomeMessageThatFails message)
         {
-            readonly SharedCounter _counter;
-
-            public SomeSagas(SharedCounter counter)
-            {
-                _counter = counter;
-            }
-
-            protected override void CorrelateMessages(ICorrelationConfig<SomeSagaDatas> config)
-            {
-                config.Correlate<SomeMessageThatFails>(m => m.CorrelationId, d => d.CorrelationId);
-                config.Correlate<IFailed<SomeMessageThatFails>>(m => m.Message.CorrelationId, d => d.CorrelationId);
-                config.Correlate<IAnInterface>(m => m.CorrelationId, d => d.CorrelationId);
-            }
-
-            public async Task Handle(SomeMessageThatFails message)
-            {
-                throw new RebusApplicationException("bummer dude");
-            }
-
-            public async Task Handle(IFailed<SomeMessageThatFails> message)
-            {
-                Data.CorrelationId = message.Message.CorrelationId;
-
-                _counter.Decrement();
-            }
-
-            public async Task Handle(IAnInterface message)
-            {
-                Data.CorrelationId = message.CorrelationId;
-
-                _counter.Decrement();
-            }
+            throw new RebusApplicationException("bummer dude");
         }
 
-        class SomeSagaDatas : ISagaData
+        public async Task Handle(IFailed<SomeMessageThatFails> message)
         {
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
-            public string CorrelationId { get; set; }
+            Data.CorrelationId = message.Message.CorrelationId;
+
+            _counter.Decrement();
         }
 
-        class SomeMessageThatFails
+        public async Task Handle(IAnInterface message)
         {
-            public SomeMessageThatFails(string correlationId)
-            {
-                CorrelationId = correlationId;
-            }
+            Data.CorrelationId = message.CorrelationId;
 
-            public string CorrelationId { get; }
+            _counter.Decrement();
+        }
+    }
+
+    class SomeSagaDatas : ISagaData
+    {
+        public Guid Id { get; set; }
+        public int Revision { get; set; }
+        public string CorrelationId { get; set; }
+    }
+
+    class SomeMessageThatFails
+    {
+        public SomeMessageThatFails(string correlationId)
+        {
+            CorrelationId = correlationId;
         }
 
-        interface IAnInterface
+        public string CorrelationId { get; }
+    }
+
+    interface IAnInterface
+    {
+        string CorrelationId { get; }
+    }
+
+    class Impl : IAnInterface
+    {
+        public Impl(string correlationId)
         {
-            string CorrelationId { get; }
+            CorrelationId = correlationId;
         }
 
-        class Impl : IAnInterface
-        {
-            public Impl(string correlationId)
-            {
-                CorrelationId = correlationId;
-            }
+        public string CorrelationId { get; }
+    }
 
-            public string CorrelationId { get; }
+    [Test]
+    public void CanCorrelateWithIncomingMessageWhichIsInherited()
+    {
+        var encounteredSagaIds = new ConcurrentQueue<Guid>();
+        var counter = new SharedCounter(3);
+
+        _activator.Register((bus, context) => new PolySaga(encounteredSagaIds, counter));
+
+        _busStarter.Start();
+
+        _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
+        _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
+        _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
+
+        counter.WaitForResetEvent();
+
+        Assert.That(encounteredSagaIds.Distinct().Count(), Is.EqualTo(1));
+    }
+
+    class PolySaga : Saga<PolySagaState>, IAmInitiatedBy<AbstractPolyMessage>
+    {
+        readonly ConcurrentQueue<Guid> _sagaIdsEncountered;
+        readonly SharedCounter _counter;
+
+        public PolySaga(ConcurrentQueue<Guid> sagaIdsEncountered, SharedCounter counter)
+        {
+            _sagaIdsEncountered = sagaIdsEncountered;
+            _counter = counter;
         }
 
-        [Test]
-        public void CanCorrelateWithIncomingMessageWhichIsInherited()
+        protected override void CorrelateMessages(ICorrelationConfig<PolySagaState> config)
         {
-            var encounteredSagaIds = new ConcurrentQueue<Guid>();
-            var counter = new SharedCounter(3);
-
-            _activator.Register((bus, context) => new PolySaga(encounteredSagaIds, counter));
-
-            _busStarter.Start();
-
-            _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
-            _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
-            _activator.Bus.SendLocal(new ConcretePolyMessage("blah!")).Wait();
-
-            counter.WaitForResetEvent();
-
-            Assert.That(encounteredSagaIds.Distinct().Count(), Is.EqualTo(1));
+            config.Correlate<AbstractPolyMessage>(m => m.CorrelationId, d => d.CorrelationId);
         }
 
-        class PolySaga : Saga<PolySagaState>, IAmInitiatedBy<AbstractPolyMessage>
+        public async Task Handle(AbstractPolyMessage message)
         {
-            readonly ConcurrentQueue<Guid> _sagaIdsEncountered;
-            readonly SharedCounter _counter;
+            Data.CorrelationId = message.CorrelationId;
 
-            public PolySaga(ConcurrentQueue<Guid> sagaIdsEncountered, SharedCounter counter)
-            {
-                _sagaIdsEncountered = sagaIdsEncountered;
-                _counter = counter;
-            }
+            _sagaIdsEncountered.Enqueue(Data.Id);
 
-            protected override void CorrelateMessages(ICorrelationConfig<PolySagaState> config)
-            {
-                config.Correlate<AbstractPolyMessage>(m => m.CorrelationId, d => d.CorrelationId);
-            }
+            _counter.Decrement();
+        }
+    }
 
-            public async Task Handle(AbstractPolyMessage message)
-            {
-                Data.CorrelationId = message.CorrelationId;
+    class PolySagaState : ISagaData
+    {
+        public Guid Id { get; set; }
+        public int Revision { get; set; }
+        public string CorrelationId { get; set; }
+    }
 
-                _sagaIdsEncountered.Enqueue(Data.Id);
-
-                _counter.Decrement();
-            }
+    abstract class AbstractPolyMessage
+    {
+        protected AbstractPolyMessage(string correlationId)
+        {
+            CorrelationId = correlationId;
         }
 
-        class PolySagaState : ISagaData
-        {
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
-            public string CorrelationId { get; set; }
-        }
+        public string CorrelationId { get; }
+    }
 
-        abstract class AbstractPolyMessage
+    class ConcretePolyMessage : AbstractPolyMessage
+    {
+        public ConcretePolyMessage(string correlationId) : base(correlationId)
         {
-            protected AbstractPolyMessage(string correlationId)
-            {
-                CorrelationId = correlationId;
-            }
-
-            public string CorrelationId { get; }
-        }
-
-        class ConcretePolyMessage : AbstractPolyMessage
-        {
-            public ConcretePolyMessage(string correlationId) : base(correlationId)
-            {
-            }
         }
     }
 }

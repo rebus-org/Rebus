@@ -7,20 +7,19 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Sagas;
 using Rebus.Tests.Contracts.Utilities;
 
-namespace Rebus.Tests.Persistence.Filesystem
+namespace Rebus.Tests.Persistence.Filesystem;
+
+public class FilesystemSagaStorageFactory : ISagaStorageFactory
 {
-    public class FilesystemSagaStorageFactory : ISagaStorageFactory
+    readonly string _basePath = Path.Combine(TestConfig.DirectoryPath(), $"Sagas{DateTime.Now:yyyyMMddHHmmssffff}");
+
+    public ISagaStorage GetSagaStorage()
     {
-        readonly string _basePath = Path.Combine(TestConfig.DirectoryPath(), $"Sagas{DateTime.Now:yyyyMMddHHmmssffff}");
+        return new FileSystemSagaStorage(_basePath, new ConsoleLoggerFactory(false));
+    }
 
-        public ISagaStorage GetSagaStorage()
-        {
-            return new FileSystemSagaStorage(_basePath, new ConsoleLoggerFactory(false));
-        }
-
-        public void CleanUp()
-        {
-            DeleteHelper.DeleteDirectory(_basePath);
-        }
+    public void CleanUp()
+    {
+        DeleteHelper.DeleteDirectory(_basePath);
     }
 }

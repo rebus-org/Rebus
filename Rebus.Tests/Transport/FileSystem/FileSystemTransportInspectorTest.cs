@@ -5,36 +5,35 @@ using Rebus.Tests.Contracts.Transports;
 using Rebus.Tests.Time;
 using Rebus.Transport.FileSystem;
 
-namespace Rebus.Tests.Transport.FileSystem
+namespace Rebus.Tests.Transport.FileSystem;
+
+[TestFixture]
+public class FileSystemTransportInspectorTest : TransportInspectorTest<FileSystemTransportInspectorTest.FileSystemTransportInspectorFactory>
 {
-    [TestFixture]
-    public class FileSystemTransportInspectorTest : TransportInspectorTest<FileSystemTransportInspectorTest.FileSystemTransportInspectorFactory>
+    public class FileSystemTransportInspectorFactory : ITransportInspectorFactory
     {
-        public class FileSystemTransportInspectorFactory : ITransportInspectorFactory
+        string _path;
+
+        public FileSystemTransportInspectorFactory()
         {
-            string _path;
+            _path = Path.Combine(TestConfig.DirectoryPath(), "transport");
 
-            public FileSystemTransportInspectorFactory()
+            if (Directory.Exists(_path))
             {
-                _path = Path.Combine(TestConfig.DirectoryPath(), "transport");
-
-                if (Directory.Exists(_path))
-                {
-                    Directory.Delete(_path, true);
-                }
-
-                Directory.CreateDirectory(_path);
+                Directory.Delete(_path, true);
             }
 
-            public TransportAndInspector Create(string address)
-            {
-                var transport = new FileSystemTransport(_path, address, new FileSystemTransportOptions(), new FakeRebusTime());
-                return new TransportAndInspector(transport, transport);
-            }
+            Directory.CreateDirectory(_path);
+        }
 
-            public void Dispose()
-            {
-            }
+        public TransportAndInspector Create(string address)
+        {
+            var transport = new FileSystemTransport(_path, address, new FileSystemTransportOptions(), new FakeRebusTime());
+            return new TransportAndInspector(transport, transport);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

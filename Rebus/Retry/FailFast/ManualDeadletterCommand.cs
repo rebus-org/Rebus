@@ -1,12 +1,11 @@
-﻿namespace Rebus.Retry.FailFast
-{
-    class ManualDeadletterCommand
-    {
-        public string ErrorDetails { get; }
+﻿namespace Rebus.Retry.FailFast;
 
-        public ManualDeadletterCommand(string errorDetails)
-        {
-            ErrorDetails = errorDetails;
-        }
+class ManualDeadletterCommand
+{
+    public string ErrorDetails { get; }
+
+    public ManualDeadletterCommand(string errorDetails)
+    {
+        ErrorDetails = errorDetails;
     }
 }

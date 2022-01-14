@@ -8,42 +8,41 @@ using Rebus.Tests.Contracts.DataBus;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Tests.Time;
 
-namespace Rebus.Tests.DataBus.FileSystem
+namespace Rebus.Tests.DataBus.FileSystem;
+
+public class FileSystemDataBusStorageFactory : IDataBusStorageFactory
 {
-    public class FileSystemDataBusStorageFactory : IDataBusStorageFactory
+    static readonly string DirectoryPath = Path.Combine(TestConfig.DirectoryPath(), "databus");
+
+    readonly FakeRebusTime _fakeRebusTime = new FakeRebusTime();
+
+    public FileSystemDataBusStorageFactory()
     {
-        static readonly string DirectoryPath = Path.Combine(TestConfig.DirectoryPath(), "databus");
+        CleanUpDirectory();
+    }
 
-        readonly FakeRebusTime _fakeRebusTime = new FakeRebusTime();
+    public IDataBusStorage Create()
+    {
+        var fileSystemDataBusStorage = new FileSystemDataBusStorage(DirectoryPath, new ConsoleLoggerFactory(false), _fakeRebusTime);
+        fileSystemDataBusStorage.Initialize();
+        return fileSystemDataBusStorage;
+    }
 
-        public FileSystemDataBusStorageFactory()
-        {
-            CleanUpDirectory();
-        }
+    public void CleanUp()
+    {
+        CleanUpDirectory();
 
-        public IDataBusStorage Create()
-        {
-            var fileSystemDataBusStorage = new FileSystemDataBusStorage(DirectoryPath, new ConsoleLoggerFactory(false), _fakeRebusTime);
-            fileSystemDataBusStorage.Initialize();
-            return fileSystemDataBusStorage;
-        }
+        _fakeRebusTime.Reset();
+    }
 
-        public void CleanUp()
-        {
-            CleanUpDirectory();
+    public void FakeIt(DateTimeOffset fakeTime) => _fakeRebusTime.FakeIt(fakeTime);
 
-            _fakeRebusTime.Reset();
-        }
+    static void CleanUpDirectory()
+    {
+        if (!Directory.Exists(DirectoryPath)) return;
 
-        public void FakeIt(DateTimeOffset fakeTime) => _fakeRebusTime.FakeIt(fakeTime);
+        Console.WriteLine($"Removing directory '{DirectoryPath}'");
 
-        static void CleanUpDirectory()
-        {
-            if (!Directory.Exists(DirectoryPath)) return;
-
-            Console.WriteLine($"Removing directory '{DirectoryPath}'");
-
-            DeleteHelper.DeleteDirectory(DirectoryPath);
-        }
+        DeleteHelper.DeleteDirectory(DirectoryPath);
     }
 }

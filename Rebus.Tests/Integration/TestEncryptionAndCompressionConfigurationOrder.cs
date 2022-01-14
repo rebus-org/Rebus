@@ -9,58 +9,57 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestEncryptionAndCompressionConfigurationOrder : FixtureBase
 {
-    [TestFixture]
-    public class TestEncryptionAndCompressionConfigurationOrder : FixtureBase
+    const string InputQueueName = "config-order";
+    const string DestinationQueueName = "config-order-destination";
+    const string EncryptionKey = "gMPg8ySmshUk3gA+OnUNSUIrd253zQyUDJHW4359L3E=";
+    readonly InMemNetwork _network = new InMemNetwork();
+
+    [Test]
+    public void CompressionFirst()
     {
-        const string InputQueueName = "config-order";
-        const string DestinationQueueName = "config-order-destination";
-        const string EncryptionKey = "gMPg8ySmshUk3gA+OnUNSUIrd253zQyUDJHW4359L3E=";
-        readonly InMemNetwork _network = new InMemNetwork();
-
-        [Test]
-        public void CompressionFirst()
+        SetUpBus(o =>
         {
-            SetUpBus(o =>
-            {
-                o.EnableCompression();
-                o.EnableEncryption(EncryptionKey);
-            });
+            o.EnableCompression();
+            o.EnableEncryption(EncryptionKey);
+        });
 
-            var transportMessage = _network.GetNextOrNull(DestinationQueueName);
+        var transportMessage = _network.GetNextOrNull(DestinationQueueName);
 
-            Console.WriteLine($"Size: {transportMessage.Body.Length} bytes");
-        }
+        Console.WriteLine($"Size: {transportMessage.Body.Length} bytes");
+    }
 
-        [Test]
-        public void EncryptionFirst()
+    [Test]
+    public void EncryptionFirst()
+    {
+        SetUpBus(o =>
         {
-            SetUpBus(o =>
-            {
-                o.EnableEncryption(EncryptionKey);
-                o.EnableCompression();
-            });
+            o.EnableEncryption(EncryptionKey);
+            o.EnableCompression();
+        });
 
-            var transportMessage = _network.GetNextOrNull(DestinationQueueName);
+        var transportMessage = _network.GetNextOrNull(DestinationQueueName);
 
-            Console.WriteLine($"Size: {transportMessage.Body.Length} bytes");
-        }
+        Console.WriteLine($"Size: {transportMessage.Body.Length} bytes");
+    }
 
-        void SetUpBus(Action<OptionsConfigurer> configurer)
-        {
-            _network.CreateQueue(DestinationQueueName);
+    void SetUpBus(Action<OptionsConfigurer> configurer)
+    {
+        _network.CreateQueue(DestinationQueueName);
 
-            var handlerActivator = Using(new BuiltinHandlerActivator());
+        var handlerActivator = Using(new BuiltinHandlerActivator());
 
-            var bus = Configure.With(handlerActivator)
-                .Logging(l => l.Console(LogLevel.Warn))
-                .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
-                .Routing(r => r.TypeBased().Map<string>(DestinationQueueName))
-                .Options(configurer)
-                .Start();
+        var bus = Configure.With(handlerActivator)
+            .Logging(l => l.Console(LogLevel.Warn))
+            .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
+            .Routing(r => r.TypeBased().Map<string>(DestinationQueueName))
+            .Options(configurer)
+            .Start();
 
-            bus.Send("hej med dig min ven!").Wait();
-        }
+        bus.Send("hej med dig min ven!").Wait();
     }
 }

@@ -2,79 +2,78 @@
 using System.Linq;
 using System.Text;
 
-namespace Rebus.Extensions
+namespace Rebus.Extensions;
+
+static class StringExtensions
 {
-    static class StringExtensions
+    public static string Truncate(this string text, int maxLength, string placeholder = "(...)")
     {
-        public static string Truncate(this string text, int maxLength, string placeholder = "(...)")
+        if (text.Length <= maxLength) return text;
+        if (placeholder.Length >= maxLength) return placeholder.Substring(0, maxLength);
+
+        var lengthOfTextToKeep = maxLength - placeholder.Length;
+
+        if (lengthOfTextToKeep <= 0) return placeholder;
+
+        return string.Concat(text.Substring(0, lengthOfTextToKeep), placeholder);
+    }
+
+    public static string WrappedAt(this string str, int width)
+    {
+        var twoLineBreaks = Environment.NewLine + Environment.NewLine;
+
+        var sections = str.Split(new[] { twoLineBreaks },
+            StringSplitOptions.RemoveEmptyEntries);
+
+        return string.Join(twoLineBreaks, sections.Select(section => WrapSection(section, width)));
+    }
+
+    static string WrapSection(string section, int width)
+    {
+        var oneLongString = string.Join(" ",
+            section.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
+
+        var words = oneLongString.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+        var builder = new StringBuilder();
+
+        var currentLineLength = 0;
+
+        for (var index = 0; index < words.Length; index++)
         {
-            if (text.Length <= maxLength) return text;
-            if (placeholder.Length >= maxLength) return placeholder.Substring(0, maxLength);
+            var word = words[index];
+            builder.Append(word);
+            currentLineLength += word.Length;
 
-            var lengthOfTextToKeep = maxLength - placeholder.Length;
-
-            if (lengthOfTextToKeep <= 0) return placeholder;
-
-            return string.Concat(text.Substring(0, lengthOfTextToKeep), placeholder);
-        }
-
-        public static string WrappedAt(this string str, int width)
-        {
-            var twoLineBreaks = Environment.NewLine + Environment.NewLine;
-
-            var sections = str.Split(new[] { twoLineBreaks },
-                StringSplitOptions.RemoveEmptyEntries);
-
-            return string.Join(twoLineBreaks, sections.Select(section => WrapSection(section, width)));
-        }
-
-        static string WrapSection(string section, int width)
-        {
-            var oneLongString = string.Join(" ",
-                section.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
-
-            var words = oneLongString.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-
-            var builder = new StringBuilder();
-
-            var currentLineLength = 0;
-
-            for (var index = 0; index < words.Length; index++)
+            if (index < words.Length - 1)
             {
-                var word = words[index];
-                builder.Append(word);
-                currentLineLength += word.Length;
+                var nextWord = words[index];
 
-                if (index < words.Length - 1)
+                var spaceLeftOnCurrentLine = width - currentLineLength - 1; // -1 to leave room for space...
+                var nextWordIsTooLong = nextWord.Length > spaceLeftOnCurrentLine;
+
+                if (nextWordIsTooLong)
                 {
-                    var nextWord = words[index];
-
-                    var spaceLeftOnCurrentLine = width - currentLineLength - 1; // -1 to leave room for space...
-                    var nextWordIsTooLong = nextWord.Length > spaceLeftOnCurrentLine;
-
-                    if (nextWordIsTooLong)
-                    {
-                        builder.AppendLine();
-                        currentLineLength = 0;
-                    }
-                    else
-                    {
-                        builder.Append(" ");
-                        currentLineLength++;
-                    }
+                    builder.AppendLine();
+                    currentLineLength = 0;
+                }
+                else
+                {
+                    builder.Append(" ");
+                    currentLineLength++;
                 }
             }
-
-            return builder.ToString();
         }
 
-        public static string Indented(this string str, int indent)
-        {
-            var indentedLines = str
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
-                .Select(line => string.Concat(new string(' ', indent), line));
+        return builder.ToString();
+    }
 
-            return string.Join(Environment.NewLine, indentedLines);
-        }
+    public static string Indented(this string str, int indent)
+    {
+        var indentedLines = str
+            .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
+            .Select(line => string.Concat(new string(' ', indent), line));
+
+        return string.Join(Environment.NewLine, indentedLines);
     }
 }

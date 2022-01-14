@@ -4,18 +4,17 @@ using Rebus.Logging;
 using Rebus.Threading;
 using Rebus.Threading.SystemThreadingTimer;
 
-namespace Rebus.Tests.Timers.Factories
-{
-    public class ThreadingTimerTaskFactory : IAsyncTaskFactory
-    {
-        public IAsyncTask CreateTask(TimeSpan interval, Func<Task> action)
-        {
-            var asyncTask = new SystemThreadingTimerAsyncTask("task", action, new ConsoleLoggerFactory(false), false)
-            {
-                Interval = interval
-            };
+namespace Rebus.Tests.Timers.Factories;
 
-            return asyncTask;
-        }
+public class ThreadingTimerTaskFactory : IAsyncTaskFactory
+{
+    public IAsyncTask CreateTask(TimeSpan interval, Func<Task> action)
+    {
+        var asyncTask = new SystemThreadingTimerAsyncTask("task", action, new ConsoleLoggerFactory(false), false)
+        {
+            Interval = interval
+        };
+
+        return asyncTask;
     }
 }

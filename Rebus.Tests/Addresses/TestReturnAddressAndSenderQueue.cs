@@ -12,84 +12,83 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Addresses
+namespace Rebus.Tests.Addresses;
+
+[TestFixture]
+public class TestReturnAddressAndSenderQueue : FixtureBase
 {
-    [TestFixture]
-    public class TestReturnAddressAndSenderQueue : FixtureBase
+    const string QueueName = "queue-headers-tjek";
+
+    BuiltinHandlerActivator _activator;
+
+    IBusStarter _starter;
+
+    protected override void SetUp()
     {
-        const string QueueName = "queue-headers-tjek";
+        _activator = new BuiltinHandlerActivator();
 
-        BuiltinHandlerActivator _activator;
+        Using(_activator);
 
-        IBusStarter _starter;
+        _starter = Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), QueueName))
+            .Create();
+    }
 
-        protected override void SetUp()
+    [Test]
+    public async Task CorrectlySetsReturnAddressAndSenderAddress_Defaults()
+    {
+        var messageHandled = new ManualResetEvent(false);
+        var returnAddress = "";
+        var senderAddress = "";
+
+        _activator.Handle<string>(async (bus, context, message) =>
         {
-            _activator = new BuiltinHandlerActivator();
+            var headers = context.Headers;
 
-            Using(_activator);
+            returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
+            senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
 
-            _starter = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), QueueName))
-                .Create();
-        }
+            messageHandled.Set();
+        });
 
-        [Test]
-        public async Task CorrectlySetsReturnAddressAndSenderAddress_Defaults()
+        _starter.Start();
+
+        await _activator.Bus.SendLocal("hej med dig");
+
+        messageHandled.WaitOrDie(TimeSpan.FromSeconds(2));
+
+        Assert.That(returnAddress, Is.EqualTo(QueueName));
+        Assert.That(senderAddress, Is.EqualTo(QueueName));
+    }
+
+    [Test]
+    public async Task CorrectlySetsReturnAddressAndSenderAddress_Overridden()
+    {
+        var messageHandled = new ManualResetEvent(false);
+        var returnAddress = "";
+        var senderAddress = "";
+
+        _activator.Handle<string>(async (bus, context, message) =>
         {
-            var messageHandled = new ManualResetEvent(false);
-            var returnAddress = "";
-            var senderAddress = "";
+            var headers = context.Headers;
 
-            _activator.Handle<string>(async (bus, context, message) =>
-            {
-                var headers = context.Headers;
+            returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
+            senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
 
-                returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
-                senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
+            messageHandled.Set();
+        });
 
-                messageHandled.Set();
-            });
+        _starter.Start();
 
-            _starter.Start();
-
-            await _activator.Bus.SendLocal("hej med dig");
-
-            messageHandled.WaitOrDie(TimeSpan.FromSeconds(2));
-
-            Assert.That(returnAddress, Is.EqualTo(QueueName));
-            Assert.That(senderAddress, Is.EqualTo(QueueName));
-        }
-
-        [Test]
-        public async Task CorrectlySetsReturnAddressAndSenderAddress_Overridden()
+        await _activator.Bus.SendLocal("hej med dig", new Dictionary<string, string>
         {
-            var messageHandled = new ManualResetEvent(false);
-            var returnAddress = "";
-            var senderAddress = "";
+            {Headers.SenderAddress, "hooloobooloo-sender-address"},
+            {Headers.ReturnAddress, "hooloobooloo-return-address"},
+        });
 
-            _activator.Handle<string>(async (bus, context, message) =>
-            {
-                var headers = context.Headers;
+        messageHandled.WaitOrDie(TimeSpan.FromSeconds(2));
 
-                returnAddress = headers.GetValueOrNull(Headers.ReturnAddress);
-                senderAddress = headers.GetValueOrNull(Headers.SenderAddress);
-
-                messageHandled.Set();
-            });
-
-            _starter.Start();
-
-            await _activator.Bus.SendLocal("hej med dig", new Dictionary<string, string>
-            {
-                {Headers.SenderAddress, "hooloobooloo-sender-address"},
-                {Headers.ReturnAddress, "hooloobooloo-return-address"},
-            });
-
-            messageHandled.WaitOrDie(TimeSpan.FromSeconds(2));
-
-            Assert.That(returnAddress, Is.EqualTo("hooloobooloo-return-address"));
-            Assert.That(senderAddress, Is.EqualTo(QueueName), "Expected the actual sender's address, because this particular header cannot be set :)");
-        }
+        Assert.That(returnAddress, Is.EqualTo("hooloobooloo-return-address"));
+        Assert.That(senderAddress, Is.EqualTo(QueueName), "Expected the actual sender's address, because this particular header cannot be set :)");
     }
 }

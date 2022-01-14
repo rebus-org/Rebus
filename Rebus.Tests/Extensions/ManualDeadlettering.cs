@@ -20,112 +20,111 @@ using Exception = System.Exception;
 // ReSharper disable ArgumentsStyleStringLiteral
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Extensions
+namespace Rebus.Tests.Extensions;
+
+[TestFixture]
+public class ManualDeadlettering : FixtureBase
 {
-    [TestFixture]
-    public class ManualDeadlettering : FixtureBase
+    [Test]
+    public async Task CanDeadLetterMessageManuallyWithoutAnyNoise()
     {
-        [Test]
-        public async Task CanDeadLetterMessageManuallyWithoutAnyNoise()
+        var listLoggerFactory = new ListLoggerFactory(outputToConsole: true);
+        var activator = Using(new BuiltinHandlerActivator());
+
+        activator.Handle<string>(async (bus, message) =>
         {
-            var listLoggerFactory = new ListLoggerFactory(outputToConsole: true);
-            var activator = Using(new BuiltinHandlerActivator());
+            await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
+        });
 
-            activator.Handle<string>(async (bus, message) =>
-            {
-                await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
-            });
+        var fakeErrorHandler = new FakeErrorHandler();
 
-            var fakeErrorHandler = new FakeErrorHandler();
+        Configure.With(activator)
+            .Logging(l => l.Use(listLoggerFactory))
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "manual-deadlettering"))
+            .Options(o => o.Register<IErrorHandler>(c => fakeErrorHandler)) //< provide our own implementation here, so we'll know what gets dead-lettered
+            .Start();
 
-            Configure.With(activator)
-                .Logging(l => l.Use(listLoggerFactory))
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "manual-deadlettering"))
-                .Options(o => o.Register<IErrorHandler>(c => fakeErrorHandler)) //< provide our own implementation here, so we'll know what gets dead-lettered
-                .Start();
+        await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
 
-            await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
+        var poisonMessage = await fakeErrorHandler.GetNextPoisonMessage(timeoutSeconds: 2);
 
-            var poisonMessage = await fakeErrorHandler.GetNextPoisonMessage(timeoutSeconds: 2);
+        Assert.That(poisonMessage.Item1.Headers, Contains.Key(Headers.ErrorDetails).And.ContainValue("has been manually dead-lettered"));
+        Assert.That(poisonMessage.Item1.Headers, Contains.Key(Headers.SourceQueue).And.ContainValue("manual-deadlettering"));
 
-            Assert.That(poisonMessage.Item1.Headers, Contains.Key(Headers.ErrorDetails).And.ContainValue("has been manually dead-lettered"));
-            Assert.That(poisonMessage.Item1.Headers, Contains.Key(Headers.SourceQueue).And.ContainValue("manual-deadlettering"));
+        Console.WriteLine("Exception passed to error handler:");
+        Console.WriteLine(poisonMessage.Item2);
 
-            Console.WriteLine("Exception passed to error handler:");
-            Console.WriteLine(poisonMessage.Item2);
+        var linesAboveInfo = listLoggerFactory.Where(log => log.Level > LogLevel.Info).ToList();
 
-            var linesAboveInfo = listLoggerFactory.Where(log => log.Level > LogLevel.Info).ToList();
-
-            if (linesAboveInfo.Any())
-            {
-                throw new AssertionException($@"Didn't expect NOISE in the log, but the following lines were > INFO:
+        if (linesAboveInfo.Any())
+        {
+            throw new AssertionException($@"Didn't expect NOISE in the log, but the following lines were > INFO:
 
 {string.Join(Environment.NewLine, linesAboveInfo)}");
-            }
         }
+    }
 
-        [Test]
-        public async Task CannotDeadletterTwice()
+    [Test]
+    public async Task CannotDeadletterTwice()
+    {
+        var activator = Using(new BuiltinHandlerActivator());
+        var caughtExceptions = new ConcurrentQueue<Exception>();
+
+        activator.Handle<string>(async (bus, message) =>
         {
-            var activator = Using(new BuiltinHandlerActivator());
-            var caughtExceptions = new ConcurrentQueue<Exception>();
+            await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
 
-            activator.Handle<string>(async (bus, message) =>
+            try
             {
                 await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
+            }
+            catch (Exception exception)
+            {
+                caughtExceptions.Enqueue(exception);
+            }
+        });
 
-                try
-                {
-                    await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
-                }
-                catch (Exception exception)
-                {
-                    caughtExceptions.Enqueue(exception);
-                }
-            });
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "manual-deadlettering"))
+            .Start();
 
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "manual-deadlettering"))
-                .Start();
+        await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
 
-            await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
+        var caughtException = await caughtExceptions.DequeueNext(timeoutSeconds: 5);
 
-            var caughtException = await caughtExceptions.DequeueNext(timeoutSeconds: 5);
+        Console.WriteLine(caughtException);
 
-            Console.WriteLine(caughtException);
+        Assert.That(caughtException, Is.TypeOf<InvalidOperationException>());
+    }
 
-            Assert.That(caughtException, Is.TypeOf<InvalidOperationException>());
+    class FakeErrorHandler : IErrorHandler
+    {
+        readonly ConcurrentQueue<(TransportMessage, Exception)> _poisonMessages = new ConcurrentQueue<(TransportMessage, Exception)>();
+
+        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
+        {
+            _poisonMessages.Enqueue((transportMessage, exception));
         }
 
-        class FakeErrorHandler : IErrorHandler
+        public async Task<(TransportMessage, Exception)> GetNextPoisonMessage(int timeoutSeconds = 5)
         {
-            readonly ConcurrentQueue<(TransportMessage, Exception)> _poisonMessages = new ConcurrentQueue<(TransportMessage, Exception)>();
-
-            public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
+            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
             {
-                _poisonMessages.Enqueue((transportMessage, exception));
-            }
-
-            public async Task<(TransportMessage, Exception)> GetNextPoisonMessage(int timeoutSeconds = 5)
-            {
-                using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+                try
                 {
-                    try
+                    while (true)
                     {
-                        while (true)
+                        if (_poisonMessages.TryDequeue(out var item))
                         {
-                            if (_poisonMessages.TryDequeue(out var item))
-                            {
-                                return item;
-                            }
-
-                            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationTokenSource.Token);
+                            return item;
                         }
+
+                        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationTokenSource.Token);
                     }
-                    catch (Exception)
-                    {
-                        throw new TimeoutException($"Did not receive poison message within {timeoutSeconds} s timeout");
-                    }
+                }
+                catch (Exception)
+                {
+                    throw new TimeoutException($"Did not receive poison message within {timeoutSeconds} s timeout");
                 }
             }
         }

@@ -12,83 +12,82 @@ using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Bugs
+namespace Rebus.Tests.Bugs;
+
+[TestFixture]
+public class ForwardingDoesNotPreserveOriginalBody : FixtureBase
 {
-    [TestFixture]
-    public class ForwardingDoesNotPreserveOriginalBody : FixtureBase
+    BuiltinHandlerActivator _client;
+    IBusStarter _clientStarter;
+    BuiltinHandlerActivator _forwarder;
+    IBusStarter _forwarderStarter;
+    BuiltinHandlerActivator _receiver;
+    IBusStarter _receiverStarter;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _client;
-        IBusStarter _clientStarter;
-        BuiltinHandlerActivator _forwarder;
-        IBusStarter _forwarderStarter;
-        BuiltinHandlerActivator _receiver;
-        IBusStarter _receiverStarter;
+        var network = new InMemNetwork(outputEventsToConsole: true);
 
-        protected override void SetUp()
+        (_client, _clientStarter) = CreateBus(network);
+        (_forwarder, _forwarderStarter) = CreateBus(network, "forwarder");
+        (_receiver, _receiverStarter) = CreateBus(network, "receiver");
+    }
+
+    void Start()
+    {
+        _clientStarter.Start();
+        _forwarderStarter.Start();
+        _receiverStarter.Start();
+    }
+
+    [Test]
+    public async Task ReceivedMessageIsTheOriginal()
+    {
+        var gotTheExpectedStringMessage = new ManualResetEvent(false);
+
+        _forwarder.Handle<string>(async (bus, _) =>
         {
-            var network = new InMemNetwork(outputEventsToConsole: true);
+            // forward the transport message to the receiver
+            await bus.Advanced.TransportMessage.Forward("receiver");
+        });
 
-            (_client, _clientStarter) = CreateBus(network);
-            (_forwarder, _forwarderStarter) = CreateBus(network, "forwarder");
-            (_receiver, _receiverStarter) = CreateBus(network, "receiver");
-        }
-
-        void Start()
+        _receiver.Handle<string>(async stringMessage =>
         {
-            _clientStarter.Start();
-            _forwarderStarter.Start();
-            _receiverStarter.Start();
-        }
-
-        [Test]
-        public async Task ReceivedMessageIsTheOriginal()
-        {
-            var gotTheExpectedStringMessage = new ManualResetEvent(false);
-
-            _forwarder.Handle<string>(async (bus, _) =>
+            if (stringMessage == "hej du")
             {
-                // forward the transport message to the receiver
-                await bus.Advanced.TransportMessage.Forward("receiver");
-            });
+                gotTheExpectedStringMessage.Set();
+            }
+        });
 
-            _receiver.Handle<string>(async stringMessage =>
+        Start();
+
+        await _client.Bus.Advanced.Routing.Send("forwarder", "hej du");
+
+        gotTheExpectedStringMessage.WaitOrDie(TimeSpan.FromSeconds(2));
+    }
+
+    (BuiltinHandlerActivator, IBusStarter) CreateBus(InMemNetwork network, string queueName = null)
+    {
+        var activator = new BuiltinHandlerActivator();
+
+        Using(activator);
+
+        var starter = Configure.With(activator)
+            .Logging(l => l.Console(LogLevel.Warn))
+            .Transport(t =>
             {
-                if (stringMessage == "hej du")
+                if (queueName == null)
                 {
-                    gotTheExpectedStringMessage.Set();
+                    t.UseInMemoryTransportAsOneWayClient(network);
                 }
-            });
-
-            Start();
-
-            await _client.Bus.Advanced.Routing.Send("forwarder", "hej du");
-
-            gotTheExpectedStringMessage.WaitOrDie(TimeSpan.FromSeconds(2));
-        }
-
-        (BuiltinHandlerActivator, IBusStarter) CreateBus(InMemNetwork network, string queueName = null)
-        {
-            var activator = new BuiltinHandlerActivator();
-
-            Using(activator);
-
-            var starter = Configure.With(activator)
-                .Logging(l => l.Console(LogLevel.Warn))
-                .Transport(t =>
+                else
                 {
-                    if (queueName == null)
-                    {
-                        t.UseInMemoryTransportAsOneWayClient(network);
-                    }
-                    else
-                    {
-                        t.UseInMemoryTransport(network, queueName);
-                    }
-                })
-                .Options(o => o.EnableEncryption("d2f6QgE0ITuV++fM+BjzVJ1O+LClb3QdUsraWl2qlB4="))
-                .Create();
+                    t.UseInMemoryTransport(network, queueName);
+                }
+            })
+            .Options(o => o.EnableEncryption("d2f6QgE0ITuV++fM+BjzVJ1O+LClb3QdUsraWl2qlB4="))
+            .Create();
 
-            return (activator, starter);
-        }
+        return (activator, starter);
     }
 }

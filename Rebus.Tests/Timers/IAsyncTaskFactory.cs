@@ -2,10 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Rebus.Threading;
 
-namespace Rebus.Tests.Timers
+namespace Rebus.Tests.Timers;
+
+public interface IAsyncTaskFactory
 {
-    public interface IAsyncTaskFactory
-    {
-        IAsyncTask CreateTask(TimeSpan interval, Func<Task> action);
-    }
+    IAsyncTask CreateTask(TimeSpan interval, Func<Task> action);
 }

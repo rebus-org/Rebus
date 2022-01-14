@@ -6,34 +6,33 @@ using Rebus.Pipeline;
 using Rebus.Transport;
 using Rebus.Workers.ThreadPoolBased;
 
-namespace Rebus.Workers.TplBased
+namespace Rebus.Workers.TplBased;
+
+/// <summary>
+/// Configuration extensions for an experimental TPL-based worker factory
+/// </summary>
+public static class TplOptionsExtensions
 {
     /// <summary>
-    /// Configuration extensions for an experimental TPL-based worker factory
+    /// Replaces the worker factory with one based on TPL
     /// </summary>
-    public static class TplOptionsExtensions
+    public static void UseTplToReceiveMessages(this OptionsConfigurer configurer)
     {
-        /// <summary>
-        /// Replaces the worker factory with one based on TPL
-        /// </summary>
-        public static void UseTplToReceiveMessages(this OptionsConfigurer configurer)
+        configurer.Register<IWorkerFactory>(c =>
         {
-            configurer.Register<IWorkerFactory>(c =>
-            {
-                var transport = c.Get<ITransport>();
-                var loggerFactory = c.Get<IRebusLoggerFactory>();
+            var transport = c.Get<ITransport>();
+            var loggerFactory = c.Get<IRebusLoggerFactory>();
 
-                return new TplWorkerFactory(
-                    transport,
-                    loggerFactory,
-                    c.Get<IPipelineInvoker>(),
-                    c.Get<Options>(),
-                    c.Get<RebusBus>,
-                    c.Get<BusLifetimeEvents>(),
-                    c.Get<IBackoffStrategy>(),
-                    c.Get<CancellationToken>()
-                );
-            });
-        }
+            return new TplWorkerFactory(
+                transport,
+                loggerFactory,
+                c.Get<IPipelineInvoker>(),
+                c.Get<Options>(),
+                c.Get<RebusBus>,
+                c.Get<BusLifetimeEvents>(),
+                c.Get<IBackoffStrategy>(),
+                c.Get<CancellationToken>()
+            );
+        });
     }
 }

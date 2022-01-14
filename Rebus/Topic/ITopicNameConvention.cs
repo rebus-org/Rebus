@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace Rebus.Topic
+namespace Rebus.Topic;
+
+/// <summary>
+/// Defines the rules to name topics
+/// </summary>
+public interface ITopicNameConvention
 {
     /// <summary>
-    /// Defines the rules to name topics
+    /// Returns the topic name based on type of message
     /// </summary>
-    public interface ITopicNameConvention
-    {
-        /// <summary>
-        /// Returns the topic name based on type of message
-        /// </summary>
-        string GetTopic(Type eventType);
-    }
+    string GetTopic(Type eventType);
 }

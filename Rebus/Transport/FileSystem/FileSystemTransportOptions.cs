@@ -1,25 +1,24 @@
 ﻿using System;
 
-namespace Rebus.Transport.FileSystem
+namespace Rebus.Transport.FileSystem;
+
+/// <summary>
+/// File system-based transport options
+/// </summary>
+public class FileSystemTransportOptions
 {
     /// <summary>
-    /// File system-based transport options
+    /// Configures how many files to "prefetch", i.e. acquire file locks on
     /// </summary>
-    public class FileSystemTransportOptions
+    public FileSystemTransportOptions Prefetch(int prefecthCount)
     {
-        /// <summary>
-        /// Configures how many files to "prefetch", i.e. acquire file locks on
-        /// </summary>
-        public FileSystemTransportOptions Prefetch(int prefecthCount)
+        if (prefecthCount <= 0)
         {
-            if (prefecthCount <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(prefecthCount), prefecthCount, "Please use a positive number as the prefetch count");
-            }
-            PrefetchCount = prefecthCount;
-            return this;
+            throw new ArgumentOutOfRangeException(nameof(prefecthCount), prefecthCount, "Please use a positive number as the prefetch count");
         }
-
-        internal int PrefetchCount { get; set; } = 10;
+        PrefetchCount = prefecthCount;
+        return this;
     }
+
+    internal int PrefetchCount { get; set; } = 10;
 }

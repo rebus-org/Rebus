@@ -11,75 +11,74 @@ using Rebus.DataBus.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.DataBus
+namespace Rebus.Tests.DataBus;
+
+[TestFixture]
+public class OutOfHandlersRoundtripTest : FixtureBase
 {
-    [TestFixture]
-    public class OutOfHandlersRoundtripTest : FixtureBase
+    IBus _bus;
+
+    protected override void SetUp()
     {
-        IBus _bus;
+        var activator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
+        Using(activator);
+
+        _bus = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "data-tripping"))
+            .DataBus(d => d.StoreInMemory(new InMemDataStore()))
+            .Start();
+    }
+
+    [Test]
+    public async Task RoundtripSomeData()
+    {
+        var knownData = "HELLO THERE MY FRIEND";
+        var dataBus = _bus.Advanced.DataBus;
+        var attachment = await CreateAttachment(dataBus, knownData);
+        var id = attachment.Id;
+
+        var fullyRoundtrippedKnownData = await LoadAttachment(dataBus, id);
+
+        Assert.That(fullyRoundtrippedKnownData, Is.EqualTo(knownData));
+    }
+
+    [Test]
+    public async Task RoundtripSomeMetaData()
+    {
+        var knownKey = "KEY";
+        var knownValue = "HELLO THERE MY FRIEND";
+        var dataBus = _bus.Advanced.DataBus;
+        var attachment = await CreateAttachment(dataBus, "blah", new Dictionary<string, string>
         {
-            var activator = new BuiltinHandlerActivator();
+            {knownKey, knownValue}
+        });
+        var id = attachment.Id;
 
-            Using(activator);
+        var fullyRoundtrippedMetadata = await dataBus.GetMetadata(id);
 
-            _bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "data-tripping"))
-                .DataBus(d => d.StoreInMemory(new InMemDataStore()))
-                .Start();
-        }
+        Assert.That(fullyRoundtrippedMetadata, Contains.Key(knownKey));
+        Assert.That(fullyRoundtrippedMetadata[knownKey], Is.EqualTo(knownValue));
+    }
 
-        [Test]
-        public async Task RoundtripSomeData()
+    static async Task<string> LoadAttachment(IDataBus dataBus, string id)
+    {
+        using (var destination = new MemoryStream())
         {
-            var knownData = "HELLO THERE MY FRIEND";
-            var dataBus = _bus.Advanced.DataBus;
-            var attachment = await CreateAttachment(dataBus, knownData);
-            var id = attachment.Id;
-
-            var fullyRoundtrippedKnownData = await LoadAttachment(dataBus, id);
-
-            Assert.That(fullyRoundtrippedKnownData, Is.EqualTo(knownData));
-        }
-
-        [Test]
-        public async Task RoundtripSomeMetaData()
-        {
-            var knownKey = "KEY";
-            var knownValue = "HELLO THERE MY FRIEND";
-            var dataBus = _bus.Advanced.DataBus;
-            var attachment = await CreateAttachment(dataBus, "blah", new Dictionary<string, string>
+            using (var source = await dataBus.OpenRead(id))
             {
-                {knownKey, knownValue}
-            });
-            var id = attachment.Id;
-
-            var fullyRoundtrippedMetadata = await dataBus.GetMetadata(id);
-
-            Assert.That(fullyRoundtrippedMetadata, Contains.Key(knownKey));
-            Assert.That(fullyRoundtrippedMetadata[knownKey], Is.EqualTo(knownValue));
-        }
-
-        static async Task<string> LoadAttachment(IDataBus dataBus, string id)
-        {
-            using (var destination = new MemoryStream())
-            {
-                using (var source = await dataBus.OpenRead(id))
-                {
-                    await source.CopyToAsync(destination);
-                }
-
-                return Encoding.UTF8.GetString(destination.ToArray());
+                await source.CopyToAsync(destination);
             }
-        }
 
-        static async Task<DataBusAttachment> CreateAttachment(IDataBus dataBus, string text, Dictionary<string, string> optionalMetadata = null)
+            return Encoding.UTF8.GetString(destination.ToArray());
+        }
+    }
+
+    static async Task<DataBusAttachment> CreateAttachment(IDataBus dataBus, string text, Dictionary<string, string> optionalMetadata = null)
+    {
+        using (var source = new MemoryStream(Encoding.UTF8.GetBytes(text)))
         {
-            using (var source = new MemoryStream(Encoding.UTF8.GetBytes(text)))
-            {
-                return await dataBus.CreateAttachment(source, optionalMetadata);
-            }
+            return await dataBus.CreateAttachment(source, optionalMetadata);
         }
     }
 }

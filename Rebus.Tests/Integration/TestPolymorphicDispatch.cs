@@ -12,167 +12,166 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestPolymorphicDispatch : FixtureBase
 {
-    [TestFixture]
-    public class TestPolymorphicDispatch : FixtureBase
+    static readonly TimeSpan BlockingWaitTimeout = TimeSpan.FromSeconds(5);
+    BuiltinHandlerActivator _handlerActivator;
+    IBus _bus;
+
+    protected override void SetUp()
     {
-        static readonly TimeSpan BlockingWaitTimeout = TimeSpan.FromSeconds(5);
-        BuiltinHandlerActivator _handlerActivator;
-        IBus _bus;
+        _handlerActivator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
-        {
-            _handlerActivator = new BuiltinHandlerActivator();
-
-            _bus = Configure.With(_handlerActivator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "input"))
-                .Options(o =>
-                {
-                    o.SetNumberOfWorkers(0);
-                    o.SetMaxParallelism(1);
-                })
-                .Start();
-
-            Using(_bus);
-        }
-
-        void StartBus() => _bus.Advanced.Workers.SetNumberOfWorkers(1);
-
-        [Test]
-        public async Task ItWorksInSimpleScenario()
-        {
-            var events = new ConcurrentQueue<string>();
-            var gotMessage = new AutoResetEvent(false);
-
-            _handlerActivator.Handle<BaseMessage>(async msg =>
+        _bus = Configure.With(_handlerActivator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "input"))
+            .Options(o =>
             {
-                events.Enqueue($"Got {msg.GetType().Name} with {msg.Payload}");
+                o.SetNumberOfWorkers(0);
+                o.SetMaxParallelism(1);
+            })
+            .Start();
 
-                gotMessage.Set();
-            });
+        Using(_bus);
+    }
 
-            StartBus();
+    void StartBus() => _bus.Advanced.Workers.SetNumberOfWorkers(1);
 
-            await _bus.SendLocal(new SpecializationA { Payload = "a" });
-            await _bus.SendLocal(new SpecializationB { Payload = "b" });
+    [Test]
+    public async Task ItWorksInSimpleScenario()
+    {
+        var events = new ConcurrentQueue<string>();
+        var gotMessage = new AutoResetEvent(false);
 
-            gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the first message");
-            gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the second message");
-
-            Assert.That(events.ToArray(), Is.EqualTo(new[]
-            {
-                "Got SpecializationA with a",
-                "Got SpecializationB with b",
-            }));
-        }
-
-        [Test]
-        public async Task CanHandleObject()
+        _handlerActivator.Handle<BaseMessage>(async msg =>
         {
-            var events = new ConcurrentQueue<string>();
-            var gotMessage = new AutoResetEvent(false);
+            events.Enqueue($"Got {msg.GetType().Name} with {msg.Payload}");
 
-            _handlerActivator.Handle<object>(async msg =>
-            {
-                events.Enqueue($"Got {msg.GetType().Name}");
-                gotMessage.Set();
-            });
+            gotMessage.Set();
+        });
 
-            StartBus();
+        StartBus();
 
-            await _bus.SendLocal("hej med dig");
+        await _bus.SendLocal(new SpecializationA { Payload = "a" });
+        await _bus.SendLocal(new SpecializationB { Payload = "b" });
 
-            gotMessage.WaitOrDie(BlockingWaitTimeout);
+        gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the first message");
+        gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the second message");
 
-            Assert.That(events.ToArray(), Is.EqualTo(new[]
-            {
-                "Got String",
-            }));
-        }
-
-        [Test]
-        public async Task CanHandleInterface()
+        Assert.That(events.ToArray(), Is.EqualTo(new[]
         {
-            var events = new ConcurrentQueue<string>();
-            var gotMessage = new AutoResetEvent(false);
+            "Got SpecializationA with a",
+            "Got SpecializationB with b",
+        }));
+    }
 
-            _handlerActivator.Handle<IMessage>(async msg =>
-            {
-                events.Enqueue($"Got {msg.GetType().Name}");
-                gotMessage.Set();
-            });
+    [Test]
+    public async Task CanHandleObject()
+    {
+        var events = new ConcurrentQueue<string>();
+        var gotMessage = new AutoResetEvent(false);
 
-            StartBus();
-
-            await _bus.SendLocal(new ImplementorOfInterface());
-
-            gotMessage.WaitOrDie(BlockingWaitTimeout);
-
-            Assert.That(events.ToArray(), Is.EqualTo(new[]
-            {
-                "Got ImplementorOfInterface",
-            }));
-        }
-
-        abstract class BaseMessage
+        _handlerActivator.Handle<object>(async msg =>
         {
-            public string Payload { get; set; }
-        }
+            events.Enqueue($"Got {msg.GetType().Name}");
+            gotMessage.Set();
+        });
 
-        class SpecializationA : BaseMessage { }
-        class SpecializationB : BaseMessage { }
+        StartBus();
 
-        interface IMessage { }
+        await _bus.SendLocal("hej med dig");
 
-        class ImplementorOfInterface : IMessage { }
+        gotMessage.WaitOrDie(BlockingWaitTimeout);
 
-        [Test]
-        public async Task WorksWithHandlerPipelineToo()
+        Assert.That(events.ToArray(), Is.EqualTo(new[]
         {
-            var events = new ConcurrentQueue<string>();
+            "Got String",
+        }));
+    }
 
-            _handlerActivator
-                .Register(() => new Handler1(events))
-                .Register(() => new Handler2(events));
+    [Test]
+    public async Task CanHandleInterface()
+    {
+        var events = new ConcurrentQueue<string>();
+        var gotMessage = new AutoResetEvent(false);
 
-            StartBus();
+        _handlerActivator.Handle<IMessage>(async msg =>
+        {
+            events.Enqueue($"Got {msg.GetType().Name}");
+            gotMessage.Set();
+        });
 
-            await _bus.SendLocal(new SomeMessage());
+        StartBus();
 
-            await events.WaitUntil(q => q.Count == 2);
+        await _bus.SendLocal(new ImplementorOfInterface());
 
-            Console.WriteLine($@"Got these events:
+        gotMessage.WaitOrDie(BlockingWaitTimeout);
+
+        Assert.That(events.ToArray(), Is.EqualTo(new[]
+        {
+            "Got ImplementorOfInterface",
+        }));
+    }
+
+    abstract class BaseMessage
+    {
+        public string Payload { get; set; }
+    }
+
+    class SpecializationA : BaseMessage { }
+    class SpecializationB : BaseMessage { }
+
+    interface IMessage { }
+
+    class ImplementorOfInterface : IMessage { }
+
+    [Test]
+    public async Task WorksWithHandlerPipelineToo()
+    {
+        var events = new ConcurrentQueue<string>();
+
+        _handlerActivator
+            .Register(() => new Handler1(events))
+            .Register(() => new Handler2(events));
+
+        StartBus();
+
+        await _bus.SendLocal(new SomeMessage());
+
+        await events.WaitUntil(q => q.Count == 2);
+
+        Console.WriteLine($@"Got these events:
 
 {string.Join(Environment.NewLine, events)}
 ");
 
-            Assert.That(events.ToArray(), Is.EqualTo(new[]
-            {
-                "Handled by Handler1",
-                "Handled by Handler2"
-            }));
-        }
-
-        public interface ISomeInterface { }
-
-        public class SomeMessage : ISomeInterface { }
-
-        public class Handler1 : IHandleMessages<SomeMessage>
+        Assert.That(events.ToArray(), Is.EqualTo(new[]
         {
-            readonly ConcurrentQueue<string> _events;
+            "Handled by Handler1",
+            "Handled by Handler2"
+        }));
+    }
 
-            public Handler1(ConcurrentQueue<string> events) => _events = events;
+    public interface ISomeInterface { }
 
-            public async Task Handle(SomeMessage message) => _events.Enqueue("Handled by Handler1");
-        }
-        public class Handler2 : IHandleMessages<ISomeInterface>
-        {
-            readonly ConcurrentQueue<string> _events;
+    public class SomeMessage : ISomeInterface { }
 
-            public Handler2(ConcurrentQueue<string> events) => _events = events;
+    public class Handler1 : IHandleMessages<SomeMessage>
+    {
+        readonly ConcurrentQueue<string> _events;
 
-            public async Task Handle(ISomeInterface message) => _events.Enqueue("Handled by Handler2");
-        }
+        public Handler1(ConcurrentQueue<string> events) => _events = events;
+
+        public async Task Handle(SomeMessage message) => _events.Enqueue("Handled by Handler1");
+    }
+    public class Handler2 : IHandleMessages<ISomeInterface>
+    {
+        readonly ConcurrentQueue<string> _events;
+
+        public Handler2(ConcurrentQueue<string> events) => _events = events;
+
+        public async Task Handle(ISomeInterface message) => _events.Enqueue("Handled by Handler2");
     }
 }

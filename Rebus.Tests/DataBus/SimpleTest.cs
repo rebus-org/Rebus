@@ -15,97 +15,96 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.DataBus
+namespace Rebus.Tests.DataBus;
+
+[TestFixture]
+public class SimpleTest : FixtureBase
 {
-    [TestFixture]
-    public class SimpleTest : FixtureBase
+    InMemNetwork _inMemNetwork;
+    IBus _senderBus;
+    BuiltinHandlerActivator _receiverActivator;
+    InMemDataStore _inMemDataStore;
+    IBusStarter _starter;
+
+    protected override void SetUp()
     {
-        InMemNetwork _inMemNetwork;
-        IBus _senderBus;
-        BuiltinHandlerActivator _receiverActivator;
-        InMemDataStore _inMemDataStore;
-        IBusStarter _starter;
+        _inMemNetwork = new InMemNetwork();
+        _inMemDataStore = new InMemDataStore();
 
-        protected override void SetUp()
-        {
-            _inMemNetwork = new InMemNetwork();
-            _inMemDataStore = new InMemDataStore();
+        var (_, senderStarter) = CreateBus("sender");
 
-            var (_, senderStarter) = CreateBus("sender");
+        _senderBus = senderStarter.Start();
 
-            _senderBus = senderStarter.Start();
+        (_receiverActivator, _starter) = CreateBus("receiver");
+    }
 
-            (_receiverActivator, _starter) = CreateBus("receiver");
-        }
+    (BuiltinHandlerActivator activator, IBusStarter starter) CreateBus(string queueName)
+    {
+        var activator = Using(new BuiltinHandlerActivator());
 
-        (BuiltinHandlerActivator activator, IBusStarter starter) CreateBus(string queueName)
-        {
-            var activator = Using(new BuiltinHandlerActivator());
-
-            var starter = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(_inMemNetwork, queueName))
-                .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
-                .DataBus(d =>
-                {
-                    d.UseCompression(DataCompressionMode.Always);
-                    d.StoreInMemory(_inMemDataStore);
-                })
-                .Create();
-
-            return (activator, starter);
-        }
-
-        [Test]
-        public async Task CanSendBigFile()
-        {
-            var sourceFilePath = GetTempFilePath();
-            var destinationFilePath = GetTempFilePath();
-
-            const string originalFileContents = "THIS IS A BIG FILE!!";
-
-            File.WriteAllText(sourceFilePath, originalFileContents);
-
-            var dataSuccessfullyCopied = new ManualResetEvent(false);
-
-            // set up handler that writes the contents of the received attachment to a file
-            _receiverActivator.Handle<MessageWithAttachment>(async message =>
+        var starter = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(_inMemNetwork, queueName))
+            .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
+            .DataBus(d =>
             {
-                var attachment = message.Attachment;
+                d.UseCompression(DataCompressionMode.Always);
+                d.StoreInMemory(_inMemDataStore);
+            })
+            .Create();
 
-                using (var destination = File.OpenWrite(destinationFilePath))
-                using (var stream = await attachment.OpenRead())
-                {
-                    await stream.CopyToAsync(destination);
-                }
+        return (activator, starter);
+    }
 
-                dataSuccessfullyCopied.Set();
-            });
+    [Test]
+    public async Task CanSendBigFile()
+    {
+        var sourceFilePath = GetTempFilePath();
+        var destinationFilePath = GetTempFilePath();
 
-            _starter.Start();
+        const string originalFileContents = "THIS IS A BIG FILE!!";
 
-            // send a message that sends the contents of a file as an attachment
-            using (var source = File.OpenRead(sourceFilePath))
+        File.WriteAllText(sourceFilePath, originalFileContents);
+
+        var dataSuccessfullyCopied = new ManualResetEvent(false);
+
+        // set up handler that writes the contents of the received attachment to a file
+        _receiverActivator.Handle<MessageWithAttachment>(async message =>
+        {
+            var attachment = message.Attachment;
+
+            using (var destination = File.OpenWrite(destinationFilePath))
+            using (var stream = await attachment.OpenRead())
             {
-                var optionalMetadata = new Dictionary<string, string>
-                {
-                    {"username", "ExampleUserName" }
-                };
-                var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source, optionalMetadata);
-
-                await _senderBus.Send(new MessageWithAttachment
-                {
-                    Attachment = attachment
-                });
+                await stream.CopyToAsync(destination);
             }
 
-            dataSuccessfullyCopied.WaitOrDie(TimeSpan.FromSeconds(5), "Data was not successfully copied within 5 second timeout");
+            dataSuccessfullyCopied.Set();
+        });
 
-            Assert.That(File.ReadAllText(destinationFilePath), Is.EqualTo(originalFileContents));
-        }
+        _starter.Start();
 
-        class MessageWithAttachment
+        // send a message that sends the contents of a file as an attachment
+        using (var source = File.OpenRead(sourceFilePath))
         {
-            public DataBusAttachment Attachment { get; set; }
+            var optionalMetadata = new Dictionary<string, string>
+            {
+                {"username", "ExampleUserName" }
+            };
+            var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source, optionalMetadata);
+
+            await _senderBus.Send(new MessageWithAttachment
+            {
+                Attachment = attachment
+            });
         }
+
+        dataSuccessfullyCopied.WaitOrDie(TimeSpan.FromSeconds(5), "Data was not successfully copied within 5 second timeout");
+
+        Assert.That(File.ReadAllText(destinationFilePath), Is.EqualTo(originalFileContents));
+    }
+
+    class MessageWithAttachment
+    {
+        public DataBusAttachment Attachment { get; set; }
     }
 }

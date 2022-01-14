@@ -2,25 +2,24 @@
 using System.Threading.Tasks;
 using Rebus.Pipeline;
 
-namespace Rebus.DataBus
+namespace Rebus.DataBus;
+
+class DataBusIncomingStep : IIncomingStep
 {
-    class DataBusIncomingStep : IIncomingStep
+    public const string DataBusStorageKey = "rebus-databus-storage";
+
+    readonly IDataBusStorage _dataBusStorage;
+
+    public DataBusIncomingStep(IDataBusStorage dataBusStorage)
     {
-        public const string DataBusStorageKey = "rebus-databus-storage";
+        _dataBusStorage = dataBusStorage ?? throw new ArgumentNullException(nameof(dataBusStorage));
+    }
 
-        readonly IDataBusStorage _dataBusStorage;
+    public async Task Process(IncomingStepContext context, Func<Task> next)
+    {
+        // stashes the current implementation of IDataBusStorage in the context for DataBusAttachment to find
+        context.Save(DataBusStorageKey, _dataBusStorage);
 
-        public DataBusIncomingStep(IDataBusStorage dataBusStorage)
-        {
-            _dataBusStorage = dataBusStorage ?? throw new ArgumentNullException(nameof(dataBusStorage));
-        }
-
-        public async Task Process(IncomingStepContext context, Func<Task> next)
-        {
-            // stashes the current implementation of IDataBusStorage in the context for DataBusAttachment to find
-            context.Save(DataBusStorageKey, _dataBusStorage);
-
-            await next();
-        }
+        await next();
     }
 }

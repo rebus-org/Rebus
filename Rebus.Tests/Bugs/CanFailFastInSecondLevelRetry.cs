@@ -13,44 +13,43 @@ using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Bugs
+namespace Rebus.Tests.Bugs;
+
+[TestFixture]
+public class CanFailFastInSecondLevelRetry : FixtureBase
 {
-    [TestFixture]
-    public class CanFailFastInSecondLevelRetry : FixtureBase
+    [Test]
+    public async Task YesWeCan()
     {
-        [Test]
-        public async Task YesWeCan()
-        {
-            var activator = Using(new BuiltinHandlerActivator());
+        var activator = Using(new BuiltinHandlerActivator());
 
-            activator.Handle<string>(async _ => throw new ArgumentException("1st"));
-            activator.Handle<IFailed<string>>(async _ => throw new ArgumentException("2nd"));
+        activator.Handle<string>(async _ => throw new ArgumentException("1st"));
+        activator.Handle<IFailed<string>>(async _ => throw new ArgumentException("2nd"));
 
-            var loggerFactory = new ListLoggerFactory(outputToConsole: true);
+        var loggerFactory = new ListLoggerFactory(outputToConsole: true);
 
-            var bus = Configure.With(activator)
-                .Logging(l => l.Use(loggerFactory))
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "who-cares"))
-                .Options(o =>
-                {
-                    o.SimpleRetryStrategy(secondLevelRetriesEnabled: true);
-                    o.FailFastOn<ArgumentException>();
-                })
-                .Start();
+        var bus = Configure.With(activator)
+            .Logging(l => l.Use(loggerFactory))
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "who-cares"))
+            .Options(o =>
+            {
+                o.SimpleRetryStrategy(secondLevelRetriesEnabled: true);
+                o.FailFastOn<ArgumentException>();
+            })
+            .Start();
 
-            await bus.SendLocal("HEJ MED DIG!");
+        await bus.SendLocal("HEJ MED DIG!");
 
-            // wait until an error is logged
-            await loggerFactory.LogLines.WaitUntil(lines => lines.Any(l => l.Level == LogLevel.Error));
+        // wait until an error is logged
+        await loggerFactory.LogLines.WaitUntil(lines => lines.Any(l => l.Level == LogLevel.Error));
 
-            // provide extra time for additional stuff to happen
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+        // provide extra time for additional stuff to happen
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
 
-            Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Warn), Is.EqualTo(2),
-                "Expected exactly two WARNings, because each one was due to a fail-fast exception");
+        Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Warn), Is.EqualTo(2),
+            "Expected exactly two WARNings, because each one was due to a fail-fast exception");
 
-            Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Error), Is.EqualTo(1),
-                "Expected exactly one ERROR, because the message is only dead-lettered once");
-        }
+        Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Error), Is.EqualTo(1),
+            "Expected exactly one ERROR, because the message is only dead-lettered once");
     }
 }

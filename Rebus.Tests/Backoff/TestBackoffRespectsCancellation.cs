@@ -12,103 +12,102 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 using Rebus.Workers.ThreadPoolBased;
 
-namespace Rebus.Tests.Backoff
+namespace Rebus.Tests.Backoff;
+
+[TestFixture]
+public class TestBackoffRespectsCancellation : FixtureBase
 {
-    [TestFixture]
-    public class TestBackoffRespectsCancellation : FixtureBase
+    private IBus _bus;
+    private BackoffSnitch _snitch;
+
+    protected override void SetUp()
     {
-        private IBus _bus;
-        private BackoffSnitch _snitch;
+        var activator = Using(new BuiltinHandlerActivator());
 
-        protected override void SetUp()
-        {
-            var activator = Using(new BuiltinHandlerActivator());
+        _snitch = new BackoffSnitch();
 
-            _snitch = new BackoffSnitch();
+        _bus = Configure.With(activator)
+            .Logging(l => l.Console(LogLevel.Info))
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "cancellation-test"))
+            .Options(o =>
+            {
+                o.SetMaxParallelism(1);
+                o.SetNumberOfWorkers(1);
+                o.SetBackoffTimes(TimeSpan.FromDays(1));
+                o.SetWorkerShutdownTimeout(TimeSpan.FromMinutes(1));
 
-            _bus = Configure.With(activator)
-                .Logging(l => l.Console(LogLevel.Info))
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "cancellation-test"))
-                .Options(o =>
+                // install the snitch
+                o.Decorate<IBackoffStrategy>(c =>
                 {
-                    o.SetMaxParallelism(1);
-                    o.SetNumberOfWorkers(1);
-                    o.SetBackoffTimes(TimeSpan.FromDays(1));
-                    o.SetWorkerShutdownTimeout(TimeSpan.FromMinutes(1));
+                    var backoffStrategy = c.Get<IBackoffStrategy>();
+                    _snitch.BackoffStrategy = backoffStrategy;
+                    return _snitch;
+                });
+            })
+            .Start();
+    }
 
-                    // install the snitch
-                    o.Decorate<IBackoffStrategy>(c =>
-                    {
-                        var backoffStrategy = c.Get<IBackoffStrategy>();
-                        _snitch.BackoffStrategy = backoffStrategy;
-                        return _snitch;
-                    });
-                })
-                .Start();
+    [TestCase]
+    public void BackoffRespectsCancellation()
+    {
+        // Wait until the backoff strategy has entered an wait cycle 
+        _snitch.WaitNoMessageEntered.WaitOrDie(TimeSpan.FromSeconds(10),
+            "Backoff strategy did not enter an wait cycle within the expected timeframe!");
+
+        var shutdownSignal = new ManualResetEvent(false);
+        var thread = new Thread(() =>
+        {
+            _bus.Dispose();
+            shutdownSignal.Set();
+        });
+
+        thread.Start();
+        shutdownSignal.WaitOrDie(TimeSpan.FromSeconds(1),
+            "Rebus did not shut down within the expected timeframe because the worker " +
+            "did not return from its backoff wait cycle!");
+    }
+
+    private class BackoffSnitch : IBackoffStrategy
+    {
+        public IBackoffStrategy BackoffStrategy { get; set; }
+
+        public ManualResetEvent WaitNoMessageEntered { get; }
+            = new ManualResetEvent(false);
+
+        public void Reset()
+        {
+            BackoffStrategy.Reset();
         }
 
-        [TestCase]
-        public void BackoffRespectsCancellation()
+        public void WaitNoMessage(CancellationToken token)
         {
-            // Wait until the backoff strategy has entered an wait cycle 
-            _snitch.WaitNoMessageEntered.WaitOrDie(TimeSpan.FromSeconds(10),
-                "Backoff strategy did not enter an wait cycle within the expected timeframe!");
-
-            var shutdownSignal = new ManualResetEvent(false);
-            var thread = new Thread(() =>
-            {
-                _bus.Dispose();
-                shutdownSignal.Set();
-            });
-
-            thread.Start();
-            shutdownSignal.WaitOrDie(TimeSpan.FromSeconds(1),
-                "Rebus did not shut down within the expected timeframe because the worker " +
-                "did not return from its backoff wait cycle!");
+            BackoffStrategy.WaitNoMessage(token);
         }
 
-        private class BackoffSnitch : IBackoffStrategy
+        public async Task WaitNoMessageAsync(CancellationToken token)
         {
-            public IBackoffStrategy BackoffStrategy { get; set; }
+            WaitNoMessageEntered.Set();
+            await BackoffStrategy.WaitNoMessageAsync(token);
+        }
 
-            public ManualResetEvent WaitNoMessageEntered { get; }
-                = new ManualResetEvent(false);
+        public void Wait(CancellationToken token)
+        {
+            BackoffStrategy.Wait(token);
+        }
 
-            public void Reset()
-            {
-                BackoffStrategy.Reset();
-            }
+        public Task WaitAsync(CancellationToken token)
+        {
+            return BackoffStrategy.WaitAsync(token);
+        }
 
-            public void WaitNoMessage(CancellationToken token)
-            {
-                BackoffStrategy.WaitNoMessage(token);
-            }
+        public void WaitError(CancellationToken token)
+        {
+            BackoffStrategy.WaitError(token);
+        }
 
-            public async Task WaitNoMessageAsync(CancellationToken token)
-            {
-                WaitNoMessageEntered.Set();
-                await BackoffStrategy.WaitNoMessageAsync(token);
-            }
-
-            public void Wait(CancellationToken token)
-            {
-                BackoffStrategy.Wait(token);
-            }
-
-            public Task WaitAsync(CancellationToken token)
-            {
-                return BackoffStrategy.WaitAsync(token);
-            }
-
-            public void WaitError(CancellationToken token)
-            {
-                BackoffStrategy.WaitError(token);
-            }
-
-            public Task WaitErrorAsync(CancellationToken token)
-            {
-                return BackoffStrategy.WaitErrorAsync(token);
-            }
+        public Task WaitErrorAsync(CancellationToken token)
+        {
+            return BackoffStrategy.WaitErrorAsync(token);
         }
     }
 }

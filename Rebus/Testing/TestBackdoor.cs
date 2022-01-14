@@ -1,19 +1,18 @@
 ﻿using Rebus.DataBus;
 
-namespace Rebus.Testing
+namespace Rebus.Testing;
+
+static class TestBackdoor
 {
-    static class TestBackdoor
+    public static void EnableTestMode(IDataBusStorage dataBusStorage)
     {
-        public static void EnableTestMode(IDataBusStorage dataBusStorage)
-        {
-            TestDataBusStorage = dataBusStorage;
-        }
-
-        public static void Reset()
-        {
-            EnableTestMode(null);
-        }
-
-        public static IDataBusStorage TestDataBusStorage { get; private set; }
+        TestDataBusStorage = dataBusStorage;
     }
+
+    public static void Reset()
+    {
+        EnableTestMode(null);
+    }
+
+    public static IDataBusStorage TestDataBusStorage { get; private set; }
 }

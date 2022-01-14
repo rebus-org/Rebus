@@ -11,106 +11,105 @@ using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Bugs
+namespace Rebus.Tests.Bugs;
+
+[TestFixture]
+[Description("Two sagas, each with its own saga data type. One message to hit them both. And it turned out that it didn't explode - it actually seemed to work fine. I wonder........")]
+public class DoesNotDispatchWrongSagaDataType : FixtureBase
 {
-    [TestFixture]
-    [Description("Two sagas, each with its own saga data type. One message to hit them both. And it turned out that it didn't explode - it actually seemed to work fine. I wonder........")]
-    public class DoesNotDispatchWrongSagaDataType : FixtureBase
+    BuiltinHandlerActivator _activator;
+    IBusStarter _busStarter;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        IBusStarter _busStarter;
+        _activator = Using(new BuiltinHandlerActivator());
 
-        protected override void SetUp()
-        {
-            _activator = Using(new BuiltinHandlerActivator());
+        _busStarter = Configure.With(_activator)
+            .Logging(l => l.Use(new ListLoggerFactory(true)))
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesntmatter"))
+            .Sagas(s => s.StoreInMemory())
+            .Options(o =>
+            {
+                o.SetNumberOfWorkers(1);
+                o.SetMaxParallelism(1);
+            })
+            .Create();
+    }
 
-            _busStarter = Configure.With(_activator)
-                .Logging(l => l.Use(new ListLoggerFactory(true)))
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesntmatter"))
-                .Sagas(s => s.StoreInMemory())
-                .Options(o =>
-                {
-                    o.SetNumberOfWorkers(1);
-                    o.SetMaxParallelism(1);
-                })
-                .Create();
-        }
-
-        [Test]
-        public void DoesNotBreak()
-        {
-            var counter = new SharedCounter(6);
+    [Test]
+    public void DoesNotBreak()
+    {
+        var counter = new SharedCounter(6);
             
-            _activator.Register(() => new FirstSaga(counter));
-            _activator.Register(() => new SecondSaga(counter));
+        _activator.Register(() => new FirstSaga(counter));
+        _activator.Register(() => new SecondSaga(counter));
 
-            _busStarter.Start();
+        _busStarter.Start();
 
-            var sagaId = Guid.NewGuid().ToString();
+        var sagaId = Guid.NewGuid().ToString();
 
-            3.Times(() => _activator.Bus.SendLocal(new Message(sagaId)).Wait());
+        3.Times(() => _activator.Bus.SendLocal(new Message(sagaId)).Wait());
 
-            counter.WaitForResetEvent(3);
+        counter.WaitForResetEvent(3);
+    }
+
+    class FirstSagaData : ISagaData
+    {
+        public Guid Id { get; set; }
+        public int Revision { get; set; }
+        public string CorrelationId { get; set; }
+    }
+
+    class SecondSagaData : ISagaData
+    {
+        public Guid Id { get; set; }
+        public int Revision { get; set; }
+        public string CorrelationId { get; set; }
+    }
+
+    class Message
+    {
+        public Message(string correlationId) { CorrelationId = correlationId; }
+        public string CorrelationId { get; }
+    }
+
+    class FirstSaga : Saga<FirstSagaData>, IAmInitiatedBy<Message>
+    {
+        readonly SharedCounter _counter;
+
+        public FirstSaga(SharedCounter counter)
+        {
+            _counter = counter;
         }
 
-        class FirstSagaData : ISagaData
+        protected override void CorrelateMessages(ICorrelationConfig<FirstSagaData> config)
         {
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
-            public string CorrelationId { get; set; }
+            config.Correlate<Message>(m => m.CorrelationId, d => d.CorrelationId);
         }
 
-        class SecondSagaData : ISagaData
+        public async Task Handle(Message message)
         {
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
-            public string CorrelationId { get; set; }
+            _counter.Decrement();
+        }
+    }
+
+    class SecondSaga : Saga<SecondSagaData>, IAmInitiatedBy<Message>
+    {
+        readonly SharedCounter _counter;
+
+        public SecondSaga(SharedCounter counter)
+        {
+            _counter = counter;
         }
 
-        class Message
+        protected override void CorrelateMessages(ICorrelationConfig<SecondSagaData> config)
         {
-            public Message(string correlationId) { CorrelationId = correlationId; }
-            public string CorrelationId { get; }
+            config.Correlate<Message>(m => m.CorrelationId, d => d.CorrelationId);
         }
 
-        class FirstSaga : Saga<FirstSagaData>, IAmInitiatedBy<Message>
+        public async Task Handle(Message message)
         {
-            readonly SharedCounter _counter;
-
-            public FirstSaga(SharedCounter counter)
-            {
-                _counter = counter;
-            }
-
-            protected override void CorrelateMessages(ICorrelationConfig<FirstSagaData> config)
-            {
-                config.Correlate<Message>(m => m.CorrelationId, d => d.CorrelationId);
-            }
-
-            public async Task Handle(Message message)
-            {
-                _counter.Decrement();
-            }
-        }
-
-        class SecondSaga : Saga<SecondSagaData>, IAmInitiatedBy<Message>
-        {
-            readonly SharedCounter _counter;
-
-            public SecondSaga(SharedCounter counter)
-            {
-                _counter = counter;
-            }
-
-            protected override void CorrelateMessages(ICorrelationConfig<SecondSagaData> config)
-            {
-                config.Correlate<Message>(m => m.CorrelationId, d => d.CorrelationId);
-            }
-
-            public async Task Handle(Message message)
-            {
-                _counter.Decrement();
-            }
+            _counter.Decrement();
         }
     }
 }

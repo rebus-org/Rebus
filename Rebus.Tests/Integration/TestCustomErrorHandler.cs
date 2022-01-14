@@ -15,56 +15,55 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestCustomErrorHandler : FixtureBase
 {
-    [TestFixture]
-    public class TestCustomErrorHandler : FixtureBase
+    BuiltinHandlerActivator _activator;
+    CustomErrorHandlerInTheTest _customErrorHandler;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        CustomErrorHandlerInTheTest _customErrorHandler;
+        _activator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
+        Using(_activator);
+
+        _customErrorHandler = new CustomErrorHandlerInTheTest();
+
+        Configure.With(_activator)
+            .Logging(l => l.None())
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "custom-error-handler"))
+            .Options(o => o.Register<IErrorHandler>(c => _customErrorHandler))
+            .Start();
+    }
+
+    [Test]
+    public async Task ForwardsFailedMessageToCustomErrorHandler()
+    {
+        _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
         {
-            _activator = new BuiltinHandlerActivator();
+            Console.WriteLine("Throwing UnauthorizedAccessException");
 
-            Using(_activator);
+            throw new UnauthorizedAccessException("don't do that");
+        });
 
-            _customErrorHandler = new CustomErrorHandlerInTheTest();
+        _activator.Bus.SendLocal("hej 2").Wait();
 
-            Configure.With(_activator)
-                .Logging(l => l.None())
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "custom-error-handler"))
-                .Options(o => o.Register<IErrorHandler>(c => _customErrorHandler))
-                .Start();
-        }
+        await _customErrorHandler.FailedMessages.WaitUntil(q => q.Any());
 
-        [Test]
-        public async Task ForwardsFailedMessageToCustomErrorHandler()
+        var transportMessage = _customErrorHandler.FailedMessages.First();
+
+        Assert.That(Encoding.UTF8.GetString(transportMessage.Body), Is.EqualTo(@"""hej 2"""));
+    }
+
+    class CustomErrorHandlerInTheTest : IErrorHandler
+    {
+        public readonly ConcurrentQueue<TransportMessage> FailedMessages = new ConcurrentQueue<TransportMessage>();
+
+        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
         {
-            _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
-            {
-                Console.WriteLine("Throwing UnauthorizedAccessException");
-
-                throw new UnauthorizedAccessException("don't do that");
-            });
-
-            _activator.Bus.SendLocal("hej 2").Wait();
-
-            await _customErrorHandler.FailedMessages.WaitUntil(q => q.Any());
-
-            var transportMessage = _customErrorHandler.FailedMessages.First();
-
-            Assert.That(Encoding.UTF8.GetString(transportMessage.Body), Is.EqualTo(@"""hej 2"""));
-        }
-
-        class CustomErrorHandlerInTheTest : IErrorHandler
-        {
-            public readonly ConcurrentQueue<TransportMessage> FailedMessages = new ConcurrentQueue<TransportMessage>();
-
-            public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
-            {
-                FailedMessages.Enqueue(transportMessage);
-            }
+            FailedMessages.Enqueue(transportMessage);
         }
     }
 }

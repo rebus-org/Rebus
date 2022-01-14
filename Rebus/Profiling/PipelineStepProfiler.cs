@@ -4,83 +4,82 @@ using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Pipeline;
 
-namespace Rebus.Profiling
+namespace Rebus.Profiling;
+
+/// <summary>
+/// Implementation of <see cref="IPipeline"/> that wraps another <see cref="IPipeline"/>
+/// and injects instances of a single step into the pipeline which can be used to measure time spent
+/// </summary>
+public class PipelineStepProfiler : IPipeline
 {
+    readonly IPipeline _pipeline;
+    readonly PipelineStepProfilerStats _profilerStats;
+
     /// <summary>
-    /// Implementation of <see cref="IPipeline"/> that wraps another <see cref="IPipeline"/>
-    /// and injects instances of a single step into the pipeline which can be used to measure time spent
+    /// Creates the profiler
     /// </summary>
-    public class PipelineStepProfiler : IPipeline
+    public PipelineStepProfiler(IPipeline pipeline, PipelineStepProfilerStats profilerStats)
     {
-        readonly IPipeline _pipeline;
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+        _profilerStats = profilerStats ?? throw new ArgumentNullException(nameof(profilerStats));
+    }
+
+    /// <summary>
+    /// Gets the original send pipeline
+    /// </summary>
+    /// <returns></returns>
+    public IOutgoingStep[] SendPipeline() => _pipeline.SendPipeline();
+
+    /// <summary>
+    /// Gets a pipeline with time-tracking steps interleaved
+    /// </summary>
+    public IIncomingStep[] ReceivePipeline() => ComposeReceivePipeline().ToArray();
+
+    IEnumerable<IIncomingStep> ComposeReceivePipeline()
+    {
+        yield return new RegisterCollectedProfilerStatsStep(_profilerStats);
+
+        foreach (var step in _pipeline.ReceivePipeline())
+        {
+            yield return new ProfilerStep(step);
+            yield return step;
+        }
+    }
+
+    [StepDocumentation("Collected profiler measurements and registers them with the stats collector")]
+    class RegisterCollectedProfilerStatsStep : IIncomingStep
+    {
         readonly PipelineStepProfilerStats _profilerStats;
 
-        /// <summary>
-        /// Creates the profiler
-        /// </summary>
-        public PipelineStepProfiler(IPipeline pipeline, PipelineStepProfilerStats profilerStats)
+        public RegisterCollectedProfilerStatsStep(PipelineStepProfilerStats profilerStats) => _profilerStats = profilerStats;
+
+        public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
-            _profilerStats = profilerStats ?? throw new ArgumentNullException(nameof(profilerStats));
+            var statsContext = new StatsContext();
+
+            // save stats context for all the ProfilerSteps to find
+            context.Save(statsContext);
+
+            await next();
+
+            _profilerStats.Register(statsContext);
         }
+    }
 
-        /// <summary>
-        /// Gets the original send pipeline
-        /// </summary>
-        /// <returns></returns>
-        public IOutgoingStep[] SendPipeline() => _pipeline.SendPipeline();
+    [StepDocumentation("Measures time spent in the rest of the pipeline")]
+    class ProfilerStep : IIncomingStep
+    {
+        readonly IIncomingStep _nextStep;
 
-        /// <summary>
-        /// Gets a pipeline with time-tracking steps interleaved
-        /// </summary>
-        public IIncomingStep[] ReceivePipeline() => ComposeReceivePipeline().ToArray();
+        public ProfilerStep(IIncomingStep nextStep) => _nextStep = nextStep;
 
-        IEnumerable<IIncomingStep> ComposeReceivePipeline()
+        public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            yield return new RegisterCollectedProfilerStatsStep(_profilerStats);
+            var statsContext = context.Load<StatsContext>();
 
-            foreach (var step in _pipeline.ReceivePipeline())
+            using (statsContext.Measure(_nextStep))
             {
-                yield return new ProfilerStep(step);
-                yield return step;
-            }
-        }
-
-        [StepDocumentation("Collected profiler measurements and registers them with the stats collector")]
-        class RegisterCollectedProfilerStatsStep : IIncomingStep
-        {
-            readonly PipelineStepProfilerStats _profilerStats;
-
-            public RegisterCollectedProfilerStatsStep(PipelineStepProfilerStats profilerStats) => _profilerStats = profilerStats;
-
-            public async Task Process(IncomingStepContext context, Func<Task> next)
-            {
-                var statsContext = new StatsContext();
-
-                // save stats context for all the ProfilerSteps to find
-                context.Save(statsContext);
-
                 await next();
-
-                _profilerStats.Register(statsContext);
-            }
-        }
-
-        [StepDocumentation("Measures time spent in the rest of the pipeline")]
-        class ProfilerStep : IIncomingStep
-        {
-            readonly IIncomingStep _nextStep;
-
-            public ProfilerStep(IIncomingStep nextStep) => _nextStep = nextStep;
-
-            public async Task Process(IncomingStepContext context, Func<Task> next)
-            {
-                var statsContext = context.Load<StatsContext>();
-
-                using (statsContext.Measure(_nextStep))
-                {
-                    await next();
-                }
             }
         }
     }

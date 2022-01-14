@@ -13,95 +13,94 @@ using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Serialization
+namespace Rebus.Tests.Serialization;
+
+[TestFixture]
+public class TestJsonSerializerInInteroperableMode : FixtureBase
 {
-    [TestFixture]
-    public class TestJsonSerializerInInteroperableMode : FixtureBase
+    [Test]
+    public async Task WorksWithCustomizedTypeName_Emoji2()
     {
-        [Test]
-        public async Task WorksWithCustomizedTypeName_Emoji2()
+        var activator = Using(new BuiltinHandlerActivator());
+        var gotString = new ManualResetEvent(initialState: false);
+        var serializedTypeName = "<not-set>";
+
+        activator.Handle<string>(async (bus, context, str) =>
         {
-            var activator = Using(new BuiltinHandlerActivator());
-            var gotString = new ManualResetEvent(initialState: false);
-            var serializedTypeName = "<not-set>";
+            serializedTypeName = context.Headers.GetValue(Headers.Type);
+            Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
+            gotString.Set();
+        });
 
-            activator.Handle<string>(async (bus, context, str) =>
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
+            .Serialization(s =>
             {
-                serializedTypeName = context.Headers.GetValue(Headers.Type);
-                Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
-                gotString.Set();
-            });
+                s.UseCustomMessageTypeNames()
+                    .AddWithCustomName<string>("😈");
+            })
+            .Start();
 
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-                .Serialization(s =>
-                {
-                    s.UseCustomMessageTypeNames()
-                        .AddWithCustomName<string>("😈");
-                })
-                .Start();
+        await activator.Bus.SendLocal("hej 🥓");
 
-            await activator.Bus.SendLocal("hej 🥓");
+        gotString.WaitOrDie(TimeSpan.FromSeconds(2));
 
-            gotString.WaitOrDie(TimeSpan.FromSeconds(2));
-
-            Assert.That(serializedTypeName, Is.EqualTo("😈"));
-        }
-
-        [Test]
-        public async Task WorksWithCustomizedTypeName_String()
-        {
-            var activator = Using(new BuiltinHandlerActivator());
-            var gotString = new ManualResetEvent(initialState: false);
-            var serializedTypeName = "<not-set>";
-
-            activator.Handle<string>(async (bus, context, str) =>
-            {
-                serializedTypeName = context.Headers.GetValue(Headers.Type);
-                Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
-                gotString.Set();
-            });
-
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-                .Serialization(s => s.UseCustomMessageTypeNames()
-                    .AddWithShortNames(new[] { typeof(string) }))
-                .Start();
-
-            await activator.Bus.SendLocal("hej 🥓");
-
-            gotString.WaitOrDie(TimeSpan.FromSeconds(2));
-
-            Assert.That(serializedTypeName, Is.EqualTo("String"));
-        }
-
-        [Test]
-        public async Task WorksWithCustomizedTypeName_MyLittleMessage()
-        {
-            var activator = Using(new BuiltinHandlerActivator());
-            var gotString = new ManualResetEvent(initialState: false);
-            var serializedTypeName = "<not-set>";
-
-            activator.Handle<MyLittleMessage>(async (bus, context, str) =>
-            {
-                serializedTypeName = context.Headers.GetValue(Headers.Type);
-                Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
-                gotString.Set();
-            });
-
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-                .Serialization(s => s.UseCustomMessageTypeNames()
-                        .AddWithShortNames(new[] { typeof(MyLittleMessage) }))
-                .Start();
-
-            await activator.Bus.SendLocal(new MyLittleMessage());
-
-            gotString.WaitOrDie(TimeSpan.FromSeconds(2));
-
-            Assert.That(serializedTypeName, Is.EqualTo("MyLittleMessage"));
-        }
+        Assert.That(serializedTypeName, Is.EqualTo("😈"));
     }
 
-    class MyLittleMessage { }
+    [Test]
+    public async Task WorksWithCustomizedTypeName_String()
+    {
+        var activator = Using(new BuiltinHandlerActivator());
+        var gotString = new ManualResetEvent(initialState: false);
+        var serializedTypeName = "<not-set>";
+
+        activator.Handle<string>(async (bus, context, str) =>
+        {
+            serializedTypeName = context.Headers.GetValue(Headers.Type);
+            Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
+            gotString.Set();
+        });
+
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
+            .Serialization(s => s.UseCustomMessageTypeNames()
+                .AddWithShortNames(new[] { typeof(string) }))
+            .Start();
+
+        await activator.Bus.SendLocal("hej 🥓");
+
+        gotString.WaitOrDie(TimeSpan.FromSeconds(2));
+
+        Assert.That(serializedTypeName, Is.EqualTo("String"));
+    }
+
+    [Test]
+    public async Task WorksWithCustomizedTypeName_MyLittleMessage()
+    {
+        var activator = Using(new BuiltinHandlerActivator());
+        var gotString = new ManualResetEvent(initialState: false);
+        var serializedTypeName = "<not-set>";
+
+        activator.Handle<MyLittleMessage>(async (bus, context, str) =>
+        {
+            serializedTypeName = context.Headers.GetValue(Headers.Type);
+            Console.WriteLine($"THE SERIALIZED TYPE NAME WAS '{serializedTypeName}'");
+            gotString.Set();
+        });
+
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
+            .Serialization(s => s.UseCustomMessageTypeNames()
+                .AddWithShortNames(new[] { typeof(MyLittleMessage) }))
+            .Start();
+
+        await activator.Bus.SendLocal(new MyLittleMessage());
+
+        gotString.WaitOrDie(TimeSpan.FromSeconds(2));
+
+        Assert.That(serializedTypeName, Is.EqualTo("MyLittleMessage"));
+    }
 }
+
+class MyLittleMessage { }

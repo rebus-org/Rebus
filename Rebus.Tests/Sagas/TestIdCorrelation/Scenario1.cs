@@ -9,51 +9,50 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Sagas.TestIdCorrelation
+namespace Rebus.Tests.Sagas.TestIdCorrelation;
+
+[TestFixture]
+public class Scenario1 : FixtureBase
 {
-    [TestFixture]
-    public class Scenario1 : FixtureBase
+    BuiltinHandlerActivator _activator;
+    InMemorySagaStorage _sagas;
+    IBusStarter _busStarter;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        InMemorySagaStorage _sagas;
-        IBusStarter _busStarter;
+        _activator = Using(new BuiltinHandlerActivator());
 
-        protected override void SetUp()
-        {
-            _activator = Using(new BuiltinHandlerActivator());
+        _sagas = new InMemorySagaStorage();
 
-            _sagas = new InMemorySagaStorage();
+        _busStarter = Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-correlation"))
+            .Sagas(s => s.Register(c => _sagas))
+            .Create();
+    }
 
-            _busStarter = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-id-correlation"))
-                .Sagas(s => s.Register(c => _sagas))
-                .Create();
-        }
+    [Test]
+    public async Task CanInitiateSagaAndOverrideItsId()
+    {
+        var counter = new SharedCounter(5);
 
-        [Test]
-        public async Task CanInitiateSagaAndOverrideItsId()
-        {
-            var counter = new SharedCounter(5);
+        _activator.Register(() => new DefaultSaga(counter));
 
-            _activator.Register(() => new DefaultSaga(counter));
+        _busStarter.Start();
 
-            _busStarter.Start();
+        var id1 = Guid.NewGuid();
+        var id2 = Guid.NewGuid();
 
-            var id1 = Guid.NewGuid();
-            var id2 = Guid.NewGuid();
+        // five messages using 2 ids
+        await _activator.Bus.SendLocal(new DefaultSagaMessage(id1));
+        await _activator.Bus.SendLocal(new DefaultSagaMessage(id2));
+        await _activator.Bus.SendLocal(new DefaultSagaMessage(id1));
+        await _activator.Bus.SendLocal(new DefaultSagaMessage(id2));
+        await _activator.Bus.SendLocal(new DefaultSagaMessage(id1));
 
-            // five messages using 2 ids
-            await _activator.Bus.SendLocal(new DefaultSagaMessage(id1));
-            await _activator.Bus.SendLocal(new DefaultSagaMessage(id2));
-            await _activator.Bus.SendLocal(new DefaultSagaMessage(id1));
-            await _activator.Bus.SendLocal(new DefaultSagaMessage(id2));
-            await _activator.Bus.SendLocal(new DefaultSagaMessage(id1));
+        counter.WaitForResetEvent();
 
-            counter.WaitForResetEvent();
+        var sagaInstances = _sagas.Instances.ToList();
 
-            var sagaInstances = _sagas.Instances.ToList();
-
-            Assert.That(sagaInstances.Count, Is.EqualTo(2));
-        }
+        Assert.That(sagaInstances.Count, Is.EqualTo(2));
     }
 }

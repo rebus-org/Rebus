@@ -1,14 +1,13 @@
 ﻿using Rebus.Bus;
 
-namespace Rebus.Transport
+namespace Rebus.Transport;
+
+class TransactionContextWithOwningBus : TransactionContext, ITransactionContextWithOwningBus
 {
-    class TransactionContextWithOwningBus : TransactionContext, ITransactionContextWithOwningBus
+    public TransactionContextWithOwningBus(RebusBus owningBus)
     {
-        public TransactionContextWithOwningBus(RebusBus owningBus)
-        {
-            OwningBus = owningBus;
-        }
-        
-        public IBus OwningBus { get; }
+        OwningBus = owningBus;
     }
+        
+    public IBus OwningBus { get; }
 }

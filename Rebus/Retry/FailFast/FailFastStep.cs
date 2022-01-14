@@ -10,81 +10,80 @@ using Rebus.Transport;
 
 // ReSharper disable ArgumentsStyleLiteral
 
-namespace Rebus.Retry.FailFast
-{
-    /// <summary>
-    /// Incoming message pipeline step that implements a fail-fast mechanism - if the message has failed once
-    /// with a specific exceptions, it get marked as "failed too many times". This allows the <seealso cref="Simple.SimpleRetryStrategyStep"/>
-    /// to send the message to the error queue.
-    /// </summary>
-    [StepDocumentation(@"Checks if a message has failed with specific exceptions and marks it as ""failed too many times"". 
+namespace Rebus.Retry.FailFast;
+
+/// <summary>
+/// Incoming message pipeline step that implements a fail-fast mechanism - if the message has failed once
+/// with a specific exceptions, it get marked as "failed too many times". This allows the <seealso cref="Simple.SimpleRetryStrategyStep"/>
+/// to send the message to the error queue.
+/// </summary>
+[StepDocumentation(@"Checks if a message has failed with specific exceptions and marks it as ""failed too many times"". 
 This allows the SimpleRetryStrategyStep to move it to the error queue.")]
-    public class FailFastStep : IIncomingStep
+public class FailFastStep : IIncomingStep
+{
+    readonly IErrorTracker _errorTracker;
+    readonly IFailFastChecker _failFastChecker;
+    readonly IErrorHandler _errorHandler;
+    readonly ITransport _transport;
+
+    /// <summary>
+    /// Constructs the step, using the given error tracker
+    /// </summary>
+    public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler, ITransport transport)
     {
-        readonly IErrorTracker _errorTracker;
-        readonly IFailFastChecker _failFastChecker;
-        readonly IErrorHandler _errorHandler;
-        readonly ITransport _transport;
+        _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
+        _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
+        _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
+        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+    }
 
-        /// <summary>
-        /// Constructs the step, using the given error tracker
-        /// </summary>
-        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler, ITransport transport)
+    /// <summary>
+    /// Checks if there are any registered exceptions to the current message and
+    /// if all of them are <see cref="FailFastException"/>, then mark the message
+    /// as failed too many times.
+    /// </summary>
+    public async Task Process(IncomingStepContext context, Func<Task> next)
+    {
+        try
         {
-            _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
-            _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
-            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
-            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
-        }
+            await next();
 
-        /// <summary>
-        /// Checks if there are any registered exceptions to the current message and
-        /// if all of them are <see cref="FailFastException"/>, then mark the message
-        /// as failed too many times.
-        /// </summary>
-        public async Task Process(IncomingStepContext context, Func<Task> next)
-        {
-            try
+            var deadletterCommand = context.Load<ManualDeadletterCommand>();
+
+            if (deadletterCommand != null)
             {
-                await next();
-
-                var deadletterCommand = context.Load<ManualDeadletterCommand>();
-
-                if (deadletterCommand != null)
-                {
-                    await ProcessDeadletterCommand(context, deadletterCommand);
-                }
-            }
-            catch (Exception exception)
-            {
-                var transportMessage = context.Load<TransportMessage>();
-                var messageId = transportMessage.GetMessageId();
-                if (_failFastChecker.ShouldFailFast(messageId, exception))
-                {
-                    // if we're currently executing a 2nd level retry, it's the 2nd level surrogate message ID we must mark as final
-                    var messageIdToMarkAsFinal = context.Load<bool>(SimpleRetryStrategyStep.DispatchAsFailedMessageKey)
-                        ? SimpleRetryStrategyStep.GetSecondLevelMessageId(messageId)
-                        : messageId;
-
-                    _errorTracker.MarkAsFinal(messageIdToMarkAsFinal);
-                }
-                throw;
+                await ProcessDeadletterCommand(context, deadletterCommand);
             }
         }
-
-        async Task ProcessDeadletterCommand(IncomingStepContext context, ManualDeadletterCommand deadletterCommand)
+        catch (Exception exception)
         {
-            var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
+            var transportMessage = context.Load<TransportMessage>();
+            var messageId = transportMessage.GetMessageId();
+            if (_failFastChecker.ShouldFailFast(messageId, exception))
+            {
+                // if we're currently executing a 2nd level retry, it's the 2nd level surrogate message ID we must mark as final
+                var messageIdToMarkAsFinal = context.Load<bool>(SimpleRetryStrategyStep.DispatchAsFailedMessageKey)
+                    ? SimpleRetryStrategyStep.GetSecondLevelMessageId(messageId)
+                    : messageId;
 
-            var transportMessage = originalTransportMessage.TransportMessage.Clone();
-            var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
-
-            transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
-            transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
-
-            var transactionContext = context.Load<ITransactionContext>();
-
-            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, new RebusApplicationException(errorDetails));
+                _errorTracker.MarkAsFinal(messageIdToMarkAsFinal);
+            }
+            throw;
         }
+    }
+
+    async Task ProcessDeadletterCommand(IncomingStepContext context, ManualDeadletterCommand deadletterCommand)
+    {
+        var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
+
+        var transportMessage = originalTransportMessage.TransportMessage.Clone();
+        var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
+
+        transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
+        transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
+
+        var transactionContext = context.Load<ITransactionContext>();
+
+        await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, new RebusApplicationException(errorDetails));
     }
 }

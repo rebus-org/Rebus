@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Timeouts;
 
-namespace Rebus.Persistence.Throwing
+namespace Rebus.Persistence.Throwing;
+
+class DisabledTimeoutManager : ITimeoutManager
 {
-    class DisabledTimeoutManager : ITimeoutManager
-    {
-        public Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body) => throw GetException();
+    public Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body) => throw GetException();
 
-        public Task<DueMessagesResult> GetDueMessages() => throw GetException();
+    public Task<DueMessagesResult> GetDueMessages() => throw GetException();
 
-        static InvalidOperationException GetException() => new InvalidOperationException(@"A timeout manager has not been configured. Please configure a timeout manager with the .Timeouts(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new InvalidOperationException(@"A timeout manager has not been configured. Please configure a timeout manager with the .Timeouts(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)
@@ -34,5 +34,4 @@ Configure.With(..)
 
 if you want to send deferred messages to another endpoint (which then of course needs to have a timeout manager configured too)
 ");
-    }
 }

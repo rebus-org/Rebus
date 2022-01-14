@@ -12,78 +12,77 @@ using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestCustomizedBackoffTime : FixtureBase
 {
-    [TestFixture]
-    public class TestCustomizedBackoffTime : FixtureBase
+    BuiltinHandlerActivator _activator;
+    RebusConfigurer _rebusConfigurer;
+    ConcurrentQueue<double> _waitedSeconds;
+
+    DateTime _busStartTime;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        RebusConfigurer _rebusConfigurer;
-        ConcurrentQueue<double> _waitedSeconds;
+        _activator = Using(new BuiltinHandlerActivator());
 
-        DateTime _busStartTime;
+        _waitedSeconds = new ConcurrentQueue<double>();
 
-        protected override void SetUp()
-        {
-            _activator = Using(new BuiltinHandlerActivator());
+        _rebusConfigurer = Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test backoff"))
+            .Options(o =>
+            {
+                o.SetBackoffTimes(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(0.5), TimeSpan.FromSeconds(1));
 
-            _waitedSeconds = new ConcurrentQueue<double>();
-
-            _rebusConfigurer = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test backoff"))
-                .Options(o =>
+                o.Decorate<ITransport>(c =>
                 {
-                    o.SetBackoffTimes(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(0.5), TimeSpan.FromSeconds(1));
+                    var transport = c.Get<ITransport>();
+                    var transportTap = new TransportTap(transport);
 
-                    o.Decorate<ITransport>(c =>
+                    transportTap.NoMessageReceived += () =>
                     {
-                        var transport = c.Get<ITransport>();
-                        var transportTap = new TransportTap(transport);
+                        var elapsedSinceStart = DateTime.UtcNow - _busStartTime;
+                        var elapsedSeconds = Math.Round(elapsedSinceStart.TotalSeconds, 1);
+                        _waitedSeconds.Enqueue(elapsedSeconds);
+                    };
 
-                        transportTap.NoMessageReceived += () =>
-                        {
-                            var elapsedSinceStart = DateTime.UtcNow - _busStartTime;
-                            var elapsedSeconds = Math.Round(elapsedSinceStart.TotalSeconds, 1);
-                            _waitedSeconds.Enqueue(elapsedSeconds);
-                        };
-
-                        return transportTap;
-                    });
-
-                    o.SetMaxParallelism(10);
-                    o.SetNumberOfWorkers(1);
+                    return transportTap;
                 });
-        }
 
-        [Test]
-        public async Task ItWorks()
-        {
-            _busStartTime = DateTime.UtcNow;
-            _rebusConfigurer.Start();
+                o.SetMaxParallelism(10);
+                o.SetNumberOfWorkers(1);
+            });
+    }
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+    [Test]
+    public async Task ItWorks()
+    {
+        _busStartTime = DateTime.UtcNow;
+        _rebusConfigurer.Start();
 
-            _activator.Dispose();
+        await Task.Delay(TimeSpan.FromSeconds(5));
 
-            Console.WriteLine(@"Receive attempts:
+        _activator.Dispose();
+
+        Console.WriteLine(@"Receive attempts:
 {0}
 
 Diffs:
 {1}", string.Join(Environment.NewLine, _waitedSeconds),
-    string.Join(Environment.NewLine, GetDiffs(_waitedSeconds)));
-        }
+            string.Join(Environment.NewLine, GetDiffs(_waitedSeconds)));
+    }
 
-        static IEnumerable<double> GetDiffs(IEnumerable<double> waitedSeconds)
+    static IEnumerable<double> GetDiffs(IEnumerable<double> waitedSeconds)
+    {
+        var list = waitedSeconds.ToList();
+
+        for (int index1 = 0, index2 = 1; index2 < list.Count; index1++, index2++)
         {
-            var list = waitedSeconds.ToList();
+            var time1 = list[index1];
+            var time2 = list[index2];
 
-            for (int index1 = 0, index2 = 1; index2 < list.Count; index1++, index2++)
-            {
-                var time1 = list[index1];
-                var time2 = list[index2];
-
-                yield return time2 - time1;
-            }
+            yield return time2 - time1;
         }
     }
 }

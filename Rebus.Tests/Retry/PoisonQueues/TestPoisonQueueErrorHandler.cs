@@ -11,62 +11,62 @@ using Rebus.Tests.Contracts;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Retry.PoisonQueues
+namespace Rebus.Tests.Retry.PoisonQueues;
+
+[TestFixture]
+public class TestPoisonQueueErrorHandler : FixtureBase
 {
-    [TestFixture]
-    public class TestPoisonQueueErrorHandler : FixtureBase
+    readonly InMemNetwork _network = new InMemNetwork(true);
+
+    PoisonQueueErrorHandler _handler;
+    InMemTransport _transport;
+    SimpleRetryStrategySettings _simpleRetryStrategySettings;
+
+    protected override void SetUp()
     {
-        readonly InMemNetwork _network = new InMemNetwork(true);
+        _network.Reset();
 
-        PoisonQueueErrorHandler _handler;
-        InMemTransport _transport;
-        SimpleRetryStrategySettings _simpleRetryStrategySettings;
+        _simpleRetryStrategySettings = new SimpleRetryStrategySettings();
+        _transport = new InMemTransport(_network, "whatever");
+        _handler = new PoisonQueueErrorHandler(_simpleRetryStrategySettings, _transport, new ConsoleLoggerFactory(false));
+        _handler.Initialize();
+    }
 
-        protected override void SetUp()
+    [Test]
+    public async Task MovesMessageToErrorQueueAsExpected()
+    {
+        var message = NewMessage("known-id");
+        var exception = new IOException("æi altså");
+
+        await WithContext(async context =>
         {
-            _network.Reset();
+            await _handler.HandlePoisonMessage(message, context, exception);
+        });
 
-            _simpleRetryStrategySettings = new SimpleRetryStrategySettings();
-            _transport = new InMemTransport(_network, "whatever");
-            _handler = new PoisonQueueErrorHandler(_simpleRetryStrategySettings, _transport, new ConsoleLoggerFactory(false));
-            _handler.Initialize();
-        }
+        var failedMessage = _network.GetNextOrNull("error");
 
-        [Test]
-        public async Task MovesMessageToErrorQueueAsExpected()
+        Assert.That(failedMessage, Is.Not.Null);
+        Assert.That(failedMessage.Headers[Headers.MessageId], Is.EqualTo("known-id"));
+    }
+
+    [Test]
+    public async Task TruncatesErrorDetailsIfTheyAreTooLong()
+    {
+        _simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength = 300;
+
+        var message = NewMessage("known-id");
+        var exception = new IOException(new string('*', 1024));
+        var originalErrorDetails = exception.ToString();
+
+        await WithContext(async context =>
         {
-            var message = NewMessage("known-id");
-            var exception = new IOException("æi altså");
+            await _handler.HandlePoisonMessage(message, context, exception);
+        });
 
-            await WithContext(async context =>
-            {
-                await _handler.HandlePoisonMessage(message, context, exception);
-            });
+        var failedMessage = _network.GetNextOrNull("error");
+        var truncatedErrorDetails = failedMessage.Headers[Headers.ErrorDetails];
 
-            var failedMessage = _network.GetNextOrNull("error");
-
-            Assert.That(failedMessage, Is.Not.Null);
-            Assert.That(failedMessage.Headers[Headers.MessageId], Is.EqualTo("known-id"));
-        }
-
-        [Test]
-        public async Task TruncatesErrorDetailsIfTheyAreTooLong()
-        {
-            _simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength = 300;
-
-            var message = NewMessage("known-id");
-            var exception = new IOException(new string('*', 1024));
-            var originalErrorDetails = exception.ToString();
-
-            await WithContext(async context =>
-            {
-                await _handler.HandlePoisonMessage(message, context, exception);
-            });
-
-            var failedMessage = _network.GetNextOrNull("error");
-            var truncatedErrorDetails = failedMessage.Headers[Headers.ErrorDetails];
-
-            Console.WriteLine($@"
+        Console.WriteLine($@"
 
 -------------------------------------------------------------
 
@@ -86,24 +86,23 @@ The forwarded message contained these error details:
 (length: {truncatedErrorDetails.Length})
 ");
 
-            Assert.That(truncatedErrorDetails.Length, Is.LessThanOrEqualTo(_simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength));
-        }
+        Assert.That(truncatedErrorDetails.Length, Is.LessThanOrEqualTo(_simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength));
+    }
 
-        static TransportMessage NewMessage(string messageId = null)
+    static TransportMessage NewMessage(string messageId = null)
+    {
+        var headers = new Dictionary<string, string>
         {
-            var headers = new Dictionary<string, string>
-            {
-                {Headers.MessageId, messageId ?? (Guid.NewGuid()).ToString()}
-            };
+            {Headers.MessageId, messageId ?? (Guid.NewGuid()).ToString()}
+        };
 
-            return new TransportMessage(headers, new byte[] { 1, 2, 3 });
-        }
+        return new TransportMessage(headers, new byte[] { 1, 2, 3 });
+    }
 
-        async Task WithContext(Func<ITransactionContext, Task> action)
-        {
-            var context = new TransactionContext();
-            await action(context);
-            await context.Complete();
-        }
+    async Task WithContext(Func<ITransactionContext, Task> action)
+    {
+        var context = new TransactionContext();
+        await action(context);
+        await context.Complete();
     }
 }

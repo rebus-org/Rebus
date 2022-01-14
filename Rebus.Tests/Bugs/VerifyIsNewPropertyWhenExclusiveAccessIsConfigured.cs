@@ -13,109 +13,108 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Bugs
+namespace Rebus.Tests.Bugs;
+
+[TestFixture]
+[Description("Not a bug, just verifies (once more) that exclusive access can be had")]
+public class VerifyIsNewPropertyWhenExclusiveAccessIsConfigured : FixtureBase
 {
-    [TestFixture]
-    [Description("Not a bug, just verifies (once more) that exclusive access can be had")]
-    public class VerifyIsNewPropertyWhenExclusiveAccessIsConfigured : FixtureBase
+    BuiltinHandlerActivator _activator;
+    IBusStarter _busStarter;
+
+    protected override void SetUp()
     {
-        BuiltinHandlerActivator _activator;
-        IBusStarter _busStarter;
+        _activator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
-        {
-            _activator = new BuiltinHandlerActivator();
+        Using(_activator);
 
-            Using(_activator);
-
-            _busStarter = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "exlusivitivity"))
-                .Sagas(s =>
-                {
-                    s.StoreInMemory();
-                    s.EnforceExclusiveAccess();
-                })
-                .Create();
-        }
-
-        [Test]
-        public async Task WorksAsExpected()
-        {
-            const int count = 5;
-
-            var props = new ConcurrentQueue<SagaProps>();
-            var sharedCounter = new SharedCounter(count);
-
-            _activator.Register(() => new MyExclusiveSaga(props, sharedCounter));
-
-            _busStarter.Start();
-
-            var bus = _activator.Bus;
-
-            count.Times(() => bus.Advanced.SyncBus.SendLocal(new Go("corr1")));
-
-            sharedCounter.WaitForResetEvent();
-
-            // see if we get any extra props
-            await Task.Delay(TimeSpan.FromSeconds(1));
-
-            var recordedProps = props.ToList();
-
-            Assert.That(recordedProps.Count, Is.EqualTo(count));
-
-            Assert.That(recordedProps.First().IsNew, Is.True);
-            Assert.That(recordedProps.Skip(1).All(p => p.IsNew), Is.False);
-        }
-
-        class MyExclusiveSaga : Saga<MyExclusiveSagaData>, IAmInitiatedBy<Go>
-        {
-            readonly ConcurrentQueue<SagaProps> _props;
-            readonly SharedCounter _sharedCounter;
-
-            public MyExclusiveSaga(ConcurrentQueue<SagaProps> props, SharedCounter sharedCounter)
+        _busStarter = Configure.With(_activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "exlusivitivity"))
+            .Sagas(s =>
             {
-                _props = props;
-                _sharedCounter = sharedCounter;
-            }
+                s.StoreInMemory();
+                s.EnforceExclusiveAccess();
+            })
+            .Create();
+    }
 
-            protected override void CorrelateMessages(ICorrelationConfig<MyExclusiveSagaData> config)
-            {
-                config.Correlate<Go>(m => m.CorrelationId, d => d.CorrelationId);
-            }
+    [Test]
+    public async Task WorksAsExpected()
+    {
+        const int count = 5;
 
-            public async Task Handle(Go message)
-            {
-                await Task.Delay(20);
+        var props = new ConcurrentQueue<SagaProps>();
+        var sharedCounter = new SharedCounter(count);
 
-                _props.Enqueue(new SagaProps(IsNew));
+        _activator.Register(() => new MyExclusiveSaga(props, sharedCounter));
 
-                _sharedCounter.Decrement();
-            }
-        }
+        _busStarter.Start();
 
-        class SagaProps
+        var bus = _activator.Bus;
+
+        count.Times(() => bus.Advanced.SyncBus.SendLocal(new Go("corr1")));
+
+        sharedCounter.WaitForResetEvent();
+
+        // see if we get any extra props
+        await Task.Delay(TimeSpan.FromSeconds(1));
+
+        var recordedProps = props.ToList();
+
+        Assert.That(recordedProps.Count, Is.EqualTo(count));
+
+        Assert.That(recordedProps.First().IsNew, Is.True);
+        Assert.That(recordedProps.Skip(1).All(p => p.IsNew), Is.False);
+    }
+
+    class MyExclusiveSaga : Saga<MyExclusiveSagaData>, IAmInitiatedBy<Go>
+    {
+        readonly ConcurrentQueue<SagaProps> _props;
+        readonly SharedCounter _sharedCounter;
+
+        public MyExclusiveSaga(ConcurrentQueue<SagaProps> props, SharedCounter sharedCounter)
         {
-            public bool IsNew { get; }
-
-            public SagaProps(bool isNew)
-            {
-                IsNew = isNew;
-            }
+            _props = props;
+            _sharedCounter = sharedCounter;
         }
 
-        class MyExclusiveSagaData : SagaData
+        protected override void CorrelateMessages(ICorrelationConfig<MyExclusiveSagaData> config)
         {
-            public string CorrelationId { get; set; }
+            config.Correlate<Go>(m => m.CorrelationId, d => d.CorrelationId);
         }
 
-        class Go
+        public async Task Handle(Go message)
         {
-            public Go(string correlationId)
-            {
-                CorrelationId = correlationId;
-            }
+            await Task.Delay(20);
 
-            public string CorrelationId { get; }
+            _props.Enqueue(new SagaProps(IsNew));
+
+            _sharedCounter.Decrement();
         }
+    }
+
+    class SagaProps
+    {
+        public bool IsNew { get; }
+
+        public SagaProps(bool isNew)
+        {
+            IsNew = isNew;
+        }
+    }
+
+    class MyExclusiveSagaData : SagaData
+    {
+        public string CorrelationId { get; set; }
+    }
+
+    class Go
+    {
+        public Go(string correlationId)
+        {
+            CorrelationId = correlationId;
+        }
+
+        public string CorrelationId { get; }
     }
 }

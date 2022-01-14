@@ -7,64 +7,63 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
 
-namespace Rebus.DataBus.ClaimCheck
+namespace Rebus.DataBus.ClaimCheck;
+
+/// <summary>
+/// Outgoing step that 'dehydrates' big messages by storing the payload as a data bus attachment.
+/// </summary>
+[StepDocumentation("Outgoing step that 'dehydrates' big messages by storing the payload as a data bus attachment.")]
+public class DehydrateOutgoingMessageStep : IOutgoingStep
 {
+    static readonly byte[] EmptyMessageBody = new byte[0];
+
+    readonly int _messageSizeLimitBytes;
+    readonly IDataBus _dataBus;
+
     /// <summary>
-    /// Outgoing step that 'dehydrates' big messages by storing the payload as a data bus attachment.
+    /// Creates the step
     /// </summary>
-    [StepDocumentation("Outgoing step that 'dehydrates' big messages by storing the payload as a data bus attachment.")]
-    public class DehydrateOutgoingMessageStep : IOutgoingStep
+    public DehydrateOutgoingMessageStep(IDataBus dataBus, int messageSizeLimitBytes)
     {
-        static readonly byte[] EmptyMessageBody = new byte[0];
+        _dataBus = dataBus;
+        _messageSizeLimitBytes = messageSizeLimitBytes;
+    }
 
-        readonly int _messageSizeLimitBytes;
-        readonly IDataBus _dataBus;
+    /// <summary>
+    /// Dehydrates the message, if it's too big
+    /// </summary>
+    public async Task Process(OutgoingStepContext context, Func<Task> next)
+    {
+        var transportMessage = context.Load<TransportMessage>();
 
-        /// <summary>
-        /// Creates the step
-        /// </summary>
-        public DehydrateOutgoingMessageStep(IDataBus dataBus, int messageSizeLimitBytes)
+        if (transportMessage.Body.Length > _messageSizeLimitBytes)
         {
-            _dataBus = dataBus;
-            _messageSizeLimitBytes = messageSizeLimitBytes;
+            await DehydrateTransportMessage(context, transportMessage);
         }
 
-        /// <summary>
-        /// Dehydrates the message, if it's too big
-        /// </summary>
-        public async Task Process(OutgoingStepContext context, Func<Task> next)
+        await next();
+    }
+
+    async Task DehydrateTransportMessage(OutgoingStepContext context, TransportMessage transportMessage)
+    {
+        var messageId = transportMessage.GetMessageId();
+
+        try
         {
-            var transportMessage = context.Load<TransportMessage>();
-
-            if (transportMessage.Body.Length > _messageSizeLimitBytes)
+            using (var source = new MemoryStream(transportMessage.Body))
             {
-                await DehydrateTransportMessage(context, transportMessage);
-            }
+                var attachment = await _dataBus.CreateAttachment(source);
+                var headers = transportMessage.Headers.Clone();
 
-            await next();
+                headers[Headers.MessagePayloadAttachmentId] = attachment.Id;
+
+                context.Save(new TransportMessage(headers, EmptyMessageBody));
+            }
         }
-
-        async Task DehydrateTransportMessage(OutgoingStepContext context, TransportMessage transportMessage)
+        catch (Exception exception)
         {
-            var messageId = transportMessage.GetMessageId();
-
-            try
-            {
-                using (var source = new MemoryStream(transportMessage.Body))
-                {
-                    var attachment = await _dataBus.CreateAttachment(source);
-                    var headers = transportMessage.Headers.Clone();
-
-                    headers[Headers.MessagePayloadAttachmentId] = attachment.Id;
-
-                    context.Save(new TransportMessage(headers, EmptyMessageBody));
-                }
-            }
-            catch (Exception exception)
-            {
-                throw new RebusApplicationException(exception,
-                    $"Could not create (automatic claim check) attachment for outgoing message with ID {messageId}");
-            }
+            throw new RebusApplicationException(exception,
+                $"Could not create (automatic claim check) attachment for outgoing message with ID {messageId}");
         }
     }
 }

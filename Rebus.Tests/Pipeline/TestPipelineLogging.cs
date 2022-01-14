@@ -7,33 +7,32 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Pipeline
+namespace Rebus.Tests.Pipeline;
+
+[TestFixture]
+public class TestPipelineLogging : FixtureBase
 {
-    [TestFixture]
-    public class TestPipelineLogging : FixtureBase
+    ListLoggerFactory _listLoggerFactory;
+
+    protected override void SetUp()
     {
-        ListLoggerFactory _listLoggerFactory;
+        _listLoggerFactory = new ListLoggerFactory();
+    }
 
-        protected override void SetUp()
-        {
-            _listLoggerFactory = new ListLoggerFactory();
-        }
+    [Test]
+    public void CanLogPipelineGood()
+    {
+        var bus = Configure.With(new BuiltinHandlerActivator())
+            .Logging(l => l.Use(_listLoggerFactory))
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test"))
+            .Options(o => o.LogPipeline(verbose:true))
+            .Start();
 
-        [Test]
-        public void CanLogPipelineGood()
-        {
-            var bus = Configure.With(new BuiltinHandlerActivator())
-                .Logging(l => l.Use(_listLoggerFactory))
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test"))
-                .Options(o => o.LogPipeline(verbose:true))
-                .Start();
+        Using(bus);
 
-            Using(bus);
+        var listLoggerFactory = _listLoggerFactory;
 
-            var listLoggerFactory = _listLoggerFactory;
-
-            Console.WriteLine(string.Join(Environment.NewLine, listLoggerFactory.Select(l => l.Text)));
-            Console.WriteLine();
-        }
+        Console.WriteLine(string.Join(Environment.NewLine, listLoggerFactory.Select(l => l.Text)));
+        Console.WriteLine();
     }
 }

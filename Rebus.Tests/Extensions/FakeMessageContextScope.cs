@@ -4,19 +4,18 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
 
-namespace Rebus.Tests.Extensions
+namespace Rebus.Tests.Extensions;
+
+class FakeMessageContextScope : IDisposable
 {
-    class FakeMessageContextScope : IDisposable
+    readonly RebusTransactionScope _rebusTransactionScope = new RebusTransactionScope();
+
+    public FakeMessageContextScope()
     {
-        readonly RebusTransactionScope _rebusTransactionScope = new RebusTransactionScope();
-
-        public FakeMessageContextScope()
-        {
-            TransactionContext.Items[StepContext.StepContextKey] = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[] { 1, 2, 3 }), TransactionContext);
-        }
-
-        public ITransactionContext TransactionContext => _rebusTransactionScope.TransactionContext;
-
-        public void Dispose() => _rebusTransactionScope.Dispose();
+        TransactionContext.Items[StepContext.StepContextKey] = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[] { 1, 2, 3 }), TransactionContext);
     }
+
+    public ITransactionContext TransactionContext => _rebusTransactionScope.TransactionContext;
+
+    public void Dispose() => _rebusTransactionScope.Dispose();
 }

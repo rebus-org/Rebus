@@ -13,99 +13,98 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestHandlerReordering : FixtureBase
 {
-    [TestFixture]
-    public class TestHandlerReordering : FixtureBase
+    [Test]
+    public async Task CanReorderHandlers()
     {
-        [Test]
-        public async Task CanReorderHandlers()
+        var events = new ConcurrentQueue<string>();
+        var activator = new FakeHandlerActivator(new IHandleMessages[]
         {
-            var events = new ConcurrentQueue<string>();
-            var activator = new FakeHandlerActivator(new IHandleMessages[]
+            new ThirdHandler(events), 
+            new SecondHandler(events), 
+            new FirstHandler(events), 
+        });
+
+        var bus = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "handler-reordering"))
+            .Options(o =>
             {
-                new ThirdHandler(events), 
-                new SecondHandler(events), 
-                new FirstHandler(events), 
-            });
+                o.SpecifyOrderOfHandlers()
+                    .First<FirstHandler>()
+                    .Then<SecondHandler>();
+            })
+            .Start();
 
-            var bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "handler-reordering"))
-                .Options(o =>
-                {
-                    o.SpecifyOrderOfHandlers()
-                        .First<FirstHandler>()
-                        .Then<SecondHandler>();
-                })
-                .Start();
+        Using(bus);
 
-            Using(bus);
+        await bus.SendLocal("hej med dig min ven");
 
-            await bus.SendLocal("hej med dig min ven");
+        await events.WaitUntil(e => e.Count == 3);
 
-            await events.WaitUntil(e => e.Count == 3);
+        Assert.That(events.ToArray(), Is.EqualTo(new[] { "FirstHandler", "SecondHandler", "ThirdHandler" }));
+    }
 
-            Assert.That(events.ToArray(), Is.EqualTo(new[] { "FirstHandler", "SecondHandler", "ThirdHandler" }));
+    class FirstHandler : IHandleMessages<string>
+    {
+        readonly ConcurrentQueue<string> _events;
+
+        public FirstHandler(ConcurrentQueue<string> events)
+        {
+            _events = events;
         }
 
-        class FirstHandler : IHandleMessages<string>
+        public async Task Handle(string message)
         {
-            readonly ConcurrentQueue<string> _events;
+            _events.Enqueue("FirstHandler");
+        }
+    }
 
-            public FirstHandler(ConcurrentQueue<string> events)
-            {
-                _events = events;
-            }
+    class SecondHandler : IHandleMessages<string>
+    {
+        readonly ConcurrentQueue<string> _events;
 
-            public async Task Handle(string message)
-            {
-                _events.Enqueue("FirstHandler");
-            }
+        public SecondHandler(ConcurrentQueue<string> events)
+        {
+            _events = events;
         }
 
-        class SecondHandler : IHandleMessages<string>
+        public async Task Handle(string message)
         {
-            readonly ConcurrentQueue<string> _events;
+            _events.Enqueue("SecondHandler");
+        }
+    }
 
-            public SecondHandler(ConcurrentQueue<string> events)
-            {
-                _events = events;
-            }
+    class ThirdHandler : IHandleMessages<string>
+    {
+        readonly ConcurrentQueue<string> _events;
 
-            public async Task Handle(string message)
-            {
-                _events.Enqueue("SecondHandler");
-            }
+        public ThirdHandler(ConcurrentQueue<string> events)
+        {
+            _events = events;
         }
 
-        class ThirdHandler : IHandleMessages<string>
+        public async Task Handle(string message)
         {
-            readonly ConcurrentQueue<string> _events;
+            _events.Enqueue("ThirdHandler");
+        }
+    }
 
-            public ThirdHandler(ConcurrentQueue<string> events)
-            {
-                _events = events;
-            }
+    class FakeHandlerActivator : IHandlerActivator
+    {
+        readonly IEnumerable<IHandleMessages> _handlers;
 
-            public async Task Handle(string message)
-            {
-                _events.Enqueue("ThirdHandler");
-            }
+        public FakeHandlerActivator(IEnumerable<IHandleMessages> handlers)
+        {
+            _handlers = handlers;
         }
 
-        class FakeHandlerActivator : IHandlerActivator
+        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
-            readonly IEnumerable<IHandleMessages> _handlers;
-
-            public FakeHandlerActivator(IEnumerable<IHandleMessages> handlers)
-            {
-                _handlers = handlers;
-            }
-
-            public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
-            {
-                return _handlers.OfType<IHandleMessages<TMessage>>();
-            }
+            return _handlers.OfType<IHandleMessages<TMessage>>();
         }
     }
 }

@@ -1,22 +1,21 @@
 ﻿using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace Rebus.Handlers
+namespace Rebus.Handlers;
+
+/// <summary>
+/// Base message handler interface. Don't implement this one directly, it would give you nothing
+/// </summary>
+public interface IHandleMessages { }
+    
+/// <summary>
+/// Message handler interface. Implement this in order to get to handle messages of a specific type
+/// </summary>
+[UsedImplicitly(ImplicitUseTargetFlags.Itself | ImplicitUseTargetFlags.WithInheritors)]
+public interface IHandleMessages<in TMessage> : IHandleMessages
 {
     /// <summary>
-    /// Base message handler interface. Don't implement this one directly, it would give you nothing
+    /// This method will be invoked with a message of type <typeparamref name="TMessage"/>
     /// </summary>
-    public interface IHandleMessages { }
-    
-    /// <summary>
-    /// Message handler interface. Implement this in order to get to handle messages of a specific type
-    /// </summary>
-    [UsedImplicitly(ImplicitUseTargetFlags.Itself | ImplicitUseTargetFlags.WithInheritors)]
-    public interface IHandleMessages<in TMessage> : IHandleMessages
-    {
-        /// <summary>
-        /// This method will be invoked with a message of type <typeparamref name="TMessage"/>
-        /// </summary>
-        Task Handle(TMessage message);
-    }
+    Task Handle(TMessage message);
 }

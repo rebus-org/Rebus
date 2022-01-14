@@ -9,105 +9,104 @@ using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Routing
+namespace Rebus.Tests.Routing;
+
+[TestFixture]
+public class TestTransportMessageOperations : FixtureBase
 {
-    [TestFixture]
-    public class TestTransportMessageOperations : FixtureBase
+    const string ForwardedMessagesQueue = "forwarded messages";
+    InMemNetwork _network;
+    BuiltinHandlerActivator _forwarderActivator;
+    BuiltinHandlerActivator _receiverActivator;
+
+    protected override void SetUp()
     {
-        const string ForwardedMessagesQueue = "forwarded messages";
-        InMemNetwork _network;
-        BuiltinHandlerActivator _forwarderActivator;
-        BuiltinHandlerActivator _receiverActivator;
+        _network = new InMemNetwork();
 
-        protected override void SetUp()
-        {
-            _network = new InMemNetwork();
-
-            _forwarderActivator = Using(new BuiltinHandlerActivator());
+        _forwarderActivator = Using(new BuiltinHandlerActivator());
             
-            Configure.With(_forwarderActivator)
-                .Transport(t => t.UseInMemoryTransport(_network, "message forwarder"))
-                .Start();
+        Configure.With(_forwarderActivator)
+            .Transport(t => t.UseInMemoryTransport(_network, "message forwarder"))
+            .Start();
 
-            _receiverActivator = Using(new BuiltinHandlerActivator());
+        _receiverActivator = Using(new BuiltinHandlerActivator());
             
-            Configure.With(_receiverActivator)
-                .Transport(t => t.UseInMemoryTransport(_network, ForwardedMessagesQueue))
-                .Start();
-        }
+        Configure.With(_receiverActivator)
+            .Transport(t => t.UseInMemoryTransport(_network, ForwardedMessagesQueue))
+            .Start();
+    }
 
-        [Test]
-        public void CanForwardMessageToErrorQueue()
+    [Test]
+    public void CanForwardMessageToErrorQueue()
+    {
+        var sharedCounter = new SharedCounter(1) { Delay = TimeSpan.FromSeconds(0.1) };
+
+        Using(sharedCounter);
+
+        _forwarderActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
         {
-            var sharedCounter = new SharedCounter(1) { Delay = TimeSpan.FromSeconds(0.1) };
+            await bus.Advanced.TransportMessage.Forward(ForwardedMessagesQueue, new Dictionary<string, string> {{"testheader", "OK"}});
+        });
 
-            Using(sharedCounter);
-
-            _forwarderActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
-            {
-                await bus.Advanced.TransportMessage.Forward(ForwardedMessagesQueue, new Dictionary<string, string> {{"testheader", "OK"}});
-            });
-
-            _receiverActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, str) =>
-            {
-                var headers = context.TransportMessage.Headers;
-
-                if (!headers.ContainsKey("testheader"))
-                {
-                    sharedCounter.Fail("Could not find 'testheader' header!");
-                    return;
-                }
-
-                var headerValue = headers["testheader"];
-                if (headerValue != "OK")
-                {
-                    sharedCounter.Fail("'testheader' header had value {0}", headerValue);
-                    return;
-                }
-
-                sharedCounter.Decrement();
-            });
-
-            _forwarderActivator.Bus.SendLocal("hej med dig min ven!!!").Wait();
-
-            sharedCounter.WaitForResetEvent();
-        }
-
-        [Test]
-        public void CanDeferTransportMessage()
+        _receiverActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, str) =>
         {
-            var counter = new SharedCounter(1);
+            var headers = context.TransportMessage.Headers;
 
-            Using(counter);
-
-            var customHeaders = new Dictionary<string, string>
+            if (!headers.ContainsKey("testheader"))
             {
-                {"testheader", "customizzle valuizzle"}
-            };
+                sharedCounter.Fail("Could not find 'testheader' header!");
+                return;
+            }
 
-            var didDeferTheMessage = false;
-
-            _forwarderActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
+            var headerValue = headers["testheader"];
+            if (headerValue != "OK")
             {
-                if (!didDeferTheMessage)
-                {
-                    Console.WriteLine("Got the message for the first time - deferring it!");
+                sharedCounter.Fail("'testheader' header had value {0}", headerValue);
+                return;
+            }
 
-                    await bus.Advanced.TransportMessage.Defer(TimeSpan.FromSeconds(2), customHeaders);
+            sharedCounter.Decrement();
+        });
 
-                    didDeferTheMessage = true;
+        _forwarderActivator.Bus.SendLocal("hej med dig min ven!!!").Wait();
 
-                    return;
-                }
+        sharedCounter.WaitForResetEvent();
+    }
 
-                Console.WriteLine("Got the message after it was deferred... nice!");
+    [Test]
+    public void CanDeferTransportMessage()
+    {
+        var counter = new SharedCounter(1);
 
-                counter.Decrement();
-            });
+        Using(counter);
 
-            _forwarderActivator.Bus.SendLocal("hej med dig min ven!!!").Wait();
+        var customHeaders = new Dictionary<string, string>
+        {
+            {"testheader", "customizzle valuizzle"}
+        };
 
-            counter.WaitForResetEvent();
-        }
+        var didDeferTheMessage = false;
+
+        _forwarderActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
+        {
+            if (!didDeferTheMessage)
+            {
+                Console.WriteLine("Got the message for the first time - deferring it!");
+
+                await bus.Advanced.TransportMessage.Defer(TimeSpan.FromSeconds(2), customHeaders);
+
+                didDeferTheMessage = true;
+
+                return;
+            }
+
+            Console.WriteLine("Got the message after it was deferred... nice!");
+
+            counter.Decrement();
+        });
+
+        _forwarderActivator.Bus.SendLocal("hej med dig min ven!!!").Wait();
+
+        counter.WaitForResetEvent();
     }
 }

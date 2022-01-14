@@ -15,86 +15,85 @@ using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestRequestReply : FixtureBase
 {
-    [TestFixture]
-    public class TestRequestReply : FixtureBase
+    IBus _bus;
+    BuiltinHandlerActivator _handlerActivator;
+
+    protected override void SetUp()
     {
-        IBus _bus;
-        BuiltinHandlerActivator _handlerActivator;
+        _handlerActivator = Using(new BuiltinHandlerActivator());
 
-        protected override void SetUp()
-        {
-            _handlerActivator = Using(new BuiltinHandlerActivator());
+        const string queueName = "request-reply";
 
-            const string queueName = "request-reply";
-
-            _bus = Configure.With(_handlerActivator)
-                .Logging(l => l.Console())
-                .Transport(t =>
-                {
-                    t.UseInMemoryTransport(new InMemNetwork(), queueName);
-                })
-                .Routing(r => r.TypeBased().Map<string>(queueName))
-                .Options(o => o.SetNumberOfWorkers(1))
-                .Start();
-        }
-
-        [Test]
-        public async Task CanSendAndReceive()
-        {
-            var gotMessage = new ManualResetEvent(false);
-
-            _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
+        _bus = Configure.With(_handlerActivator)
+            .Logging(l => l.Console())
+            .Transport(t =>
             {
-                if (str == "hej med dig min ven!")
-                {
-                    Console.WriteLine("w00t!");
+                t.UseInMemoryTransport(new InMemNetwork(), queueName);
+            })
+            .Routing(r => r.TypeBased().Map<string>(queueName))
+            .Options(o => o.SetNumberOfWorkers(1))
+            .Start();
+    }
 
-                    await bus.Reply("t00t!");
-                }
+    [Test]
+    public async Task CanSendAndReceive()
+    {
+        var gotMessage = new ManualResetEvent(false);
 
-                if (str == "t00t!")
-                {
-                    Console.WriteLine("got t++t!!!");
+        _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, str) =>
+        {
+            if (str == "hej med dig min ven!")
+            {
+                Console.WriteLine("w00t!");
 
-                    gotMessage.Set();
-                }
+                await bus.Reply("t00t!");
+            }
+
+            if (str == "t00t!")
+            {
+                Console.WriteLine("got t++t!!!");
+
+                gotMessage.Set();
+            }
+        });
+
+        await _bus.Send("hej med dig min ven!");
+
+        gotMessage.WaitOrDie(TimeSpan.FromSeconds(30));
+    }
+
+    [Test]
+    public async Task SetsReplyToHeader()
+    {
+        var gotMessage = new ManualResetEvent(false);
+        var receivedInReplyToHeaderValue = "not set";
+
+        _handlerActivator
+            .AddHandlerWithBusTemporarilyStopped<Request>(async (bus, request) =>
+            {
+                await bus.Reply(new Reply());
+            })
+            .AddHandlerWithBusTemporarilyStopped<Reply>(async (bus, context, reply) =>
+            {
+                receivedInReplyToHeaderValue = context.Headers.GetValueOrNull(Headers.InReplyTo);
+                gotMessage.Set();
             });
 
-            await _bus.Send("hej med dig min ven!");
 
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(30));
-        }
+        const string knownMessageId = "known-id";
 
-        [Test]
-        public async Task SetsReplyToHeader()
-        {
-            var gotMessage = new ManualResetEvent(false);
-            var receivedInReplyToHeaderValue = "not set";
+        await _bus.SendLocal(new Request(), new Dictionary<string, string> { { Headers.MessageId, knownMessageId } });
 
-            _handlerActivator
-                .AddHandlerWithBusTemporarilyStopped<Request>(async (bus, request) =>
-                {
-                    await bus.Reply(new Reply());
-                })
-                .AddHandlerWithBusTemporarilyStopped<Reply>(async (bus, context, reply) =>
-                {
-                    receivedInReplyToHeaderValue = context.Headers.GetValueOrNull(Headers.InReplyTo);
-                    gotMessage.Set();
-                });
+        gotMessage.WaitOrDie(TimeSpan.FromSeconds(5));
 
-
-            const string knownMessageId = "known-id";
-
-            await _bus.SendLocal(new Request(), new Dictionary<string, string> { { Headers.MessageId, knownMessageId } });
-
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(5));
-
-            Assert.That(receivedInReplyToHeaderValue, Is.EqualTo(knownMessageId));
-        }
-
-        class Request { }
-        class Reply { }
+        Assert.That(receivedInReplyToHeaderValue, Is.EqualTo(knownMessageId));
     }
+
+    class Request { }
+    class Reply { }
 }

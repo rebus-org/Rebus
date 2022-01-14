@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace Rebus.Time
+namespace Rebus.Time;
+
+/// <summary>
+/// Represents time
+/// </summary>
+public interface IRebusTime
 {
     /// <summary>
-    /// Represents time
+    /// Gets the current time
     /// </summary>
-    public interface IRebusTime
-    {
-        /// <summary>
-        /// Gets the current time
-        /// </summary>
-        DateTimeOffset Now { get; }
-    }
+    DateTimeOffset Now { get; }
 }

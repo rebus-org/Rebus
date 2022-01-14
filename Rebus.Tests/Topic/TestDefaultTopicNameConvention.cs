@@ -2,26 +2,25 @@
 using Rebus.Extensions;
 using Rebus.Topic;
 
-namespace Rebus.Tests.Topic
+namespace Rebus.Tests.Topic;
+
+[TestFixture]
+public class TestDefaultTopicNameConvention
 {
-    [TestFixture]
-    public class TestDefaultTopicNameConvention
+    [Test]
+    public void DefaultTopicNameConventionUseGetAssExtension()
     {
-        [Test]
-        public void DefaultTopicNameConventionUseGetAssExtension()
-        {
-            var convention = new DefaultTopicNameConvention();
+        var convention = new DefaultTopicNameConvention();
 
-            var expected = typeof(SimpleMessage).GetSimpleAssemblyQualifiedName();
-            var actual = convention.GetTopic(typeof(SimpleMessage));
+        var expected = typeof(SimpleMessage).GetSimpleAssemblyQualifiedName();
+        var actual = convention.GetTopic(typeof(SimpleMessage));
 
-            Assert.That(actual, Is.EqualTo(expected));
-        }
+        Assert.That(actual, Is.EqualTo(expected));
     }
+}
 
-    public class SimpleMessage
-    {
-        public string Something { get; set; }
+public class SimpleMessage
+{
+    public string Something { get; set; }
 
-    }
 }

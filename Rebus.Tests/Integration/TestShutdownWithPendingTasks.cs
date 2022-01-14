@@ -9,41 +9,40 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration;
+
+[TestFixture]
+public class TestShutdownWithPendingTasks : FixtureBase
 {
-    [TestFixture]
-    public class TestShutdownWithPendingTasks : FixtureBase
+    [Test]
+    public async Task DoIt()
     {
-        [Test]
-        public async Task DoIt()
+        var builtinHandlerActivator = new BuiltinHandlerActivator();
+        var allDone = false;
+        var gotMessage = new ManualResetEvent(false);
+
+        builtinHandlerActivator.Handle<string>(async _ =>
         {
-            var builtinHandlerActivator = new BuiltinHandlerActivator();
-            var allDone = false;
-            var gotMessage = new ManualResetEvent(false);
+            gotMessage.Set();
 
-            builtinHandlerActivator.Handle<string>(async _ =>
-            {
-                gotMessage.Set();
+            await Task.Delay(2000);
 
-                await Task.Delay(2000);
+            allDone = true;
+        });
 
-                allDone = true;
-            });
+        var bus = Configure.With(builtinHandlerActivator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "shutdown with pending tasks"))
+            .Start();
 
-            var bus = Configure.With(builtinHandlerActivator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "shutdown with pending tasks"))
-                .Start();
+        using (bus)
+        {
+            await bus.SendLocal("hej");
 
-            using (bus)
-            {
-                await bus.SendLocal("hej");
+            gotMessage.WaitOrDie(TimeSpan.FromSeconds(2));
 
-                gotMessage.WaitOrDie(TimeSpan.FromSeconds(2));
-
-                // make bus shut down here
-            }
-
-            Assert.That(allDone, Is.True, "The message was apparently not handled all the way to the end!!!");
+            // make bus shut down here
         }
+
+        Assert.That(allDone, Is.True, "The message was apparently not handled all the way to the end!!!");
     }
 }

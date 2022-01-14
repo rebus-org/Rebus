@@ -3,23 +3,22 @@ using Rebus.Config;
 using Rebus.Logging;
 // ReSharper disable UnusedMember.Global
 
-namespace Rebus.Persistence.FileSystem
+namespace Rebus.Persistence.FileSystem;
+
+/// <summary>
+/// Configuration extensions for the <see cref="FileSystemSagaSnapshotStorage"/>
+/// </summary>
+public static class FileSystemSagaSnapshotStorageConfigurationExtensions
 {
     /// <summary>
-    /// Configuration extensions for the <see cref="FileSystemSagaSnapshotStorage"/>
+    /// Configures Rebus to use JSON files to store snapshots of saga data
     /// </summary>
-    public static class FileSystemSagaSnapshotStorageConfigurationExtensions
+    public static void UseJsonFile(this StandardConfigurer<ISagaSnapshotStorage> configurer, string directory)
     {
-        /// <summary>
-        /// Configures Rebus to use JSON files to store snapshots of saga data
-        /// </summary>
-        public static void UseJsonFile(this StandardConfigurer<ISagaSnapshotStorage> configurer, string directory)
+        configurer.Register(c =>
         {
-            configurer.Register(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new FileSystemSagaSnapshotStorage(directory, rebusLoggerFactory);
-            });
-        }
+            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            return new FileSystemSagaSnapshotStorage(directory, rebusLoggerFactory);
+        });
     }
 }

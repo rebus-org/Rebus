@@ -2,19 +2,19 @@
 using System.Threading.Tasks;
 using Rebus.Subscriptions;
 
-namespace Rebus.Persistence.Throwing
+namespace Rebus.Persistence.Throwing;
+
+class DisabledSubscriptionStorage : ISubscriptionStorage
 {
-    class DisabledSubscriptionStorage : ISubscriptionStorage
-    {
-        public Task<string[]> GetSubscriberAddresses(string topic) => throw GetException();
+    public Task<string[]> GetSubscriberAddresses(string topic) => throw GetException();
 
-        public Task RegisterSubscriber(string topic, string subscriberAddress) => throw GetException();
+    public Task RegisterSubscriber(string topic, string subscriberAddress) => throw GetException();
 
-        public Task UnregisterSubscriber(string topic, string subscriberAddress) => throw GetException();
+    public Task UnregisterSubscriber(string topic, string subscriberAddress) => throw GetException();
 
-        public bool IsCentralized => false;
+    public bool IsCentralized => false;
 
-        static InvalidOperationException GetException() => new InvalidOperationException(@"A subscription storage has not been configured. Please configure a subscription storage with the .Subscriptions(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new InvalidOperationException(@"A subscription storage has not been configured. Please configure a subscription storage with the .Subscriptions(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)
@@ -30,5 +30,4 @@ Configure.With(..)
 
 if you have imported the Rebus.SqlServer package and want to store subscriptions in SQL Server.
 ");
-    }
 }
