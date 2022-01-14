@@ -27,13 +27,13 @@ if %ERRORLEVEL% neq 0 (
  	goto exit_fail
 )
 
-dotnet restore
+dotnet restore --interactive
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail
 )
 
-dotnet msbuild "/p:Configuration=Release;Version=%version%" "%root%\Rebus.Tests.Contracts"
+dotnet msbuild "/p:Configuration=Release;Version=%version%" "%root%\Rebus.Tests.Contracts" --no-restore
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail

@@ -27,7 +27,7 @@ if not exist "%nuget%" (
 )
 
 
-"%nuget%" push "%destination%\*.%version%.nupkg" -Source nuget.org
+"%nuget%" push "%destination%\*.%version%.nupkg" -Source https://nuget.org
 if %ERRORLEVEL% neq 0 (
   echo NuGet push failed.
   goto exit_fail

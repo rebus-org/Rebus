@@ -29,14 +29,14 @@ if %ERRORLEVEL% neq 0 (
  	goto exit_fail
 )
 
-dotnet restore
+dotnet restore --interactive
 if %ERRORLEVEL% neq 0 (
 	popd
 	echo Could not restore NuGet packages.
  	goto exit_fail
 )
 
-dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" /p:PackageVersion=%version%;Version=%version%;WarningLevel=3
+dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" -p:PackageVersion=%version%;Version=%version%;WarningLevel=3 --no-restore
 if %ERRORLEVEL% neq 0 (
 	popd
 	echo Could pack Rebus.Tests.Contracts
