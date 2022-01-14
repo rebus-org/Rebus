@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using Rebus.Config;
-using Rebus.Injection;
 using System.Text.Json;
 
 namespace Rebus.Serialization.Json
@@ -40,7 +39,7 @@ namespace Rebus.Serialization.Json
         static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, JsonSerializerOptions settings, Encoding encoding)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            configurer.OtherService<ISerializer>().Decorate((IResolutionContext c) => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>(), settings, encoding));
+            configurer.OtherService<ISerializer>().Decorate(c => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>(), settings, encoding));
         }
     }
 }

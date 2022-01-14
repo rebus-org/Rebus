@@ -3,18 +3,15 @@
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>10</LangVersion>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
-		<Copyright>Copyright 2012</Copyright>
+		<Copyright>Copyright Rebus FM ApS 2012</Copyright>
 		<PackageTags>rebus queue messaging service bus</PackageTags>
 		<PackageDescription>Rebus is a lean service bus for .NET</PackageDescription>
 		<RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PostBuildEvent></PostBuildEvent>
-		<Product>Rebus</Product>
-		<PackageId>Rebus</PackageId>
 
 		<!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -53,8 +50,8 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="jetbrains.annotations" Version="2021.3.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="system.text.json" Version="6.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+		<PackageReference Include="system.text.json" Version="5.0.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 	<ItemGroup>
