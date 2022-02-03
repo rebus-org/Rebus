@@ -17,7 +17,7 @@ using Rebus.Transport.InMem;
 namespace Rebus.Tests.Bugs;
 
 [TestFixture]
-[Description("Try to reproduce a bug")]
+[Description("Try to reproduce a bug. Turned out there was no bug")]
 public class CheckBuildInHandlerActivatorBuggerino : FixtureBase
 {
     [Test]
