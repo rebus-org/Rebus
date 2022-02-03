@@ -26,10 +26,18 @@ public class CheckBuildInHandlerActivatorBuggerino : FixtureBase
         using var gotTheEvent = new ManualResetEvent(initialState: false);
         using var activator = new BuiltinHandlerActivator();
 
+        var subscriberStore = new InMemorySubscriberStore();
+        var network = new InMemNetwork();
+
         var starter = Configure.With(activator)
-            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "buggerino"))
-            .Subscriptions(s => s.StoreInMemory(new InMemorySubscriberStore()))
+            .Transport(t => t.UseInMemoryTransport(network, "buggerino"))
+            .Subscriptions(s => s.StoreInMemory(subscriberStore))
             .Create();
+
+        var publisher = Configure.With(Using(new BuiltinHandlerActivator()))
+            .Transport(t => t.UseInMemoryTransportAsOneWayClient(network))
+            .Subscriptions(s => s.StoreInMemory(subscriberStore))
+            .Start();
 
         Task Handle(ThisIsTheEventWeAreTalkingAbout configurationUpdatedEvent)
         {
@@ -44,7 +52,7 @@ public class CheckBuildInHandlerActivatorBuggerino : FixtureBase
 
         starter.Start();
 
-        await starter.Bus.Publish(new ThisIsTheEventWeAreTalkingAbout());
+        await publisher.Publish(new ThisIsTheEventWeAreTalkingAbout());
 
         gotTheEvent.WaitOrDie(timeout: TimeSpan.FromSeconds(2));
     }
