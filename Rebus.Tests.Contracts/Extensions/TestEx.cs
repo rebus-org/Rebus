@@ -14,6 +14,7 @@ using Rebus.Messages;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Exception = System.Exception;
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace Rebus.Tests.Contracts.Extensions
 {
@@ -138,29 +139,24 @@ namespace Rebus.Tests.Contracts.Extensions
             }
         }
 
-        public static IDisposable Interval(this TimeSpan delay, Action action)
-        {
-            var timer = new Timer(obj => action(), null, delay, delay);
-            return timer;
-        }
+        public static IDisposable Interval(this TimeSpan delay, Action action) => new Timer(_ => action(), null, delay, delay);
 
         public static async Task<T> DequeueNext<T>(this ConcurrentQueue<T> queue, int timeoutSeconds = 5)
         {
-            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+            
+            try
             {
-                try
+                while (true)
                 {
-                    while (true)
-                    {
-                        if (queue.TryDequeue(out var item)) return item;
+                    if (queue.TryDequeue(out var item)) return item;
 
-                        await Task.Delay(TimeSpan.FromSeconds(timeoutSeconds), cancellationTokenSource.Token);
-                    }
+                    await Task.Delay(millisecondsDelay: 200, cancellationTokenSource.Token);
                 }
-                catch (Exception)
-                {
-                    throw new TimeoutException($"Could not return {typeof(T)} from queue within {timeoutSeconds} s timeout");
-                }
+            }
+            catch (Exception)
+            {
+                throw new TimeoutException($"Could not return {typeof(T)} from queue within {timeoutSeconds} s timeout");
             }
         }
 

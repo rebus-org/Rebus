@@ -6,55 +6,54 @@ using NUnit.Framework;
 using Rebus.Exceptions;
 using Rebus.Sagas;
 
-namespace Rebus.Tests.Contracts.Sagas
+namespace Rebus.Tests.Contracts.Sagas;
+
+/// <summary>
+/// Test fixture base class for verifying compliance with the <see cref="ISagaStorage"/> contract
+/// </summary>
+public abstract class ConcurrencyHandling<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
 {
-    /// <summary>
-    /// Test fixture base class for verifying compliance with the <see cref="ISagaStorage"/> contract
-    /// </summary>
-    public abstract class ConcurrencyHandling<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
+    readonly IEnumerable<ISagaCorrelationProperty> _noCorrelationProperties = Enumerable.Empty<ISagaCorrelationProperty>();
+
+    ISagaStorage _sagaStorage;
+    TFactory _factory;
+
+    protected override void SetUp()
     {
-        readonly IEnumerable<ISagaCorrelationProperty> _noCorrelationProperties = Enumerable.Empty<ISagaCorrelationProperty>();
+        _factory = new TFactory();
+        _sagaStorage = _factory.GetSagaStorage();
+    }
 
-        ISagaStorage _sagaStorage;
-        TFactory _factory;
+    protected override void TearDown()
+    {
+        CleanUpDisposables();
 
-        protected override void SetUp()
-        {
-            _factory = new TFactory();
-            _sagaStorage = _factory.GetSagaStorage();
-        }
+        _factory.CleanUp();
+    }
 
-        protected override void TearDown()
-        {
-            CleanUpDisposables();
+    [Test]
+    public async Task ThrowsWhenRevisionDoesNotMatchExpected()
+    {
+        var id = Guid.NewGuid();
 
-            _factory.CleanUp();
-        }
+        await _sagaStorage.Insert(new SomeSagaData { Id = id }, _noCorrelationProperties);
 
-        [Test]
-        public async Task ThrowsWhenRevisionDoesNotMatchExpected()
-        {
-            var id = Guid.NewGuid();
+        var loadedData1 = await _sagaStorage.Find(typeof(SomeSagaData), "Id", id);
 
-            await _sagaStorage.Insert(new SomeSagaData { Id = id }, _noCorrelationProperties);
+        var loadedData2 = await _sagaStorage.Find(typeof(SomeSagaData), "Id", id);
 
-            var loadedData1 = await _sagaStorage.Find(typeof(SomeSagaData), "Id", id);
+        await _sagaStorage.Update(loadedData1, _noCorrelationProperties);
 
-            var loadedData2 = await _sagaStorage.Find(typeof(SomeSagaData), "Id", id);
+        var aggregateException = Assert.Throws<AggregateException>(() => _sagaStorage.Update(loadedData2, _noCorrelationProperties).Wait());
 
-            await _sagaStorage.Update(loadedData1, _noCorrelationProperties);
+        var baseException = aggregateException.GetBaseException();
 
-            var aggregateException = Assert.Throws<AggregateException>(() => _sagaStorage.Update(loadedData2, _noCorrelationProperties).Wait());
+        Assert.That(baseException, Is.TypeOf<ConcurrencyException>());
+    }
 
-            var baseException = aggregateException.GetBaseException();
-
-            Assert.That(baseException, Is.TypeOf<ConcurrencyException>());
-        }
-
-        class SomeSagaData : ISagaData
-        {
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
-        }
+    class SomeSagaData : ISagaData
+    {
+        public Guid Id { get; set; }
+        public int Revision { get; set; }
     }
 }

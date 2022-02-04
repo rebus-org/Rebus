@@ -1,13 +1,12 @@
 ﻿using System;
 
-namespace Rebus.Tests.Contracts.Utilities
+namespace Rebus.Tests.Contracts.Utilities;
+
+class DisposableCallback : IDisposable
 {
-    class DisposableCallback : IDisposable
-    {
-        readonly Action _callback;
+    readonly Action _callback;
 
-        public DisposableCallback(Action callback) => _callback = callback;
+    public DisposableCallback(Action callback) => _callback = callback;
 
-        public void Dispose() => _callback();
-    }
+    public void Dispose() => _callback();
 }

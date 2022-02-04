@@ -10,63 +10,62 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Contracts.Serialization.Default
+namespace Rebus.Tests.Contracts.Serialization.Default;
+
+[TestFixture]
+public class TestDynamicCapabilityOfDefaultSerializer : FixtureBase
 {
-    [TestFixture]
-    public class TestDynamicCapabilityOfDefaultSerializer : FixtureBase
+    const string InputQueueName = "json";
+    BuiltinHandlerActivator _builtinHandlerActivator;
+    InMemNetwork _network;
+    IBusStarter _starter;
+
+    protected override void SetUp()
     {
-        const string InputQueueName = "json";
-        BuiltinHandlerActivator _builtinHandlerActivator;
-        InMemNetwork _network;
-        IBusStarter _starter;
+        _builtinHandlerActivator = new BuiltinHandlerActivator();
 
-        protected override void SetUp()
+        Using(_builtinHandlerActivator);
+
+        _network = new InMemNetwork();
+
+        _starter = Configure.With(_builtinHandlerActivator)
+            .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
+            .Create();
+    }
+
+    [Test]
+    public void DispatchesDynamicMessageWhenDotNetTypeCannotBeFound()
+    {
+        var gotTheMessage = new ManualResetEvent(false);
+
+        string messageText = null;
+
+        _builtinHandlerActivator.Handle<dynamic>(async message =>
         {
-            _builtinHandlerActivator = new BuiltinHandlerActivator();
+            Console.WriteLine("Received dynamic message: {0}", message);
 
-            Using(_builtinHandlerActivator);
+            messageText = message.something.text;
 
-            _network = new InMemNetwork();
+            gotTheMessage.Set();
+        });
 
-            _starter = Configure.With(_builtinHandlerActivator)
-                .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
-                .Create();
-        }
+        _starter.Start();
 
-        [Test]
-        public void DispatchesDynamicMessageWhenDotNetTypeCannotBeFound()
+        var headers = new Dictionary<string, string>
         {
-            var gotTheMessage = new ManualResetEvent(false);
+            {Headers.MessageId, Guid.NewGuid().ToString()},
+            {Headers.ContentType, "application/json;charset=utf-8"},
+        };
 
-            string messageText = null;
-
-            _builtinHandlerActivator.Handle<dynamic>(async message =>
-            {
-                Console.WriteLine("Received dynamic message: {0}", message);
-
-                messageText = message.something.text;
-
-                gotTheMessage.Set();
-            });
-
-            _starter.Start();
-
-            var headers = new Dictionary<string, string>
-            {
-                {Headers.MessageId, Guid.NewGuid().ToString()},
-                {Headers.ContentType, "application/json;charset=utf-8"},
-            };
-
-            var transportMessage = new TransportMessage(headers, Encoding.UTF8.GetBytes(@"{
+        var transportMessage = new TransportMessage(headers, Encoding.UTF8.GetBytes(@"{
     ""something"": {
         ""text"": ""OMG dynamic JSON BABY!!""
     }
 }"));
-            _network.Deliver(InputQueueName, new InMemTransportMessage(transportMessage));
+        _network.Deliver(InputQueueName, new InMemTransportMessage(transportMessage));
 
-            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
+        gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
 
-            Assert.That(messageText, Is.EqualTo("OMG dynamic JSON BABY!!"));
-        }
+        Assert.That(messageText, Is.EqualTo("OMG dynamic JSON BABY!!"));
     }
 }

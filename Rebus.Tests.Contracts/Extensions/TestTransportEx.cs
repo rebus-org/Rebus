@@ -6,31 +6,30 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
 
-namespace Rebus.Tests.Contracts.Extensions
+namespace Rebus.Tests.Contracts.Extensions;
+
+public static class TestTransportEx
 {
-    public static class TestTransportEx
+    public static async Task<TransportMessage> AwaitReceive(this ITransport transport, double timeoutSeconds = 5)
     {
-        public static async Task<TransportMessage> AwaitReceive(this ITransport transport, double timeoutSeconds = 5)
+        var stopwatch = Stopwatch.StartNew();
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var source = new CancellationTokenSource();
+
+        while (stopwatch.Elapsed < timeout)
         {
-            var stopwatch = Stopwatch.StartNew();
-            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            var source = new CancellationTokenSource();
+            TransportMessage receivedTransportMessage;
 
-            while (stopwatch.Elapsed < timeout)
+            using (var scope = new RebusTransactionScope())
             {
-                TransportMessage receivedTransportMessage;
+                receivedTransportMessage = await transport.Receive(scope.TransactionContext, source.Token);
 
-                using (var scope = new RebusTransactionScope())
-                {
-                    receivedTransportMessage = await transport.Receive(scope.TransactionContext, source.Token);
-
-                    await scope.CompleteAsync();
-                }
-
-                if (receivedTransportMessage != null) return receivedTransportMessage;
+                await scope.CompleteAsync();
             }
 
-            throw new AssertionException($"Did not receive transport message from {transport} within {timeout} timeout");
+            if (receivedTransportMessage != null) return receivedTransportMessage;
         }
+
+        throw new AssertionException($"Did not receive transport message from {transport} within {timeout} timeout");
     }
 }

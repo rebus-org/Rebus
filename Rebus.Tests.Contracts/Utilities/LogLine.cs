@@ -1,27 +1,26 @@
 ﻿using System;
 using Rebus.Logging;
 
-namespace Rebus.Tests.Contracts.Utilities
+namespace Rebus.Tests.Contracts.Utilities;
+
+public class LogLine
 {
-    public class LogLine
+    public DateTime Time { get; }
+    public LogLevel Level { get; }
+    public Type Type { get; }
+    public string Text { get; }
+
+    public LogLine(LogLevel level, string text, Type type)
     {
-        public DateTime Time { get; }
-        public LogLevel Level { get; }
-        public Type Type { get; }
-        public string Text { get; }
+        Time = DateTime.Now;
+        Level = level;
+        Text = text;
+        Type = type;
+    }
 
-        public LogLine(LogLevel level, string text, Type type)
-        {
-            Time = DateTime.Now;
-            Level = level;
-            Text = text;
-            Type = type;
-        }
-
-        public override string ToString()
-        {
-            return
-                $"{Level} / {Type} / {string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))}";
-        }
+    public override string ToString()
+    {
+        return
+            $"{Level} / {Type} / {string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))}";
     }
 }

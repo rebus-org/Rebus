@@ -1,10 +1,9 @@
 ﻿using Rebus.Subscriptions;
 
-namespace Rebus.Tests.Contracts.Subscriptions
+namespace Rebus.Tests.Contracts.Subscriptions;
+
+public interface ISubscriptionStorageFactory
 {
-    public interface ISubscriptionStorageFactory
-    {
-        ISubscriptionStorage Create();
-        void Cleanup();
-    }
+    ISubscriptionStorage Create();
+    void Cleanup();
 }

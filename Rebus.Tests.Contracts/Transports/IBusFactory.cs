@@ -2,11 +2,10 @@
 using System.Threading.Tasks;
 using Rebus.Bus;
 
-namespace Rebus.Tests.Contracts.Transports
+namespace Rebus.Tests.Contracts.Transports;
+
+public interface IBusFactory
 {
-    public interface IBusFactory
-    {
-        IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler);
-        void Cleanup();
-    }
+    IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler);
+    void Cleanup();
 }

@@ -1,9 +1,8 @@
 using System;
 
-namespace Rebus.Tests.Contracts.Transports
+namespace Rebus.Tests.Contracts.Transports;
+
+public interface ITransportInspectorFactory : IDisposable
 {
-    public interface ITransportInspectorFactory : IDisposable
-    {
-        TransportAndInspector Create(string address);
-    }
+    TransportAndInspector Create(string address);
 }

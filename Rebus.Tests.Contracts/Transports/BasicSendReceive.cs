@@ -8,246 +8,245 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Transport;
 
-namespace Rebus.Tests.Contracts.Transports
+namespace Rebus.Tests.Contracts.Transports;
+
+public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
 {
-    public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
+    readonly Encoding _defaultEncoding = Encoding.UTF8;
+
+    TTransportFactory _factory;
+    CancellationToken _cancellationToken;
+
+    protected override void SetUp()
     {
-        readonly Encoding _defaultEncoding = Encoding.UTF8;
+        _cancellationToken = new CancellationTokenSource().Token;
+        _factory = new TTransportFactory();
+    }
 
-        TTransportFactory _factory;
-        CancellationToken _cancellationToken;
+    protected override void TearDown()
+    {
+        CleanUpDisposables();
 
-        protected override void SetUp()
-        {
-            _cancellationToken = new CancellationTokenSource().Token;
-            _factory = new TTransportFactory();
-        }
+        _factory.CleanUp();
+    }
 
-        protected override void TearDown()
-        {
-            CleanUpDisposables();
-
-            _factory.CleanUp();
-        }
-
-        [Test]
-        public async Task HasOneWayClient()
-        {
-            var receiverQueue = TestConfig.GetName("receiver");
+    [Test]
+    public async Task HasOneWayClient()
+    {
+        var receiverQueue = TestConfig.GetName("receiver");
             
-            var client = _factory.CreateOneWayClient();
-            var receiver = _factory.Create(receiverQueue);
+        var client = _factory.CreateOneWayClient();
+        var receiver = _factory.Create(receiverQueue);
 
-            await WithContext(async context =>
-            {
-                await client.Send(receiverQueue, MessageWith("greetings!"), context);
-            });
-
-            await WithContext(async context =>
-            {
-                var transportMessage = await receiver.Receive(context, _cancellationToken);
-
-                Assert.That(transportMessage, Is.Not.Null);
-
-                var stringBody = GetStringBody(transportMessage);
-
-                Assert.That(stringBody, Is.EqualTo("greetings!"));
-            });
-        }
-
-        [Test]
-        public async Task EmptyQueueReturnsNull()
+        await WithContext(async context =>
         {
-            var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
+            await client.Send(receiverQueue, MessageWith("greetings!"), context);
+        });
 
-            await WithContext(async context =>
-            {
-                var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
-
-                Assert.That(transportMessage, Is.Null);
-            });
-        }
-
-        [Test]
-        public async Task CanSendAndReceive()
+        await WithContext(async context =>
         {
-            var input1QueueName = TestConfig.GetName("input1");
-            var input2QueueName = TestConfig.GetName("input2");
+            var transportMessage = await receiver.Receive(context, _cancellationToken);
 
-            var input1 = _factory.Create(input1QueueName);
-            var input2 = _factory.Create(input2QueueName);
+            Assert.That(transportMessage, Is.Not.Null);
 
-            await WithContext(async context =>
-            {
-                await input1.Send(input2QueueName, MessageWith("hej"), context);
-            });
+            var stringBody = GetStringBody(transportMessage);
 
-            await WithContext(async context =>
-            {
-                var transportMessage = await input2.Receive(context, _cancellationToken);
-                var stringBody = GetStringBody(transportMessage);
+            Assert.That(stringBody, Is.EqualTo("greetings!"));
+        });
+    }
 
-                Assert.That(stringBody, Is.EqualTo("hej"));
-            });
-        }
+    [Test]
+    public async Task EmptyQueueReturnsNull()
+    {
+        var emptyQueue = _factory.Create(TestConfig.GetName("empty"));
 
-        [Test]
-        public async Task MessageIsNotSentWhenTransactionIsNotCompleted()
+        await WithContext(async context =>
         {
-            var input1QueueName = TestConfig.GetName("input1");
-            var input2QueueName = TestConfig.GetName("input2");
+            var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
 
-            var input1 = _factory.Create(input1QueueName);
-            var input2 = _factory.Create(input2QueueName);
+            Assert.That(transportMessage, Is.Null);
+        });
+    }
 
-            await WithContext(async context =>
+    [Test]
+    public async Task CanSendAndReceive()
+    {
+        var input1QueueName = TestConfig.GetName("input1");
+        var input2QueueName = TestConfig.GetName("input2");
+
+        var input1 = _factory.Create(input1QueueName);
+        var input2 = _factory.Create(input2QueueName);
+
+        await WithContext(async context =>
+        {
+            await input1.Send(input2QueueName, MessageWith("hej"), context);
+        });
+
+        await WithContext(async context =>
+        {
+            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var stringBody = GetStringBody(transportMessage);
+
+            Assert.That(stringBody, Is.EqualTo("hej"));
+        });
+    }
+
+    [Test]
+    public async Task MessageIsNotSentWhenTransactionIsNotCompleted()
+    {
+        var input1QueueName = TestConfig.GetName("input1");
+        var input2QueueName = TestConfig.GetName("input2");
+
+        var input1 = _factory.Create(input1QueueName);
+        var input2 = _factory.Create(input2QueueName);
+
+        await WithContext(async context =>
             {
                 await input1.Send(input2QueueName, MessageWith("hej"), context);
             },
             completeTransaction: false);
 
-            await WithContext(async context =>
-            {
-                var transportMessage = await input2.Receive(context, _cancellationToken);
-
-                Assert.That(transportMessage, Is.Null);
-            });
-        }
-
-        [Test]
-        public async Task MessageIsReturnedToQueueWhenReceivingTransactionIsNotCommitted()
+        await WithContext(async context =>
         {
-            var input1QueueName = TestConfig.GetName("input1");
-            var input2QueueName = TestConfig.GetName("input2");
+            var transportMessage = await input2.Receive(context, _cancellationToken);
 
-            var input1 = _factory.Create(input1QueueName);
-            var input2 = _factory.Create(input2QueueName);
+            Assert.That(transportMessage, Is.Null);
+        });
+    }
 
-            Console.WriteLine($"Sending message to {input2QueueName}");
+    [Test]
+    public async Task MessageIsReturnedToQueueWhenReceivingTransactionIsNotCommitted()
+    {
+        var input1QueueName = TestConfig.GetName("input1");
+        var input2QueueName = TestConfig.GetName("input2");
 
-            await WithContext(async context =>
-            {
-                await input1.Send(input2QueueName, MessageWith("hej"), context);
-            });
+        var input1 = _factory.Create(input1QueueName);
+        var input2 = _factory.Create(input2QueueName);
 
-            Console.WriteLine("Receiving message in tx context, which is rolled back");
+        Console.WriteLine($"Sending message to {input2QueueName}");
 
-            await WithContext(async context =>
-            {
-                var transportMessage = await input2.Receive(context, _cancellationToken);
-                var stringBody = GetStringBody(transportMessage);
-
-                Assert.That(stringBody, Is.EqualTo("hej"));
-            }, completeTransaction: false);
-
-            Console.WriteLine("Receiving message in tx context, which is completed");
-
-            await WithContext(async context =>
-            {
-                var transportMessage = await input2.Receive(context, _cancellationToken);
-                var stringBody = GetStringBody(transportMessage);
-
-                Assert.That(stringBody, Is.EqualTo("hej"));
-            });
-
-            Console.WriteLine("Receiving message in tx context, expecting null this time");
-
-            await WithContext(async context =>
-            {
-                var transportMessage = await input2.Receive(context, _cancellationToken);
-
-                Assert.That(transportMessage, Is.Null);
-            });
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task MultipleSentMessagesCanBeRolledBack(bool commitAndExpectTheMessagesToBeSent)
+        await WithContext(async context =>
         {
-            var inputQueueName = TestConfig.GetName("input");
-            var input = _factory.Create(inputQueueName);
+            await input1.Send(input2QueueName, MessageWith("hej"), context);
+        });
 
-            await WithContext(async ctx =>
+        Console.WriteLine("Receiving message in tx context, which is rolled back");
+
+        await WithContext(async context =>
+        {
+            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var stringBody = GetStringBody(transportMessage);
+
+            Assert.That(stringBody, Is.EqualTo("hej"));
+        }, completeTransaction: false);
+
+        Console.WriteLine("Receiving message in tx context, which is completed");
+
+        await WithContext(async context =>
+        {
+            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var stringBody = GetStringBody(transportMessage);
+
+            Assert.That(stringBody, Is.EqualTo("hej"));
+        });
+
+        Console.WriteLine("Receiving message in tx context, expecting null this time");
+
+        await WithContext(async context =>
+        {
+            var transportMessage = await input2.Receive(context, _cancellationToken);
+
+            Assert.That(transportMessage, Is.Null);
+        });
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task MultipleSentMessagesCanBeRolledBack(bool commitAndExpectTheMessagesToBeSent)
+    {
+        var inputQueueName = TestConfig.GetName("input");
+        var input = _factory.Create(inputQueueName);
+
+        await WithContext(async ctx =>
             {
                 await input.Send(inputQueueName, MessageWith("hej1"), ctx);
                 await input.Send(inputQueueName, MessageWith("hej2"), ctx);
             },
-                completeTransaction: commitAndExpectTheMessagesToBeSent);
+            completeTransaction: commitAndExpectTheMessagesToBeSent);
 
-            var allMessages = await GetAll(input);
+        var allMessages = await GetAll(input);
 
-            if (commitAndExpectTheMessagesToBeSent)
-            {
-                var receivedMessages = allMessages.OrderBy(s => s).ToArray();
-                
-                Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
-                
-                Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }), 
-                    $@"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
-            }
-            else
-            {
-                Assert.That(allMessages.Count, Is.EqualTo(0), "The transaction was not completed, so we didn't expect any messages to have been sent");
-            }
-        }
-
-        async Task<List<string>> GetAll(ITransport input)
+        if (commitAndExpectTheMessagesToBeSent)
         {
-            var transportMessages = new List<string>();
-            var receivedNulls = 0;
-
-            while (receivedNulls < 5)
-            {
-                using (var scope = new RebusTransactionScope())
-                {
-                    var msg = await input.Receive(scope.TransactionContext, _cancellationToken);
-
-                    if (msg != null)
-                    {
-                        transportMessages.Add(GetStringBody(msg));
-                        await scope.CompleteAsync();
-                        continue;
-                    }
-
-                    await Task.Delay(100);
-                    receivedNulls++;
-                }
-            }
-
-            return transportMessages;
+            var receivedMessages = allMessages.OrderBy(s => s).ToArray();
+                
+            Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
+                
+            Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }), 
+                $@"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
         }
+        else
+        {
+            Assert.That(allMessages.Count, Is.EqualTo(0), "The transaction was not completed, so we didn't expect any messages to have been sent");
+        }
+    }
 
-        async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
+    async Task<List<string>> GetAll(ITransport input)
+    {
+        var transportMessages = new List<string>();
+        var receivedNulls = 0;
+
+        while (receivedNulls < 5)
         {
             using (var scope = new RebusTransactionScope())
             {
-                await contextAction(scope.TransactionContext);
+                var msg = await input.Receive(scope.TransactionContext, _cancellationToken);
 
-                if (completeTransaction)
+                if (msg != null)
                 {
+                    transportMessages.Add(GetStringBody(msg));
                     await scope.CompleteAsync();
+                    continue;
                 }
+
+                await Task.Delay(100);
+                receivedNulls++;
             }
         }
 
-        string GetStringBody(TransportMessage transportMessage)
+        return transportMessages;
+    }
+
+    async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
+    {
+        using (var scope = new RebusTransactionScope())
         {
-            if (transportMessage == null)
+            await contextAction(scope.TransactionContext);
+
+            if (completeTransaction)
             {
-                throw new InvalidOperationException("Cannot get string body out of null message!");
+                await scope.CompleteAsync();
             }
-
-            return _defaultEncoding.GetString(transportMessage.Body);
         }
+    }
 
-        TransportMessage MessageWith(string stringBody)
+    string GetStringBody(TransportMessage transportMessage)
+    {
+        if (transportMessage == null)
         {
-            var headers = new Dictionary<string, string>
-            {
-                {Headers.MessageId, Guid.NewGuid().ToString()}
-            };
-            var body = _defaultEncoding.GetBytes(stringBody);
-            return new TransportMessage(headers, body);
+            throw new InvalidOperationException("Cannot get string body out of null message!");
         }
+
+        return _defaultEncoding.GetString(transportMessage.Body);
+    }
+
+    TransportMessage MessageWith(string stringBody)
+    {
+        var headers = new Dictionary<string, string>
+        {
+            {Headers.MessageId, Guid.NewGuid().ToString()}
+        };
+        var body = _defaultEncoding.GetBytes(stringBody);
+        return new TransportMessage(headers, body);
     }
 }

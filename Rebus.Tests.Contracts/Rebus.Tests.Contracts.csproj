@@ -1,49 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
- <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <Authors>mookid8000</Authors>
-    <PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
-    <Copyright>Copyright 2012</Copyright>
-    <PackageTags>rebus tests contracts</PackageTags>
-    <PackageIconUrl></PackageIconUrl>
-    <PackageDescription>Contains contract tests for Rebus services - valuable, if you e.g. want to implement your own Rebus transport, subscription storage, etc.</PackageDescription>
-    <RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>RELEASE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Release\Rebus.Tests.Contracts.xml</DocumentationFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="..\artwork\little_rebusbus2_copy-500x500.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rebus\Rebus.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NUnit" Version="3.13.2" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<LangVersion>10</LangVersion>
+		<Authors>mookid8000</Authors>
+		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
+		<Copyright>Copyright 2012</Copyright>
+		<PackageTags>rebus tests contracts</PackageTags>
+		<PackageIconUrl></PackageIconUrl>
+		<PackageDescription>Contains contract tests for Rebus services - valuable, if you e.g. want to implement your own Rebus transport, subscription storage, etc.</PackageDescription>
+		<RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\artwork\little_rebusbus2_copy-500x500.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Rebus\Rebus.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="NUnit" Version="3.13.2" />
+	</ItemGroup>
 </Project>

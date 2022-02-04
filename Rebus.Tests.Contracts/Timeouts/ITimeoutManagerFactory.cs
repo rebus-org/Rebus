@@ -1,13 +1,12 @@
 ﻿using System;
 using Rebus.Timeouts;
 
-namespace Rebus.Tests.Contracts.Timeouts
+namespace Rebus.Tests.Contracts.Timeouts;
+
+public interface ITimeoutManagerFactory
 {
-    public interface ITimeoutManagerFactory
-    {
-        ITimeoutManager Create();
-        void Cleanup();
-        string GetDebugInfo();
-        void FakeIt(DateTimeOffset fakeTime);
-    }
+    ITimeoutManager Create();
+    void Cleanup();
+    string GetDebugInfo();
+    void FakeIt(DateTimeOffset fakeTime);
 }

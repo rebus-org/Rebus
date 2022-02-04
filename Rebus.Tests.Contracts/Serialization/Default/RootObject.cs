@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Rebus.Tests.Contracts.Serialization.Default
+namespace Rebus.Tests.Contracts.Serialization.Default;
+
+public class RootObject
 {
-    public class RootObject
-    {
-        public List<BigObject> BigObjects { get; set; }
-    }
+    public List<BigObject> BigObjects { get; set; }
 }

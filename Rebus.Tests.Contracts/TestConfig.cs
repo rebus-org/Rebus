@@ -2,62 +2,61 @@
 using System.IO;
 using System.Linq;
 
-namespace Rebus.Tests.Contracts
+namespace Rebus.Tests.Contracts;
+
+public class TestConfig
 {
-    public class TestConfig
+    /// <summary>
+    /// Gets a path in the file system which can be used for testing things
+    /// </summary>
+    public static string DirectoryPath()
     {
-        /// <summary>
-        /// Gets a path in the file system which can be used for testing things
-        /// </summary>
-        public static string DirectoryPath()
-        {
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test");
-        }
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test");
+    }
 
-        /// <summary>
-        /// Gets a suffix that can be appended to things in order to have tests run on separate sets of queues/databases/whatever
-        /// </summary>
-        public static string Suffix
+    /// <summary>
+    /// Gets a suffix that can be appended to things in order to have tests run on separate sets of queues/databases/whatever
+    /// </summary>
+    public static string Suffix
+    {
+        get
         {
-            get
+            var agentSpecificVariable = Environment.GetEnvironmentVariable("tcagent");
+
+            if (agentSpecificVariable != null)
             {
-                var agentSpecificVariable = Environment.GetEnvironmentVariable("tcagent");
-
-                if (agentSpecificVariable != null)
-                {
-                    return agentSpecificVariable;
-                }
-
-                return "";
+                return agentSpecificVariable;
             }
+
+            return "";
         }
+    }
 
-        /// <summary>
-        /// Gets a (possibly agent-qualified) name, which allows for tests to run in parallel.
-        /// Useful when there is a shared resource, like global or machine-wide queues, databases, etc.
-        /// </summary>
-        public static string GetName(string nameBase)
-        {
-            var name = GenerateName(nameBase);
+    /// <summary>
+    /// Gets a (possibly agent-qualified) name, which allows for tests to run in parallel.
+    /// Useful when there is a shared resource, like global or machine-wide queues, databases, etc.
+    /// </summary>
+    public static string GetName(string nameBase)
+    {
+        var name = GenerateName(nameBase);
 
-            Console.WriteLine($"Generated name {name}");
+        Console.WriteLine($"Generated name {name}");
             
-            return name;
-        }
+        return name;
+    }
 
-        static string GenerateName(string nameBase)
+    static string GenerateName(string nameBase)
+    {
+        if (nameBase.Contains("@"))
         {
-            if (nameBase.Contains("@"))
-            {
-                var tokens = nameBase.Split('@');
+            var tokens = nameBase.Split('@');
 
-                var head = tokens.First();
-                var tail = string.Join("@", tokens.Skip(1));
+            var head = tokens.First();
+            var tail = string.Join("@", tokens.Skip(1));
 
-                return $"{head}{Suffix}@{tail}";
-            }
-
-            return $"{nameBase}{Suffix}";
+            return $"{head}{Suffix}@{tail}";
         }
+
+        return $"{nameBase}{Suffix}";
     }
 }

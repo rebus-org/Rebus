@@ -31,7 +31,7 @@ public class ManualDeadlettering : FixtureBase
         var listLoggerFactory = new ListLoggerFactory(outputToConsole: true);
         var activator = Using(new BuiltinHandlerActivator());
 
-        activator.Handle<string>(async (bus, message) =>
+        activator.Handle<string>(async (bus, _) =>
         {
             await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
         });
@@ -41,7 +41,7 @@ public class ManualDeadlettering : FixtureBase
         Configure.With(activator)
             .Logging(l => l.Use(listLoggerFactory))
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "manual-deadlettering"))
-            .Options(o => o.Register<IErrorHandler>(c => fakeErrorHandler)) //< provide our own implementation here, so we'll know what gets dead-lettered
+            .Options(o => o.Register<IErrorHandler>(_ => fakeErrorHandler)) //< provide our own implementation here, so we'll know what gets dead-lettered
             .Start();
 
         await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
@@ -67,10 +67,11 @@ public class ManualDeadlettering : FixtureBase
     [Test]
     public async Task CannotDeadletterTwice()
     {
-        var activator = Using(new BuiltinHandlerActivator());
         var caughtExceptions = new ConcurrentQueue<Exception>();
 
-        activator.Handle<string>(async (bus, message) =>
+        using var activator = new BuiltinHandlerActivator();
+
+        activator.Handle<string>(async (bus, _) =>
         {
             await bus.Advanced.TransportMessage.Deadletter(errorDetails: "has been manually dead-lettered");
 
@@ -99,34 +100,10 @@ public class ManualDeadlettering : FixtureBase
 
     class FakeErrorHandler : IErrorHandler
     {
-        readonly ConcurrentQueue<(TransportMessage, Exception)> _poisonMessages = new ConcurrentQueue<(TransportMessage, Exception)>();
+        readonly ConcurrentQueue<(TransportMessage, Exception)> _poisonMessages = new();
 
-        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
-        {
-            _poisonMessages.Enqueue((transportMessage, exception));
-        }
+        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception) => _poisonMessages.Enqueue((transportMessage, exception));
 
-        public async Task<(TransportMessage, Exception)> GetNextPoisonMessage(int timeoutSeconds = 5)
-        {
-            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
-            {
-                try
-                {
-                    while (true)
-                    {
-                        if (_poisonMessages.TryDequeue(out var item))
-                        {
-                            return item;
-                        }
-
-                        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationTokenSource.Token);
-                    }
-                }
-                catch (Exception)
-                {
-                    throw new TimeoutException($"Did not receive poison message within {timeoutSeconds} s timeout");
-                }
-            }
-        }
+        public async Task<(TransportMessage, Exception)> GetNextPoisonMessage(int timeoutSeconds = 5) => await _poisonMessages.DequeueNext(timeoutSeconds: timeoutSeconds);
     }
 }

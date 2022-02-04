@@ -1,16 +1,15 @@
 ﻿using NUnit.Framework;
 
-namespace Rebus.Tests.Contracts
+namespace Rebus.Tests.Contracts;
+
+[TestFixture]
+public class Dummy
 {
-    [TestFixture]
-    public class Dummy
+    /// <summary>
+    /// NUnit 3.5 FAILS if one accidentally points it towards a DLL that has no test fixtures
+    /// </summary>
+    [Test]
+    public void MakeNUnit350GreatAgain()
     {
-        /// <summary>
-        /// NUnit 3.5 FAILS if one accidentally points it towards a DLL that has no test fixtures
-        /// </summary>
-        [Test]
-        public void MakeNUnit350GreatAgain()
-        {
-        }
     }
 }

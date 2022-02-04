@@ -6,123 +6,122 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts.Utilities;
 
-namespace Rebus.Tests.Contracts
+namespace Rebus.Tests.Contracts;
+
+public abstract class FixtureBase
 {
-    public abstract class FixtureBase
+    static FixtureBase() => Console.SetOut(TestContext.Progress);
+
+    readonly ConcurrentStack<IDisposable> _disposables = new ConcurrentStack<IDisposable>();
+
+    [SetUp]
+    public void _SetUp()
     {
-        static FixtureBase() => Console.SetOut(TestContext.Progress);
+        _disposables.Clear();
 
-        readonly ConcurrentStack<IDisposable> _disposables = new ConcurrentStack<IDisposable>();
+        SetUp();
+    }
 
-        [SetUp]
-        public void _SetUp()
+    [TearDown]
+    public void _TearDown()
+    {
+        CleanUpDisposables();
+
+        TearDown();
+    }
+
+    protected virtual void SetUp()
+    {
+    }
+
+    protected virtual void TearDown()
+    {
+    }
+
+    protected TDisposable Using<TDisposable>(TDisposable disposable) where TDisposable : IDisposable
+    {
+        _disposables.Push(disposable);
+        return disposable;
+    }
+
+    protected string NewTempDirectory()
+    {
+        var directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Guid.NewGuid().ToString("N"));
+
+        Console.WriteLine($"Creating temp directory '{directoryPath}'");
+        Directory.CreateDirectory(directoryPath);
+
+        Using(new DisposableCallback(() =>
         {
-            _disposables.Clear();
+            Console.WriteLine($"Deleting temp directory '{directoryPath}'");
+            DeleteHelper.DeleteDirectory(directoryPath);
+        }));
 
-            SetUp();
+        return directoryPath;
+    }
+
+    protected string GetTempFilePath()
+    {
+        var tempFile = Path.GetTempFileName();
+        Using(new FileDeleter(tempFile));
+        return tempFile;
+    }
+
+    protected Task MeasuredDelay(int milliseconds)
+    {
+        return MeasuredDelay(TimeSpan.FromMilliseconds(milliseconds));
+    }
+
+    protected async Task MeasuredDelay(TimeSpan delay)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        await Task.Delay(delay);
+
+        Console.WriteLine($"Measured delay of {delay} took {stopwatch.Elapsed.TotalSeconds:0.0} s");
+    }
+
+    class FileDeleter : IDisposable
+    {
+        readonly string _filePath;
+
+        public FileDeleter(string filePath)
+        {
+            _filePath = filePath;
         }
 
-        [TearDown]
-        public void _TearDown()
+        public void Dispose()
         {
-            CleanUpDisposables();
-
-            TearDown();
-        }
-
-        protected virtual void SetUp()
-        {
-        }
-
-        protected virtual void TearDown()
-        {
-        }
-
-        protected TDisposable Using<TDisposable>(TDisposable disposable) where TDisposable : IDisposable
-        {
-            _disposables.Push(disposable);
-            return disposable;
-        }
-
-        protected string NewTempDirectory()
-        {
-            var directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Guid.NewGuid().ToString("N"));
-
-            Console.WriteLine($"Creating temp directory '{directoryPath}'");
-            Directory.CreateDirectory(directoryPath);
-
-            Using(new DisposableCallback(() =>
+            try
             {
-                Console.WriteLine($"Deleting temp directory '{directoryPath}'");
-                DeleteHelper.DeleteDirectory(directoryPath);
-            }));
-
-            return directoryPath;
-        }
-
-        protected string GetTempFilePath()
-        {
-            var tempFile = Path.GetTempFileName();
-            Using(new FileDeleter(tempFile));
-            return tempFile;
-        }
-
-        protected Task MeasuredDelay(int milliseconds)
-        {
-            return MeasuredDelay(TimeSpan.FromMilliseconds(milliseconds));
-        }
-
-        protected async Task MeasuredDelay(TimeSpan delay)
-        {
-            var stopwatch = Stopwatch.StartNew();
-
-            await Task.Delay(delay);
-
-            Console.WriteLine($"Measured delay of {delay} took {stopwatch.Elapsed.TotalSeconds:0.0} s");
-        }
-
-        class FileDeleter : IDisposable
-        {
-            readonly string _filePath;
-
-            public FileDeleter(string filePath)
-            {
-                _filePath = filePath;
+                File.Delete(_filePath);
             }
-
-            public void Dispose()
+            catch (FileNotFoundException)
             {
-                try
-                {
-                    File.Delete(_filePath);
-                }
-                catch (FileNotFoundException)
-                {
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine($"Could not delete file {_filePath}: {exception}");
-                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"Could not delete file {_filePath}: {exception}");
             }
         }
+    }
 
-        protected void CleanUpDisposables()
+    protected void CleanUpDisposables()
+    {
+        while (_disposables.TryPop(out var disposable))
         {
-            while (_disposables.TryPop(out var disposable))
-            {
-                Console.WriteLine($"Disposing {disposable}");
-                disposable.Dispose();
-            }
+            Console.WriteLine($"Disposing {disposable}");
+            disposable.Dispose();
         }
+    }
 
-        /// <summary>
-        /// Prints the text with a fairly precise timestamp
-        /// </summary>
-        public static void Printt(string message)
-        {
-            var now = DateTime.Now;
-            var text = $"{now:HH:mm:ss}.{now.Millisecond:000}: {message}";
-            Console.WriteLine(text);
-        }
+    /// <summary>
+    /// Prints the text with a fairly precise timestamp
+    /// </summary>
+    public static void Printt(string message)
+    {
+        var now = DateTime.Now;
+        var text = $"{now:HH:mm:ss}.{now.Millisecond:000}: {message}";
+        Console.WriteLine(text);
     }
 }

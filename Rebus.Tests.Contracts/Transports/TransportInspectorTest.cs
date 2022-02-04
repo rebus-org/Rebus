@@ -5,37 +5,36 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Transport;
 
-namespace Rebus.Tests.Contracts.Transports
+namespace Rebus.Tests.Contracts.Transports;
+
+public abstract class TransportInspectorTest<TTransportInspectorFactory> : FixtureBase where TTransportInspectorFactory : ITransportInspectorFactory, new()
 {
-    public abstract class TransportInspectorTest<TTransportInspectorFactory> : FixtureBase where TTransportInspectorFactory : ITransportInspectorFactory, new()
+    TTransportInspectorFactory _factory;
+
+    ITransport _transport;
+    ITransportInspector _transportInspector;
+
+    protected override void SetUp()
     {
-        TTransportInspectorFactory _factory;
+        _factory = new TTransportInspectorFactory();
 
-        ITransport _transport;
-        ITransportInspector _transportInspector;
+        Using(_factory);
 
-        protected override void SetUp()
-        {
-            _factory = new TTransportInspectorFactory();
+        var stuff = _factory.Create("testa");
 
-            Using(_factory);
+        _transport = stuff.Transport;
+        _transportInspector = stuff.TransportInspector;
 
-            var stuff = _factory.Create("testa");
+        (_transport as IInitializable)?.Initialize();
+        (_transportInspector as IInitializable)?.Initialize();
+    }
 
-            _transport = stuff.Transport;
-            _transportInspector = stuff.TransportInspector;
+    [Test]
+    public async Task InitialCountIsZero()
+    {
+        var info = await _transportInspector.GetProperties(CancellationToken.None);
+        var count = Convert.ToInt32(info[TransportInspectorPropertyKeys.QueueLength]);
 
-            (_transport as IInitializable)?.Initialize();
-            (_transportInspector as IInitializable)?.Initialize();
-        }
-
-        [Test]
-        public async Task InitialCountIsZero()
-        {
-            var info = await _transportInspector.GetProperties(CancellationToken.None);
-            var count = Convert.ToInt32(info[TransportInspectorPropertyKeys.QueueLength]);
-
-            Assert.That(count, Is.EqualTo(0));
-        }
+        Assert.That(count, Is.EqualTo(0));
     }
 }
