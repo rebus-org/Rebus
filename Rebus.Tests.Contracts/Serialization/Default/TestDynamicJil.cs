@@ -36,7 +36,7 @@ public class TestDynamicCapabilityOfDefaultSerializer : FixtureBase
     [Test]
     public void DispatchesDynamicMessageWhenDotNetTypeCannotBeFound()
     {
-        var gotTheMessage = new ManualResetEvent(false);
+        using var gotTheMessage = new ManualResetEvent(false);
 
         string messageText = null;
 

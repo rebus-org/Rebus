@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Rebus.Logging;
 
 namespace Rebus.Tests.Contracts.Utilities;
@@ -17,29 +18,25 @@ public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine
         _detailed = detailed;
     }
 
-    public void Clear()
+    protected override ILog GetLogger([NotNull] Type type)
     {
-        LogLine temp;
-        while (LogLines.TryDequeue(out temp)) { }
-        Console.WriteLine("Cleared the logs");
-    }
-
-    public ConcurrentQueue<LogLine> LogLines { get; } = new ConcurrentQueue<LogLine>();
-
-    protected override ILog GetLogger(Type type)
-    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
         return new ListLogger(LogLines, type, _outputToConsole, _detailed, this);
     }
 
-    public IEnumerator<LogLine> GetEnumerator()
+    public ConcurrentQueue<LogLine> LogLines { get; } = new();
+
+    public void Clear()
     {
-        return LogLines.GetEnumerator();
+        while (LogLines.TryDequeue(out _)) { }
+        Console.WriteLine("Cleared the logs");
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    public override string ToString() => string.Join(Environment.NewLine, LogLines);
+
+    public IEnumerator<LogLine> GetEnumerator() => LogLines.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     class ListLogger : ILog
     {
@@ -58,39 +55,17 @@ public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine
             _loggerFactory = loggerFactory;
         }
 
-        public void Debug(string message, params object[] objs)
-        {
-            Append(LogLevel.Debug, message, objs);
-        }
+        public void Debug(string message, params object[] objs) => Append(LogLevel.Debug, message, objs);
 
-        public void Info(string message, params object[] objs)
-        {
-            Append(LogLevel.Info, message, objs);
-        }
+        public void Info(string message, params object[] objs) => Append(LogLevel.Info, message, objs);
 
-        public void Warn(string message, params object[] objs)
-        {
-            Append(LogLevel.Warn, message, objs);
-        }
+        public void Warn(string message, params object[] objs) => Append(LogLevel.Warn, message, objs);
 
-        public void Warn(Exception exception, string message, params object[] objs)
-        {
-            var text = _loggerFactory.RenderString(message, objs);
+        public void Warn(Exception exception, string message, params object[] objs) => Append(LogLevel.Warn, "{0}: {1}", _loggerFactory.RenderString(message, objs), exception);
 
-            Append(LogLevel.Warn, "{0}: {1}", text, exception);
-        }
+        public void Error(string message, params object[] objs) => Append(LogLevel.Error, message, objs);
 
-        public void Error(Exception exception, string message, params object[] objs)
-        {
-            var text = _loggerFactory.RenderString(message, objs);
-
-            Append(LogLevel.Error, "{0}: {1}", text, exception);
-        }
-
-        public void Error(string message, params object[] objs)
-        {
-            Append(LogLevel.Error, message, objs);
-        }
+        public void Error(Exception exception, string message, params object[] objs) => Append(LogLevel.Error, "{0}: {1}", _loggerFactory.RenderString(message, objs), exception);
 
         void Append(LogLevel level, string message, params object[] objs)
         {

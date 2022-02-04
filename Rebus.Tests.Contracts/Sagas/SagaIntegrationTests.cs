@@ -36,10 +36,10 @@ public abstract class SagaIntegrationTests<TFactory> : FixtureBase where TFactor
     [Test]
     public async Task DoesNotChokeWhenCorrelatingMultipleMessagesWithTheSameCorrelationProperty()
     {
-        var done = new ManualResetEvent(false);
-        var activator = new BuiltinHandlerActivator();
+        using var done = new ManualResetEvent(false);
+        using var activator = new BuiltinHandlerActivator();
 
-        activator.Register((b, context) => new MySaga(done, b));
+        activator.Register((b, _) => new MySaga(done, b));
 
         var bus = Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "sagastuff"))
@@ -48,10 +48,8 @@ public abstract class SagaIntegrationTests<TFactory> : FixtureBase where TFactor
                 o.SetNumberOfWorkers(1);
                 o.SetMaxParallelism(1);
             })
-            .Sagas(s => s.Register(c => _factory.GetSagaStorage()))
+            .Sagas(s => s.Register(_ => _factory.GetSagaStorage()))
             .Start();
-
-        Using(bus);
 
         await Task.WhenAll(
             bus.SendLocal(new Message1 { CorrelationId = "bimse" }),

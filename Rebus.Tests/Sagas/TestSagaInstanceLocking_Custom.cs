@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
-using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.ExclusiveLocks;
 using Rebus.Handlers;
@@ -18,6 +17,7 @@ using Rebus.Sagas.Exclusive;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
+// ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
 
 // ReSharper disable InconsistentNaming
@@ -33,7 +33,7 @@ public class TestSagaInstanceLocking_Custom : FixtureBase
         var loggerFactory = new ListLoggerFactory(outputToConsole: true);
         var network = new InMemNetwork();
 
-        var handlerActivator = Using(new BuiltinHandlerActivator());
+        using var handlerActivator = new BuiltinHandlerActivator();
 
         handlerActivator.Handle<ProcessThisThingRequest>((bus, request) => bus.Reply(new ProcessThisThingReply(request.Thing, request.SagaId)));
 
@@ -44,7 +44,7 @@ public class TestSagaInstanceLocking_Custom : FixtureBase
 
         var sagaActivator = Using(new BuiltinHandlerActivator());
 
-        sagaActivator.Register((bus, context) => new TypicalContendedSagaExample(bus));
+        sagaActivator.Register((bus, _) => new TypicalContendedSagaExample(bus));
 
         Configure.With(sagaActivator)
             .Logging(l => l.Use(loggerFactory))
@@ -73,7 +73,7 @@ public class TestSagaInstanceLocking_Custom : FixtureBase
     {
         public ProcessTheseThings(IEnumerable<string> things) => Things = new HashSet<string>(things);
 
-        public HashSet<string> Things { get; }
+        public IEnumerable<string> Things { get; }
     }
 
     class ProcessThisThingRequest

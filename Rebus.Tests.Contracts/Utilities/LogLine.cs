@@ -18,9 +18,5 @@ public class LogLine
         Type = type;
     }
 
-    public override string ToString()
-    {
-        return
-            $"{Level} / {Type} / {string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))}";
-    }
+    public override string ToString() => $"{Level} / {Type} / {string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))}";
 }

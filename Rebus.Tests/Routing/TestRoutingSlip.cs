@@ -25,8 +25,8 @@ namespace Rebus.Tests.Routing;
 [TestFixture]
 public class TestRoutingSlip : FixtureBase
 {
-    readonly InMemNetwork _network = new InMemNetwork();
-    readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory(true);
+    readonly InMemNetwork _network = new();
+    readonly ListLoggerFactory _listLoggerFactory = new(true);
 
     protected override void SetUp()
     {
@@ -51,13 +51,13 @@ public class TestRoutingSlip : FixtureBase
             correlationIdValues.Add(headers.GetValue(Headers.CorrelationId));
         }
 
-        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
-        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) => HandleHeaders(context.Headers));
+        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (_, context, _) => HandleHeaders(context.Headers));
+        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (_, context, _) => HandleHeaders(context.Headers));
+        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (_, context, _) => HandleHeaders(context.Headers));
 
         var routingSlipWasReturnedToSender = new ManualResetEvent(false);
 
-        var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (bus, context, message) =>
+        var initiator = StartBus("initiator").Activator.AddHandlerWithBusTemporarilyStopped<string>(async (_, context, _) =>
         {
             HandleHeaders(context.Headers);
             routingSlipWasReturnedToSender.Set();
@@ -112,11 +112,11 @@ public class TestRoutingSlip : FixtureBase
 
     class SomeMutableMessage
     {
-        readonly List<string> _lines = new List<string>();
+        readonly List<string> _lines = new();
 
         public SomeMutableMessage(IEnumerable<string> lines = null) => _lines.AddRange(lines ?? Enumerable.Empty<string>());
 
-        public IReadOnlyCollection<string> Lines => _lines;
+        public IEnumerable<string> Lines => _lines;
 
         public void AddLine(string line) => _lines.Add(line);
     }
@@ -127,11 +127,11 @@ public class TestRoutingSlip : FixtureBase
         var done = new ManualResetEvent(false);
         var events = new ConcurrentQueue<string>();
 
-        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("a"));
-        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("b"));
-        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str => events.Enqueue("c"));
+        StartBus("endpoint-a").Activator.AddHandlerWithBusTemporarilyStopped<string>(async _ => events.Enqueue("a"));
+        StartBus("endpoint-b").Activator.AddHandlerWithBusTemporarilyStopped<string>(async _ => events.Enqueue("b"));
+        StartBus("endpoint-c").Activator.AddHandlerWithBusTemporarilyStopped<string>(async _ => events.Enqueue("c"));
                     
-        StartBus("endpoint-d").Activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
+        StartBus("endpoint-d").Activator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
         {
             events.Enqueue("d");
             done.Set();
@@ -168,7 +168,7 @@ They should not have been there
 
         var routingSlipWasReturnedToSender = new ManualResetEvent(false);
 
-        var initiator = StartBus("initiator", (SomeMessage message) => routingSlipWasReturnedToSender.Set());
+        var initiator = StartBus("initiator", (SomeMessage _) => routingSlipWasReturnedToSender.Set());
 
         var itinerary = new Itinerary("endpoint-a", "endpoint-b", "endpoint-c")
             .ReturnToSender();

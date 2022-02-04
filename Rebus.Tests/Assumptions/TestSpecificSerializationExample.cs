@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,45 +57,38 @@ public class TestSpecificSerializationExample : FixtureBase
     [Test]
     public async Task MessageLooksRightWhenReceived()
     {
-        using (var activator = new BuiltinHandlerActivator())
+        using var activator = new BuiltinHandlerActivator();
+        var receivedMessages = new ConcurrentQueue<DerivedTaskCommand>();
+        activator.Handle<DerivedTaskCommand>(async message => receivedMessages.Enqueue(message));
+
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter"))
+            .Serialization(s => s.UseNewtonsoftJson()) //< have to use Newtonsoft here, because the message uses inheritance
+            .Start();
+
+        await activator.Bus.SendLocal(new DerivedTaskCommand
         {
-            var messageWasReceived = new ManualResetEvent(false);
-            DerivedTaskCommand receivedMessage = null;
-
-            activator.Handle<DerivedTaskCommand>(async message =>
-            {
-                receivedMessage = message;
-                messageWasReceived.Set();
-            });
-
-            Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter"))
-                .Start();
-
-            await activator.Bus.SendLocal(new DerivedTaskCommand
-            {
-                Delays =
-                {
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(3),
-                    TimeSpan.FromSeconds(4),
-                    TimeSpan.FromSeconds(5),
-                }
-            });
-
-            messageWasReceived.WaitOrDie(TimeSpan.FromSeconds(3));
-
-            Assert.That(receivedMessage, Is.Not.Null);
-            Assert.That(receivedMessage.Delays, Is.EqualTo(new[]
+            Delays =
             {
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(2),
                 TimeSpan.FromSeconds(3),
                 TimeSpan.FromSeconds(4),
                 TimeSpan.FromSeconds(5),
-            }));
-        }
+            }
+        });
+
+        var receivedMessage = await receivedMessages.DequeueNext();
+
+        Assert.That(receivedMessage, Is.Not.Null);
+        Assert.That(receivedMessage.Delays, Is.EqualTo(new[]
+        {
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromSeconds(3),
+            TimeSpan.FromSeconds(4),
+            TimeSpan.FromSeconds(5),
+        }));
     }
 
     async Task<T> Roundtrip<T>(T obj)

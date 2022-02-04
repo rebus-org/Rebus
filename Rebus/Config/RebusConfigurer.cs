@@ -219,7 +219,8 @@ public class RebusConfigurer
 
         PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
 
-        PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>()));
+        PossiblyRegisterDefault<ISerializer>(c => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>()));
+        //PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>()));
 
         PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvokerNew(c.Get<IPipeline>()));
 

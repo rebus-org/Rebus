@@ -22,8 +22,8 @@ namespace Rebus.Tests.Sagas;
 
 public abstract class TestSagaInstanceLockingBase : FixtureBase
 {
-    readonly InMemNetwork _network = new InMemNetwork();
-    readonly ListLoggerFactory _listLoggerFactory = new ListLoggerFactory();
+    readonly InMemNetwork _network = new();
+    readonly ListLoggerFactory _listLoggerFactory = new();
 
     BuiltinHandlerActivator _activator;
     IBusStarter _busStarter;
@@ -64,10 +64,10 @@ public abstract class TestSagaInstanceLockingBase : FixtureBase
     {
         const string caseNumber = "case-123";
 
-        var sagaWasInitiated = new ManualResetEvent(false);
-        var sagaWasMarkedAsComplete = new ManualResetEvent(false);
+        using var sagaWasInitiated = new ManualResetEvent(false);
+        using var sagaWasMarkedAsComplete = new ManualResetEvent(false);
 
-        _activator.Register((b, context) => new MySaga(b, sagaWasInitiated, sagaWasMarkedAsComplete));
+        _activator.Register((b, _) => new MySaga(b, sagaWasInitiated, sagaWasMarkedAsComplete));
 
         _busStarter.Start();
 
@@ -76,7 +76,7 @@ public abstract class TestSagaInstanceLockingBase : FixtureBase
         var replyIdsToWaitFor = Enumerable.Range(0, messageCount).Select(n => $"reply-{n}").ToList();
 
         // start the saga
-        var initiator = new StartSaga(caseNumber, replyIdsToWaitFor);
+        var initiator = new StartSaga(caseNumber, replyIdsToWaitFor.ToHashSet());
         await bus.SendLocal(initiator);
 
         // wait until we know it was started
@@ -98,7 +98,11 @@ forced one or more messages into the error queue");
         }
         catch (Exception exception)
         {
-            throw new AssertionException($@"The error queue has {_network.GetCount("error")} messages", exception);
+            throw new AssertionException($@"The error queue has {_network.GetCount("error")} messages. Here's the logs:
+
+{_listLoggerFactory}
+
+", exception);
         }
 
         // check log for errors
@@ -116,10 +120,10 @@ Bummer dude.");
 
     class StartSaga
     {
-        public StartSaga(string caseNumber, IEnumerable<string> replyIdsToWaitFor)
+        public StartSaga(string caseNumber, HashSet<string> replyIdsToWaitFor)
         {
             CaseNumber = caseNumber;
-            ReplyIdsToWaitFor = new HashSet<string>(replyIdsToWaitFor);
+            ReplyIdsToWaitFor = replyIdsToWaitFor;
         }
 
         public string CaseNumber { get; }
