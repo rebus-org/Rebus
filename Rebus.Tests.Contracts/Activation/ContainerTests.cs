@@ -70,7 +70,7 @@ namespace Rebus.Tests.Contracts.Activation
                 headers: headers,
                 message: body,
                 errorDescription: "something went bad",
-                exceptions: new[] {new Exception("oh noes!")}
+                exceptions: new[] { new Exception("oh noes!") }
             );
 
             var handlerActivator = _activationCtx.CreateActivator(r => r.Register<SomeMessageHandler>());
@@ -200,30 +200,37 @@ has failed too many times)
         }
 
         [Test]
-        public void CanGetDecoratedBus()
+        public async Task CanGetDecoratedBus()
         {
+            var callbackWasCalled = 0;
+
             var busReturnedFromConfiguration = _activationCtx.CreateBus(configure => configure
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "decorated-bus-test"))
-                    .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>()))), out var container);
+                    .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>(), () => callbackWasCalled++))), out var container);
 
             var busReturnedFromContainer = container.ResolveBus();
 
-            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>(), "Expected the bus returned from Configure(...).(...).Start() to be of type TestBusDecorator");
-            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>(), "Expected the bus returned from the container to be of type TestBuDecorator");
+            await busReturnedFromContainer.SendLocal("doesn't matter");
+            await busReturnedFromConfiguration.SendLocal("doesn't matter");
+
+            Assert.That(callbackWasCalled, Is.EqualTo(2),
+                "Expected the bus returned from Configure(...).(...).Start() have a TestBusDecorator somewhere between the IBus reference and the RebusBus underneath it all");
         }
 
         class TestBusDecorator : IBus
         {
             readonly IBus _bus;
+            readonly Action _sendLocalCallback;
 
-            public TestBusDecorator(IBus bus)
+            public TestBusDecorator(IBus bus, Action sendLocalCallback)
             {
                 _bus = bus;
+                _sendLocalCallback = sendLocalCallback;
             }
 
             public void Dispose() => _bus.Dispose();
 
-            public Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
+            public async Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _sendLocalCallback();
 
             public Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _bus.SendLocal(commandMessage, optionalHeaders);
 
