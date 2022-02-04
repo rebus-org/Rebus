@@ -1071,7 +1071,7 @@
 ## 6.6.1
 * Make it possible to set the `rbs2-senttime` header explicitly (i.e. it is no longer overwritten by the default headers step)
 
-## 7.0.0-b02
+## 7.0.0-b03
 * Change locking interface to be more generic - thanks [kendallb]
 * Only target .NET Standard 2.0
 
