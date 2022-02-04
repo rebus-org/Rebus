@@ -27,7 +27,7 @@ if %ERRORLEVEL% neq 0 (
  	goto exit_fail
 )
 
-dotnet msbuild "/p:Configuration=Release;Version=%version%" "%root%\Rebus" --no-restore
+dotnet build "%root%\Rebus" -c Release -p:Version=%version% --no-restore
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail
