@@ -76,6 +76,11 @@ class JsonSerializer : ISerializer
 
         if (contentType.Equals(JsonUtf8ContentType, StringComparison.OrdinalIgnoreCase))
         {
+            return GetMessage(transportMessage, DefaultEncoding);
+        }
+
+        if (contentType.Equals(_encodingHeaderValue, StringComparison.OrdinalIgnoreCase))
+        {
             return GetMessage(transportMessage, _encoding);
         }
 

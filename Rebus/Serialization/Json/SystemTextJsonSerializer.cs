@@ -67,6 +67,11 @@ class SystemTextJsonSerializer : ISerializer
 
         if (contentType.Equals(JsonUtf8ContentType, StringComparison.OrdinalIgnoreCase))
         {
+            return Task.FromResult(GetMessage(transportMessage, DefaultEncoding));
+        }
+
+        if (contentType.Equals(_encodingHeaderValue, StringComparison.OrdinalIgnoreCase))
+        {
             return Task.FromResult(GetMessage(transportMessage, _encoding));
         }
 

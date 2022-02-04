@@ -2,8 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
  <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net4.8</TargetFrameworks>
-	 <LangVersion>latest</LangVersion>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+	 <LangVersion>10</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj" />

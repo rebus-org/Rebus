@@ -10,6 +10,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Serialization.Custom;
+using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
 using JsonSerializer = Rebus.Serialization.Json.JsonSerializer;
 #pragma warning disable 4014
@@ -17,13 +18,13 @@ using JsonSerializer = Rebus.Serialization.Json.JsonSerializer;
 namespace Rebus.Tests.Serialization;
 
 [TestFixture]
-public class TestJsonSerializer : FixtureBase
+public class TestSystemTextJsonSerializer : FixtureBase
 {
-    JsonSerializer _serializer;
+    SystemTextJsonSerializer _serializer;
 
     protected override void SetUp()
     {
-        _serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+        _serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
     }
 
     /*
@@ -83,8 +84,8 @@ Made 434064 iterations in 00:00:01
     [Description("Serializer would wrongly use its own current encoding when default encoding was detected")]
     public async Task CheckEncodingBug()
     {
-        var utf32Serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), encoding: Encoding.UTF32);
-        var utf8Serializer = new JsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), encoding: Encoding.UTF8);
+        var utf32Serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), encoding: Encoding.UTF32);
+        var utf8Serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention(), encoding: Encoding.UTF8);
 
         var transportMessage = await utf8Serializer.Serialize(new Message(new Dictionary<string, string>(), new Something("hej")));
         var roundtripped = await utf32Serializer.Deserialize(transportMessage);
@@ -215,12 +216,12 @@ Serialized type name: {type}
 
         BreakMessage(transportMessage);
 
-        var aggregateException = Assert.Throws<AggregateException>(() =>
+        var exception = Assert.Throws<FormatException>(() =>
         {
             _serializer.Deserialize(transportMessage).Wait();
         });
 
-        Console.WriteLine(aggregateException);
+        Console.WriteLine(exception);
     }
 
     static void BreakMessage(TransportMessage transportMessage)
