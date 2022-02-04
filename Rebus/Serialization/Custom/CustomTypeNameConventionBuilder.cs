@@ -9,8 +9,8 @@ namespace Rebus.Serialization.Custom;
 /// </summary>
 public class CustomTypeNameConventionBuilder
 {
-    readonly ConcurrentDictionary<Type, string> _typeToName = new ConcurrentDictionary<Type, string>();
-    readonly ConcurrentDictionary<string, Type> _nameToType = new ConcurrentDictionary<string, Type>();
+    readonly ConcurrentDictionary<Type, string> _typeToName = new();
+    readonly ConcurrentDictionary<string, Type> _nameToType = new();
 
     bool _allowFallback;
 
@@ -79,7 +79,7 @@ public class CustomTypeNameConventionBuilder
         return this;
     }
 
-    internal CustomTypeNameConvention GetConvention() => new CustomTypeNameConvention(_typeToName, _nameToType, _allowFallback);
+    internal CustomTypeNameConvention GetConvention() => new(_typeToName, _nameToType, _allowFallback);
 
     void AddMapping(Type type, string name)
     {

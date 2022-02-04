@@ -2,6 +2,7 @@
 using System.Text;
 using Rebus.Config;
 using System.Text.Json;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Serialization.Json;
 
@@ -39,6 +40,7 @@ public static class SystemJsonConfigurationExtensions
     static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, JsonSerializerOptions settings, Encoding encoding)
     {
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-        configurer.OtherService<ISerializer>().Decorate(c => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>(), settings, encoding));
+        
+        configurer.Register(c => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>(), settings, encoding));
     }
 }

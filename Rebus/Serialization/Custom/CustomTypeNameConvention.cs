@@ -22,7 +22,7 @@ class CustomTypeNameConvention : IMessageTypeNameConvention
     .Start();";
     }
 
-    readonly SimpleAssemblyQualifiedMessageTypeNameConvention _defaultConvention = new SimpleAssemblyQualifiedMessageTypeNameConvention();
+    readonly SimpleAssemblyQualifiedMessageTypeNameConvention _defaultConvention = new();
     readonly ConcurrentDictionary<Type, string> _typeToName;
     readonly ConcurrentDictionary<string, Type> _nameToType;
     readonly bool _allowFallback;

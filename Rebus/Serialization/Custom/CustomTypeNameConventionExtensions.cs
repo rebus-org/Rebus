@@ -32,7 +32,7 @@ public static class CustomTypeNameConventionExtensions
 
         configurer
             .OtherService<IMessageTypeNameConvention>()
-            .Register(c => builder.GetConvention());
+            .Register(_ => builder.GetConvention());
 
         return builder;
     }

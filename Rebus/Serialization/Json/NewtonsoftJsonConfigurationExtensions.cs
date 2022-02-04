@@ -2,6 +2,7 @@
 using System.Text;
 using Newtonsoft.Json;
 using Rebus.Config;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Serialization.Json;
 
@@ -52,18 +53,14 @@ public static class NewtonsoftJsonConfigurationExtensions
         RegisterSerializer(configurer, settings, encoding ?? Encoding.UTF8);
     }
 
-    static TypeNameHandling GetTypeNameHandling(JsonInteroperabilityMode mode)
+    static TypeNameHandling GetTypeNameHandling(JsonInteroperabilityMode mode) => mode switch
     {
-        switch (mode)
-        {
-            case JsonInteroperabilityMode.FullTypeInformation:
-                return TypeNameHandling.All;
-            case JsonInteroperabilityMode.PureJson:
-                return TypeNameHandling.None;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Unknown {typeof(JsonInteroperabilityMode).Name} value");
-        }
-    }
+        JsonInteroperabilityMode.FullTypeInformation => TypeNameHandling.All,
+
+        JsonInteroperabilityMode.PureJson => TypeNameHandling.None,
+
+        _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, $"Unknown {nameof(JsonInteroperabilityMode)} value")
+    };
 
     static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, JsonSerializerSettings settings, Encoding encoding)
     {
