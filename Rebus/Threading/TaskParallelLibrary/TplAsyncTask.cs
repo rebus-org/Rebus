@@ -13,9 +13,9 @@ public class TplAsyncTask : IAsyncTask
     /// <summary>
     /// This is the default interval between invocations if the periodic action, unless the <see cref="Interval"/> property is set to something else
     /// </summary>
-    public static TimeSpan DefaultInterval = TimeSpan.FromSeconds(10);
+    public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(10);
 
-    readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+    readonly CancellationTokenSource _tokenSource = new();
     readonly bool _prettyInsignificant;
     readonly string _description;
     readonly Func<Task> _action;

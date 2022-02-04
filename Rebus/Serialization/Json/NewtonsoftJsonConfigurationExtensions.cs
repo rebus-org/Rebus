@@ -15,7 +15,6 @@ public static class NewtonsoftJsonConfigurationExtensions
     /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages, using <see cref="JsonSerializerSettings"/> that includes ALL
     /// type information in every object, thus allowing for preserving all type information when roundtripping message types.
     /// Message bodies are UTF8-encoded.
-    /// This is the default message serialization, so there is actually no need to call this method.
     /// </summary>
     public static void UseNewtonsoftJson(this StandardConfigurer<ISerializer> configurer)
     {
@@ -29,8 +28,7 @@ public static class NewtonsoftJsonConfigurationExtensions
     /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages, using appropriate <see cref="JsonSerializerSettings"/> 
     /// depending on the given <paramref name="mode"/>. Message bodies are UTF8-encoded.
     /// Passing <see cref="JsonInteroperabilityMode.FullTypeInformation"/> as the value for <paramref name="mode"/> is equivalent
-    /// to calling <see cref="UseNewtonsoftJson(StandardConfigurer{ISerializer})"/> which in turn
-    /// is equivalent to not explicitly configuring the serializer because it's the default serialization :)
+    /// to calling <see cref="UseNewtonsoftJson(StandardConfigurer{ISerializer})"/> 
     /// </summary>
     public static void UseNewtonsoftJson(this StandardConfigurer<ISerializer> configurer, JsonInteroperabilityMode mode)
     {

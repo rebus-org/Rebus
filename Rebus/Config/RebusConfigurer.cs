@@ -45,8 +45,8 @@ namespace Rebus.Config;
 /// </summary>
 public class RebusConfigurer
 {
-    readonly Injectionist _injectionist = new Injectionist();
-    readonly Options _options = new Options();
+    readonly Injectionist _injectionist = new();
+    readonly Options _options = new();
 
     bool _hasBeenStarted;
 
@@ -54,11 +54,11 @@ public class RebusConfigurer
     {
         if (handlerActivator == null) throw new ArgumentNullException(nameof(handlerActivator));
 
-        _injectionist.Register(c => handlerActivator);
+        _injectionist.Register(_ => handlerActivator);
 
         if (handlerActivator is IContainerAdapter)
         {
-            _injectionist.Register(c => (IContainerAdapter)handlerActivator);
+            _injectionist.Register(_ => (IContainerAdapter)handlerActivator);
         }
     }
 
@@ -95,7 +95,7 @@ public class RebusConfigurer
         {
             if (!_injectionist.Has<IDataBusStorageManagement>())
             {
-                _injectionist.Register<IDataBusStorageManagement>(c => new DisabledDataBusStorageManagement());
+                _injectionist.Register<IDataBusStorageManagement>(_ => new DisabledDataBusStorageManagement());
             }
 
             _injectionist.Register<IDataBus>(c =>
@@ -192,13 +192,13 @@ public class RebusConfigurer
     {
         VerifyRequirements();
 
-        _injectionist.Register(c => _options);
-        _injectionist.Register(c => new CancellationTokenSource());
+        _injectionist.Register(_ => _options);
+        _injectionist.Register(_ => new CancellationTokenSource());
         _injectionist.Register(c => c.Get<CancellationTokenSource>().Token);
 
-        PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
+        PossiblyRegisterDefault<IRebusLoggerFactory>(_ => new ConsoleLoggerFactory(true));
 
-        PossiblyRegisterDefault<IRebusTime>(c => new DefaultRebusTime());
+        PossiblyRegisterDefault<IRebusTime>(_ => new DefaultRebusTime());
 
         //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
         PossiblyRegisterDefault<IAsyncTaskFactory>(c =>
@@ -213,11 +213,11 @@ public class RebusConfigurer
             return new TypeBasedRouter(rebusLoggerFactory);
         });
 
-        PossiblyRegisterDefault<ISubscriptionStorage>(c => new DisabledSubscriptionStorage());
+        PossiblyRegisterDefault<ISubscriptionStorage>(_ => new DisabledSubscriptionStorage());
 
-        PossiblyRegisterDefault<ISagaStorage>(c => new DisabledSagaStorage());
+        PossiblyRegisterDefault<ISagaStorage>(_ => new DisabledSagaStorage());
 
-        PossiblyRegisterDefault<ITimeoutManager>(c => new DisabledTimeoutManager());
+        PossiblyRegisterDefault<ITimeoutManager>(_ => new DisabledTimeoutManager());
 
         PossiblyRegisterDefault<ISerializer>(c => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>()));
         //PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer(c.Get<IMessageTypeNameConvention>()));
@@ -291,7 +291,7 @@ public class RebusConfigurer
             return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
         });
 
-        PossiblyRegisterDefault<IFailFastChecker>(c => new FailFastChecker());
+        PossiblyRegisterDefault<IFailFastChecker>(_ => new FailFastChecker());
 
         PossiblyRegisterDefault<IRetryStrategy>(c =>
         {
@@ -303,7 +303,7 @@ public class RebusConfigurer
             return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, cancellationToken);
         });
 
-        PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
+        PossiblyRegisterDefault(_ => new SimpleRetryStrategySettings());
 
         PossiblyRegisterDefault(c =>
         {
@@ -344,13 +344,13 @@ public class RebusConfigurer
                 .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
         });
 
-        PossiblyRegisterDefault(c => new BusLifetimeEvents());
+        PossiblyRegisterDefault(_ => new BusLifetimeEvents());
 
-        PossiblyRegisterDefault<IDataBus>(c => new DisabledDataBus());
+        PossiblyRegisterDefault<IDataBus>(_ => new DisabledDataBus());
 
-        PossiblyRegisterDefault<ITopicNameConvention>(c => new DefaultTopicNameConvention());
+        PossiblyRegisterDefault<ITopicNameConvention>(_ => new DefaultTopicNameConvention());
 
-        PossiblyRegisterDefault<IMessageTypeNameConvention>(c => new SimpleAssemblyQualifiedMessageTypeNameConvention());
+        PossiblyRegisterDefault<IMessageTypeNameConvention>(_ => new SimpleAssemblyQualifiedMessageTypeNameConvention());
 
         // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
         Action startAction = null;
@@ -484,10 +484,5 @@ public class RebusConfigurer
         if (_injectionist.Has<TService>()) return;
 
         _injectionist.Register(factoryMethod);
-    }
-
-    void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
-    {
-        _injectionist.Decorate(factoryMethod);
     }
 }
