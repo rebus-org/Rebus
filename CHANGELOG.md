@@ -1071,9 +1071,10 @@
 ## 6.6.1
 * Make it possible to set the `rbs2-senttime` header explicitly (i.e. it is no longer overwritten by the default headers step)
 
-## 7.0.0-b03
+## 7.0.0-b04
 * Change locking interface to be more generic - thanks [kendallb]
 * Only target .NET Standard 2.0
+* Change default JSON serializer to System.Text.Json (this is a BREAKING change! Please remember to `.Serializer(s => s.UseNewtonsoftJson()))` if you rely on e.g. inheritance and other advanced stuff
 
 ---
 

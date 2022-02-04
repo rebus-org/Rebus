@@ -2,7 +2,6 @@
 using System.Text;
 using Rebus.Config;
 using System.Text.Json;
-using JetBrains.Annotations;
 // ReSharper disable UnusedMember.Global
 
 namespace Rebus.Serialization.Json;
@@ -14,7 +13,7 @@ public static class SystemJsonConfigurationExtensions
 {
     /// <summary>
     /// Configures Rebus to use .NET System.Text.Json to serialize messages.
-    /// Default <see cref="JsonSerializerOptions" /> settings
+    /// Default <see cref="JsonSerializerOptions" /> settings, except trailing commas are allowed, and comments are skipped.
     /// Message bodies are UTF8-encoded.
     /// This is the default message serialization, so there is actually no need to call this method.
     /// </summary>
@@ -22,7 +21,7 @@ public static class SystemJsonConfigurationExtensions
     {
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
 
-        RegisterSerializer(configurer, null, Encoding.UTF8);
+        RegisterSerializer(configurer);
     }
 
     /// <summary>
@@ -34,15 +33,12 @@ public static class SystemJsonConfigurationExtensions
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-        RegisterSerializer(configurer, settings, encoding ?? Encoding.UTF8);
+        RegisterSerializer(configurer, settings, encoding);
     }
 
-    static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, [NotNull] JsonSerializerOptions settings,
-        [NotNull] Encoding encoding)
+    static void RegisterSerializer(StandardConfigurer<ISerializer> configurer, JsonSerializerOptions settings = null, Encoding encoding = null)
     {
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-        if (settings == null) throw new ArgumentNullException(nameof(settings));
-        if (encoding == null) throw new ArgumentNullException(nameof(encoding));
 
         configurer.Register(c => new SystemTextJsonSerializer(c.Get<IMessageTypeNameConvention>(), settings, encoding));
     }

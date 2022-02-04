@@ -13,6 +13,14 @@ namespace Rebus.Serialization.Json;
 /// </summary>
 class SystemTextJsonSerializer : ISerializer
 {
+    static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+        AllowTrailingCommas = true,
+        ReadCommentHandling = JsonCommentHandling.Skip
+    };
+
+    static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
     /// <summary>
     /// Proper content type when a message has been serialized with this serializer (or another compatible JSON serializer) and it uses the standard UTF8 encoding
     /// </summary>
@@ -23,18 +31,15 @@ class SystemTextJsonSerializer : ISerializer
     /// </summary>
     public const string JsonContentType = "application/json";
 
-
-    static readonly Encoding DefaultEncoding = Encoding.UTF8;
-
-    readonly JsonSerializerOptions _settings;
-    readonly Encoding _encoding;
     readonly IMessageTypeNameConvention _messageTypeNameConvention;
+    readonly JsonSerializerOptions _options;
     readonly string _encodingHeaderValue;
+    readonly Encoding _encoding;
 
-    public SystemTextJsonSerializer(IMessageTypeNameConvention messageTypeNameConvention, JsonSerializerOptions jsonSerializerSettings = null, Encoding encoding = null)
+    public SystemTextJsonSerializer(IMessageTypeNameConvention messageTypeNameConvention, JsonSerializerOptions jsonSerializerOptions = null, Encoding encoding = null)
     {
         _messageTypeNameConvention = messageTypeNameConvention ?? throw new ArgumentNullException(nameof(messageTypeNameConvention));
-        _settings = jsonSerializerSettings;
+        _options = jsonSerializerOptions ?? DefaultJsonSerializerOptions;
         _encoding = encoding ?? DefaultEncoding;
 
         _encodingHeaderValue = $"{JsonContentType};charset={_encoding.HeaderName}";
@@ -45,7 +50,7 @@ class SystemTextJsonSerializer : ISerializer
     /// </summary>
     public Task<TransportMessage> Serialize(Message message)
     {
-        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(message.Body, message.Body.GetType(), _settings);
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(message.Body, message.Body.GetType(), _options);
         var headers = message.Headers.Clone();
 
         headers[Headers.ContentType] = _encodingHeaderValue;
@@ -132,7 +137,7 @@ class SystemTextJsonSerializer : ISerializer
     {
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize(bodyString, type, _settings);
+            return System.Text.Json.JsonSerializer.Deserialize(bodyString, type, _options);
         }
         catch (Exception exception)
         {
