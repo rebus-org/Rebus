@@ -34,4 +34,10 @@ or by registering a factory function like this:
 
         return new RebusConfigurer(handlerActivator);
     }
+
+    /// <summary>
+    /// Call this method when you're using one of the Transport(t => t.***AsOneWayClient()) transports and you don't have any <see cref="IHandlerActivator"/> to register.
+    /// </summary>
+    public static RebusConfigurer OneWayClient() => 
+        With(new EmptyActivator());
 }
