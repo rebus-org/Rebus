@@ -5,7 +5,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
-    <TargetFrameworks>net45;net46;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net46;netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
     <PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
