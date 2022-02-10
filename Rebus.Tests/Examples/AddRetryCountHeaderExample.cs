@@ -17,95 +17,99 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable CS1998
 
-namespace Rebus.Tests.Examples
+namespace Rebus.Tests.Examples;
+
+[TestFixture]
+[Description("Demonstrates how Rebus can be extended to add a retry count header to each incoming message")]
+public class AddRetryCountHeaderExample : FixtureBase
 {
-    [TestFixture]
-    [Description("Demonstrates how Rebus can be extended")]
-    public class AddRetryCountHeaderExample : FixtureBase
+    [Test]
+    public async Task CanRevealNumberOfRetries()
     {
-        [Test]
-        public async Task CanRevealNumberOfRetries()
+        var retryCounts = new ConcurrentQueue<int>();
+        var activator = Using(new BuiltinHandlerActivator());
+
+        // create random header key every time to verify that it is actually used
+        var headerKey = $"retry-count/{Guid.NewGuid()}";
+
+        activator.Handle<Fail>(async (_, context, _) =>
         {
-            var retryCounts = new ConcurrentQueue<int>();
-            var activator = Using(new BuiltinHandlerActivator());
-
-            // create random header key every time to verify that it is actually used
-            var headerKey = $"retry-count/{Guid.NewGuid()}";
-
-            activator.Handle<Fail>(async (_, context, msg) =>
-            {
-                Console.WriteLine($@"Got message {context.TransportMessage.GetMessageId()}:
+            Console.WriteLine($@"Got message {context.TransportMessage.GetMessageId()}:
 {string.Join(Environment.NewLine, context.Headers.Select(kvp => $"    {kvp.Key}: {kvp.Value}"))}");
 
-                retryCounts.Enqueue(int.Parse(context.Headers.GetValue(headerKey)));
+            retryCounts.Enqueue(int.Parse(context.Headers.GetValue(headerKey)));
 
-                throw new Exception("oh no!");
-            });
+            throw new Exception("oh no!");
+        });
 
-            var network = new InMemNetwork();
+        var network = new InMemNetwork();
 
-            var bus = Configure.With(activator)
-                .Transport(t => t.UseInMemoryTransport(network, "who-cares"))
-                .Options(o => o.AddRetryCountHeader(key: headerKey))
-                .Start();
+        var bus = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(network, "who-cares"))
+            .Options(o => o.AddRetryCountHeader(key: headerKey))
+            .Options(o => o.LogPipeline(verbose: true))
+            .Start();
 
-            // send message that will fail
-            await bus.SendLocal(new Fail());
+        // send message that will fail
+        await bus.SendLocal(new Fail());
 
-            // wait until the message is dead-lettered
-            var _ = await network.WaitForNextMessageFrom("error");
+        // wait until the message is dead-lettered
+        _ = await network.WaitForNextMessageFrom("error");
 
-            Assert.That(retryCounts.Count, Is.EqualTo(5));
-            Assert.That(retryCounts.ToArray(), Is.EqualTo(new[] { 0, 1, 2, 3, 4 }));
-        }
-
-        class Fail { }
+        Assert.That(retryCounts.Count, Is.EqualTo(5));
+        Assert.That(retryCounts.ToArray(), Is.EqualTo(new[] { 0, 1, 2, 3, 4 }));
     }
 
-    static class RetryCountHeaderExtensions
+    class Fail { }
+}
+
+/// <summary>
+/// Extension method to configure Rebus to add an artifial retry count header to incoming messages
+/// </summary>
+static class RetryCountHeaderExtensions
+{
+    /// <summary>
+    /// Adds an artificial header with retry count under the key specified by <paramref name="key"/> to each message being handled.
+    /// It counts the number of tracked exceptions for the message, meaning that it will 0 on the initial delivery attempt.
+    /// </summary>
+    public static void AddRetryCountHeader(this OptionsConfigurer configurer, string key = "retry-count")
     {
-        /// <summary>
-        /// Adds an artificial header with retry count under the key specified by <paramref name="key"/> to each message being handled.
-        /// It counts the number of tracked exceptions for the message, meaning that it will 0 on the initial delivery attempt.
-        /// </summary>
-        public static void AddRetryCountHeader(this OptionsConfigurer configurer, string key = "retry-count")
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        if (key == null) throw new ArgumentNullException(nameof(key));
+
+        configurer.Decorate<IPipeline>(c =>
         {
-            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            var pipeline = c.Get<IPipeline>();
+            var errorTracker = c.Get<IErrorTracker>();
 
-            configurer.Decorate<IPipeline>(c =>
-            {
-                var pipeline = c.Get<IPipeline>();
-                var errorTracker = c.Get<IErrorTracker>();
+            var step = new AddRetryInfoHeaderStep(errorTracker, key);
 
-                var step = new AddRetryInfoHeaderStep(errorTracker, key);
+            return new PipelineStepInjector(pipeline)
+                .OnReceive(step, PipelineRelativePosition.After, typeof(SimpleRetryStrategyStep));
+        });
+    }
 
-                return new PipelineStepInjector(pipeline)
-                    .OnReceive(step, PipelineRelativePosition.After, typeof(SimpleRetryStrategyStep));
-            });
+    [StepDocumentation("Loads the transport message, counts the number of exceptions tracked for the message ID, and the adds an artificial header to the transport message with the retry count.")]
+    class AddRetryInfoHeaderStep : IIncomingStep
+    {
+        readonly IErrorTracker _errorTracker;
+        readonly string _key;
+
+        public AddRetryInfoHeaderStep(IErrorTracker errorTracker, string key)
+        {
+            _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
+            _key = key ?? throw new ArgumentNullException(nameof(key));
         }
 
-        class AddRetryInfoHeaderStep : IIncomingStep
+        public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            readonly IErrorTracker _errorTracker;
-            readonly string _key;
+            var message = context.Load<TransportMessage>();
+            var messageId = message.GetMessageId();
+            var exceptionCount = _errorTracker.GetExceptions(messageId).Count();
 
-            public AddRetryInfoHeaderStep(IErrorTracker errorTracker, string key)
-            {
-                _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
-                _key = key ?? throw new ArgumentNullException(nameof(key));
-            }
+            message.Headers[_key] = exceptionCount.ToString(CultureInfo.InvariantCulture);
 
-            public async Task Process(IncomingStepContext context, Func<Task> next)
-            {
-                var message = context.Load<TransportMessage>();
-                var messageId = message.GetMessageId();
-                var exceptionCount = _errorTracker.GetExceptions(messageId).Count();
-
-                message.Headers[_key] = exceptionCount.ToString(CultureInfo.InvariantCulture);
-
-                await next();
-            }
+            await next();
         }
     }
 }
