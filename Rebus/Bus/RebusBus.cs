@@ -403,9 +403,13 @@ public partial class RebusBus : IBus
 
     async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
     {
+        var isExpressMessage = logicalMessage.IsExpressMessage();
         var currentTransactionContext = GetCurrentTransactionContext(mustBelongToThisBus: true);
 
-        if (currentTransactionContext != null)
+        // Remarks for express messages:
+        // In order to trade reliability for performance to deliver this message as quickly as possible,
+        // we use a dedicated one-time single-purpose transaction context instead of the existing one.
+        if (isExpressMessage is false && currentTransactionContext is not null)
         {
             await SendUsingTransactionContext(destinationAddresses, logicalMessage, currentTransactionContext);
         }
@@ -414,6 +418,7 @@ public partial class RebusBus : IBus
             using var context = new TransactionContextWithOwningBus(this);
                 
             await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
+
             await context.Complete();
         }
     }
@@ -427,18 +432,23 @@ public partial class RebusBus : IBus
 
     async Task SendTransportMessage(string destinationAddress, TransportMessage transportMessage)
     {
+        var isExpressMessage = transportMessage.IsExpressMessage();
         var transactionContext = GetCurrentTransactionContext(mustBelongToThisBus: true);
 
-        if (transactionContext == null)
+        // Remarks for express messages:
+        // In order to trade reliability for performance to deliver this message as quickly as possible,
+        // we use a dedicated one-time single-purpose transaction context instead of the existing one.
+        if (isExpressMessage is false && transactionContext is not null)
         {
-            using var context = new TransactionContextWithOwningBus(this);
-                
-            await _transport.Send(destinationAddress, transportMessage, context);
-            await context.Complete();
+            await _transport.Send(destinationAddress, transportMessage, transactionContext);
         }
         else
         {
-            await _transport.Send(destinationAddress, transportMessage, transactionContext);
+            using var context = new TransactionContextWithOwningBus(this);
+
+            await _transport.Send(destinationAddress, transportMessage, context);
+
+            await context.Complete();
         }
     }
 

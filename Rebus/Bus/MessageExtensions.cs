@@ -129,6 +129,26 @@ public static class MessageExtensions
     }
 
     /// <summary>
+    /// Determines whether to trade reliability for performance to deliver this message as quickly as possible
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public static bool IsExpressMessage(this Message message)
+    {
+        return IsExpressMessage(message.Headers);
+    }
+
+    /// <summary>
+    /// Determines whether to trade reliability for performance to deliver this message as quickly as possible
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public static bool IsExpressMessage(this TransportMessage message)
+    {
+        return IsExpressMessage(message.Headers);
+    }
+
+    /// <summary>
     /// Returns a cloned instance of the transport message
     /// </summary>
     public static TransportMessage Clone(this TransportMessage message)
@@ -136,7 +156,19 @@ public static class MessageExtensions
         return new TransportMessage(message.Headers.Clone(), message.Body);
     }
 
-    static string GetMessageLabel(Dictionary<string, string> headers)
+    private static bool IsExpressMessage(Dictionary<string, string> headers)
+    {
+        var express = false;
+
+        if (headers.TryGetValue(Headers.Express, out var value))
+        {
+            bool.TryParse(value, out express);
+        }
+
+        return express;
+    }
+
+    private static string GetMessageLabel(Dictionary<string, string> headers)
     {
         var id = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
 
@@ -157,7 +189,7 @@ public static class MessageExtensions
         return $"{type}/{id}";
     }
 
-    static string GetTypeNameFromBodyObjectOrNull(object body)
+    private static string GetTypeNameFromBodyObjectOrNull(object body)
     {
         return body?.GetType().GetSimpleAssemblyQualifiedName();
     }
