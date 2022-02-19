@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Hypothesist;
 using Hypothesist.Rebus;
@@ -6,8 +6,8 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Injection;
 using Rebus.Persistence.InMem;
-using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Transport.InMem;
 
@@ -30,29 +30,47 @@ public class ClientOnly : FixtureBase
             .Register(hypothesis.AsHandler);
 
         var network = new InMemNetwork();
-        using var subscriber = await Subscriber(activator, network);
-        using var publisher = Publisher(network);
+        var subscriberStore = new InMemorySubscriberStore();
+
+        using var subscriber = await Subscriber(activator, network, subscriberStore);
+        using var publisher = Publisher(network, subscriberStore);
 
         // Act
-        await publisher.Send(message); // publish doesn't work in this setup, not sure why
+        await publisher.Publish(message);
 
         // Assert
         await hypothesis.Validate(TimeSpan.FromSeconds(5));
     }
 
-    private static IBus Publisher(InMemNetwork network) =>
+    [Test]
+    [Description("Verifies that a Rebus instance configured with Configure.OneWayClient().(...) cannot be configured with an input queue")]
+    public void TestOneWayClientValidation()
+    {
+        var resolutionException = Assert.Throws<ResolutionException>(() =>
+        {
+            _ = Configure.OneWayClient()
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "oh no 💀"))
+                .Start();
+        });
+
+        Assert.That(resolutionException!.InnerException, Is.TypeOf<InvalidOperationException>());
+
+        var invalidOperationException = (InvalidOperationException)resolutionException.InnerException;
+
+        Console.WriteLine(invalidOperationException);
+    }
+
+    private static IBus Publisher(InMemNetwork network, InMemorySubscriberStore subscriberStore) =>
         Configure.OneWayClient()
             .Transport(t => t.UseInMemoryTransportAsOneWayClient(network))
-            .Subscriptions(s => s.StoreInMemory()) // req'd also for one way client transports
-            .Routing(t => t.TypeBased().Map<Message>("subscriber"))
+            .Subscriptions(s => s.StoreInMemory(subscriberStore)) // req'd also for one way client transports
             .Start();
 
-    private static async Task<IBus> Subscriber(IHandlerActivator activator, InMemNetwork network)
+    private static async Task<IBus> Subscriber(IHandlerActivator activator, InMemNetwork network, InMemorySubscriberStore subscriberStore)
     {
         var subscriber = Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(network, "subscriber"))
-            .Subscriptions(s => s.StoreInMemory())
-            .Routing(t => t.TypeBased().Map<Message>("not-sure")) // req'd also when only subscribing
+            .Subscriptions(s => s.StoreInMemory(subscriberStore))
             .Start();
 
         await subscriber.Subscribe<Message>();
