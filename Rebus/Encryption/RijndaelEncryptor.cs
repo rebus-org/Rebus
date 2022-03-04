@@ -26,10 +26,9 @@ class RijndaelEncryptor : IEncryptor
         {
             _key = Convert.FromBase64String(key);
 
-            using (var rijndael = new RijndaelManaged())
-            {
-                rijndael.Key = _key;
-            }
+            using var rijndael = new RijndaelManaged();
+            
+            rijndael.Key = _key;
         }
         catch (Exception exception)
         {
@@ -44,12 +43,11 @@ I promise that the suggested key has been generated this instant - if you don't 
 
     static string GenerateNewKey()
     {
-        using (var rijndael = new RijndaelManaged())
-        {
-            rijndael.GenerateKey();
+        using var rijndael = new RijndaelManaged();
+        
+        rijndael.GenerateKey();
                 
-            return Convert.ToBase64String(rijndael.Key);
-        }
+        return Convert.ToBase64String(rijndael.Key);
     }
 
     /// <summary>
@@ -58,21 +56,19 @@ I promise that the suggested key has been generated this instant - if you don't 
     /// </summary>
     public EncryptedData Encrypt(byte[] bytes)
     {
-        using (var rijndael = new RijndaelManaged())
-        {
-            rijndael.GenerateIV();
-            rijndael.Key = _key;
+        using var rijndael = new RijndaelManaged();
+        
+        rijndael.GenerateIV();
+        rijndael.Key = _key;
 
-            using (var encryptor = rijndael.CreateEncryptor())
-            using (var destination = new MemoryStream())
-            using (var cryptoStream = new CryptoStream(destination, encryptor, CryptoStreamMode.Write))
-            {
-                cryptoStream.Write(bytes, 0, bytes.Length);
-                cryptoStream.FlushFinalBlock();
+        using var encryptor = rijndael.CreateEncryptor();
+        using var destination = new MemoryStream();
+        using var cryptoStream = new CryptoStream(destination, encryptor, CryptoStreamMode.Write);
+        
+        cryptoStream.Write(bytes, 0, bytes.Length);
+        cryptoStream.FlushFinalBlock();
 
-                return new EncryptedData(destination.ToArray(), rijndael.IV);
-            }
-        }
+        return new EncryptedData(destination.ToArray(), rijndael.IV);
     }
 
     /// <summary>
@@ -83,20 +79,18 @@ I promise that the suggested key has been generated this instant - if you don't 
         var iv = encryptedData.Iv;
         var bytes = encryptedData.Bytes;
 
-        using (var rijndael = new RijndaelManaged())
-        {
-            rijndael.IV = iv;
-            rijndael.Key = _key;
+        using var rijndael = new RijndaelManaged();
+        
+        rijndael.IV = iv;
+        rijndael.Key = _key;
 
-            using (var decryptor = rijndael.CreateDecryptor())
-            using (var destination = new MemoryStream())
-            using(var cryptoStream = new CryptoStream(destination, decryptor, CryptoStreamMode.Write))
-            {
-                cryptoStream.Write(bytes, 0, bytes.Length);
-                cryptoStream.FlushFinalBlock();
+        using var decryptor = rijndael.CreateDecryptor();
+        using var destination = new MemoryStream();
+        using var cryptoStream = new CryptoStream(destination, decryptor, CryptoStreamMode.Write);
+        
+        cryptoStream.Write(bytes, 0, bytes.Length);
+        cryptoStream.FlushFinalBlock();
 
-                return destination.ToArray();
-            }
-        }
+        return destination.ToArray();
     }
 }
