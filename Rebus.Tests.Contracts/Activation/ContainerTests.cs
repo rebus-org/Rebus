@@ -12,7 +12,6 @@ using Rebus.Handlers;
 using Rebus.Messages;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Transport;
 using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleNamedExpression
 // ReSharper disable ArgumentsStyleOther

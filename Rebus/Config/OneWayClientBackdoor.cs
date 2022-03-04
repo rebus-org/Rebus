@@ -1,6 +1,5 @@
 ﻿using System;
 using Rebus.Bus;
-using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Transport;
 

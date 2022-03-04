@@ -12,7 +12,6 @@ using Rebus.Extensions;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 // ReSharper disable ArgumentsStyleLiteral
 // ReSharper disable RedundantArgumentDefaultValue

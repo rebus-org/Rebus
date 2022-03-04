@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Rebus.Bus.Advanced;
 
 namespace Rebus.ExclusiveLocks;
 

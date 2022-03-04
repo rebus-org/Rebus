@@ -12,7 +12,6 @@ using Rebus.Persistence.InMem;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration;

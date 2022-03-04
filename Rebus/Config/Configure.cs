@@ -1,6 +1,5 @@
 ﻿using System;
 using Rebus.Activation;
-using Rebus.Transport;
 
 namespace Rebus.Config;
 

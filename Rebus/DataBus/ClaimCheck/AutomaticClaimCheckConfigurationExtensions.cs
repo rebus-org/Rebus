@@ -1,7 +1,6 @@
 ﻿using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Pipeline;
-using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 // ReSharper disable ArgumentsStyleOther
 // ReSharper disable ArgumentsStyleNamedExpression

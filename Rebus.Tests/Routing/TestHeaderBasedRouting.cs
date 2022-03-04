@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;

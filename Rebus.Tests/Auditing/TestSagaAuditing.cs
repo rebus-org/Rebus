@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Auditing.Sagas;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Persistence.InMem;
