@@ -1071,8 +1071,11 @@
 ## 6.6.1
 * Make it possible to set the `rbs2-senttime` header explicitly (i.e. it is no longer overwritten by the default headers step)
 
-## 6.6.3
+## 6.6.2
 * Make it possible for transport behavior to differ, and add flags to make the transport contract tests behave accordingly
+
+## 6.6.3
+* Hopefully fix XML docs
 
 ---
 
