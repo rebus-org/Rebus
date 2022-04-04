@@ -26,7 +26,7 @@ if exist "%deploydir%" (
 
 pushd %root%
 
-dotnet pack "%root%/Rebus" -c Release -o "%deploydir%" /p:PackageVersion=%version%;Version=%version%
+dotnet pack "%root%/Rebus" -c Release -o "%deploydir%" -p:PackageVersion=%version%;Version=%version% --no-restore
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail

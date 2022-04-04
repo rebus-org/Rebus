@@ -21,13 +21,13 @@ set Version=%version%
 
 pushd %root%
 
-dotnet restore
+dotnet restore --interactive
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail
 )
 
-dotnet msbuild "/p:Configuration=Release;Version=%version%" "%root%\Rebus"
+dotnet msbuild "/p:Configuration=Release;Version=%version%" "%root%\Rebus" --no-restore
 if %ERRORLEVEL% neq 0 (
 	popd
  	goto exit_fail
