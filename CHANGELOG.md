@@ -1074,7 +1074,7 @@
 ## 6.6.2
 * Make it possible for transport behavior to differ, and add flags to make the transport contract tests behave accordingly
 
-## 6.6.3
+## 6.6.4
 * Hopefully fix XML docs
 
 ---

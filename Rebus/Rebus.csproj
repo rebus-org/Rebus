@@ -29,6 +29,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
     <Company>Rebus FM</Company>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <DefineConstants>HAS_CONFIGURATION_MANAGER;HAS_ASYNC_LOCAL</DefineConstants>
