@@ -1076,6 +1076,7 @@
 * Only target .NET Standard 2.0
 * Change default JSON serializer to System.Text.Json (this is a BREAKING change! Please remember to `.Serializer(s => s.UseNewtonsoftJson()))` if you rely on e.g. inheritance and other advanced stuff
 * Add `Configure.OneWayClient()` API which can be used to configure one-way clients, because handlers - and thus also the handler activator - are irrelevant - thanks [riezebosch]
+* Fix typos in XML docs - thanks [torangel]
 
 ---
 
