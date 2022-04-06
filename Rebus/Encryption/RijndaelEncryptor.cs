@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 namespace Rebus.Encryption;
 
 /// <summary>
-/// Helps with encrypting/decripting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
+/// Helps with encrypting/decrypting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
 /// </summary>
 class RijndaelEncryptor : IEncryptor
 {
@@ -17,7 +17,7 @@ class RijndaelEncryptor : IEncryptor
     public string ContentEncryptionValue => "rijndael";
 
     /// <summary>
-    /// Creates the encrptor with the specified key - the key must be a valid, base64-encoded key
+    /// Creates the encryptor with the specified key - the key must be a valid, base64-encoded key
     /// </summary>
     /// <param name="key"></param>
     public RijndaelEncryptor(string key)
