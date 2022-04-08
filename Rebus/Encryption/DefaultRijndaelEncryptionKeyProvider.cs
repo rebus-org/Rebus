@@ -60,12 +60,8 @@ I promise that the suggested key has been generated this instant - if you don't 
     /// </summary>
     /// <param name="identifier">Identifier describing which key caller is asking for.</param>
     /// <returns>An<see cref="EncryptionKey"/> containing the key and its identifier</returns>
-    /// <exception cref="ArgumentException">Throws if the provider has no key matching the specified <see cref="identifier"/></exception>.
     public Task<EncryptionKey> GetSpecificKey(string identifier)
     {
-        if (identifier != _encryptionKey.Identifier)
-            throw new ArgumentException(
-                $"The {nameof(DefaultRijndaelEncryptionKeyProvider)} only provides a single key with identifier {KeyIdentifier}");
         return Task.FromResult(_encryptionKey);
     }
 }
