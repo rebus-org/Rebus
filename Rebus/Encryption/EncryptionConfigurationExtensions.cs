@@ -29,7 +29,7 @@ public static class EncryptionConfigurationExtensions
     ///     .(...)
     ///     .Options(o => {
     ///         o.EnableCustomEncryption()
-    ///             .Use***();
+    ///             .Register(c => new MyCustomEncryptor());
     ///     })
     ///     .Start();
     /// </code>
