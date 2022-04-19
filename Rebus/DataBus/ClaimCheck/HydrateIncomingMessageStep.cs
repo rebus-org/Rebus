@@ -32,20 +32,17 @@ public class HydrateIncomingMessageStep : IIncomingStep
 
         if (transportMessage.Headers.TryGetValue(Headers.MessagePayloadAttachmentId, out var attachmentId))
         {
-            using (var destination = new MemoryStream())
-            {
-                using (var source = await _dataBus.OpenRead(attachmentId))
-                {
-                    await source.CopyToAsync(destination);
-                }
+            using var destination = new MemoryStream();
+            using var source = await _dataBus.OpenRead(attachmentId);
+            
+            await source.CopyToAsync(destination);
 
-                var body = destination.ToArray();
-                var headers = transportMessage.Headers.Clone();
+            var body = destination.ToArray();
+            var headers = transportMessage.Headers.Clone();
 
-                headers.Remove(Headers.MessagePayloadAttachmentId);
+            headers.Remove(Headers.MessagePayloadAttachmentId);
 
-                context.Save(new TransportMessage(headers, body));
-            }
+            context.Save(new TransportMessage(headers, body));
         }
 
         await next();

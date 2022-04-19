@@ -17,7 +17,7 @@ public static class EncryptionConfigurationExtensions
     /// </summary>
     public static void EnableEncryption(this OptionsConfigurer configurer, string key)
     {
-        EnableCustomAsyncEncryption(configurer).Register(c => new RijndaelEncryptor(key));
+        EnableCustomAsyncEncryption(configurer).Register(_ => new RijndaelEncryptor(key));
     }
 
     /// <summary>

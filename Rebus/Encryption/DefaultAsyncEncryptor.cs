@@ -1,21 +1,21 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Rebus.Encryption;
 
 /// <summary>
 /// Default implementation of <see cref="IAsyncEncryptor"/> which wraps an instance of <see cref="IEncryptor"/>.
 /// </summary>
-internal class DefaultAsyncEncryptor : IAsyncEncryptor
+class DefaultAsyncEncryptor : IAsyncEncryptor
 {
-    private readonly IEncryptor _encryptor;
+    readonly IEncryptor _encryptor;
 
     /// <summary>
     /// Creates the encryptor wrapping an <see cref="IEncryptor"/>
     /// </summary>
-    /// <param name="encryptor"></param>
     public DefaultAsyncEncryptor(IEncryptor encryptor)
     {
-        _encryptor = encryptor;
+        _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
     }
 
     /// <inheritdoc cref="IEncryptor.ContentEncryptionValue"/>
@@ -31,7 +31,7 @@ internal class DefaultAsyncEncryptor : IAsyncEncryptor
     public Task<EncryptedData> Encrypt(byte[] bytes)
     {
         var encryptedData = _encryptor.Encrypt(bytes);
-            
+
         return Task.FromResult(encryptedData);
     }
 }

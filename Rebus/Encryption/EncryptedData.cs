@@ -12,12 +12,10 @@ public class EncryptedData
     /// </summary>
     public EncryptedData(byte[] bytes, byte[] iv)
     {
-        if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-        if (iv == null) throw new ArgumentNullException(nameof(iv));
-        Bytes = bytes;
-        Iv = iv;
+        Bytes = bytes ?? throw new ArgumentNullException(nameof(bytes));
+        Iv = iv ?? throw new ArgumentNullException(nameof(iv));
     }
-        
+
     /// <summary>
     /// Constructs an instance from the given bytes, iv and optional key id.
     /// </summary>
@@ -35,9 +33,9 @@ public class EncryptedData
     /// Gets the raw data from this encrypted data instance
     /// </summary>
     public byte[] Bytes { get; }
-        
+
     /// <summary>
     /// Gets the identifier of the key used to encrypt this data instance
     /// </summary>
-    public string KeyId { get; set; }
+    public string KeyId { get; }
 }

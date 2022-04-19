@@ -15,7 +15,7 @@ namespace Rebus.DataBus.ClaimCheck;
 [StepDocumentation("Outgoing step that 'dehydrates' big messages by storing the payload as a data bus attachment.")]
 public class DehydrateOutgoingMessageStep : IOutgoingStep
 {
-    static readonly byte[] EmptyMessageBody = new byte[0];
+    static readonly byte[] EmptyMessageBody = Array.Empty<byte>();
 
     readonly int _messageSizeLimitBytes;
     readonly IDataBus _dataBus;
@@ -50,15 +50,14 @@ public class DehydrateOutgoingMessageStep : IOutgoingStep
 
         try
         {
-            using (var source = new MemoryStream(transportMessage.Body))
-            {
-                var attachment = await _dataBus.CreateAttachment(source);
-                var headers = transportMessage.Headers.Clone();
+            using var source = new MemoryStream(transportMessage.Body);
+            
+            var attachment = await _dataBus.CreateAttachment(source);
+            var headers = transportMessage.Headers.Clone();
 
-                headers[Headers.MessagePayloadAttachmentId] = attachment.Id;
+            headers[Headers.MessagePayloadAttachmentId] = attachment.Id;
 
-                context.Save(new TransportMessage(headers, EmptyMessageBody));
-            }
+            context.Save(new TransportMessage(headers, EmptyMessageBody));
         }
         catch (Exception exception)
         {

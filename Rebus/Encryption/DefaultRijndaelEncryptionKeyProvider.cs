@@ -9,21 +9,23 @@ namespace Rebus.Encryption;
 /// </summary>
 public class DefaultRijndaelEncryptionKeyProvider : IEncryptionKeyProvider
 {
-    private const string KeyIdentifier = "default";
-    private readonly EncryptionKey _encryptionKey;
+    const string KeyIdentifier = "default";
+    readonly Task<EncryptionKey> _encryptionKey;
 
     /// <summary>
     /// Creates the keyprovider with the specified key - the key must be a valid, base64-encoded key.
     /// </summary>
-    /// <param name="encryptionKey"></param>
     public DefaultRijndaelEncryptionKeyProvider(string encryptionKey)
     {
         try
         {
-            _encryptionKey = new EncryptionKey(Convert.FromBase64String(encryptionKey), KeyIdentifier);
+            var key = new EncryptionKey(Convert.FromBase64String(encryptionKey), KeyIdentifier);
 
+            // verify the key - will throw if it's not a valid size/padded correctly
             using var rijndael = new RijndaelManaged();
-            rijndael.Key = _encryptionKey.Key;
+            rijndael.Key = key.Key;
+
+            _encryptionKey = Task.FromResult(key);
         }
         catch (Exception exception)
         {
@@ -50,18 +52,12 @@ I promise that the suggested key has been generated this instant - if you don't 
     /// Returns the key the provider was constructed with.
     /// </summary>
     /// <returns>An<see cref="EncryptionKey"/> containing the key and its identifier</returns>
-    public Task<EncryptionKey> GetCurrentKey()
-    {
-        return Task.FromResult(_encryptionKey);
-    }
+    public Task<EncryptionKey> GetCurrentKey() => _encryptionKey;
 
     /// <summary>
-    /// Returns a key matching the <see cref="identifier"/> if found.
+    /// Returns a key matching the <paramref name="identifier"/> if found.
     /// </summary>
     /// <param name="identifier">Identifier describing which key caller is asking for.</param>
     /// <returns>An<see cref="EncryptionKey"/> containing the key and its identifier</returns>
-    public Task<EncryptionKey> GetSpecificKey(string identifier)
-    {
-        return Task.FromResult(_encryptionKey);
-    }
+    public Task<EncryptionKey> GetSpecificKey(string identifier) => _encryptionKey;
 }

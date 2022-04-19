@@ -1,4 +1,3 @@
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Rebus.Encryption;

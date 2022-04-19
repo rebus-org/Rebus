@@ -5,9 +5,6 @@ namespace Rebus.Encryption;
 /// </summary>
 public class EncryptionKey
 {
-    private readonly byte[] _key;
-    private readonly string _identifier;
-
     /// <summary>
     /// A new encryptionkey with key content and identifier.
     /// </summary>
@@ -15,18 +12,18 @@ public class EncryptionKey
     /// <param name="identifier">Identifier for provided key.</param>
     public EncryptionKey(byte[] key, string identifier)
     {
-        _key = key;
-        _identifier = identifier;
+        Key = key;
+        Identifier = identifier;
     }
 
     /// <summary>
     /// Key as byte array
     /// </summary>
-    public byte[] Key => _key;
+    public byte[] Key { get; }
 
     /// <summary>
     /// Identifier for this key.
     /// Typically used for describing which key that was used for encrypting, and must be used for decrypting.
     /// </summary>
-    public string Identifier => _identifier;
+    public string Identifier { get; }
 }
