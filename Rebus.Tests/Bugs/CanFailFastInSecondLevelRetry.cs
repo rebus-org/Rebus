@@ -41,7 +41,7 @@ public class CanFailFastInSecondLevelRetry : FixtureBase
         await bus.SendLocal("HEJ MED DIG!");
 
         // wait until an error is logged
-        await loggerFactory.LogLines.WaitUntil(lines => lines.Any(l => l.Level == LogLevel.Error));
+        await loggerFactory.WaitUntil(lines => lines.Any(l => l.Level == LogLevel.Error));
 
         // provide extra time for additional stuff to happen
         await Task.Delay(TimeSpan.FromMilliseconds(100));

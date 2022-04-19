@@ -15,6 +15,7 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Exception = System.Exception;
 // ReSharper disable ArgumentsStyleLiteral
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Tests.Contracts.Extensions
 {
@@ -54,6 +55,10 @@ namespace Rebus.Tests.Contracts.Extensions
             return new DateTime(resultingTicks);
         }
 
+        /// <summary>
+        /// Waits for the next message to arrive on the <paramref name="transport"/>, throwing a <see cref="TimeoutException"/>
+        /// if one does not arrive within <paramref name="timeoutSeconds"/> seconds
+        /// </summary>
         public static async Task<TransportMessage> WaitForNextMessage(this ITransport transport, int timeoutSeconds = 5)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -160,8 +165,14 @@ namespace Rebus.Tests.Contracts.Extensions
             }
         }
 
-        public static async Task WaitUntil<T>(this ConcurrentQueue<T> queue, Expression<Func<ConcurrentQueue<T>, bool>> criteriaExpression, int? timeoutSeconds = 5)
+        /// <summary>
+        /// Waits up to <paramref name="timeoutSeconds"/> seconds, checking the predicate specified by <paramref name="criteriaExpression"/>,
+        /// returning when it evalutates to true.
+        /// </summary>
+        public static async Task WaitUntil<T>(this T obj, Expression<Func<T, bool>> criteriaExpression, int? timeoutSeconds = 5)
         {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (criteriaExpression == null) throw new ArgumentNullException(nameof(criteriaExpression));
             var start = DateTime.UtcNow;
             var timeout = TimeSpan.FromSeconds(timeoutSeconds.GetValueOrDefault(5));
             var criteria = criteriaExpression.Compile();
@@ -170,9 +181,9 @@ namespace Rebus.Tests.Contracts.Extensions
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
 
-                if (criteria(queue)) break;
+                if (criteria(obj)) break;
 
-                if ((DateTime.UtcNow - start) < timeout) continue;
+                if (DateTime.UtcNow - start < timeout) continue;
 
                 throw new TimeoutException($"Criteria {criteriaExpression} not satisfied within {timeoutSeconds} s timeout");
             }

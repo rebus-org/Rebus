@@ -7,34 +7,52 @@ using Rebus.Logging;
 
 namespace Rebus.Tests.Contracts.Utilities;
 
+/// <summary>
+/// Implementation of <see cref="IRebusLoggerFactory"/> that collects logs in a <see cref="ConcurrentQueue{T}"/>, enabling inspection after running a test.
+/// </summary>
 public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine>
 {
+    readonly ConcurrentQueue<LogLine> _logLines = new();
     readonly bool _outputToConsole;
     readonly bool _detailed;
 
+    /// <summary>
+    /// Creates the logger factory.
+    /// </summary>
+    /// <param name="outputToConsole">Specifies whether logged lines should be simultaneously output to the console as they are logged</param>
+    /// <param name="detailed">Specifies whether to use the detailed format when outputting to the console (if true, <paramref name="outputToConsole"/>=true is implied)</param>
     public ListLoggerFactory(bool outputToConsole = false, bool detailed = false)
     {
         _outputToConsole = outputToConsole || detailed;
         _detailed = detailed;
     }
 
+    /// <inheritdoc />
     protected override ILog GetLogger([NotNull] Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
-        return new ListLogger(LogLines, type, _outputToConsole, _detailed, this);
+        return new ListLogger(_logLines, type, _outputToConsole, _detailed, this);
     }
 
-    public ConcurrentQueue<LogLine> LogLines { get; } = new();
-
+    /// <summary>
+    /// Clears the in-mem list of logged lines
+    /// </summary>
     public void Clear()
     {
-        while (LogLines.TryDequeue(out _)) { }
+        while (_logLines.TryDequeue(out _)) { }
         Console.WriteLine("Cleared the logs");
     }
 
-    public override string ToString() => string.Join(Environment.NewLine, LogLines);
+    /// <summary>
+    /// Renders the entire collection of log lines into a string
+    /// </summary>
+    public override string ToString() => string.Join(Environment.NewLine, _logLines);
 
-    public IEnumerator<LogLine> GetEnumerator() => LogLines.GetEnumerator();
+    /// <summary>
+    /// Allows for enumerating the log lines
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator<LogLine> GetEnumerator() => _logLines.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

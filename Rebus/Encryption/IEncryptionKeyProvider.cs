@@ -15,7 +15,7 @@ public interface IEncryptionKeyProvider
     public Task<EncryptionKey> GetCurrentKey();
     
     /// <summary>
-    /// Returns an <see cref="EncryptionKey"/> if the provider is capable finding one matching the <see cref="identifier"/>. 
+    /// Returns an <see cref="EncryptionKey"/> if the provider is capable finding one matching the <paramref name="identifier"/>. 
     /// </summary>
     /// <param name="identifier">The identifier unique for this key</param>
     /// <returns>An<see cref="EncryptionKey"/> containing the key and its identifier</returns>
