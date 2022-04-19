@@ -17,7 +17,7 @@ public static class EncryptionConfigurationExtensions
     /// </summary>
     public static void EnableEncryption(this OptionsConfigurer configurer, string key)
     {
-        EnableCustomEncryption(configurer).Register(c => new RijndaelEncryptor(key));
+        EnableCustomAsyncEncryption(configurer).Register(c => new RijndaelEncryptor(key));
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public static class EncryptionConfigurationExtensions
     ///     .(...)
     ///     .Options(o => {
     ///         o.EnableCustomEncryption()
-    ///             .Use***();
+    ///             .Register(c => new MyCustomEncryptor());
     ///     })
     ///     .Start();
     /// </code>
@@ -40,7 +40,7 @@ public static class EncryptionConfigurationExtensions
             
         return StandardConfigurer<IEncryptor>.GetConfigurerFrom(configurer);
     }
-        
+    
     /// <inheritdoc cref="EnableCustomEncryption" />
     public static StandardConfigurer<IAsyncEncryptor> EnableCustomAsyncEncryption(this OptionsConfigurer configurer)
     {
