@@ -1077,6 +1077,9 @@
 ## 6.6.4
 * Hopefully fix XML docs
 
+## 6.6.5
+* Fix transaction context bug that would result in the completed flag being incorrectly set in situations where completion failed, which could lead to abort handlers not being called as they should
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
