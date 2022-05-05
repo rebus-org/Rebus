@@ -1071,6 +1071,9 @@
 ## 6.6.1
 * Make it possible to set the `rbs2-senttime` header explicitly (i.e. it is no longer overwritten by the default headers step)
 
+## 6.6.5
+* Fix transaction context bug that would result in the completed flag being incorrectly set in situations where completion failed, which could lead to abort handlers not being called as they should
+
 ## 7.0.0
 * Change locking interface to be more generic - thanks [kendallb]
 * Only target .NET Standard 2.0
@@ -1078,6 +1081,7 @@
 * Add `Configure.OneWayClient()` API which can be used to configure one-way clients, because handlers - and thus also the handler activator - are irrelevant - thanks [riezebosch]
 * Fix typos in XML docs - thanks [torangel]
 * Add extensibility point for fetching encryption keys from remote source, thus enabling centrally managed key rotation - thanks [torangel]
+
 
 ---
 

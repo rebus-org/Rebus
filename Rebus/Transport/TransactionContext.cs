@@ -117,11 +117,10 @@ class TransactionContext : ITransactionContext
         return InvokeAsync(onCommitted);
     }
 
-    Task RaiseCompleted()
+    async Task RaiseCompleted()
     {
-        var task = InvokeAsync(_onCompleted);
+        await InvokeAsync(_onCompleted);
         _completed = true;
-        return task;
     }
 
     async Task InvokeAsync(Func<ITransactionContext, Task> actions)
