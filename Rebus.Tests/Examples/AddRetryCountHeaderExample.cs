@@ -105,7 +105,7 @@ static class RetryCountHeaderExtensions
         {
             var message = context.Load<TransportMessage>();
             var messageId = message.GetMessageId();
-            var exceptionCount = _errorTracker.GetExceptions(messageId).Count();
+            var exceptionCount = (await _errorTracker.GetExceptions(messageId)).Count;
 
             message.Headers[_key] = exceptionCount.ToString(CultureInfo.InvariantCulture);
 

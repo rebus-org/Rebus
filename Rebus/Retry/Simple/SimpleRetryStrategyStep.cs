@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,26 +71,26 @@ public class SimpleRetryStrategyStep : IRetryStrategyStep
             return;
         }
 
-        if (_errorTracker.HasFailedTooManyTimes(messageId))
+        if (await _errorTracker.HasFailedTooManyTimes(messageId))
         {
             // if we don't have 2nd level retries, just get the message out of the way
             if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
             {
-                var aggregateException = GetAggregateException(messageId);
+                var aggregateException = await GetAggregateException(messageId);
                 await MoveMessageToErrorQueue(context, transactionContext, aggregateException);
-                _errorTracker.CleanUp(messageId);
+                await _errorTracker.CleanUp(messageId);
                 return;
             }
 
             // change the identifier to track by to perform this 2nd level of delivery attempts
             var secondLevelMessageId = GetSecondLevelMessageId(messageId);
 
-            if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
+            if (await _errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
             {
-                var aggregateException = GetAggregateException(messageId, secondLevelMessageId);
+                var aggregateException = await GetAggregateException(messageId, secondLevelMessageId);
                 await MoveMessageToErrorQueue(context, transactionContext, aggregateException);
-                _errorTracker.CleanUp(messageId);
-                _errorTracker.CleanUp(secondLevelMessageId);
+                await _errorTracker.CleanUp(messageId);
+                await _errorTracker.CleanUp(secondLevelMessageId);
                 return;
             }
 
@@ -102,11 +103,16 @@ public class SimpleRetryStrategyStep : IRetryStrategyStep
         await DispatchWithTrackerIdentifier(next, messageId, transactionContext, messageId);
     }
 
-    AggregateException GetAggregateException(params string[] ids)
+    async Task<AggregateException> GetAggregateException(params string[] ids)
     {
-        var exceptions = ids.SelectMany(_errorTracker.GetExceptions).ToArray();
+        var exceptions = new List<Exception>();
 
-        return new AggregateException($"{exceptions.Length} unhandled exceptions", exceptions);
+        foreach (var id in ids)
+        {
+            exceptions.AddRange(await _errorTracker.GetExceptions(id));
+        }
+
+        return new AggregateException($"{exceptions.Count} unhandled exceptions", exceptions);
     }
 
     /// <summary>
@@ -122,11 +128,11 @@ public class SimpleRetryStrategyStep : IRetryStrategyStep
 
             await transactionContext.Commit();
 
-            _errorTracker.CleanUp(messageId);
+            await _errorTracker.CleanUp(messageId);
 
             if (secondLevelMessageId != null)
             {
-                _errorTracker.CleanUp(secondLevelMessageId);
+                await _errorTracker.CleanUp(secondLevelMessageId);
             }
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
@@ -138,7 +144,7 @@ public class SimpleRetryStrategyStep : IRetryStrategyStep
         }
         catch (Exception exception)
         {
-            _errorTracker.RegisterError(identifierToTrackMessageBy, exception);
+            await _errorTracker.RegisterError(identifierToTrackMessageBy, exception);
 
             transactionContext.Abort();
         }

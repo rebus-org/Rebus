@@ -30,8 +30,8 @@ class FailedMessageWrapperStep : IIncomingStep
             var originalMessage = context.Load<Message>();
 
             var messageId = originalMessage.GetMessageId();
-            var fullErrorDescription = _errorTracker.GetFullErrorDescription(messageId) ?? "(not available in the error tracker!)";
-            var exceptions = _errorTracker.GetExceptions(messageId);
+            var fullErrorDescription = await _errorTracker.GetFullErrorDescription(messageId) ?? "(not available in the error tracker!)";
+            var exceptions = await _errorTracker.GetExceptions(messageId);
             var headers = originalMessage.Headers;
             var body = originalMessage.Body;
             var wrappedBody = WrapInFailed(headers, body, fullErrorDescription, exceptions);
@@ -42,7 +42,7 @@ class FailedMessageWrapperStep : IIncomingStep
         await next();
     }
 
-    static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new ConcurrentDictionary<Type, MethodInfo>();
+    static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new();
 
     object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription, IEnumerable<Exception> exceptions)
     {
@@ -56,7 +56,8 @@ class FailedMessageWrapperStep : IIncomingStep
                 {
                     const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-                    var genericWrapMethod = GetType().GetMethod(nameof(Wrap), bindingFlags);
+                    var genericWrapMethod = GetType().GetMethod(nameof(Wrap), bindingFlags)
+                        ?? throw new ArgumentException($"Could not find non-public instance method named {nameof(Wrap)} on {GetType()}");
 
                     return genericWrapMethod.MakeGenericMethod(type);
                 })

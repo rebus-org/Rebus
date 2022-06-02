@@ -24,14 +24,15 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
 {
     const string BackgroundTaskName = "CleanupTrackedErrors";
 
-    readonly ILog _log;
+    readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new();
     readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
+    readonly IAsyncTask _cleanupOldTrackedErrorsTask;
     readonly ITransport _transport;
     readonly IRebusTime _rebusTime;
-    readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
-    readonly IAsyncTask _cleanupOldTrackedErrorsTask;
+    readonly ILog _log;
 
     bool _disposed;
+    static readonly Task<bool> FalseTaskResult = Task.FromResult(false);
 
     /// <summary>
     /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
@@ -68,17 +69,19 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// <summary>
     /// Marks the given <paramref name="messageId"/> as "FINAL", meaning that it should be considered as "having failed too many times now"
     /// </summary>
-    public void MarkAsFinal(string messageId)
+    public Task MarkAsFinal(string messageId)
     {
         _trackedErrors.AddOrUpdate(messageId,
-            id => new ErrorTracking(_rebusTime, final: true),
-            (id, tracking) => tracking.MarkAsFinal());
+            _ => new ErrorTracking(_rebusTime, final: true),
+            (_, tracking) => tracking.MarkAsFinal());
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Registers the given <paramref name="exception"/> under the supplied <paramref name="messageId"/>
     /// </summary>
-    public void RegisterError(string messageId, Exception exception)
+    public Task RegisterError(string messageId, Exception exception)
     {
         var errorTracking = _trackedErrors.AddOrUpdate(messageId,
             id => new ErrorTracking(_rebusTime, exception),
@@ -89,38 +92,29 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
             : "Unhandled exception {errorNumber} while handling message with ID {messageId}";
 
         _log.Warn(exception, message, errorTracking.Errors.Count(), messageId);
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Gets whether too many errors have been tracked for the given <paramref name="messageId"/>
     /// </summary>
-    public bool HasFailedTooManyTimes(string messageId)
+    public Task<bool> HasFailedTooManyTimes(string messageId)
     {
         var hasTrackingForThisMessage = _trackedErrors.TryGetValue(messageId, out var existingTracking);
-        if (!hasTrackingForThisMessage) return false;
+        if (!hasTrackingForThisMessage) return FalseTaskResult;
 
         var hasFailedTooManyTimes = existingTracking.Final
                                     || existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
 
-        return hasFailedTooManyTimes;
-    }
-
-    /// <summary>
-    /// Gets a short description of the tracked errors for the given <paramref name="messageId"/> on the form
-    /// "n unhandled exceptions"
-    /// </summary>
-    public string GetShortErrorDescription(string messageId)
-    {
-        return _trackedErrors.TryGetValue(messageId, out var errorTracking)
-            ? $"{errorTracking.Errors.Count()} unhandled exceptions"
-            : null;
+        return Task.FromResult(hasFailedTooManyTimes);
     }
 
     /// <summary>
     /// Gets a long and detailed description of the tracked errors for the given <paramref name="messageId"/>
     /// consisting of time and full exception details for all registered exceptions
     /// </summary>
-    public string GetFullErrorDescription(string messageId)
+    public async Task<string> GetFullErrorDescription(string messageId)
     {
         if (!_trackedErrors.TryGetValue(messageId, out var errorTracking))
         {
@@ -136,11 +130,11 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// <summary>
     /// Gets all caught exceptions for the message ID
     /// </summary>
-    public IEnumerable<Exception> GetExceptions(string messageId)
+    public async Task<IReadOnlyList<Exception>> GetExceptions(string messageId)
     {
         if (!_trackedErrors.TryGetValue(messageId, out var errorTracking))
         {
-            return Enumerable.Empty<Exception>();
+            return Array.Empty<Exception>();
         }
 
         return errorTracking.Errors
@@ -151,7 +145,11 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// <summary>
     /// Cleans up whichever tracking wr have done for the given <paramref name="messageId"/>
     /// </summary>
-    public void CleanUp(string messageId) => RemoveTracking(messageId);
+    public Task CleanUp(string messageId)
+    {
+        RemoveTracking(messageId);
+        return Task.CompletedTask;
+    }
 
     async Task CleanupOldTrackedErrors()
     {
@@ -183,7 +181,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
         }
 
         public ErrorTracking(IRebusTime rebusTime, Exception exception = null, bool final = false)
-            : this(rebusTime, exception != null ? new[] { new CaughtException(rebusTime.Now, exception) } : new CaughtException[0], final)
+            : this(rebusTime, exception != null ? new[] { new CaughtException(rebusTime.Now, exception) } : Array.Empty<CaughtException>(), final)
         {
         }
 
@@ -211,7 +209,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
             }
         }
 
-        public ErrorTracking MarkAsFinal() => new ErrorTracking(_rebusTime, _caughtExceptions, final: true);
+        public ErrorTracking MarkAsFinal() => new(_rebusTime, _caughtExceptions, final: true);
     }
 
     class CaughtException
