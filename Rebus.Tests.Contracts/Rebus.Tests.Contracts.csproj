@@ -5,7 +5,7 @@
 		<LangVersion>10</LangVersion>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
-		<Copyright>Copyright 2012</Copyright>
+		<Copyright>Copyright Rebus FM ApS 2012</Copyright>
 		<PackageTags>rebus tests contracts</PackageTags>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageDescription>Contains contract tests for Rebus services - valuable, if you e.g. want to implement your own Rebus transport, subscription storage, etc.</PackageDescription>
