@@ -1074,7 +1074,7 @@
 ## 6.6.5
 * Fix transaction context bug that would result in the completed flag being incorrectly set in situations where completion failed, which could lead to abort handlers not being called as they should
 
-## 7.0.0-rc2
+## 7.0.0-rc3
 * Change locking interface to be more generic - thanks [kendallb]
 * Only target .NET Standard 2.0
 * Change default JSON serializer to System.Text.Json (this is a BREAKING change! Please remember to `.Serializer(s => s.UseNewtonsoftJson()))` if you rely on e.g. inheritance and other advanced stuff
