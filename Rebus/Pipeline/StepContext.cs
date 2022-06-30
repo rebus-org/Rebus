@@ -14,7 +14,7 @@ public abstract class StepContext
     /// </summary>
     public const string StepContextKey = "stepContext";
 
-    readonly ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
+    readonly ConcurrentDictionary<string, object> _items = new();
     readonly object[] _fastItems = new object[100];
 
     /// <summary>
