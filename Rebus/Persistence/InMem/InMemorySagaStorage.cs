@@ -17,10 +17,10 @@ namespace Rebus.Persistence.InMem;
 /// </summary>
 public class InMemorySagaStorage : ISagaStorage
 {
-    readonly ConcurrentDictionary<Guid, ISagaData> _data = new ConcurrentDictionary<Guid, ISagaData>();
-    readonly object _lock = new object();
+    readonly ConcurrentDictionary<Guid, ISagaData> _data = new();
+    readonly object _lock = new();
 
-    readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
+    readonly JsonSerializerSettings _serializerSettings = new()
     {
         TypeNameHandling = TypeNameHandling.All
     };
@@ -180,8 +180,7 @@ public class InMemorySagaStorage : ISagaStorage
                 throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be deleted");
             }
 
-            ISagaData temp;
-            if (_data.TryRemove(id, out temp))
+            if (_data.TryRemove(id, out var temp))
             {
                 Deleted?.Invoke(temp);
             }
