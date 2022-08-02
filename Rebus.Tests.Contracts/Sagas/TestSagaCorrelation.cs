@@ -31,7 +31,7 @@ namespace Rebus.Tests.Contracts.Sagas
         [Test]
         public async Task YeahItWorks()
         {
-            var events    = new ConcurrentQueue<Tuple<Guid, string>>();
+            var events = new ConcurrentQueue<Tuple<Guid, string>>();
             var activator = new BuiltinHandlerActivator();
             activator.Register((b, context) => new MySaga(events, b, useSagaDataPropertyNames: false));
             await CheckThatItWorks(activator, events);
@@ -40,7 +40,7 @@ namespace Rebus.Tests.Contracts.Sagas
         [Test]
         public async Task YeahItWorksWhenUsingStringSagaDataPropertyNames()
         {
-            var events    = new ConcurrentQueue<Tuple<Guid, string>>();
+            var events = new ConcurrentQueue<Tuple<Guid, string>>();
             var activator = new BuiltinHandlerActivator();
             activator.Register((b, context) => new MySaga(events, b, useSagaDataPropertyNames: true));
             await CheckThatItWorks(activator, events);
@@ -62,9 +62,9 @@ namespace Rebus.Tests.Contracts.Sagas
 
             await activator.Bus.SendLocal(new Initiate
             {
-                AGuid   = new Guid("BAA06058-B34E-4699-8463-E0CBA73E925C"),
+                AGuid = new Guid("BAA06058-B34E-4699-8463-E0CBA73E925C"),
                 AString = "hej",
-                AnInt   = 23
+                AnInt = 23
             });
 
             await events.WaitUntil(e => e.Count >= 4);
