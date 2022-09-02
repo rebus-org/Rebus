@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Rebus.Logging;
 
 namespace Rebus.Tests.Contracts.Utilities;
@@ -28,7 +27,7 @@ public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine
     }
 
     /// <inheritdoc />
-    protected override ILog GetLogger([NotNull] Type type)
+    protected override ILog GetLogger( Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
         return new ListLogger(_logLines, type, _outputToConsole, _detailed, this);

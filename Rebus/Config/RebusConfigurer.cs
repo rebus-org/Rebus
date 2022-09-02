@@ -316,6 +316,8 @@ public class RebusConfigurer
 
         PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
 
+        PossiblyRegisterDefault<ICorrelationErrorHandler>(c => new DefaultCorrelationErrorHandler(c.Get<IRebusLoggerFactory>()));
+
         PossiblyRegisterDefault<IPipeline>(c =>
         {
             var serializer = c.Get<ISerializer>();
@@ -333,7 +335,7 @@ public class RebusConfigurer
                 .OnReceive(new DeserializeIncomingMessageStep(serializer))
                 .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
                 .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
-                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory, options))
+                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), c.Get<ICorrelationErrorHandler>(), rebusLoggerFactory, options))
                 .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
                 .OnSend(new AssignDefaultHeadersStep(transport, rebusTime, messageTypeNameConvention, options.DefaultReturnAddressOrNull))

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Rebus.Logging;
 
 namespace Rebus.Threading.TaskParallelLibrary;
@@ -15,7 +14,7 @@ public class TplAsyncTaskFactory : IAsyncTaskFactory
     /// <summary>
     /// Creates a new TPL-based async task factory
     /// </summary>
-    public TplAsyncTaskFactory([NotNull] IRebusLoggerFactory rebusLoggerFactory) => _rebusLoggerFactory = rebusLoggerFactory ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+    public TplAsyncTaskFactory( IRebusLoggerFactory rebusLoggerFactory) => _rebusLoggerFactory = rebusLoggerFactory ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
     /// <summary>
     /// Creates a new async task

@@ -16,7 +16,7 @@ namespace Rebus.Pipeline.Receive;
 /// </summary>
 public abstract class HandlerInvoker
 {        
-    static readonly ConcurrentDictionary<string, bool> CanBeInitiatedByCache = new ConcurrentDictionary<string, bool>();
+    static readonly ConcurrentDictionary<string, bool> CanBeInitiatedByCache = new();
 
     /// <summary>
     /// Gets whether a message of the given type is allowed to cause a new saga data instance to be created
@@ -39,7 +39,7 @@ public abstract class HandlerInvoker
     /// <summary>
     /// Cached setter methods that "mount" a saga data instance on a handler (which is assumed to have a <code>Data</code> property, like <see cref="Saga"/>
     /// </summary>
-    protected static readonly ConcurrentDictionary<Type, Action<object, ISagaData>> SagaDataSetters = new ConcurrentDictionary<Type, Action<object, ISagaData>>();
+    protected static readonly ConcurrentDictionary<Type, Action<object, ISagaData>> SagaDataSetters = new();
 
     /// <summary>
     /// Key under which the handler invoker will stash itself in the <see cref="ITransactionContext.Items"/>
