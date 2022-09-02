@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
+using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Reflection;
 #pragma warning disable 1998
@@ -134,7 +135,7 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
             _sagaType = sagaType;
         }
 
-        readonly List<CorrelationProperty> _correlationProperties = new List<CorrelationProperty>();
+        readonly List<CorrelationProperty> _correlationProperties = new();
 
         public void Correlate<TMessage>(Func<TMessage, object> messageValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression)
         {
@@ -144,11 +145,12 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
 
         public void Correlate<TMessage>(Func<TMessage, object> messageValueExtractorFunction, string sagaDataPropertyName)
         {
-            object NeutralMessageValueExtractor(IMessageContext context, object message)
+            object NeutralMessageValueExtractor(IMessageContext context, Message message)
             {
                 try
                 {
-                    return messageValueExtractorFunction((TMessage) message);
+                    var body = message.Body;
+                    return messageValueExtractorFunction((TMessage) body);
                 }
                 catch (Exception exception)
                 {
@@ -167,7 +169,7 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
 
         public void CorrelateHeader<TMessage>(string headerKey, string sagaDataPropertyName)
         {
-            object NeutralMessageValueExtractor(IMessageContext context, object message)
+            object NeutralMessageValueExtractor(IMessageContext context, Message message)
             {
                 try
                 {
@@ -192,7 +194,7 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
 
         public void CorrelateContext<TMessage>(Func<IMessageContext, object> contextValueExtractorFunction, string sagaDataPropertyName)
         {
-            object NeutralMessageValueExtractor(IMessageContext context, object message)
+            object NeutralMessageValueExtractor(IMessageContext context, Message message)
             {
                 try
                 {

@@ -37,12 +37,11 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
         var message = context.Load<Message>();
         var transactionContext = context.Load<ITransactionContext>();
         var messageContext = new MessageContext(transactionContext);
-
-        var messageBody = message.Body;
+        var body = message.Body;
 
         var correlationProperties = handlerInvokersForSagas
             .Select(h => h.Saga)
-            .SelectMany(saga => _sagaHelper.GetCorrelationProperties(messageBody, saga).ForMessage(messageBody)
+            .SelectMany(saga => _sagaHelper.GetCorrelationProperties(body, saga).ForMessage(body)
                 .Select(correlationProperty => new { saga, correlationProperty }))
             .ToList();
 
@@ -51,7 +50,7 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
             {
                 SagaDataType = a.saga.GetSagaDataType().FullName,
                 CorrelationPropertyName = a.correlationProperty.PropertyName,
-                CorrelationPropertyValue = a.correlationProperty.ValueFromMessage(messageContext, messageBody)
+                CorrelationPropertyValue = a.correlationProperty.GetValueFromMessage(messageContext, message)
             })
             .Select(a => a.ToString())
             .Select(lockId => Math.Abs(lockId.GetHashCode()) % _maxLockBuckets)

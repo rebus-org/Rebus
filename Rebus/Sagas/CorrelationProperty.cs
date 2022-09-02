@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Rebus.Messages;
 using Rebus.Pipeline;
 
 namespace Rebus.Sagas;
@@ -28,17 +29,17 @@ public class CorrelationProperty : ISagaCorrelationProperty
     /// Constructs the correlation property
     /// </summary>
     /// <param name="messageType">Specifies the message type that this property can correlate</param>
-    /// <param name="valueFromMessage">Specifies the function that will be called with the message instance in order to extract a value that should be used for correlation</param>
+    /// <param name="getValueFromMessage">Specifies the function that will be called with the message instance in order to extract a value that should be used for correlation</param>
     /// <param name="sagaDataType">Specifies the type of saga data that this property can correlate to</param>
     /// <param name="propertyName">Specifies that property name on the saga data that this correlation addresses</param>
     /// <param name="sagaType">Specifies the saga type (i.e. the handler type) that contains the logic of the saga</param>
-    public CorrelationProperty(Type messageType, Func<IMessageContext, object, object> valueFromMessage, Type sagaDataType, string propertyName, Type sagaType)
+    public CorrelationProperty(Type messageType, Func<IMessageContext, Message, object> getValueFromMessage, Type sagaDataType, string propertyName, Type sagaType)
     {
         PropertyName = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
         SagaType = sagaType ?? throw new ArgumentNullException(nameof(sagaType));
         SagaDataType = sagaDataType ?? throw new ArgumentNullException(nameof(sagaDataType));
         MessageType = messageType ?? throw new ArgumentNullException(nameof(messageType));
-        ValueFromMessage = valueFromMessage;
+        GetValueFromMessage = getValueFromMessage;
         Validate();
     }
 
@@ -95,7 +96,7 @@ public class CorrelationProperty : ISagaCorrelationProperty
     /// <summary>
     /// The function that will be called with the message instance in order to extract a value that should be used for correlation
     /// </summary>
-    public Func<IMessageContext, object, object> ValueFromMessage { get; }
+    public Func<IMessageContext, Message, object> GetValueFromMessage { get; }
 
     /// <summary>
     /// Gets the type of the saga's saga data

@@ -121,7 +121,7 @@ public class LoadSagaDataStep : IIncomingStep
 
         foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
         {
-            var valueFromMessage = correlationProperty.ValueFromMessage(new MessageContext(transactionContext), body);
+            var valueFromMessage = correlationProperty.GetValueFromMessage(new MessageContext(transactionContext), message);
             var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
 
             if (sagaData == null) continue;
@@ -146,7 +146,7 @@ public class LoadSagaDataStep : IIncomingStep
                 // if there's exacly one correlation property that points to a property on the saga data, we can set it
                 if (correlationPropertiesRelevantForMessage.Length == 1)
                 {
-                    TrySetCorrelationPropertyValue(newSagaData, correlationPropertiesRelevantForMessage[0], body, transactionContext);
+                    TrySetCorrelationPropertyValue(newSagaData, correlationPropertiesRelevantForMessage[0], message, transactionContext);
                 }
 
                 sagaInvoker.SetSagaData(newSagaData);
@@ -162,7 +162,7 @@ public class LoadSagaDataStep : IIncomingStep
         }
     }
 
-    static void TrySetCorrelationPropertyValue(ISagaData newSagaData, CorrelationProperty correlationProperty, object body, ITransactionContext transactionContext)
+    static void TrySetCorrelationPropertyValue(ISagaData newSagaData, CorrelationProperty correlationProperty, Message message, ITransactionContext transactionContext)
     {
         try
         {
@@ -172,7 +172,7 @@ public class LoadSagaDataStep : IIncomingStep
 
             if (correlationPropertyInfo == null) return;
 
-            var valueFromMessage = correlationProperty.ValueFromMessage(new MessageContext(transactionContext), body);
+            var valueFromMessage = correlationProperty.GetValueFromMessage(new MessageContext(transactionContext), message);
 
             correlationPropertyInfo.SetValue(newSagaData, valueFromMessage);
         }

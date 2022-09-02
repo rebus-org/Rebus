@@ -87,8 +87,8 @@ public class TestCorrelationBehavior : FixtureBase
         Assert.That(correlationProperty.PropertyName, Is.EqualTo(nameof(SomeSagaData.CorrelationId)));
         Assert.That(correlationProperty.SagaDataType, Is.EqualTo(typeof(SomeSagaData)));
         Assert.That(correlationProperty.SagaType, Is.EqualTo(typeof(SomeSaga)));
-        
-        var messageCorrelationValue = correlationProperty.ValueFromMessage(null, message.Body);
+
+        var messageCorrelationValue = correlationProperty.GetValueFromMessage(null, message);
         Assert.That(messageCorrelationValue, Is.EqualTo("does-not-exist"));
     }
 
