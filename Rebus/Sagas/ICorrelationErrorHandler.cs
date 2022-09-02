@@ -14,5 +14,11 @@ public interface ICorrelationErrorHandler
     /// This method will be invoked when an incoming message cannot be correlated
     /// with an existing instance of saga data, and the message is not allowed to initiate a new saga.
     /// </summary>
-    Task HandleCorrelationError(HandlerInvoker handlerInvoker, SagaDataCorrelationProperties correlationProperties, Message message);
+    /// <param name="correlationProperties">
+    /// Full collection of <see cref="CorrelationProperty"/> instances available for this Rebus instance. Call <see cref="SagaDataCorrelationProperties.ForMessage"/>
+    /// </param>
+    /// <param name="handlerInvoker"></param>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    Task HandleCorrelationError(SagaDataCorrelationProperties correlationProperties, HandlerInvoker handlerInvoker, Message message);
 }

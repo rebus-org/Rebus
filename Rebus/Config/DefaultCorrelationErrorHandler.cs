@@ -18,7 +18,8 @@ class DefaultCorrelationErrorHandler : ICorrelationErrorHandler
         _log = rebusLoggerFactory.GetLogger<DefaultCorrelationErrorHandler>();
     }
 
-    public Task HandleCorrelationError(HandlerInvoker handlerInvoker, SagaDataCorrelationProperties properties, Message message)
+    public Task HandleCorrelationError(SagaDataCorrelationProperties properties, HandlerInvoker handlerInvoker,
+        Message message)
     {
         _log.Debug("Could not find existing saga data for message {messageLabel}", message.GetMessageLabel());
         handlerInvoker.SkipInvocation();

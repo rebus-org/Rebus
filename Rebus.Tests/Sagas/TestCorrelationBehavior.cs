@@ -154,6 +154,7 @@ public class TestCorrelationBehavior : FixtureBase
 
         public CallbackCorrelationErrorHandler(Action<HandlerInvoker, SagaDataCorrelationProperties, Message> callback) => _callback = callback;
 
-        public async Task HandleCorrelationError(HandlerInvoker handlerInvoker, SagaDataCorrelationProperties correlationProperties, Message message) => _callback(handlerInvoker, correlationProperties, message);
+        public async Task HandleCorrelationError(SagaDataCorrelationProperties correlationProperties,
+            HandlerInvoker handlerInvoker, Message message) => _callback(handlerInvoker, correlationProperties, message);
     }
 }

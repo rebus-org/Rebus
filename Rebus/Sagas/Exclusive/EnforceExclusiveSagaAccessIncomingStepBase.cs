@@ -41,7 +41,7 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
 
         var correlationProperties = handlerInvokersForSagas
             .Select(h => h.Saga)
-            .SelectMany(saga => _sagaHelper.GetCorrelationProperties(body, saga).ForMessage(body)
+            .SelectMany(saga => _sagaHelper.GetCorrelationProperties(saga).ForMessage(body)
                 .Select(correlationProperty => new { saga, correlationProperty }))
             .ToList();
 

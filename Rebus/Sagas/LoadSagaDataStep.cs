@@ -116,7 +116,7 @@ public class LoadSagaDataStep : IIncomingStep
         var foundExistingSagaData = false;
 
         var body = message.Body;
-        var correlationProperties = _sagaHelper.GetCorrelationProperties(body, sagaInvoker.Saga);
+        var correlationProperties = _sagaHelper.GetCorrelationProperties(sagaInvoker.Saga);
         var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body).ToArray();
 
         foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
@@ -157,7 +157,7 @@ public class LoadSagaDataStep : IIncomingStep
             }
             else
             {
-                await _correlationErrorHandler.HandleCorrelationError(sagaInvoker, correlationProperties, message);
+                await _correlationErrorHandler.HandleCorrelationError(correlationProperties, sagaInvoker, message);
             }
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Extensions;
@@ -11,13 +12,14 @@ namespace Rebus.Sagas;
 /// </summary>
 public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
 {
-    readonly Dictionary<Type, CorrelationProperty[]> _correlationProperties;
+    readonly ConcurrentDictionary<Type, IReadOnlyList<CorrelationProperty>> _cachedCorrelationProperties = new();
+    readonly Dictionary<Type, IReadOnlyList<CorrelationProperty>> _correlationProperties;
     readonly Type _sagaDataType;
 
     /// <summary>
     /// Constructs the set
     /// </summary>
-    public SagaDataCorrelationProperties(Dictionary<Type, CorrelationProperty[]> correlationProperties, Type sagaDataType)
+    public SagaDataCorrelationProperties(Dictionary<Type, IReadOnlyList<CorrelationProperty>> correlationProperties, Type sagaDataType)
     {
         _correlationProperties = correlationProperties ?? throw new ArgumentNullException(nameof(correlationProperties));
         _sagaDataType = sagaDataType ?? throw new ArgumentNullException(nameof(sagaDataType));
@@ -32,19 +34,22 @@ public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
 
         var messageType = body.GetType();
 
-        var potentialCorrelationProperties = new [] {messageType}.Concat(messageType.GetBaseTypes())
-            .SelectMany(type => _correlationProperties.TryGetValue(type, out var potentialCorrelationproperties)
-                ? potentialCorrelationproperties
-                : Array.Empty<CorrelationProperty>())
-            .ToList();
-
-        if (!potentialCorrelationProperties.Any())
+        return _cachedCorrelationProperties.GetOrAdd(messageType, _ =>
         {
-            throw new ArgumentException(
-                $"Could not find any correlation properties for message {messageType} and saga data {_sagaDataType}");
-        }
+            var potentialCorrelationProperties = new[] { messageType }.Concat(messageType.GetBaseTypes())
+                .SelectMany(type => _correlationProperties.TryGetValue(type, out var potentialCorrelationproperties)
+                    ? potentialCorrelationproperties
+                    : Array.Empty<CorrelationProperty>())
+                .ToList();
 
-        return potentialCorrelationProperties;
+            if (!potentialCorrelationProperties.Any())
+            {
+                throw new ArgumentException(
+                    $"Could not find any correlation properties for message {messageType} and saga data {_sagaDataType}");
+            }
+
+            return potentialCorrelationProperties;
+        });
     }
 
     /// <summary>
