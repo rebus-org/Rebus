@@ -157,7 +157,7 @@ public class LoadSagaDataStep : IIncomingStep
             }
             else
             {
-                await _correlationErrorHandler.HandleCorrelationError(message, sagaInvoker);
+                await _correlationErrorHandler.HandleCorrelationError(sagaInvoker, correlationProperties, message);
             }
         }
     }

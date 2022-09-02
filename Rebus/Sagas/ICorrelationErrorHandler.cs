@@ -14,5 +14,5 @@ public interface ICorrelationErrorHandler
     /// This method will be invoked when an incoming message cannot be correlated
     /// with an existing instance of saga data, and the message is not allowed to initiate a new saga.
     /// </summary>
-    Task HandleCorrelationError(Message message, HandlerInvoker handlerInvoker);
+    Task HandleCorrelationError(HandlerInvoker handlerInvoker, SagaDataCorrelationProperties correlationProperties, Message message);
 }

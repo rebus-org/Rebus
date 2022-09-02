@@ -50,7 +50,10 @@ public class TestCorrelationBehavior : FixtureBase
     [Test]
     public async Task CanCustomizeHowCorrelationErrorAreHandled_Callback()
     {
-        using var errorHandlerWasCalled = new ManualResetEvent(initialState: false);
+        var futureMessage = new TaskCompletionSource<Message>();
+        var futureSagaDataCorrelationProperties = new TaskCompletionSource<SagaDataCorrelationProperties>();
+        var futureHandlerInvoker = new TaskCompletionSource<HandlerInvoker>();
+
         using var activator = new BuiltinHandlerActivator();
 
         activator.Register(() => new SomeSaga());
@@ -63,16 +66,30 @@ public class TestCorrelationBehavior : FixtureBase
             .Sagas(s =>
             {
                 s.StoreInMemory();
-                s.UseCorrelationErrorHandler(new CallbackCorrelationErrorHandler((_, __) => errorHandlerWasCalled.Set()));
+                s.UseCorrelationErrorHandler(new CallbackCorrelationErrorHandler((invoker, properties, message) => Task.Run(async () =>
+                {
+                    futureHandlerInvoker.SetResult(invoker);
+                    futureSagaDataCorrelationProperties.SetResult(properties);
+                    futureMessage.SetResult(message);
+                })));
             })
             .Start();
 
         await bus.SendLocal(new SomeMessage(CorrelationId: "does-not-exist"));
 
-        errorHandlerWasCalled.WaitOrDie(
-            timeout: TimeSpan.FromSeconds(2),
-            errorMessage: "The callback was not called within the timeout, which indicates that the custom ICorrelationErrorHandler was not invoked as expected"
-        );
+        var invoker = await futureHandlerInvoker.Task;
+        var properties = await futureSagaDataCorrelationProperties.Task;
+        var message = await futureMessage.Task;
+
+        Assert.That(properties.Count(), Is.EqualTo(1));
+        var correlationProperty = properties.First();
+        Assert.That(correlationProperty.MessageType, Is.EqualTo(typeof(SomeMessage)));
+        Assert.That(correlationProperty.PropertyName, Is.EqualTo(nameof(SomeSagaData.CorrelationId)));
+        Assert.That(correlationProperty.SagaDataType, Is.EqualTo(typeof(SomeSagaData)));
+        Assert.That(correlationProperty.SagaType, Is.EqualTo(typeof(SomeSaga)));
+        
+        var messageCorrelationValue = correlationProperty.ValueFromMessage(null, message.Body);
+        Assert.That(messageCorrelationValue, Is.EqualTo("does-not-exist"));
     }
 
     [Test]
@@ -94,7 +111,7 @@ public class TestCorrelationBehavior : FixtureBase
             .Sagas(s =>
             {
                 s.StoreInMemory();
-                s.UseCorrelationErrorHandler(new CallbackCorrelationErrorHandler((_, __) => throw new Exception(secretExceptionMessage)));
+                s.UseCorrelationErrorHandler(new CallbackCorrelationErrorHandler((_, __, ___) => throw new Exception(secretExceptionMessage)));
             })
             .Start();
 
@@ -133,10 +150,10 @@ public class TestCorrelationBehavior : FixtureBase
 
     class CallbackCorrelationErrorHandler : ICorrelationErrorHandler
     {
-        readonly Action<Message, HandlerInvoker> _callback;
+        readonly Action<HandlerInvoker, SagaDataCorrelationProperties, Message> _callback;
 
-        public CallbackCorrelationErrorHandler(Action<Message, HandlerInvoker> callback) => _callback = callback;
+        public CallbackCorrelationErrorHandler(Action<HandlerInvoker, SagaDataCorrelationProperties, Message> callback) => _callback = callback;
 
-        public async Task HandleCorrelationError(Message message, HandlerInvoker handlerInvoker) => _callback(message, handlerInvoker);
+        public async Task HandleCorrelationError(HandlerInvoker handlerInvoker, SagaDataCorrelationProperties correlationProperties, Message message) => _callback(handlerInvoker, correlationProperties, message);
     }
 }

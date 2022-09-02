@@ -35,7 +35,7 @@ public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
         var potentialCorrelationProperties = new [] {messageType}.Concat(messageType.GetBaseTypes())
             .SelectMany(type => _correlationProperties.TryGetValue(type, out var potentialCorrelationproperties)
                 ? potentialCorrelationproperties
-                : new CorrelationProperty[0])
+                : Array.Empty<CorrelationProperty>())
             .ToList();
 
         if (!potentialCorrelationProperties.Any())
