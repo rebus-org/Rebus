@@ -13,11 +13,11 @@ using Rebus.Transport;
 using Rebus.Transport.InMem;
 #pragma warning disable CS1998
 
-namespace Rebus.Tests.Assumptions;
+namespace Rebus.Tests.Examples;
 
 [TestFixture]
-[Description("Checks how Thread.CurrentPrincipal flows/doesn't flow in various places")]
-public class TestThreadCurrentPrincipalFlowAndTransactionContextCallbacks : FixtureBase
+[Description("Demonstrates in full how the current principal can be changed in the pipeline and in some relevant transaction context callbacks")]
+public class ChangeCurrentPrincipalInPipelineAndTransactionContextCallbacks : FixtureBase
 {
     [Test]
     public async Task CheckHowItWorks()
@@ -76,7 +76,7 @@ public class TestThreadCurrentPrincipalFlowAndTransactionContextCallbacks : Fixt
         Assert.That(usernameInTxCtxDisposed, Is.EqualTo(customUsername));
     }
 
-    [StepDocumentation("Incoming pipeline step that changes Thread.CurrentPrincipal for the rest of the pipeline anf checks the current principal's name in a few, crucial places.")]
+    [StepDocumentation("Incoming pipeline step that changes Thread.CurrentPrincipal for the rest of the pipeline as well as in the relevant transaction context callbacks, and then checks the current principal's name the same places.")]
     class TransactionContextCallbacksStep : IIncomingStep
     {
         readonly TaskCompletionSource<string> _futureUsernameInTxCtxCommitted;
@@ -95,20 +95,33 @@ public class TestThreadCurrentPrincipalFlowAndTransactionContextCallbacks : Fixt
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
+            var customUserPrincipal = new GenericPrincipal(new GenericIdentity(_customUsername), Array.Empty<string>());
             var transactionContext = context.Load<ITransactionContext>();
-            var originalPrincipal = Thread.CurrentPrincipal;
 
-            transactionContext.OnCommitted(async _ => SetResult(_futureUsernameInTxCtxCommitted));
-            transactionContext.OnDisposed(async _ =>
+            transactionContext.OnCommitted(async ctx =>
             {
-                SetResult(_futureUsernameInTxCtxDisposed);
-                Thread.CurrentPrincipal = originalPrincipal;
+                using var _ = new TemporaryPrincipal(customUserPrincipal);
+                SetResult(_futureUsernameInTxCtxCommitted);
             });
 
-            Thread.CurrentPrincipal = new GenericPrincipal(new GenericIdentity(_customUsername), Array.Empty<string>());
+            transactionContext.OnDisposed(async ctx =>
+            {
+                using var _ = new TemporaryPrincipal(customUserPrincipal);
+                SetResult(_futureUsernameInTxCtxDisposed);
+            });
 
+            using var _ = new TemporaryPrincipal(customUserPrincipal);
             await next();
         }
+    }
+
+    struct TemporaryPrincipal : IDisposable
+    {
+        readonly IPrincipal _currentPrincipal = Thread.CurrentPrincipal;
+
+        public TemporaryPrincipal(IPrincipal principal) => Thread.CurrentPrincipal = principal ?? throw new ArgumentNullException(nameof(principal));
+
+        public void Dispose() => Thread.CurrentPrincipal = _currentPrincipal;
     }
 
     static void SetResult(TaskCompletionSource<string> taskCompletionSource) => Task.Run(() => taskCompletionSource.SetResult(Thread.CurrentPrincipal?.Identity?.Name));
