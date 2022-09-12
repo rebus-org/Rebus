@@ -20,7 +20,105 @@ namespace Rebus.Tests.Examples;
 public class ChangeCurrentPrincipalInPipelineAndTransactionContextCallbacks : FixtureBase
 {
     [Test]
-    public async Task CheckHowItWorks()
+    public async Task CheckHowItWorks_NewUserProperty()
+    {
+        var futureUsernameInHandlerBeforeAwait = new TaskCompletionSource<string>();
+        var futureUsernameInHandlerAfterAwait = new TaskCompletionSource<string>();
+        var futureUsernameInTxCtxCommitted = new TaskCompletionSource<string>();
+        var futureUsernameInTxCtxDisposed = new TaskCompletionSource<string>();
+        var futureUsernameAfterSettingUserProperty = new TaskCompletionSource<string>();
+
+        using var activator = new BuiltinHandlerActivator();
+
+        activator.Handle<object>(async _ =>
+        {
+            SetResult(futureUsernameInHandlerBeforeAwait);
+            await Task.Delay(TimeSpan.FromSeconds(0.1));
+            SetResult(futureUsernameInHandlerAfterAwait);
+        });
+
+        var customUsername = $"custom username {Guid.NewGuid():N}";
+
+        Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "flowtest"))
+            .Options(o =>
+            {
+                o.Decorate<IPipeline>(c => new PipelineStepInjector(pipeline: c.Get<IPipeline>())
+                    .OnReceive(
+                        step: new NewTransactionContextCallbacksStep(
+                            customUsername: customUsername,
+                            futureUsernameInTxCtxCommitted: futureUsernameInTxCtxCommitted,
+                            futureUsernameInTxCtxDisposed: futureUsernameInTxCtxDisposed,
+                            futureUsernameAfterSettingUserProperty: futureUsernameAfterSettingUserProperty
+                        ),
+                        position: PipelineRelativePosition.Before,
+                        anchorStep: typeof(DeserializeIncomingMessageStep)
+                    ));
+            })
+            .Start();
+
+        await activator.Bus.SendLocal("HEJ");
+
+        await Task.WhenAll(
+                futureUsernameInHandlerBeforeAwait.Task,
+                futureUsernameInHandlerAfterAwait.Task,
+                futureUsernameInTxCtxCommitted.Task,
+                futureUsernameInTxCtxDisposed.Task,
+                futureUsernameAfterSettingUserProperty.Task
+            )
+            .WithTimeout(TimeSpan.FromSeconds(2));
+
+        var usernameInHandlerBeforeAwait = await futureUsernameInHandlerBeforeAwait.Task;
+        var usernameInHandlerAfterAwait = await futureUsernameInHandlerAfterAwait.Task;
+        var usernameInTxCtxCommitted = await futureUsernameInTxCtxCommitted.Task;
+        var usernameInTxCtxDisposed = await futureUsernameInTxCtxDisposed.Task;
+        var usernameAfterSettingUserProperty = await futureUsernameAfterSettingUserProperty.Task;
+
+        Assert.That(usernameInHandlerBeforeAwait, Is.EqualTo(customUsername));
+        Assert.That(usernameInHandlerAfterAwait, Is.EqualTo(customUsername));
+        Assert.That(usernameInTxCtxCommitted, Is.EqualTo(customUsername));
+        Assert.That(usernameInTxCtxDisposed, Is.EqualTo(customUsername));
+        Assert.That(usernameAfterSettingUserProperty, Is.EqualTo(customUsername));
+    }
+
+    [StepDocumentation("Incoming pipeline step that changes Thread.CurrentPrincipal for the rest of the pipeline as well as in the relevant transaction context callbacks, and then checks the current principal's name the same places.")]
+    class NewTransactionContextCallbacksStep : IIncomingStep
+    {
+        readonly TaskCompletionSource<string> _futureUsernameInTxCtxCommitted;
+        readonly TaskCompletionSource<string> _futureUsernameInTxCtxDisposed;
+        readonly TaskCompletionSource<string> _futureUsernameAfterSettingUserProperty;
+        readonly string _customUsername;
+
+        public NewTransactionContextCallbacksStep(
+            string customUsername,
+            TaskCompletionSource<string> futureUsernameInTxCtxCommitted,
+            TaskCompletionSource<string> futureUsernameInTxCtxDisposed,
+            TaskCompletionSource<string> futureUsernameAfterSettingUserProperty
+        )
+        {
+            _customUsername = customUsername;
+            _futureUsernameInTxCtxCommitted = futureUsernameInTxCtxCommitted;
+            _futureUsernameInTxCtxDisposed = futureUsernameInTxCtxDisposed;
+            _futureUsernameAfterSettingUserProperty = futureUsernameAfterSettingUserProperty;
+        }
+
+        public async Task Process(IncomingStepContext context, Func<Task> next)
+        {
+            // this is much easier: Just the the user here!
+            context.User = new GenericPrincipal(new GenericIdentity(_customUsername), Array.Empty<string>());
+
+            SetResult(_futureUsernameAfterSettingUserProperty);
+
+            var transactionContext = context.Load<ITransactionContext>();
+            transactionContext.OnCommitted(async _ => SetResult(_futureUsernameInTxCtxCommitted));
+            transactionContext.OnDisposed(async _ => SetResult(_futureUsernameInTxCtxDisposed));
+
+            await next();
+        }
+    }
+
+    [Test]
+    public async Task CheckHowItWorks_ManualWork()
     {
         var futureUsernameInHandlerBeforeAwait = new TaskCompletionSource<string>();
         var futureUsernameInHandlerAfterAwait = new TaskCompletionSource<string>();
@@ -96,6 +194,7 @@ public class ChangeCurrentPrincipalInPipelineAndTransactionContextCallbacks : Fi
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var customUserPrincipal = new GenericPrincipal(new GenericIdentity(_customUsername), Array.Empty<string>());
+
             var transactionContext = context.Load<ITransactionContext>();
 
             transactionContext.OnCommitted(async ctx =>

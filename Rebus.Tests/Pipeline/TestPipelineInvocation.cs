@@ -109,7 +109,8 @@ public class TestPipelineInvocation
             var body = new byte[] { 1, 2, 3 };
             var transportMessage = new TransportMessage(headers, body);
             var trannieContext = new TransactionContext();
-            var stepContext = new IncomingStepContext(transportMessage, trannieContext);
+            
+            using var stepContext = new IncomingStepContext(transportMessage, trannieContext);
 
             await invoker.Invoke(stepContext);
         }

@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Pipeline;
+
 // ReSharper disable SuggestBaseTypeForParameter
 // ReSharper disable ForCanBeConvertedToForeach
 
@@ -52,9 +57,13 @@ class TransactionContext : ITransactionContext
         _onDisposed += disposedAction;
     }
 
-    public void Abort() => _mustAbort = true;
+    public async Task Commit()
+    {
+        using var _ = new LightweightTemporaryPrincipal(GetPrincipal());
+        await RaiseCommitted();
+    }
 
-    public Task Commit() => RaiseCommitted();
+    public void Abort() => _mustAbort = true;
 
     public void Dispose()
     {
@@ -64,6 +73,7 @@ class TransactionContext : ITransactionContext
         {
             if (!_completed)
             {
+                using var _ = new LightweightTemporaryPrincipal(GetPrincipal());
                 RaiseAborted();
             }
         }
@@ -75,6 +85,7 @@ class TransactionContext : ITransactionContext
             {
                 try
                 {
+                    using var _ = new LightweightTemporaryPrincipal(GetPrincipal());
                     _onDisposed?.Invoke(this);
                 }
                 finally
@@ -87,6 +98,8 @@ class TransactionContext : ITransactionContext
 
     public async Task Complete()
     {
+        using var _ = new LightweightTemporaryPrincipal(GetPrincipal());
+
         if (_mustAbort)
         {
             RaiseAborted();
@@ -109,12 +122,11 @@ class TransactionContext : ITransactionContext
         _aborted = true;
     }
 
-    Task RaiseCommitted()
+    async Task RaiseCommitted()
     {
         // RaiseCommitted() can be called multiple time.
         // So we atomically extract the current list of subscribers and reset the event to null (empty)
-        var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
-        return InvokeAsync(onCommitted);
+        await InvokeAsync(Interlocked.Exchange(ref _onCommitted, null));
     }
 
     async Task RaiseCompleted()
@@ -128,7 +140,6 @@ class TransactionContext : ITransactionContext
         if (actions == null) return;
 
         var delegates = actions.GetInvocationList();
-
         for (var index = 0; index < delegates.Length; index++)
         {
             // they're always of this type, so no need to check the type here
@@ -136,5 +147,21 @@ class TransactionContext : ITransactionContext
 
             await asyncTxContextCallback(this);
         }
+    }
+
+    private ClaimsPrincipal GetPrincipal()
+    {
+        return Items.TryGetValue("custom-claims-context", out var result)
+            ? result as ClaimsPrincipal
+            : null;
+    }
+
+    struct LightweightTemporaryPrincipal : IDisposable
+    {
+        readonly IPrincipal _currentPrincipal = Thread.CurrentPrincipal;
+
+        public LightweightTemporaryPrincipal(IPrincipal principal) => Thread.CurrentPrincipal = principal ?? _currentPrincipal;
+
+        public void Dispose() => Thread.CurrentPrincipal = _currentPrincipal;
     }
 }

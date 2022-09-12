@@ -25,11 +25,12 @@ public class TestProfiler : FixtureBase
 
         var profiler = new PipelineStepProfiler(pipeline, stats);
 
-        var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+        var transportMessage = new TransportMessage(new Dictionary<string, string>(), Array.Empty<byte>());
 
         using (new RebusTransactionScope())
         {
-            var stepContext = new IncomingStepContext(transportMessage, AmbientTransactionContext.Current);
+            using var stepContext = new IncomingStepContext(transportMessage, AmbientTransactionContext.Current);
+
             var invoker = new DefaultPipelineInvoker(profiler);
 
             invoker.Invoke(stepContext).Wait();

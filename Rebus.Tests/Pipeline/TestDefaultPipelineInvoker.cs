@@ -44,7 +44,7 @@ public class TestDefaultPipelineInvoker : FixtureBase
 
         1000000.Times(() =>
         {
-            var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), GetFakeTransactionContext());
+            using var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), Array.Empty<byte>()), GetFakeTransactionContext());
 
             invoker.Invoke(stepContext).Wait();
         });
@@ -69,7 +69,7 @@ public class TestDefaultPipelineInvoker : FixtureBase
         }
 
         public ConcurrentDictionary<string, object> Items { get; }
-            
+
         public void OnCommitted(Func<ITransactionContext, Task> commitAction)
         {
             throw new NotImplementedException();
@@ -113,7 +113,8 @@ public class TestDefaultPipelineInvoker : FixtureBase
 
         var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
         var fakeTransactionContext = GetFakeTransactionContext();
-        var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
+
+        using var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
 
         await invoker.Invoke(stepContext);
 

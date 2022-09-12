@@ -8,7 +8,7 @@ namespace Rebus.Tests.Extensions;
 
 class FakeMessageContextScope : IDisposable
 {
-    readonly RebusTransactionScope _rebusTransactionScope = new RebusTransactionScope();
+    readonly RebusTransactionScope _rebusTransactionScope = new();
 
     public FakeMessageContextScope()
     {
@@ -17,5 +17,10 @@ class FakeMessageContextScope : IDisposable
 
     public ITransactionContext TransactionContext => _rebusTransactionScope.TransactionContext;
 
-    public void Dispose() => _rebusTransactionScope.Dispose();
+    public void Dispose()
+    {
+        TransactionContext.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey).Dispose();
+
+        _rebusTransactionScope.Dispose();
+    }
 }

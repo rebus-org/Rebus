@@ -166,7 +166,7 @@ class ThreadPoolWorker : IWorker
     {
         try
         {
-            var stepContext = new IncomingStepContext(transportMessage, context);
+            using var stepContext = new IncomingStepContext(transportMessage, context);
 
             stepContext.Save(_busDisposalCancellationToken);
 

@@ -52,8 +52,9 @@ Elapsed: {elapsed.TotalSeconds:0.0}
             {"number", (number%20).ToString()}
         };
 
-        var transportMessage = new TransportMessage(headers, new byte[0]);
+        var transportMessage = new TransportMessage(headers, Array.Empty<byte>());
         var transactionContext = new TransactionContext();
+        
         var context = new IncomingStepContext(transportMessage, transactionContext);
         var message = new Message(headers, new object());
         context.Save(message);
