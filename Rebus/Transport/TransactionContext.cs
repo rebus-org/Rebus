@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable ForCanBeConvertedToForeach
 
 namespace Rebus.Transport;
 
@@ -22,7 +22,7 @@ class TransactionContext : ITransactionContext
     bool _cleanedUp;
     bool _disposed;
 
-    public ConcurrentDictionary<string, object> Items { get; } = new ConcurrentDictionary<string, object>();
+    public ConcurrentDictionary<string, object> Items { get; } = new();
 
     public void OnCommitted(Func<ITransactionContext, Task> commitAction)
     {
@@ -125,12 +125,16 @@ class TransactionContext : ITransactionContext
 
     async Task InvokeAsync(Func<ITransactionContext, Task> actions)
     {
-        if (actions != null)
+        if (actions == null) return;
+
+        var delegates = actions.GetInvocationList();
+
+        for (var index = 0; index < delegates.Length; index++)
         {
-            foreach (var action in actions.GetInvocationList().OfType<Func<ITransactionContext, Task>>())
-            {
-                await action(this);
-            }
+            // they're always of this type, so no need to check the type here
+            var asyncTxContextCallback = (Func<ITransactionContext, Task>)delegates[index];
+
+            await asyncTxContextCallback(this);
         }
     }
 }

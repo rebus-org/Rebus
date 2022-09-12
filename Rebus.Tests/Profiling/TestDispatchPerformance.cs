@@ -17,6 +17,7 @@ using Rebus.Serialization.Json;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+// ReSharper disable MemberCanBePrivate.Local
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Profiling;
@@ -31,9 +32,9 @@ public class TestDispatchPerformance : FixtureBase
         Action,
     }
 
-    [TestCase(100000, 10, PipelineInvokerMode.Action, Ignore = "Fun to enable when optimizing the pipeline invoker")]
-    [TestCase(100000, 10, PipelineInvokerMode.Default, Ignore = "Fun to enable when optimizing the pipeline invoker")]
-    [TestCase(100000, 10, PipelineInvokerMode.DefaultNew, Ignore = "Fun to enable when optimizing the pipeline invoker")]
+    [TestCase(100000, 10, PipelineInvokerMode.Action, Explicit = true)]
+    [TestCase(100000, 10, PipelineInvokerMode.Default, Explicit = true)]
+    [TestCase(100000, 10, PipelineInvokerMode.DefaultNew, Explicit = true)]
     [TestCase(100, 10, PipelineInvokerMode.DefaultNew)]
     public void TakeTime(int numberOfMessages, int numberOfSamples, PipelineInvokerMode pipelineInvokerMode)
     {
@@ -107,12 +108,12 @@ Stats:
             var inMemTransportMessage = transportMessage.ToInMemTransportMessage();
 
             network.Deliver("perftest", inMemTransportMessage);
-        };
+        }
 
         var numberOfReceivedMessages = 0;
         var gotAllMessages = new ManualResetEvent(false);
 
-        adapter.Handle<SomeMessage>(async m =>
+        adapter.Handle<SomeMessage>(async _ =>
         {
             Interlocked.Increment(ref numberOfReceivedMessages);
 

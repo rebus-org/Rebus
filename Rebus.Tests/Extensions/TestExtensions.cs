@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,5 +20,14 @@ static class TestExtensions
         {
             throw new FormatException($"Could not prettify JSON text '{json}'", exception);
         }
+    }
+
+    public static async Task<T> WithTimeout<T>(this Task<T> task, TimeSpan timeout)
+    {
+        var timeoutTask = Task.Delay(timeout);
+
+        return await Task.WhenAny(task, timeoutTask) == timeoutTask
+            ? throw new TimeoutException($"The task {task} did not finish within {timeout} timeout")
+            : await task;
     }
 }
