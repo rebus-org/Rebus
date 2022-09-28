@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Logging;
@@ -128,6 +128,42 @@ public class TestCorrelationBehavior : FixtureBase
         Assert.That(message.Headers.GetValue(Headers.Type), Is.EqualTo(typeof(SomeMessage).GetSimpleAssemblyQualifiedName()));
     }
 
+    [Test]
+    public async Task CanCustomizeHowCorrelationErrorAreHandled_ThrowException_NiceExample()
+    {
+        // come up with an easy-to-spot exception message
+        var secretExceptionMessage = Guid.NewGuid().ToString();
+        var network = new InMemNetwork();
+
+        using var activator = new BuiltinHandlerActivator();
+
+        activator.Register(() => new SomeSaga());
+
+        var loggerFactory = new ListLoggerFactory(outputToConsole: true);
+
+        var bus = Configure.With(activator)
+            .Logging(l => l.Use(loggerFactory))
+            .Transport(t => t.UseInMemoryTransport(network, "saga-correlation-check"))
+            .Sagas(s =>
+            {
+                s.StoreInMemory();
+                s.ThrowExceptionOnCorrelationError();
+            })
+            .Start();
+
+        await bus.SendLocal(new SomeMessage(CorrelationId: "does-not-exist"));
+
+        // wait for the log
+        await loggerFactory.WaitUntil(
+            criteriaExpression: logs => logs.Any(l => l.Level == LogLevel.Error && l.Text.Contains(secretExceptionMessage)),
+            timeoutSeconds: 3
+        );
+
+        // get the message from the error queue
+        var message = await network.WaitForNextMessageFrom("error", timeoutSeconds: 2);
+        Assert.That(message.Headers.GetValue(Headers.Type), Is.EqualTo(typeof(SomeMessage).GetSimpleAssemblyQualifiedName()));
+    }
+
     class SomeSaga : Saga<SomeSagaData>, IHandleMessages<SomeMessage>
     {
         protected override void CorrelateMessages(ICorrelationConfig<SomeSagaData> config)
@@ -156,5 +192,46 @@ public class TestCorrelationBehavior : FixtureBase
 
         public async Task HandleCorrelationError(SagaDataCorrelationProperties correlationProperties,
             HandlerInvoker handlerInvoker, Message message) => _callback(handlerInvoker, correlationProperties, message);
+    }
+}
+
+static class CorrelationErrorConfigurationExtensions
+{
+    public static void ThrowExceptionOnCorrelationError(this StandardConfigurer<ISagaStorage> configurer, Func<SagaDataCorrelationProperties, HandlerInvoker, Message, bool> predicate = null)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+        configurer
+            .OtherService<ICorrelationErrorHandler>()
+            .Register(c => new ThrowingCorrelationErrorHandler(predicate));
+    }
+
+    class ThrowingCorrelationErrorHandler : ICorrelationErrorHandler
+    {
+        static readonly Func<SagaDataCorrelationProperties, HandlerInvoker, Message, bool> JustDoIt = (_, _, _) => true;
+
+        readonly Func<SagaDataCorrelationProperties, HandlerInvoker, Message, bool> _predicate;
+
+        public ThrowingCorrelationErrorHandler(Func<SagaDataCorrelationProperties, HandlerInvoker, Message, bool> predicate) => _predicate = predicate ?? JustDoIt;
+
+        public Task HandleCorrelationError(SagaDataCorrelationProperties correlationProperties, HandlerInvoker handlerInvoker, Message message)
+        {
+            if (!_predicate(correlationProperties, handlerInvoker, message)) return Task.CompletedTask;
+
+            var messageProperties = correlationProperties.ForMessage(message.Body);
+
+            throw new MessageCouldNotBeCorrelatedException($@"The incoming message could be correlated with an existing saga instance. 
+
+The following saga properties were tested against the listed values from the message:
+
+{string.Join(Environment.NewLine, messageProperties.Select(p => $"Saga property: {p.PropertyName}, value from message: {p.GetValueFromMessage(null, message)}"))}");
+        }
+    }
+
+    class MessageCouldNotBeCorrelatedException : RebusApplicationException, IFailFastException
+    {
+        public MessageCouldNotBeCorrelatedException(string message) : base(message)
+        {
+        }
     }
 }
