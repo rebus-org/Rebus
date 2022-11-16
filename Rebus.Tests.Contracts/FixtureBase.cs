@@ -12,7 +12,7 @@ public abstract class FixtureBase
 {
     static FixtureBase() => Console.SetOut(TestContext.Progress);
 
-    readonly ConcurrentStack<IDisposable> _disposables = new ConcurrentStack<IDisposable>();
+    readonly ConcurrentStack<IDisposable> _disposables = new();
 
     [SetUp]
     public void _SetUp()
