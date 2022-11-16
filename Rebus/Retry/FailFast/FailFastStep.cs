@@ -66,7 +66,7 @@ public class FailFastStep : IIncomingStep
                     ? SimpleRetryStrategyStep.GetSecondLevelMessageId(messageId)
                     : messageId;
 
-                _errorTracker.MarkAsFinal(messageIdToMarkAsFinal);
+                await _errorTracker.MarkAsFinal(messageIdToMarkAsFinal);
             }
             throw;
         }
