@@ -30,7 +30,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="[12.0.1,14)" />
-		<PackageReference Include="system.text.json" Version="[6,8)" />
+		<PackageReference Include="system.text.json" Version="[5,8)" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 	<ItemGroup>
