@@ -16,7 +16,7 @@ namespace Rebus.Tests.Activation;
 [TestFixture]
 public class ClientOnly : FixtureBase
 {
-    private record Message(Guid Id);
+    record Message(Guid Id);
 
     [Test]
     public async Task ActivatorNotNecessary()
@@ -60,13 +60,13 @@ public class ClientOnly : FixtureBase
         Console.WriteLine(invalidOperationException);
     }
 
-    private static IBus Publisher(InMemNetwork network, InMemorySubscriberStore subscriberStore) =>
+    static IBus Publisher(InMemNetwork network, InMemorySubscriberStore subscriberStore) =>
         Configure.OneWayClient()
             .Transport(t => t.UseInMemoryTransportAsOneWayClient(network))
             .Subscriptions(s => s.StoreInMemory(subscriberStore)) // req'd also for one way client transports
             .Start();
 
-    private static async Task<IBus> Subscriber(IHandlerActivator activator, InMemNetwork network, InMemorySubscriberStore subscriberStore)
+    static async Task<IBus> Subscriber(IHandlerActivator activator, InMemNetwork network, InMemorySubscriberStore subscriberStore)
     {
         var subscriber = Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(network, "subscriber"))
