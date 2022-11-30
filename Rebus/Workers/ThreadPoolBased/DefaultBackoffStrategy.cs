@@ -106,12 +106,16 @@ class DefaultBackoffStrategy : IBackoffStrategy
             Interlocked.Exchange(ref _waitTimeTicks, waitedSinceTicks);
         }
 
-        var waitDurationTicks = DateTime.UtcNow.Ticks - waitedSinceTicks;
-        var totalSecondsIdle = (int) TimeSpan.FromTicks(waitDurationTicks).TotalSeconds;
+        var waitTimespan = TimeSpan.FromTicks(DateTime.UtcNow.Ticks - waitedSinceTicks);
+        var totalSecondsIdle = (int)waitTimespan.TotalSeconds;
         var waitTimeIndex = Math.Max(0, Math.Min(totalSecondsIdle, _backoffTimes.Length - 1));
 
-        var backoffTime = _backoffTimes[waitTimeIndex];
+        // Now find the jitter delays by taking the millisecond value since we started waiting to get
+        // a jitter value from 0-9 milliseconds. This will give each thread a slightly different delay each time
+        // so all the threads over time end up spread out
+        var jitterMilliseconds = waitTimespan.Milliseconds % 10;
 
-        return backoffTime;
+        // Now return the total delay
+        return _backoffTimes[waitTimeIndex].Add(TimeSpan.FromMilliseconds(jitterMilliseconds));
     }
 }
