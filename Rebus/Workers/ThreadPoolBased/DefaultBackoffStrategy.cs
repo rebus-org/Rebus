@@ -11,6 +11,7 @@ class DefaultBackoffStrategy : IBackoffStrategy
 {
     readonly TimeSpan[] _backoffTimes;
     readonly Options _options;
+    readonly Random _random = new();
 
     long _waitTimeTicks;
 
@@ -110,12 +111,16 @@ class DefaultBackoffStrategy : IBackoffStrategy
         var totalSecondsIdle = (int)waitTimespan.TotalSeconds;
         var waitTimeIndex = Math.Max(0, Math.Min(totalSecondsIdle, _backoffTimes.Length - 1));
 
-        // Now find the jitter delays by taking the millisecond value since we started waiting to get
-        // a jitter value from 0-9 milliseconds. This will give each thread a slightly different delay each time
-        // so all the threads over time end up spread out
-        var jitterMilliseconds = waitTimespan.Milliseconds % 10;
+        // Get a random jitter delay of 0-9 milliseconds. This will give each thread a slightly different delay
+        // each time so all the threads over time end up spread out. Note that we have to lock on the random
+        // generator as it is not thread safe
+        TimeSpan jitter;
+        lock (_random)
+        {
+            jitter = TimeSpan.FromMilliseconds(_random.Next(0, 10));
+        }
 
-        // Now return the total delay
-        return _backoffTimes[waitTimeIndex].Add(TimeSpan.FromMilliseconds(jitterMilliseconds));
+        // Now return the total delay with jitter
+        return _backoffTimes[waitTimeIndex].Add(jitter);
     }
 }
