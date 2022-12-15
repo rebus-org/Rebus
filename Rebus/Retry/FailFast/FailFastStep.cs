@@ -24,17 +24,15 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
         readonly IErrorTracker _errorTracker;
         readonly IFailFastChecker _failFastChecker;
         readonly IErrorHandler _errorHandler;
-        readonly ITransport _transport;
 
         /// <summary>
         /// Constructs the step, using the given error tracker
         /// </summary>
-        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler, ITransport transport)
+        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler)
         {
             _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
             _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
             _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
-            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         /// <summary>
@@ -77,14 +75,11 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
             var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
 
             var transportMessage = originalTransportMessage.TransportMessage.Clone();
-            var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
-
-            transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
-            transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
+            var exception = deadletterCommand.Exception ?? new RebusApplicationException("Manually dead-lettered");
 
             var transactionContext = context.Load<ITransactionContext>();
 
-            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, new RebusApplicationException(errorDetails));
+            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
         }
     }
 }

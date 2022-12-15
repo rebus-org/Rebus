@@ -46,11 +46,7 @@ namespace Rebus.Retry.PoisonQueues
         public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
         {
             var headers = transportMessage.Headers;
-
-            if (!headers.TryGetValue(Headers.MessageId, out var messageId))
-            {
-                messageId = "<unknown>";
-            }
+            var messageId = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
 
             headers[Headers.ErrorDetails] = GetErrorDetails(exception);
             headers[Headers.SourceQueue] = _transport.Address;
@@ -73,6 +69,9 @@ namespace Rebus.Retry.PoisonQueues
             }
         }
 
+        /// <summary>
+        /// Gets the error details from the given <paramref name="exception"/>
+        /// </summary>
         string GetErrorDetails(Exception exception)
         {
             var maxLength = _simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength;

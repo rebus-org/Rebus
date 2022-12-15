@@ -45,7 +45,7 @@ namespace Rebus.Retry.Simple
             }
             if (errorTrackingMaxAgeMinutes <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(errorTrackingMaxAgeMinutes), errorTrackingMaxAgeMinutes, 
+                throw new ArgumentOutOfRangeException(nameof(errorTrackingMaxAgeMinutes), errorTrackingMaxAgeMinutes,
                     "Please specify the max age in minutes of an in-mem error tracking before it gets purged (must be >= 1)");
             }
             ErrorQueueAddress = errorQueueAddress ?? throw new ArgumentException("Error queue address cannot be NULL");

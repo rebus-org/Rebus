@@ -26,6 +26,45 @@ namespace Rebus.Tests.Extensions
     public class ManualDeadlettering : FixtureBase
     {
         [Test]
+        public async Task CanDeadLetterMessageManuallyWithoutAnyNoise_WithException()
+        {
+            var listLoggerFactory = new ListLoggerFactory(outputToConsole: true);
+            var activator = Using(new BuiltinHandlerActivator());
+
+            activator.Handle<string>(async (bus, message) =>
+            {
+                await bus.Advanced.TransportMessage.Deadletter(exception: new AbandonedMutexException("why did you abandon me?"));
+            });
+
+            var fakeErrorHandler = new FakeErrorHandler();
+
+            Configure.With(activator)
+                .Logging(l => l.Use(listLoggerFactory))
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "manual-deadlettering"))
+                .Options(o => o.Register<IErrorHandler>(c => fakeErrorHandler)) //< provide our own implementation here, so we'll know what gets dead-lettered
+                .Start();
+
+            await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
+
+            var poisonMessage = await fakeErrorHandler.GetNextPoisonMessage(timeoutSeconds: 2);
+
+            Assert.That(poisonMessage.Item2, Is.TypeOf<AbandonedMutexException>());
+            Assert.That(poisonMessage.Item2.Message, Is.EqualTo("why did you abandon me?"));
+
+            Console.WriteLine("Exception passed to error handler:");
+            Console.WriteLine(poisonMessage.Item2);
+
+            var linesAboveInfo = listLoggerFactory.Where(log => log.Level > LogLevel.Info).ToList();
+
+            if (linesAboveInfo.Any())
+            {
+                throw new AssertionException($@"Didn't expect NOISE in the log, but the following lines were > INFO:
+
+{string.Join(Environment.NewLine, linesAboveInfo)}");
+            }
+        }
+
+        [Test]
         public async Task CanDeadLetterMessageManuallyWithoutAnyNoise()
         {
             var listLoggerFactory = new ListLoggerFactory(outputToConsole: true);
@@ -48,8 +87,8 @@ namespace Rebus.Tests.Extensions
 
             var poisonMessage = await fakeErrorHandler.GetNextPoisonMessage(timeoutSeconds: 2);
 
-            Assert.That(poisonMessage.Item1.Headers, Contains.Key(Headers.ErrorDetails).And.ContainValue("has been manually dead-lettered"));
-            Assert.That(poisonMessage.Item1.Headers, Contains.Key(Headers.SourceQueue).And.ContainValue("manual-deadlettering"));
+            Assert.That(poisonMessage.Item2, Is.TypeOf<RebusApplicationException>());
+            Assert.That(poisonMessage.Item2.Message, Is.EqualTo("has been manually dead-lettered"));
 
             Console.WriteLine("Exception passed to error handler:");
             Console.WriteLine(poisonMessage.Item2);
@@ -108,24 +147,23 @@ namespace Rebus.Tests.Extensions
 
             public async Task<(TransportMessage, Exception)> GetNextPoisonMessage(int timeoutSeconds = 5)
             {
-                using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+                using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+                
+                try
                 {
-                    try
+                    while (true)
                     {
-                        while (true)
+                        if (_poisonMessages.TryDequeue(out var item))
                         {
-                            if (_poisonMessages.TryDequeue(out var item))
-                            {
-                                return item;
-                            }
-
-                            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationTokenSource.Token);
+                            return item;
                         }
+
+                        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationTokenSource.Token);
                     }
-                    catch (Exception)
-                    {
-                        throw new TimeoutException($"Did not receive poison message within {timeoutSeconds} s timeout");
-                    }
+                }
+                catch (Exception)
+                {
+                    throw new TimeoutException($"Did not receive poison message within {timeoutSeconds} s timeout");
                 }
             }
         }

@@ -1080,6 +1080,9 @@
 ## 6.6.5
 * Fix transaction context bug that would result in the completed flag being incorrectly set in situations where completion failed, which could lead to abort handlers not being called as they should
 
+## 6.7.0
+* Add ability for manual dead-lettering to carry a proper exception object, which will then be treated as every other exception caught when handling a poisonous message
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
