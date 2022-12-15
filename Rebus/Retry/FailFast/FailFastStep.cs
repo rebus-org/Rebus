@@ -24,17 +24,15 @@ public class FailFastStep : IIncomingStep
     readonly IErrorTracker _errorTracker;
     readonly IFailFastChecker _failFastChecker;
     readonly IErrorHandler _errorHandler;
-    readonly ITransport _transport;
 
     /// <summary>
     /// Constructs the step, using the given error tracker
     /// </summary>
-    public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler, ITransport transport)
+    public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler)
     {
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
-        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
     }
 
     /// <summary>
@@ -77,13 +75,9 @@ public class FailFastStep : IIncomingStep
         var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
 
         var transportMessage = originalTransportMessage.TransportMessage.Clone();
-        var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
-
-        transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
-        transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
-
         var transactionContext = context.Load<ITransactionContext>();
+        var exception = deadletterCommand.Exception;
 
-        await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, new RebusApplicationException(errorDetails));
+        await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
     }
 }

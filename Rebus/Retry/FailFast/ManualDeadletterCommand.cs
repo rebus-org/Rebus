@@ -1,11 +1,13 @@
-﻿namespace Rebus.Retry.FailFast;
+﻿using System;
+
+namespace Rebus.Retry.FailFast;
 
 class ManualDeadletterCommand
 {
-    public string ErrorDetails { get; }
+    public Exception Exception { get; }
 
-    public ManualDeadletterCommand(string errorDetails)
+    public ManualDeadletterCommand(Exception exception)
     {
-        ErrorDetails = errorDetails;
+        Exception = exception ?? throw new ArgumentNullException(nameof(exception));
     }
 }

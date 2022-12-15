@@ -21,7 +21,25 @@ public static class TransportMessageApiExtensions
     {
         if (transportMessageApi == null) throw new ArgumentNullException(nameof(transportMessageApi));
 
-        var context = MessageContext.Current ?? throw new InvalidOperationException($"Attempted to dead-letter the current message using error details '{errorDetails}', but no message context could be found! This is probably a sign that this method was called OUTSIDE of a Rebus handler, or on a separate, disconnected thread somehow. Please only call this method inside Rebus handlers.");
+        var exception = new RebusApplicationException(errorDetails);
+
+        InnerDeadletter(exception, throwIfAlreadyDeadlettered);
+    }
+
+    /// <summary>
+    /// Manually dead-letters the message currently being handled. Optionally passes the given <paramref name="exception"/> along as the <see cref="Headers.ErrorDetails"/> header.
+    /// </summary>
+    public static async Task Deadletter(this ITransportMessageApi transportMessageApi, Exception exception, bool throwIfAlreadyDeadlettered = true)
+    {
+        if (transportMessageApi == null) throw new ArgumentNullException(nameof(transportMessageApi));
+        if (exception == null) throw new ArgumentNullException(nameof(exception));
+
+        InnerDeadletter(exception, throwIfAlreadyDeadlettered);
+    }
+
+    static void InnerDeadletter(Exception exception, bool throwIfAlreadyDeadlettered)
+    {
+        var context = MessageContext.Current ?? throw new InvalidOperationException($"Attempted to dead-letter the current message using exception '{exception}', but no message context could be found! This is probably a sign that this method was called OUTSIDE of a Rebus handler, or on a separate, disconnected thread somehow. Please only call this method inside Rebus handlers.");
         var stepContext = context.IncomingStepContext;
 
         if (throwIfAlreadyDeadlettered)
@@ -30,10 +48,11 @@ public static class TransportMessageApiExtensions
 
             if (existing != null)
             {
-                throw new InvalidOperationException($"Cannot dead-letter the current message with error details '{errorDetails}', because the message was already marked as dead-lettered with these details: '{existing.ErrorDetails}'. If you want, you can force the dead-lettering to be overwritten, by setting the {nameof(throwIfAlreadyDeadlettered)} flag when deadlettering the message");
+                throw new InvalidOperationException(
+                    $"Cannot dead-letter the current message with exception '{exception}', because the message was already marked as dead-lettered with these details: '{existing.Exception}'. If you want, you can force the dead-lettering to be overwritten, by setting the {nameof(throwIfAlreadyDeadlettered)} flag when deadlettering the message");
             }
         }
 
-        stepContext.Save(new ManualDeadletterCommand(errorDetails));
+        stepContext.Save(new ManualDeadletterCommand(exception));
     }
 }

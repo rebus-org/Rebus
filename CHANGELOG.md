@@ -1074,7 +1074,10 @@
 ## 6.6.5
 * Fix transaction context bug that would result in the completed flag being incorrectly set in situations where completion failed, which could lead to abort handlers not being called as they should
 
-## 7.0.0-rc6
+## 6.7.0
+* Add ability for manual dead-lettering to carry a proper exception object, which will then be treated as every other exception caught when handling a poisonous message
+
+## 7.0.0-rc7
 * Change locking interface to be more generic - thanks [kendallb]
 * Only target .NET Standard 2.0
 * Change default JSON serializer to System.Text.Json (this is a BREAKING change! Please remember to `.Serializer(s => s.UseNewtonsoftJson()))` if you rely on e.g. inheritance and other advanced stuff
