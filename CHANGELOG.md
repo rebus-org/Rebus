@@ -1224,7 +1224,7 @@
 
 ## 4.4.0
 
-* Target .NET 4.6 and .NET Standard 1.3
+* Target .NET 4.6 (could not compile for .NET 4.5 anymore, sorry!) and .NET Standard 1.3
 * Backport manual deadlettering method
 
 

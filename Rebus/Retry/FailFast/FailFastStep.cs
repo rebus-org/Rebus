@@ -14,28 +14,23 @@ using Rebus.Transport;
 namespace Rebus.Retry.FailFast
 {
     /// <summary>
-    /// Incoming message pipeline step that implements a fail-fast mechanism - if the message has failed once
-    /// with a specific exceptions, it get marked as "failed too many times". This allows the <seealso cref="Simple.SimpleRetryStrategyStep"/>
-    /// to send the message to the error queue.
     /// </summary>
-    [StepDocumentation(@"Checks if a message has failed with specific exceptions and marks it as ""failed too many times"". 
-This allows the SimpleRetryStrategyStep to move it to the error queue.")]
     public class FailFastStep : IIncomingStep
     {
         readonly IErrorTracker _errorTracker;
         readonly IFailFastChecker _failFastChecker;
         readonly IErrorHandler _errorHandler;
-        readonly ITransport _transport;
 
         /// <summary>
-        /// Constructs the step, using the given error tracker
+        /// Incoming message pipeline step that implements a fail-fast mechanism - if the message has failed once
+        /// with a specific exceptions, it get marked as "failed too many times". This allows the <seealso cref="Simple.SimpleRetryStrategyStep"/>
+        /// to send the message to the error queue.
         /// </summary>
-        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler, ITransport transport)
+        public FailFastStep(IErrorTracker errorTracker, IFailFastChecker failFastChecker, IErrorHandler errorHandler)
         {
             _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
             _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
             _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
-            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         /// <summary>
@@ -64,23 +59,22 @@ This allows the SimpleRetryStrategyStep to move it to the error queue.")]
                 {
                     _errorTracker.RegisterError(messageId, exception, final: true);
                 }
+
                 throw;
             }
         }
 
         async Task ProcessDeadletterCommand(IncomingStepContext context, ManualDeadletterCommand deadletterCommand)
         {
-            var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
+            var originalTransportMessage = context.Load<OriginalTransportMessage>() ??
+                                           throw new RebusApplicationException(
+                                               "Could not find the original transport message in the current incoming step context");
 
             var transportMessage = originalTransportMessage.TransportMessage.Clone();
-            var errorDetails = deadletterCommand.ErrorDetails ?? "Manually dead-lettered";
-
-            transportMessage.Headers[Headers.ErrorDetails] = errorDetails;
-            transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
-
             var transactionContext = context.Load<ITransactionContext>();
+            var exception = deadletterCommand.Exception;
 
-            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, new RebusApplicationException(errorDetails));
+            await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
         }
     }
 }

@@ -261,7 +261,7 @@ namespace Rebus.Config
 
                 return new DefaultPipeline()
                     .OnReceive(c.Get<IRetryStrategyStep>())
-                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>(), c.Get<ITransport>()))
+                    .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>()))
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
                     .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
