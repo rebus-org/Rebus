@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Hypothesist;
-using Hypothesist.Rebus;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
@@ -17,31 +15,7 @@ namespace Rebus.Tests.Activation;
 public class ClientOnly : FixtureBase
 {
     record Message(Guid Id);
-
-    [Test]
-    public async Task ActivatorNotNecessary()
-    {
-        // Arrange
-        var message = new Message(Guid.NewGuid());
-        var hypothesis = Hypothesis.For<Message>()
-            .Any(m => m == message);
-
-        using var activator = new BuiltinHandlerActivator()
-            .Register(hypothesis.AsHandler);
-
-        var network = new InMemNetwork();
-        var subscriberStore = new InMemorySubscriberStore();
-
-        using var subscriber = await Subscriber(activator, network, subscriberStore);
-        using var publisher = Publisher(network, subscriberStore);
-
-        // Act
-        await publisher.Publish(message);
-
-        // Assert
-        await hypothesis.Validate(TimeSpan.FromSeconds(5));
-    }
-
+    
     [Test]
     [Description("Verifies that a Rebus instance configured with Configure.OneWayClient().(...) cannot be configured with an input queue")]
     public void TestOneWayClientValidation()

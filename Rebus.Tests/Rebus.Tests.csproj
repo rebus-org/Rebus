@@ -9,7 +9,6 @@
 		<ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Hypothesist.Rebus" Version="2.0.30" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="NUnit" Version="3.13.3" />
