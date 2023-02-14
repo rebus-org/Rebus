@@ -1222,6 +1222,11 @@
 
 * Add methods to in-mem persistence providers, making it easier to inspect them e.g. when testing - thanks [oliverhanappi]
 
+## 4.4.0
+
+* Target .NET 4.6 and .NET Standard 1.3
+* Backport manual deadlettering method
+
 ---
 
 
