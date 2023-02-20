@@ -199,7 +199,7 @@ public class BuiltinHandlerActivator : IContainerAdapter, IDisposable
 
         throw new InvalidOperationException($@"Cannot register factory for handler {handlerDescription} now, because the bus has already been started!
 
-The reason this is not allowed, is because there's a high risk of a RACE CONDITION between an incoming message and the registrationf of a new handler.
+The reason this is not allowed, is because there's a high risk of a RACE CONDITION between an incoming message and the registration of a new handler, which would make the behavior unpredictable.
 
 If you need to initialize the bus BEFORE registering your handlers, please start it with 0 workers like this:
 

@@ -14,7 +14,7 @@ public static class MessageExtensions
     /// <summary>
     /// Gets whether the message's <see cref="Headers.ReturnAddress"/> header is set to something
     /// </summary>
-    public static bool HasReturnAddress( this Message message)
+    public static bool HasReturnAddress(this Message message)
     {
         if (message == null) throw new ArgumentNullException(nameof(message));
         return message.Headers.ContainsKey(Headers.ReturnAddress);
@@ -23,7 +23,7 @@ public static class MessageExtensions
     /// <summary>
     /// Uses the transport's input queue address as the <see cref="Headers.ReturnAddress"/> on the message
     /// </summary>
-    public static void SetReturnAddressFromTransport( this Message message,  ITransport transport)
+    public static void SetReturnAddressFromTransport(this Message message, ITransport transport)
     {
         if (message == null) throw new ArgumentNullException(nameof(message));
         if (transport == null) throw new ArgumentNullException(nameof(transport));
@@ -56,6 +56,9 @@ public static class MessageExtensions
 
     static void InnerSetDeferHeaders(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers, string destinationAddress)
     {
+        if (headers == null) throw new ArgumentNullException(nameof(headers));
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+
         headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
 
         // do not overwrite the recipient if it has been set
@@ -81,6 +84,7 @@ public static class MessageExtensions
     /// </summary>
     public static string GetMessageType(this Message message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return message.Headers.GetValueOrNull(Headers.Type)
                ?? GetTypeNameFromBodyObjectOrNull(message.Body)
                ?? "<unknown>";
@@ -91,6 +95,7 @@ public static class MessageExtensions
     /// </summary>
     public static string GetMessageType(this TransportMessage message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return message.Headers.GetValueOrNull(Headers.Type)
                ?? "<unknown>";
     }
@@ -100,6 +105,7 @@ public static class MessageExtensions
     /// </summary>
     public static string GetMessageId(this Message message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return message.Headers.GetValue(Headers.MessageId);
     }
 
@@ -108,6 +114,7 @@ public static class MessageExtensions
     /// </summary>
     public static string GetMessageId(this TransportMessage message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return message.Headers.GetValue(Headers.MessageId);
     }
 
@@ -116,6 +123,7 @@ public static class MessageExtensions
     /// </summary>
     public static string GetMessageLabel(this Message message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return GetMessageLabel(message.Headers);
     }
 
@@ -124,6 +132,7 @@ public static class MessageExtensions
     /// </summary>
     public static string GetMessageLabel(this TransportMessage message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return GetMessageLabel(message.Headers);
     }
 
@@ -132,11 +141,13 @@ public static class MessageExtensions
     /// </summary>
     public static TransportMessage Clone(this TransportMessage message)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
         return new TransportMessage(message.Headers.Clone(), message.Body);
     }
 
     static string GetMessageLabel(Dictionary<string, string> headers)
     {
+        if (headers == null) throw new ArgumentNullException(nameof(headers));
         var id = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
 
         if (headers.TryGetValue(Headers.Type, out var type))
@@ -156,8 +167,5 @@ public static class MessageExtensions
         return $"{type}/{id}";
     }
 
-    static string GetTypeNameFromBodyObjectOrNull(object body)
-    {
-        return body?.GetType().GetSimpleAssemblyQualifiedName();
-    }
+    static string GetTypeNameFromBodyObjectOrNull(object body) => body?.GetType().GetSimpleAssemblyQualifiedName();
 }
