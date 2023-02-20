@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 namespace Rebus.Encryption;
 
 /// <summary>
-/// Helps with encrypting/decrypting byte arrays, using the <see cref="RijndaelManaged"/> algorithm (which is actually AES with 256 bits key size)
+/// Helps with encrypting/decrypting byte arrays, using the <see cref="Aes"/> algorithm
 /// </summary>
 class AesEncryptor : IAsyncEncryptor
 {
     readonly IEncryptionKeyProvider _keyProvider;
 
     /// <summary>
-    /// Returns "rijndael" string
+    /// Returns "aes" string
     /// </summary>
-    public string ContentEncryptionValue => "rijndael";
+    public string ContentEncryptionValue => "aes";
 
     /// <summary>
     /// Creates the encryptor with the specified key - the key must be a valid, base64-encoded key
@@ -24,7 +24,7 @@ class AesEncryptor : IAsyncEncryptor
     public AesEncryptor(string key)
     {
         if (key == null) throw new ArgumentNullException(nameof(key));
-        _keyProvider = new DefaultRijndaelEncryptionKeyProvider(key);
+        _keyProvider = new FixedAesEncryptionKeyProvider(key);
     }
 
     /// <summary>

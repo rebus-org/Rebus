@@ -17,7 +17,7 @@ public class TestAesEncryptor : FixtureBase
     [Test]
     public void CanSuggestNewKeyIfInitializedWithErronousKey()
     {
-        var argumentException = Assert.Throws<ArgumentException>(() => _ = new RijndaelEncryptor("not a valid key"));
+        var argumentException = Assert.Throws<ArgumentException>(() => _ = new AesEncryptor("not a valid key"));
 
         Console.WriteLine(argumentException);
     }
@@ -65,7 +65,7 @@ public class TestAesEncryptor : FixtureBase
     {
         const string originalInputString = "HEJ MED DIG MIN VEN";
 
-        var knownKey = DefaultRijndaelEncryptionKeyProvider.GenerateNewKey();
+        var knownKey = FixedRijndaelEncryptionKeyProvider.GenerateNewKey();
         var encryptor = GetEncryptor(knownKey);
         var encryptedData = await encryptor.Encrypt(Encoding.UTF8.GetBytes(originalInputString));
 
@@ -73,7 +73,14 @@ public class TestAesEncryptor : FixtureBase
         var roundtrippedString = Encoding.UTF8.GetString(decryptedBytes);
 
         Assert.That(roundtrippedString, Is.EqualTo(originalInputString));
+    }
 
+    [Test]
+    public void CheckErrorWhenUsingInvalidKeySize()
+    {
+        var exception = Assert.Throws<CryptographicException>(() => _ = FixedAesEncryptionKeyProvider.GenerateNewKey(keySize: 257));
+
+        Console.WriteLine(exception);
     }
 
     static async Task<byte[]> DecryptWithRijndael(string key, EncryptedData encryptedData)
@@ -92,5 +99,5 @@ public class TestAesEncryptor : FixtureBase
         return destination.ToArray();
     }
 
-    static AesEncryptor GetEncryptor(string key = null) => new(key ?? DefaultRijndaelEncryptionKeyProvider.GenerateNewKey());
+    static AesEncryptor GetEncryptor(string key = null) => new(key ?? FixedAesEncryptionKeyProvider.GenerateNewKey());
 }

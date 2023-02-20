@@ -1088,6 +1088,7 @@
 * Add `ICorrelationErrorHandler` for handling cases where an incoming message matches a saga, but it cannot be correlated with an existing instance, and the message is not allowed to initiate a new saga. Enabled customization of how Rebus should behave.
 * Extend allowed version ranges for Newtonsoft.Json to 12.0.1 <= v < 14 and System.Text.Json to 5 <= v < 8
 
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

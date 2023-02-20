@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 namespace Rebus.Encryption;
 
 /// <summary>
-/// Helps with providing encryption keys for encrypting and decrypting messages.
+/// Helps with providing encryption keys for encrypting and decrypting messages when the key is fixed.
 /// </summary>
-public class DefaultRijndaelEncryptionKeyProvider : IEncryptionKeyProvider
+public class FixedRijndaelEncryptionKeyProvider : IEncryptionKeyProvider
 {
     const string KeyIdentifier = "default";
     readonly Task<EncryptionKey> _encryptionKey;
@@ -15,7 +15,7 @@ public class DefaultRijndaelEncryptionKeyProvider : IEncryptionKeyProvider
     /// <summary>
     /// Creates the keyprovider with the specified key - the key must be a valid, base64-encoded key.
     /// </summary>
-    public DefaultRijndaelEncryptionKeyProvider(string encryptionKey)
+    public FixedRijndaelEncryptionKeyProvider(string encryptionKey)
     {
         try
         {
@@ -40,7 +40,7 @@ I promise that the suggested key has been generated this instant - if you don't 
     }
 
     /// <summary>
-    /// Generates a new, random key which may be used to initialize this <see cref="DefaultRijndaelEncryptionKeyProvider"/>
+    /// Generates a new, random key which may be used to initialize this <see cref="FixedRijndaelEncryptionKeyProvider"/>
     /// </summary>
     public static string GenerateNewKey()
     {

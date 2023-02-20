@@ -24,7 +24,7 @@ class RijndaelEncryptor : IAsyncEncryptor
     public RijndaelEncryptor(string key)
     {
         if (key == null) throw new ArgumentNullException(nameof(key));
-        _keyProvider = new DefaultRijndaelEncryptionKeyProvider(key);
+        _keyProvider = new FixedRijndaelEncryptionKeyProvider(key);
     }
 
     /// <summary>

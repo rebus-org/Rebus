@@ -64,7 +64,7 @@ public class TestRijndaelEncryptor : FixtureBase
     {
         const string originalInputString = "HEJ MED DIG MIN VEN";
        
-        var knownKey = DefaultRijndaelEncryptionKeyProvider.GenerateNewKey();
+        var knownKey = FixedRijndaelEncryptionKeyProvider.GenerateNewKey();
         var encryptor = GetEncryptor(knownKey);
         var encryptedData = await encryptor.Encrypt(Encoding.UTF8.GetBytes(originalInputString));
 
@@ -91,5 +91,5 @@ public class TestRijndaelEncryptor : FixtureBase
         return destination.ToArray();
     }
 
-    static RijndaelEncryptor GetEncryptor(string key = null) => new(key ?? DefaultRijndaelEncryptionKeyProvider.GenerateNewKey());
+    static RijndaelEncryptor GetEncryptor(string key = null) => new(key ?? FixedRijndaelEncryptionKeyProvider.GenerateNewKey());
 }
