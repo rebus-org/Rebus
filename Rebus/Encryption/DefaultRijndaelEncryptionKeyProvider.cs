@@ -39,7 +39,10 @@ I promise that the suggested key has been generated this instant - if you don't 
         }
     }
 
-    static string GenerateNewKey()
+    /// <summary>
+    /// Generates a new, random key which may be used to initialize this <see cref="DefaultRijndaelEncryptionKeyProvider"/>
+    /// </summary>
+    public static string GenerateNewKey()
     {
         using var rijndael = new RijndaelManaged();
 
