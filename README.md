@@ -28,14 +28,14 @@ Rebus aims to have
 * a few well-selected options
 * no doodleware
 * as few dependencies as possible (currently only [JSON.NET][JSON])
-* a broad reach (targets .NET 4.5, .NET 4.6, and .NET Standard 2.0, i.e. full .NET fx and .NET core)
+* a broad reach (targets .NET Standard 2.0, i.e. .NET Framework 4.6.1, .NET Core 2, and .NET 5 and onwards)
 * integration with external dependencies via small, dedicated projects
 * the best error messages in the world
 * a frictionless getting-up-and-running-experience
 
 and in doing this, Rebus should try to align itself with common, proven asynchronous messaging patterns.
 
-Oh, and Rebus is FREE as in beer and speech, and it will stay that way forever.
+Oh, and Rebus is FREE as in beer 🍺 and speech 💬, and it will stay that way forever.
 
 More information
 ====
