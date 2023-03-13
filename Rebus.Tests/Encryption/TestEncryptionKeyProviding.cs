@@ -14,7 +14,7 @@ public class TestEncryptionKeyProviding
     [Test]
     public async Task ProviderCanProvide()
     {
-        var provider = new DefaultRijndaelEncryptionKeyProvider(EncryptionKey);
+        var provider = new FixedRijndaelEncryptionKeyProvider(EncryptionKey);
         var provided = await provider.GetCurrentKey();
         Assert.AreEqual(Convert.ToBase64String(provided.Key), EncryptionKey);
         Assert.IsNotEmpty(provided.Identifier);
@@ -30,7 +30,7 @@ public class TestEncryptionKeyProviding
         Assert.Throws<ArgumentException>(() =>
         {
             // ReSharper disable once ObjectCreationAsStatement
-            new DefaultRijndaelEncryptionKeyProvider(EncryptionKey.Take(10).ToString());
+            new FixedRijndaelEncryptionKeyProvider(EncryptionKey.Take(10).ToString());
         });
 
     }

@@ -9,6 +9,8 @@ static class OneWayClientTransportValidationExtensions
 {
     public static void ValidateOneWayClient(this OptionsConfigurer options)
     {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
         options.Decorate(c =>
         {
             // only validate this if a transport has been configured - otherwise, Rebus' normal validation will let the user know :)

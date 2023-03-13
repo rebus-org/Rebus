@@ -7,30 +7,30 @@ using System.Threading.Tasks;
 namespace Rebus.Encryption;
 
 /// <summary>
-/// Helps with encrypting/decrypting byte arrays, using the <see cref="RijndaelManaged"/> algorithm (which is actually AES with 256 bits key size)
+/// Helps with encrypting/decrypting byte arrays, using the <see cref="Aes"/> algorithm
 /// </summary>
-class RijndaelEncryptor : IAsyncEncryptor
+class AesEncryptor : IAsyncEncryptor
 {
     readonly IEncryptionKeyProvider _keyProvider;
 
     /// <summary>
-    /// Returns "rijndael" string
+    /// Returns "aes" string
     /// </summary>
-    public string ContentEncryptionValue => "rijndael";
+    public string ContentEncryptionValue => "aes";
 
     /// <summary>
     /// Creates the encryptor with the specified key - the key must be a valid, base64-encoded key
     /// </summary>
-    public RijndaelEncryptor(string key)
+    public AesEncryptor(string key)
     {
         if (key == null) throw new ArgumentNullException(nameof(key));
-        _keyProvider = new FixedRijndaelEncryptionKeyProvider(key);
+        _keyProvider = new FixedAesEncryptionKeyProvider(key);
     }
 
     /// <summary>
     /// Creates the encryptor with an <see cref="IEncryptionKeyProvider"/> which provides current encryption key and lookup for keys based on id
     /// </summary>
-    public RijndaelEncryptor(IEncryptionKeyProvider keyProvider)
+    public AesEncryptor(IEncryptionKeyProvider keyProvider)
     {
         _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
     }
@@ -43,19 +43,19 @@ class RijndaelEncryptor : IAsyncEncryptor
     {
         var key = await _keyProvider.GetCurrentKey();
         
-        using var rijndael = new RijndaelManaged();
+        using var aes = Aes.Create();
 
-        rijndael.GenerateIV();
-        rijndael.Key = key.Key;
+        aes.GenerateIV();
+        aes.Key = key.Key;
 
         using var destination = new MemoryStream();
-        using var encryptor = rijndael.CreateEncryptor();
+        using var encryptor = aes.CreateEncryptor();
         using var cryptoStream = new CryptoStream(destination, encryptor, CryptoStreamMode.Write);
 
         await cryptoStream.WriteAsync(bytes, 0, bytes.Length);
         cryptoStream.FlushFinalBlock();
 
-        return new EncryptedData(destination.ToArray(), rijndael.IV, key.Identifier);
+        return new EncryptedData(destination.ToArray(), aes.IV, key.Identifier);
     }
 
     /// <summary>
@@ -67,13 +67,13 @@ class RijndaelEncryptor : IAsyncEncryptor
         var iv = encryptedData.Iv;
         var bytes = encryptedData.Bytes;
 
-        using var rijndael = new RijndaelManaged();
+        using var aes = Aes.Create();
 
-        rijndael.IV = iv;
-        rijndael.Key = key.Key;
+        aes.IV = iv;
+        aes.Key = key.Key;
 
         using var destination = new MemoryStream();
-        using var decryptor = rijndael.CreateDecryptor();
+        using var decryptor = aes.CreateDecryptor();
         using var cryptoStream = new CryptoStream(destination, decryptor, CryptoStreamMode.Write);
 
         await cryptoStream.WriteAsync(bytes, 0, bytes.Length);

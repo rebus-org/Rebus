@@ -25,6 +25,8 @@ public class VerifyLongMessageHandlerCanBeCancelled : FixtureBase
 
         Using(activator);
 
+        var operationCancelledExceptionWasThrown = false;
+
         activator.Handle<string>(async (bus, context, message) =>
         {
             var cancellationToken = useExtensionMethod
@@ -33,7 +35,15 @@ public class VerifyLongMessageHandlerCanBeCancelled : FixtureBase
 
             handlerWasEntered.Set();
 
-            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+            try
+            {
+                await Task.Delay(TimeSpan.FromDays(14), cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                operationCancelledExceptionWasThrown = true;
+                throw;
+            }
         });
 
         const string queueName = "cancellation-verification";
@@ -47,18 +57,22 @@ public class VerifyLongMessageHandlerCanBeCancelled : FixtureBase
         // wait until the handler is entered
         handlerWasEntered.WaitOrDie(TimeSpan.FromSeconds(1));
 
-        // wait one more second
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        // wait just a little bit more
+        await Task.Delay(TimeSpan.FromSeconds(0.2));
 
         // measure how long it takes to stop the bus
         var stopwatch = Stopwatch.StartNew();
         CleanUpDisposables();
         var elapsedDisposingTheBus = stopwatch.Elapsed;
 
-        Assert.That(elapsedDisposingTheBus, Is.LessThan(TimeSpan.FromSeconds(2)), 
+        Assert.That(elapsedDisposingTheBus, Is.LessThan(TimeSpan.FromSeconds(2)),
             "Expected the bus to have shut down very quickly");
 
-        Assert.That(network.Count(queueName), Is.EqualTo(1), 
+        Assert.That(network.Count(queueName), Is.EqualTo(1),
             "Expected the message to have been moved back into the input queue");
+
+        Assert.That(operationCancelledExceptionWasThrown, Is.True,
+            "Expected that the Task.Delay operation in the handler would have resulted in a TaskCancelledException");
+
     }
 }

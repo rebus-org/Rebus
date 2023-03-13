@@ -60,6 +60,9 @@ public static class MessageExtensions
 
     static void InnerSetDeferHeaders(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers, string destinationAddress)
     {
+        if (headers == null) throw new ArgumentNullException(nameof(headers));
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+
         headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
 
         // do not overwrite the recipient if it has been set

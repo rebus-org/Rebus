@@ -11,7 +11,7 @@ namespace Rebus.Extensions;
 /// </summary>
 public static class TypeExtensions
 {
-    static readonly ConcurrentDictionary<Type, string> SimpleAssemblyQualifiedTypeNameCache = new ConcurrentDictionary<Type, string>();
+    static readonly ConcurrentDictionary<Type, string> SimpleAssemblyQualifiedTypeNameCache = new();
 
     /// <summary>
     /// Gets the type's base types (i.e. the <see cref="Type"/> for each implemented interface and for each class inherited from, all the way up to <see cref="Object"/>)
