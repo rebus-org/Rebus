@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Messages.Control;
 using Rebus.Subscriptions;
@@ -38,7 +39,7 @@ public class InMemorySubscriptionStorage : ISubscriptionStorage
     /// <summary>
     /// Gets all destination addresses for the given topic
     /// </summary>
-    public async Task<string[]> GetSubscriberAddresses(string topic)
+    public async Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic)
     {
         if (topic == null) throw new ArgumentNullException(nameof(topic), "Please remember to specify a topic when getting subscribers for it");
         return _subscriberStore.GetSubscribers(topic);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Subscriptions;
 
@@ -6,7 +7,7 @@ namespace Rebus.Persistence.Throwing;
 
 class DisabledSubscriptionStorage : ISubscriptionStorage
 {
-    public Task<string[]> GetSubscriberAddresses(string topic) => throw GetException();
+    public Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic) => throw GetException();
 
     public Task RegisterSubscriber(string topic, string subscriberAddress) => throw GetException();
 
@@ -14,7 +15,7 @@ class DisabledSubscriptionStorage : ISubscriptionStorage
 
     public bool IsCentralized => false;
 
-    static InvalidOperationException GetException() => new InvalidOperationException(@"A subscription storage has not been configured. Please configure a subscription storage with the .Subscriptions(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new(@"A subscription storage has not been configured. Please configure a subscription storage with the .Subscriptions(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)

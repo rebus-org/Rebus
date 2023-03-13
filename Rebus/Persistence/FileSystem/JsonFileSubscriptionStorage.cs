@@ -19,7 +19,7 @@ public class JsonFileSubscriptionStorage : ISubscriptionStorage, IDisposable
 {
     static readonly Encoding FileEncoding = Encoding.UTF8;
 
-    readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
+    readonly ReaderWriterLockSlim _readerWriterLockSlim = new();
     readonly string _jsonFilePath;
 
     bool _disposed;
@@ -36,7 +36,7 @@ public class JsonFileSubscriptionStorage : ISubscriptionStorage, IDisposable
     /// <summary>
     /// Gets all subscribers of the given topic from the JSON file
     /// </summary>
-    public async Task<string[]> GetSubscriberAddresses(string topic)
+    public async Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic)
     {
         // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
         using (_readerWriterLockSlim.ReadLock())
@@ -45,7 +45,7 @@ public class JsonFileSubscriptionStorage : ISubscriptionStorage, IDisposable
 
             return subscriptions.TryGetValue(topic, out var subscribers)
                 ? subscribers.ToArray()
-                : new string[0];
+                : Array.Empty<string>();
         }
     }
 

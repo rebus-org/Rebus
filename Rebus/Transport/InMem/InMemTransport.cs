@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Messages;
+using Rebus.Subscriptions;
+
 // ReSharper disable ArgumentsStyleLiteral
 #pragma warning disable 1998
 
@@ -13,7 +15,7 @@ namespace Rebus.Transport.InMem;
 /// In-mem implementation of <see cref="ITransport"/> that uses one particular <see cref="InMemNetwork"/> to deliver messages. Can
 /// be used for in-process messaging and unit testing
 /// </summary>
-public class InMemTransport : AbstractRebusTransport, ITransportInspector, IInitializable
+public class InMemTransport : AbstractRebusTransport, ITransportInspector, IInitializable, ISubscriptionStorage
 {
     readonly InMemNetwork _network;
     readonly string _inputQueueAddress;
@@ -95,4 +97,33 @@ public class InMemTransport : AbstractRebusTransport, ITransportInspector, IInit
             {TransportInspectorPropertyKeys.QueueLength, count.ToString()}
         };
     }
+
+    /// <summary>
+    /// Gets all subscribers for topic <paramref name="topic"/>
+    /// </summary>
+    public async Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic)
+    {
+        return _network.GetSubscribers(topic);
+    }
+
+    /// <summary>
+    /// Registers <paramref name="subscriberAddress"/> as a susbcriber of <paramref name="topic"/>
+    /// </summary>
+    public async Task RegisterSubscriber(string topic, string subscriberAddress)
+    {
+        _network.AddSubscriber(topic, subscriberAddress);
+    }
+
+    /// <summary>
+    /// Unregisters <paramref name="subscriberAddress"/> as a susbcriber of <paramref name="topic"/>
+    /// </summary>
+    public async Task UnregisterSubscriber(string topic, string subscriberAddress)
+    {
+        _network.RemoveSubscriber(topic, subscriberAddress);
+    }
+
+    /// <summary>
+    /// Gets whether this is a centralized subscription storage. Always returns true.
+    /// </summary>
+    public bool IsCentralized => true;
 }

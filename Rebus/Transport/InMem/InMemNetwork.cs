@@ -16,11 +16,11 @@ public class InMemNetwork
 {
     static int _networkIdCounter;
 
-    readonly ILog _log; 
     readonly string _networkId = $"In-mem network {Interlocked.Increment(ref _networkIdCounter)}";
+    readonly ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>> _queues = new(StringComparer.OrdinalIgnoreCase);
+    readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _subscribers = new(StringComparer.OrdinalIgnoreCase);
 
-    readonly ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>> _queues =
-        new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.OrdinalIgnoreCase);
+    readonly ILog _log;
 
     /// <summary>
     /// Retrieves all queues.
@@ -41,7 +41,7 @@ public class InMemNetwork
     /// </summary>
     public InMemNetwork(IRebusLoggerFactory loggerFactory)
     {
-        loggerFactory = loggerFactory ?? new NullLoggerFactory();
+        loggerFactory ??= new NullLoggerFactory();
 
         _log = loggerFactory.GetLogger<InMemNetwork>();
         _log.Info($"Created in-mem network '{_networkId}'");
@@ -55,8 +55,9 @@ public class InMemNetwork
         _log.Info($"Resetting in-mem network '{_networkId}'");
 
         _queues.Clear();
+        _subscribers.Clear();
     }
-        
+
     /// <summary>
     /// Get the total count of all queue messages
     /// </summary>
@@ -72,7 +73,7 @@ public class InMemNetwork
     {
         if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
 
-        var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<InMemTransportMessage>());
+        var messageQueue = _queues.GetOrAdd(inputQueueName, _ => new ConcurrentQueue<InMemTransportMessage>());
 
         return messageQueue.Count;
     }
@@ -94,10 +95,7 @@ public class InMemNetwork
             _log.Info($"{messageId} ---> {destinationAddress} ({_networkId})");
         }
 
-        var messageQueue = _queues
-            .GetOrAdd(destinationAddress, address => new ConcurrentQueue<InMemTransportMessage>());
-
-        messageQueue.Enqueue(msg);
+        _queues.GetOrAdd(destinationAddress, _ => new ConcurrentQueue<InMemTransportMessage>()).Enqueue(msg);
     }
 
     /// <summary>
@@ -130,42 +128,65 @@ public class InMemNetwork
     /// <summary>
     /// Returns whether the network has a queue with the specified name
     /// </summary>
-    public bool HasQueue(string address)
-    {
-        return _queues.ContainsKey(address);
-    }
+    public bool HasQueue(string address) => _queues.ContainsKey(address);
 
     /// <summary>
     /// Creates a queue on the network with the specified name
     /// </summary>
-    public void CreateQueue(string address)
-    {
-        _queues.TryAdd(address, new ConcurrentQueue<InMemTransportMessage>());
-    }
+    public void CreateQueue(string address) => _queues.TryAdd(address, new ConcurrentQueue<InMemTransportMessage>());
 
     /// <summary>
     /// Gets the number of messages in the queue with the given <paramref name="address"/>
     /// </summary>
-    public int GetCount(string address)
-    {
-        return _queues.TryGetValue(address, out var queue)
-            ? queue.Count
-            : 0;
-    }
+    public int GetCount(string address) => _queues.TryGetValue(address, out var queue) ? queue.Count : 0;
 
     /// <summary>
     /// Gets the messages currently stored in the queue with the given <paramref name="address"/>
     /// </summary>
-    public IReadOnlyList<InMemTransportMessage> GetMessages(string address)
-    {
-        return _queues.TryGetValue(address, out var queue)
+    public IReadOnlyList<InMemTransportMessage> GetMessages(string address) =>
+        _queues.TryGetValue(address, out var queue)
             ? queue.ToArray()
-            : new InMemTransportMessage[0];
+            : Array.Empty<InMemTransportMessage>();
+
+    /// <summary>
+    /// Gets the subscribers for the current topic
+    /// </summary>
+    public IReadOnlyList<string> GetSubscribers(string topic)
+    {
+        if (topic == null) throw new ArgumentNullException(nameof(topic));
+
+        return _subscribers.TryGetValue(topic, out var subscriberAddresses)
+            ? subscriberAddresses.Keys.ToArray()
+            : Array.Empty<string>();
+    }
+
+    /// <summary>
+    /// Adds the subscriber with the given <paramref name="subscriberAddress"/> to the list of subscribers for the given <paramref name="topic"/>
+    /// </summary>
+    public void AddSubscriber(string topic, string subscriberAddress)
+    {
+        if (topic == null) throw new ArgumentNullException(nameof(topic));
+        if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
+
+        _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase))
+            .TryAdd(subscriberAddress, null);
+    }
+
+    /// <summary>
+    /// Removes the subscriber with the given <paramref name="subscriberAddress"/> from the list of subscribers for the given <paramref name="topic"/>
+    /// </summary>
+    public void RemoveSubscriber(string topic, string subscriberAddress)
+    {
+        if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
+
+        if (!_subscribers.TryGetValue(topic, out var subscribers)) return;
+
+        subscribers.TryRemove(subscriberAddress, out _);
     }
 
     static bool MessageIsExpired(InMemTransportMessage message)
     {
-        var headers= message.Headers;
+        var headers = message.Headers;
         if (!headers.ContainsKey(Headers.TimeToBeReceived)) return false;
 
         var timeToBeReceived = headers[Headers.TimeToBeReceived];

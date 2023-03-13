@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rebus.Messages.Control;
 
 namespace Rebus.Subscriptions;
@@ -11,7 +12,7 @@ public interface ISubscriptionStorage
     /// <summary>
     /// Gets all destination addresses for the given topic
     /// </summary>
-    Task<string[]> GetSubscriberAddresses(string topic);
+    Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic);
 
     /// <summary>
     /// Registers the given <paramref name="subscriberAddress"/> as a subscriber of the given topic

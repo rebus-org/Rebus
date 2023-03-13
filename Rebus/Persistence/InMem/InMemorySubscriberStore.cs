@@ -11,9 +11,9 @@ namespace Rebus.Persistence.InMem;
 public class InMemorySubscriberStore
 {
     static readonly StringComparer StringComparer = StringComparer.OrdinalIgnoreCase;
-    static readonly string[] NoSubscribers = new string[0];
+    static readonly string[] NoSubscribers = Array.Empty<string>();
 
-    readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _subscribers = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>(StringComparer);
+    readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _subscribers = new(StringComparer);
 
     /// <summary>
     /// Gets all topics which are known by the subscriber store. 
@@ -25,12 +25,11 @@ public class InMemorySubscriberStore
     /// </summary>
     public string[] GetSubscribers(string topic)
     {
-        ConcurrentDictionary<string, object> subscriberAddresses;
-
-        return _subscribers.TryGetValue(topic, out subscriberAddresses)
+        if (topic == null) throw new ArgumentNullException(nameof(topic));
+        
+        return _subscribers.TryGetValue(topic, out var subscriberAddresses)
             ? subscriberAddresses.Keys.ToArray()
             : NoSubscribers;
-
     }
 
     /// <summary>
@@ -38,8 +37,11 @@ public class InMemorySubscriberStore
     /// </summary>
     public void AddSubscriber(string topic, string subscriberAddress)
     {
+        if (topic == null) throw new ArgumentNullException(nameof(topic));
+        if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
+
         _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer))
-            .TryAdd(subscriberAddress, new object());
+            .TryAdd(subscriberAddress, null);
     }
 
     /// <summary>
@@ -47,17 +49,15 @@ public class InMemorySubscriberStore
     /// </summary>
     public void RemoveSubscriber(string topic, string subscriberAddress)
     {
-        object dummy;
+        if (subscriberAddress == null) throw new ArgumentNullException(nameof(subscriberAddress));
 
-        _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer))
-            .TryRemove(subscriberAddress, out dummy);
+        if (!_subscribers.TryGetValue(topic, out var subscribers)) return;
+
+        subscribers.TryRemove(subscriberAddress, out _);
     }
 
     /// <summary>
     /// Resets the subscriber store (i.e. all known topics and their subscriptions are deleted)
     /// </summary>
-    public void Reset()
-    {
-        _subscribers.Clear();
-    }
+    public void Reset() => _subscribers.Clear();
 }

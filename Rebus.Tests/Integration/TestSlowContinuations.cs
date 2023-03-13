@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -91,7 +92,7 @@ public class TestSlowContinuations : FixtureBase
             _subscriptionStorage = subscriptionStorage;
         }
 
-        public async Task<string[]> GetSubscriberAddresses(string topic)
+        public async Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic)
         {
             await Task.Delay(1);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -46,9 +47,9 @@ public class TestConfigurationApi : FixtureBase
     {
         public bool WasDisposed { get; set; }
 
-        public async Task<string[]> GetSubscriberAddresses(string topic)
+        public async Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic)
         {
-            return new string[0];
+            return Array.Empty<string>();
         }
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
