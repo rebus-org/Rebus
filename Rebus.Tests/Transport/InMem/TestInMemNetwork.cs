@@ -57,7 +57,7 @@ public class TestInMemNetwork : FixtureBase
             {Headers.MessageId, messageId}
         };
 
-        var emptyMessageBody = new byte[0];
+        var emptyMessageBody = Array.Empty<byte>();
 
         return new TransportMessage(headers, emptyMessageBody);
     }
