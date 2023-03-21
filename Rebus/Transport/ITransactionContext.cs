@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Rebus.Retry;
 
 namespace Rebus.Transport;
 
@@ -47,4 +48,11 @@ public interface ITransactionContext : IDisposable
     /// Executes commit actions enlisted in the transaction with <see cref="OnCommitted"/>
     /// </summary>
     Task Commit();
+
+    /// <summary>
+    /// Marks the queue transaction as one that should not have outgoing messages committed, but still the incoming message will be ACKed.
+    /// Probably only used in the single case where the <see cref="IErrorHandler"/> gets to handle the incoming message (e.g. by moving
+    /// the message to the error queue)
+    /// </summary>
+    void SkipCommit();
 }

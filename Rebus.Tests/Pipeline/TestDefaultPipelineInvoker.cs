@@ -99,6 +99,11 @@ public class TestDefaultPipelineInvoker : FixtureBase
         {
             throw new NotImplementedException();
         }
+
+        public void SkipCommit()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Test]

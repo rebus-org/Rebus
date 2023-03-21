@@ -16,6 +16,7 @@ class TransactionContext : ITransactionContext
     event Action<ITransactionContext> _onAborted;
     event Action<ITransactionContext> _onDisposed;
 
+    bool _skipCommit;
     bool _mustAbort;
     bool _completed;
     bool _aborted;
@@ -56,6 +57,8 @@ class TransactionContext : ITransactionContext
 
     public Task Commit() => RaiseCommitted();
 
+    public void SkipCommit() => _skipCommit = true;
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -87,13 +90,18 @@ class TransactionContext : ITransactionContext
 
     public async Task Complete()
     {
+        // if we must abort all, just do that
         if (_mustAbort)
         {
             RaiseAborted();
             return;
         }
 
-        await RaiseCommitted();
+
+        if (!_skipCommit)
+        {
+            await RaiseCommitted();
+        }
 
         await RaiseCompleted();
 
