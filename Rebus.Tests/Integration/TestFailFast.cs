@@ -15,7 +15,6 @@ using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
 using Rebus.Retry.FailFast;
-using Rebus.Tests.Extensions;
 
 #pragma warning disable 1998
 
@@ -31,11 +30,13 @@ public class TestFailFast : FixtureBase
     IBus _bus;
     InMemNetwork _network;
 
-    void InitializeBus(int numberOfRetries, IFailFastChecker failFastChecker = null)
+    void InitializeBus(int numberOfRetries, IFailFastChecker failFastChecker = null, Action<BuiltinHandlerActivator> handlers = null)
     {
         _network = new InMemNetwork();
 
         _handlerActivator = new BuiltinHandlerActivator();
+
+        handlers?.Invoke(_handlerActivator);
 
         _bus = Configure.With(_handlerActivator)
             .Logging(l => l.Console(minLevel: LogLevel.Warn))
@@ -63,15 +64,13 @@ public class TestFailFast : FixtureBase
     {
         const int numberOfRetries = 5;
 
-        InitializeBus(numberOfRetries);
-
         var attemptedDeliveries = 0;
 
-        _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
+        InitializeBus(numberOfRetries, handlers: activator => activator.Handle<string>(async _ =>
         {
             Interlocked.Increment(ref attemptedDeliveries);
             throw new FailFastException("omgwtf!");
-        });
+        }));
 
         await _bus.Send("hej");
 
@@ -87,15 +86,13 @@ public class TestFailFast : FixtureBase
     {
         const int numberOfRetries = 5;
 
-        InitializeBus(numberOfRetries);
-
         var attemptedDeliveries = 0;
 
-        _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
+        InitializeBus(numberOfRetries, handlers: activator => activator.Handle<string>(async _ =>
         {
             Interlocked.Increment(ref attemptedDeliveries);
             throw new InvalidOperationException("omgwtf!");
-        });
+        }));
 
         await _bus.Send("hej");
 
@@ -111,15 +108,13 @@ public class TestFailFast : FixtureBase
     {
         const int numberOfRetries = 5;
 
-        InitializeBus(numberOfRetries, new CustomFailFastChecker());
-
         var attemptedDeliveries = 0;
 
-        _handlerActivator.AddHandlerWithBusTemporarilyStopped<string>(async _ =>
+        InitializeBus(numberOfRetries, new CustomFailFastChecker(), handlers: activator => activator.Handle<string>(async _ =>
         {
             Interlocked.Increment(ref attemptedDeliveries);
             throw new InvalidOperationException("omgwtf!");
-        });
+        }));
 
         await _bus.Send("hej");
 

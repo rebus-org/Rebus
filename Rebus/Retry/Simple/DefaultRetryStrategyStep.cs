@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,11 +25,6 @@ namespace Rebus.Retry.Simple;
 If the maximum number of delivery attempts is reached, the message is passed to the error handler, which by default will move the message to the error queue.")]
 public class DefaultRetryStrategyStep : IRetryStrategyStep
 {
-    /// <summary>
-    /// Gets the 2nd level retry surrogate message ID corresponding to <paramref name="messageId"/>
-    /// </summary>
-    public static string GetSecondLevelMessageId(string messageId) => $"{messageId}-2nd-level";
-
     /// <summary>
     /// Key of a step context item that indicates that the message must be wrapped in a <see cref="FailedMessageWrapper{TMessage}"/> after being deserialized
     /// </summary>
@@ -80,6 +76,14 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
         try
         {
             await next();
+
+            var manualDeadletterCommand = context.Load<ManualDeadletterCommand>();
+
+            if (manualDeadletterCommand != null)
+            {
+                await PassToErrorHandler(context, manualDeadletterCommand.Exception);
+            }
+
             await transactionContext.Commit();
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
@@ -99,7 +103,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
         {
             await _errorTracker.MarkAsFinal(messageId);
             await _errorTracker.RegisterError(messageId, exception);
-            await PassToErrorHandler(context, new AggregateException(exception));
+            await PassToErrorHandler(context, GetAggregateException(new[] { exception }));
             await _errorTracker.CleanUp(messageId);
             transactionContext.SkipCommit();
             return;
@@ -129,14 +133,14 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
             catch (Exception secondLevelException)
             {
                 var exceptions = await _errorTracker.GetExceptions(messageId);
-                await PassToErrorHandler(context, new AggregateException(exceptions.Concat(new[] { secondLevelException })));
+                await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { secondLevelException })));
                 await _errorTracker.CleanUp(messageId);
                 transactionContext.SkipCommit();
                 return;
             }
         }
 
-        var aggregateException = new AggregateException(await _errorTracker.GetExceptions(messageId));
+        var aggregateException = GetAggregateException(await _errorTracker.GetExceptions(messageId));
 
         await PassToErrorHandler(context, aggregateException);
         await _errorTracker.CleanUp(messageId);
@@ -164,5 +168,12 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
         using var scope = new RebusTransactionScope();
         await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, exception);
         await scope.CompleteAsync();
+    }
+
+    static AggregateException GetAggregateException(IEnumerable<Exception> exceptions)
+    {
+        var list = exceptions.ToList();
+
+        return new AggregateException($"{list.Count} unhandled exceptions", list);
     }
 }

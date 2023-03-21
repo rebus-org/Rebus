@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -6,8 +7,10 @@ using Rebus.Config;
 using Rebus.Exceptions;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
+using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+// ReSharper disable AccessToDisposedClosure
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Transactions;
@@ -19,9 +22,13 @@ public class TransactionContextTests : FixtureBase
     [Test]
     public async Task EnsureTransactionContextIsAvailableInItsOwnCallbacks()
     {
-        bool FoundTransactionContext() => AmbientTransactionContext.Current != null;
+        bool FoundAmbientTransactionContext() => AmbientTransactionContext.Current != null;
 
-        var activator = Using(new BuiltinHandlerActivator());
+        using var activator = new BuiltinHandlerActivator();
+
+        using var committedCallbackCalled = new ManualResetEvent(initialState: false);
+        using var abortedCallbackCalled = new ManualResetEvent(initialState: false);
+        using var disposedCallbackCalled = new ManualResetEvent(initialState: false);
 
         var foundTransactionContextInCommittedCallback = false;
         var foundTransactionContextInAbortedCallback = false;
@@ -32,22 +39,31 @@ public class TransactionContextTests : FixtureBase
             // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
             context.TransactionContext.OnCommitted(async transactionContext =>
             {
-                foundTransactionContextInCommittedCallback = FoundTransactionContext()
+                foundTransactionContextInCommittedCallback = FoundAmbientTransactionContext()
                                                              && transactionContext != null;
+                committedCallbackCalled.Set();
             });
 
             // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
             context.TransactionContext.OnAborted(transactionContext =>
             {
-                foundTransactionContextInAbortedCallback = FoundTransactionContext()
+                foundTransactionContextInAbortedCallback = FoundAmbientTransactionContext()
                                                            && transactionContext != null;
+                abortedCallbackCalled.Set();
             });
 
-            // this check is just here to show how the transaction context must be access from the disposed callback, because
+            // this check is just here to show how the transaction context must be accessed from the disposed callback, because
             // the ambient transaction context is no longer available at this point
-            context.TransactionContext.OnDisposed(transactionContext => foundTransactionContextInDisposedCallback = transactionContext != null);
+            context.TransactionContext.OnDisposed(transactionContext =>
+            {
+                foundTransactionContextInDisposedCallback = transactionContext != null;
+                disposedCallbackCalled.Set();
+            });
 
-            if (message == "throw!") throw new RebusApplicationException("thrown!");
+            if (message == "throw!")
+            {
+                throw new RebusApplicationException("thrown!");
+            }
         });
 
         Configure.With(activator)
@@ -58,7 +74,9 @@ public class TransactionContextTests : FixtureBase
         await activator.Bus.SendLocal("hej du");
         await activator.Bus.SendLocal("throw!");
 
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        committedCallbackCalled.WaitOrDie(TimeSpan.FromSeconds(2));
+        abortedCallbackCalled.WaitOrDie(TimeSpan.FromSeconds(2));
+        disposedCallbackCalled.WaitOrDie(TimeSpan.FromSeconds(2));
 
         Assert.That(foundTransactionContextInCommittedCallback, Is.True,
             "Expected to find an ambient transaction context in the OnCommitted callback from the transaction context");
