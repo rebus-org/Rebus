@@ -17,7 +17,7 @@ namespace Rebus.Pipeline.Receive;
 [StepDocumentation(@"Looks at the incoming message and decides how to handle it. A HandlerInvokers object is saved to the context to be invoked later.")]
 public class ActivateHandlersStep : IIncomingStep
 {
-    readonly ConcurrentDictionary<Type, MethodInfo> _dispatchMethods = new ConcurrentDictionary<Type, MethodInfo>();
+    readonly ConcurrentDictionary<Type, MethodInfo> _dispatchMethods = new();
     readonly IHandlerActivator _handlerActivator;
 
     /// <summary>
@@ -37,10 +37,10 @@ public class ActivateHandlersStep : IIncomingStep
         var message = context.Load<Message>();
         var body = message.Body;
         var messageType = body.GetType();
-        var methodToInvoke = _dispatchMethods
-            .GetOrAdd(messageType, type => GetDispatchMethod(messageType));
+        var methodToInvoke = _dispatchMethods.GetOrAdd(messageType, _ => GetDispatchMethod(messageType));
 
-        var handlerInvokers = await ((Task<HandlerInvokers>)methodToInvoke.Invoke(this, new[] { body, transactionContext, message }));
+        var args = new[] { body, transactionContext, message };
+        var handlerInvokers = await (Task<HandlerInvokers>)methodToInvoke.Invoke(this, args);
 
         context.Save(handlerInvokers);
 
@@ -69,7 +69,7 @@ public class ActivateHandlersStep : IIncomingStep
     MethodInfo GetDispatchMethod(Type messageType)
     {
         const string methodName = nameof(GetHandlerInvokers);
-            
+
         var genericDispatchMethod = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)
                                     ?? throw new ArgumentException($"Could not find the {methodName} method?!");
 

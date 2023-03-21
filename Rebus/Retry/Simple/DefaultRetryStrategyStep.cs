@@ -35,14 +35,14 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
     readonly IErrorTracker _errorTracker;
     readonly IFailFastChecker _failFastChecker;
     readonly bool _secondLevelRetriesEnabled;
-    readonly ILog _logger;
+    readonly ILog _log;
 
     /// <summary>
     /// Creates the step
     /// </summary>
     public DefaultRetryStrategyStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
     {
-        _logger = rebusLoggerFactory?.GetLogger<DefaultRetryStrategyStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+        _log = rebusLoggerFactory?.GetLogger<DefaultRetryStrategyStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
@@ -88,7 +88,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
-            _logger.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
+            _log.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
             transactionContext.Abort();
         }
         catch (Exception exception)
@@ -128,7 +128,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
             }
             catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
             {
-                _logger.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
+                _log.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
             }
             catch (Exception secondLevelException)
             {
