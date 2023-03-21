@@ -46,8 +46,13 @@ public class CanFailFastInSecondLevelRetry : FixtureBase
         // provide extra time for additional stuff to happen
         await Task.Delay(TimeSpan.FromMilliseconds(100));
 
-        Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Warn), Is.EqualTo(2),
-            "Expected exactly two WARNings, because each one was due to a fail-fast exception");
+        var warnings = loggerFactory.Where(l => l.Level == LogLevel.Warn).ToList();
+
+        Assert.That(warnings.Count, Is.EqualTo(1),
+            "Expected only one WARNing, because the fail-fast exception should cause it to be marked as FINAL");
+
+        Assert.That(warnings.First().Text, Contains.Substring("FINAL"),
+            "Expected the single WARNing to contain the substring 'FINAL'");
 
         Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Error), Is.EqualTo(1),
             "Expected exactly one ERROR, because the message is only dead-lettered once");

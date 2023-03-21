@@ -85,7 +85,7 @@ static class RetryCountHeaderExtensions
             var step = new AddRetryInfoHeaderStep(errorTracker, key);
 
             return new PipelineStepInjector(pipeline)
-                .OnReceive(step, PipelineRelativePosition.After, typeof(SimpleRetryStrategyStep));
+                .OnReceive(step, PipelineRelativePosition.After, typeof(DefaultRetryStrategyStep));
         });
     }
 

@@ -9,6 +9,7 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Retry.FailFast;
 using Rebus.Transport;
 
 namespace Rebus.Retry.Simple;
@@ -21,7 +22,7 @@ namespace Rebus.Retry.Simple;
 [StepDocumentation(@"Wraps the invocation of the entire receive pipeline in an exception handler, tracking the number of times the received message has been attempted to be delivered.
 
 If the maximum number of delivery attempts is reached, the message is passed to the error handler, which by default will move the message to the error queue.")]
-public class DefaultRetryStrategyStep : IIncomingStep
+public class DefaultRetryStrategyStep : IRetryStrategyStep
 {
     /// <summary>
     /// Gets the 2nd level retry surrogate message ID corresponding to <paramref name="messageId"/>
@@ -36,17 +37,19 @@ public class DefaultRetryStrategyStep : IIncomingStep
     readonly CancellationToken _cancellationToken;
     readonly IErrorHandler _errorHandler;
     readonly IErrorTracker _errorTracker;
+    readonly IFailFastChecker _failFastChecker;
     readonly bool _secondLevelRetriesEnabled;
     readonly ILog _logger;
 
     /// <summary>
     /// Creates the step
     /// </summary>
-    public DefaultRetryStrategyStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
+    public DefaultRetryStrategyStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
     {
         _logger = rebusLoggerFactory?.GetLogger<DefaultRetryStrategyStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
+        _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
         _secondLevelRetriesEnabled = secondLevelRetriesEnabled;
         _cancellationToken = cancellationToken;
     }
@@ -82,6 +85,7 @@ public class DefaultRetryStrategyStep : IIncomingStep
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
             _logger.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
+            transactionContext.Abort();
         }
         catch (Exception exception)
         {
@@ -91,6 +95,16 @@ public class DefaultRetryStrategyStep : IIncomingStep
 
     async Task HandleException(Exception exception, ITransactionContext transactionContext, string messageId, IncomingStepContext context, Func<Task> next)
     {
+        if (_failFastChecker.ShouldFailFast(messageId, exception))
+        {
+            await _errorTracker.MarkAsFinal(messageId);
+            await _errorTracker.RegisterError(messageId, exception);
+            await PassToErrorHandler(context, new AggregateException(exception));
+            await _errorTracker.CleanUp(messageId);
+            transactionContext.SkipCommit();
+            return;
+        }
+
         await _errorTracker.RegisterError(messageId, exception);
 
         if (!await _errorTracker.HasFailedTooManyTimes(messageId))

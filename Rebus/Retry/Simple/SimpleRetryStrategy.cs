@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Rebus.Logging;
+using Rebus.Retry.FailFast;
 
 namespace Rebus.Retry.Simple;
 
@@ -13,28 +14,31 @@ public class SimpleRetryStrategy : IRetryStrategy
     readonly IRebusLoggerFactory _rebusLoggerFactory;
     readonly IErrorTracker _errorTracker;
     readonly IErrorHandler _errorHandler;
+    readonly IFailFastChecker _failFastChecker;
     readonly CancellationToken _cancellationToken;
 
     /// <summary>
     /// Constructs the retry strategy with the given settings, creating an error queue with the configured name if necessary
     /// </summary>
-    public SimpleRetryStrategy(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IErrorTracker errorTracker, IErrorHandler errorHandler, CancellationToken cancellationToken)
+    public SimpleRetryStrategy(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IErrorTracker errorTracker, IErrorHandler errorHandler, IFailFastChecker failFastChecker, CancellationToken cancellationToken)
     {
         _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
         _rebusLoggerFactory = rebusLoggerFactory ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
+        _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
         _cancellationToken = cancellationToken;
     }
 
     /// <summary>
     /// Gets the retry step with appropriate settings for this <see cref="SimpleRetryStrategy"/>
     /// </summary>
-    public IRetryStrategyStep GetRetryStep() => new SimpleRetryStrategyStep(
-        _simpleRetryStrategySettings,
+    public IRetryStrategyStep GetRetryStep() => new DefaultRetryStrategyStep(
         _rebusLoggerFactory,
-        _errorTracker,
         _errorHandler,
+        _errorTracker,
+        _failFastChecker,
+        _simpleRetryStrategySettings.SecondLevelRetriesEnabled,
         _cancellationToken
     );
 }

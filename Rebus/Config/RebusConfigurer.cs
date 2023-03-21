@@ -299,8 +299,9 @@ public class RebusConfigurer
             var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             var errorTracker = c.Get<IErrorTracker>();
             var errorHandler = c.Get<IErrorHandler>();
+            var failFastChecker = c.Get<IFailFastChecker>();
             var cancellationToken = c.Get<CancellationToken>();
-            return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, cancellationToken);
+            return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, failFastChecker, cancellationToken);
         });
 
         PossiblyRegisterDefault(_ => new SimpleRetryStrategySettings());
@@ -329,7 +330,7 @@ public class RebusConfigurer
 
             return new DefaultPipeline()
                 .OnReceive(c.Get<IRetryStrategyStep>())
-                .OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>()))
+                //.OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>()))
                 .OnReceive(c.Get<HandleDeferredMessagesStep>())
                 .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
                 .OnReceive(new DeserializeIncomingMessageStep(serializer))

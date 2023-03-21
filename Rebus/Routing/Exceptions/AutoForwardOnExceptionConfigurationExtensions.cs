@@ -33,13 +33,13 @@ public static class AutoForwardOnExceptionConfigurationExtensions
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
                 var shouldForwardException = shouldForward != null
-                    ? (Func<Exception, bool>)(exception => shouldForward((TException) exception))
+                    ? (Func<Exception, bool>)(exception => shouldForward((TException)exception))
                     : (exception => true);
 
                 var step = new ForwardOnExceptionsStep(typeof(TException), destinationQueue, transport, rebusLoggerFactory, logLevel, shouldForwardException);
 
                 return new PipelineStepInjector(pipeline)
-                    .OnReceive(step, PipelineRelativePosition.After, typeof(SimpleRetryStrategyStep));
+                    .OnReceive(step, PipelineRelativePosition.After, typeof(DefaultRetryStrategyStep));
             });
 
         return configurer;
