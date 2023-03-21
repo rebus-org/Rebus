@@ -13,6 +13,7 @@ namespace Rebus.Transport;
 /// </summary>
 public abstract class AbstractRebusTransport : ITransport
 {
+    internal const string OutgoingMessagesKey = "outgoing-messages";
     static readonly Task<int> TaskCompletedResult = Task.FromResult(0);
 
     /// <summary>
@@ -29,7 +30,7 @@ public abstract class AbstractRebusTransport : ITransport
     /// <inheritdoc />
     public Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
     {
-        var outgoingMessages = context.GetOrAdd("outgoing-messages", () =>
+        var outgoingMessages = context.GetOrAdd(OutgoingMessagesKey, () =>
         {
             var messages = new ConcurrentQueue<OutgoingMessage>();
 
@@ -57,7 +58,7 @@ public abstract class AbstractRebusTransport : ITransport
     /// Implement this to send all outgoing messages
     /// </summary>
     protected abstract Task SendOutgoingMessages(IEnumerable<OutgoingMessage> outgoingMessages, ITransactionContext context);
-        
+
     /// <summary>
     /// Gets the transport's input queue address
     /// </summary>
