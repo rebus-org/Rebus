@@ -62,7 +62,7 @@ public class InMemTransport : AbstractRebusTransport, ITransportInspector, IInit
     /// <summary>
     /// Sends all outgoing messages by delivering them to the in-mem network
     /// </summary>
-    protected override async Task SendOutgoingMessages(IEnumerable<OutgoingMessage> outgoingMessages, ITransactionContext context)
+    protected override async Task SendOutgoingMessages(IEnumerable<OutgoingTransportMessage> outgoingMessages, ITransactionContext context)
     {
         foreach (var message in outgoingMessages)
         {

@@ -222,16 +222,14 @@ public class TypeBasedRouter : IRouter
 
     string GetDestinationAddressForMessageType(Type messageType)
     {
-        if (!_messageTypeAddresses.TryGetValue(messageType, out var destinationAddress))
-        {
-            if (_fallbackAddress != null) return _fallbackAddress;
+        if (_messageTypeAddresses.TryGetValue(messageType, out var destinationAddress)) return destinationAddress;
 
-            throw new ArgumentException(
-                $@"Cannot get destination for message of type {messageType} because it has not been mapped! 
+        if (_fallbackAddress != null) return _fallbackAddress;
+
+        throw new ArgumentException(
+            $@"Cannot get destination for message of type {messageType} because it has not been mapped! 
 
 You need to ensure that all message types that you intend to bus.Send or bus.Subscribe to are mapped to an endpoint - it can be done by calling .Map<SomeMessage>(someEndpoint) or .MapAssemblyOf<SomeMessage>(someEndpoint) in the routing configuration.");
-        }
 
-        return destinationAddress;
     }
 }

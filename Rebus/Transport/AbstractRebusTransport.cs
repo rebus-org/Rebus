@@ -32,14 +32,14 @@ public abstract class AbstractRebusTransport : ITransport
     {
         var outgoingMessages = context.GetOrAdd(OutgoingMessagesKey, () =>
         {
-            var messages = new ConcurrentQueue<OutgoingMessage>();
+            var messages = new ConcurrentQueue<OutgoingTransportMessage>();
 
             context.OnCommitted(async _ => await SendOutgoingMessages(messages, context));
 
             return messages;
         });
 
-        outgoingMessages.Enqueue(new OutgoingMessage(message, destinationAddress));
+        outgoingMessages.Enqueue(new OutgoingTransportMessage(message, destinationAddress));
 
         return TaskCompletedResult;
     }
@@ -57,35 +57,11 @@ public abstract class AbstractRebusTransport : ITransport
     /// <summary>
     /// Implement this to send all outgoing messages
     /// </summary>
-    protected abstract Task SendOutgoingMessages(IEnumerable<OutgoingMessage> outgoingMessages, ITransactionContext context);
+    protected abstract Task SendOutgoingMessages(IEnumerable<OutgoingTransportMessage> outgoingMessages, ITransactionContext context);
 
     /// <summary>
     /// Gets the transport's input queue address
     /// </summary>
     public string Address { get; }
 
-    /// <summary>
-    /// Represents one single transport messages for one particular destination
-    /// </summary>
-    public class OutgoingMessage
-    {
-        /// <summary>
-        /// Gets the transport message
-        /// </summary>
-        public TransportMessage TransportMessage { get; }
-
-        /// <summary>
-        /// Gets the destination address
-        /// </summary>
-        public string DestinationAddress { get; }
-
-        /// <summary>
-        /// Constructs the outgoing message
-        /// </summary>
-        public OutgoingMessage(TransportMessage transportMessage, string destinationAddress)
-        {
-            TransportMessage = transportMessage;
-            DestinationAddress = destinationAddress;
-        }
-    }
 }

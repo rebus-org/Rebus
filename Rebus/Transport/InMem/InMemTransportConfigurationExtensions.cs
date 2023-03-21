@@ -24,10 +24,9 @@ public static class InMemTransportConfigurationExtensions
         configurer.OtherService<ITransportInspector>()
             .Register(context => context.Get<InMemTransport>());
 
-        // register subscription storage like this to enable using in-mem transport together with some other kind of subscription storage
         configurer
             .OtherService<ISubscriptionStorage>()
-            .Decorate(context => context.Has<ISubscriptionStorage>(primary: true) ? context.Get<ISubscriptionStorage>() : context.Get<InMemTransport>());
+            .Register(context => context.Get<InMemTransport>());
 
         configurer.Register(context => context.Get<InMemTransport>());
     }
@@ -43,10 +42,9 @@ public static class InMemTransportConfigurationExtensions
         configurer.OtherService<InMemTransport>()
             .Register(_ => new InMemTransport(network, null));
 
-        // register subscription storage like this to enable using in-mem transport together with some other kind of subscription storage
         configurer
             .OtherService<ISubscriptionStorage>()
-            .Decorate(context => context.Has<ISubscriptionStorage>(primary: true) ? context.Get<ISubscriptionStorage>() : context.Get<InMemTransport>());
+            .Register(context => context.Get<InMemTransport>());
 
         configurer.Register(context => context.Get<InMemTransport>());
 

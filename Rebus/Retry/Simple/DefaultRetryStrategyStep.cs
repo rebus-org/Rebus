@@ -121,7 +121,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
         {
             try
             {
-                await DispatchSecondLevelRetry(messageId, transactionContext, context, next);
+                await DispatchSecondLevelRetry(transactionContext, context, next);
                 await transactionContext.Commit();
                 await _errorTracker.CleanUp(messageId);
                 return;
@@ -147,10 +147,10 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
         transactionContext.SkipCommit();
     }
 
-    static async Task DispatchSecondLevelRetry(string messageId, ITransactionContext transactionContext, IncomingStepContext context, Func<Task> next)
+    static async Task DispatchSecondLevelRetry(ITransactionContext transactionContext, StepContext context, Func<Task> next)
     {
         if (transactionContext.Items.TryGetValue(AbstractRebusTransport.OutgoingMessagesKey, out var result)
-            && result is ConcurrentQueue<AbstractRebusTransport.OutgoingMessage> outgoingMessages)
+            && result is ConcurrentQueue<OutgoingTransportMessage> outgoingMessages)
         {
             outgoingMessages.Clear();
         }
