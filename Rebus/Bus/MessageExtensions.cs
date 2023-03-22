@@ -43,8 +43,6 @@ public static class MessageExtensions
     /// </summary>
     public static void SetDeferHeaders(this Message message, DateTimeOffset approximateDeliveryTime, string destinationAddress)
     {
-        if (message == null) throw new ArgumentNullException(nameof(message));
-        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         InnerSetDeferHeaders(approximateDeliveryTime, message.Headers, destinationAddress);
     }
 
@@ -53,21 +51,27 @@ public static class MessageExtensions
     /// </summary>
     public static void SetDeferHeaders(this TransportMessage message, DateTimeOffset approximateDeliveryTime, string destinationAddress)
     {
-        if (message == null) throw new ArgumentNullException(nameof(message));
-        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         InnerSetDeferHeaders(approximateDeliveryTime, message.Headers, destinationAddress);
     }
 
     static void InnerSetDeferHeaders(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers, string destinationAddress)
     {
         if (headers == null) throw new ArgumentNullException(nameof(headers));
-        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
 
         headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
 
         // do not overwrite the recipient if it has been set
         if (!headers.ContainsKey(Headers.DeferredRecipient))
         {
+            // if a recipient is not specified explicitly, it must be passed to this method... fail with an IOE if that is not the case
+            if (string.IsNullOrWhiteSpace(destinationAddress))
+            {
+                throw new InvalidOperationException($"The {nameof(destinationAddress)} parameter did not have a value, in which case it is required that the '{Headers.DeferredRecipient}' header is" +
+                                                    " explicitly set to the queue name of the recipient of the message. This error can typically happen when a one-way client defers a message," +
+                                                    $" and the message is not explicitly routed somewhere. Please either pass a recipient queue name as the '{Headers.DeferredRecipient}' headers," +
+                                                    " or bind this particular message type to a destination queue.");
+            }
+
             headers[Headers.DeferredRecipient] = destinationAddress;
         }
 
