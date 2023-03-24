@@ -24,4 +24,19 @@ public static class MetadataKeys
     /// Optional header that might contain an encoding of the contents, e.g."gzip" for gzipped data.
     /// </summary>
     public const string ContentEncoding = "Rbs2ContentEncoding";
+
+    /// <summary>
+    /// Optional header that might contain the name of which encryption type was used to encode the contents, e.g."aes" for AES encrypted data.
+    /// </summary>
+    public const string ContentEncryption = "Rbs2ContentEncryption";
+
+    /// <summary>
+    /// Optional header that contains the salt used when encrypting the data.
+    /// </summary>
+    public const string ContentInitializationVector = "Rbs2ContentInitializationVector";
+
+    /// <summary>
+    /// Optional header that indicates which key was used to encrypt the data.
+    /// </summary>
+    public const string ContentEncryptionKeyId = "Rbs2ContentEncryptionKeyId";
 }
