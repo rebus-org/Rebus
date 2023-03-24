@@ -8,7 +8,6 @@ using Rebus.Config;
 using Rebus.DataBus.ClaimCheck;
 using Rebus.DataBus.InMem;
 using Rebus.Messages;
-using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport;
@@ -24,7 +23,6 @@ public class TestAutomaticClaimCheckWhenMessageIsBig : FixtureBase
     const int limit = 2048;
 
     BuiltinHandlerActivator _activator;
-    InMemorySubscriberStore _subscriberStore;
     InMemNetwork _network;
     InMemDataStore _dataStore;
     IBusStarter _starter;
@@ -39,14 +37,12 @@ public class TestAutomaticClaimCheckWhenMessageIsBig : FixtureBase
 
         Using(_activator);
 
-        _subscriberStore = new InMemorySubscriberStore();
         _network = new InMemNetwork();
         _dataStore = new InMemDataStore();
 
         _starter = Configure.With(_activator)
             .Transport(t => t.UseInMemoryTransport(_network, "automatic-claim-check"))
             .Options(o => o.LogPipeline(verbose: true))
-            .Subscriptions(s => s.StoreInMemory(_subscriberStore))
             .DataBus(d =>
             {
                 d.SendBigMessagesAsAttachments(bodySizeThresholdBytes: limit / 2);
@@ -107,7 +103,6 @@ public class TestAutomaticClaimCheckWhenMessageIsBig : FixtureBase
 
         return Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(_network, Guid.NewGuid().ToString()))
-            .Subscriptions(s => s.StoreInMemory(_subscriberStore))
             .DataBus(d => d.StoreInMemory(_dataStore))
             .Start()
             .Advanced

@@ -30,7 +30,7 @@ public class TestCentralizedInMemSubscriptionStorage : FixtureBase
         Using(_activator);
 
         _starter = Configure.With(_activator)
-            .Transport(t => t.UseInMemoryTransport(_network, "endpoint1"))
+            .Transport(t => t.UseInMemoryTransport(_network, "endpoint1", registerSubscriptionStorage: false))
             .Subscriptions(s => s.StoreInMemory(_subscriberStore))
             .Create();
     }
@@ -43,7 +43,7 @@ public class TestCentralizedInMemSubscriptionStorage : FixtureBase
         _activator.Handle<string>(async str => gotTheString.Set());
 
         var bus = _starter.Start();
-            
+
         await bus.Subscribe<string>();
 
         await Task.Delay(500);

@@ -21,13 +21,11 @@ public class VerifySyncBusAndTransactionScope : FixtureBase
     public void OnlyReceivesPublishedEventWhenRebusTransactionScopeIsCompleted()
     {
         var network = new InMemNetwork();
-        var subscriberStore = new InMemorySubscriberStore();
 
         network.CreateQueue("subscriber");
-        subscriberStore.AddSubscriber(typeof(TestEvent).GetSimpleAssemblyQualifiedName(), "subscriber");
+        network.AddSubscriber(typeof(TestEvent).GetSimpleAssemblyQualifiedName(), "subscriber");
 
         var bus = Configure.With(new BuiltinHandlerActivator())
-            .Subscriptions(config => config.StoreInMemory(subscriberStore))
             .Transport(configurer => configurer.UseInMemoryTransport(network, "Test"))
             .Start();
 

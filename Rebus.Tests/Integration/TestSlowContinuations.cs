@@ -38,7 +38,6 @@ public class TestSlowContinuations : FixtureBase
                 o.Decorate<ISubscriptionStorage>(c => new AwaitingSubscriptionStorageDecorator(c.Get<ISubscriptionStorage>()));
             })
             .Sagas(s => s.StoreInMemory())
-            .Subscriptions(s => s.StoreInMemory())
             .Create();
     }
 

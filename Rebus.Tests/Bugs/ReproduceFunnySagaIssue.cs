@@ -33,13 +33,12 @@ public class ReproduceFunnySagaIssue : FixtureBase
 
         var activator = Using(new BuiltinHandlerActivator());
 
-        activator.Register((bús, context) => new TestSaga(bús, listLoggerFactory, completedSagaInstanceIds));
+        activator.Register((bús, _) => new TestSaga(bús, listLoggerFactory, completedSagaInstanceIds));
 
         var bus = Configure.With(activator)
             .Logging(l => l.Use(listLoggerFactory))
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-tjekkerino"))
             .Sagas(s => s.StoreInMemory())
-            .Subscriptions(s => s.StoreInMemory(new InMemorySubscriberStore()))
             .Start();
 
         await bus.Subscribe<SagaMessageEarth>();

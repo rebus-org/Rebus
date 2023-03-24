@@ -31,9 +31,9 @@ public class TestMessageAuditing : FixtureBase
         Using(_adapter);
 
         _network = new InMemNetwork();
-            
+
         _starter = Configure.With(_adapter)
-            .Transport(t => t.UseInMemoryTransport(_network, "test"))
+            .Transport(t => t.UseInMemoryTransport(_network, "test", registerSubscriptionStorage: false))
             .Subscriptions(s => s.StoreInMemory())
             .Options(o =>
             {

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Persistence.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -23,19 +22,11 @@ public class TestTypeBasedRouting : FixtureBase
 
     protected override void SetUp()
     {
+        _client1GotTheEvent = Using(new ManualResetEvent(false));
+        
         var network = new InMemNetwork();
-        var subscriberStore = new InMemorySubscriberStore();
-        _publisher = GetEndpoint(network, "publisher", c =>
-        {
-            c.Subscriptions(s => s.StoreInMemory(subscriberStore));
-            c.Routing(r => r.TypeBased());
-        });
-
-        _client1GotTheEvent = new ManualResetEvent(false);
-        _client1 = GetEndpoint(network, "client1", c =>
-        {
-            c.Routing(r => r.TypeBased().Map<SomeKindOfEvent>("publisher"));
-        });
+        _publisher = GetEndpoint(network, "publisher", c => c.Routing(r => r.TypeBased()));
+        _client1 = GetEndpoint(network, "client1", c => c.Routing(r => r.TypeBased().Map<SomeKindOfEvent>("publisher")));
         _client1.AddHandlerWithBusTemporarilyStopped<SomeKindOfEvent>(async e => _client1GotTheEvent.Set());
     }
 

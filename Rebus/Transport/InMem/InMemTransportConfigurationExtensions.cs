@@ -11,8 +11,10 @@ public static class InMemTransportConfigurationExtensions
 {
     /// <summary>
     /// Configures Rebus to use in-mem message queues, delivering/receiving from the specified <see cref="InMemNetwork"/>
+    /// If <paramref name="registerSubscriptionStorage"/> is TRUE, the in-mem network will be used as a subscription storage too, thus providing support for pub/sub without additional configuration.
+    /// If <paramref name="registerSubscriptionStorage"/> is FALSE, another subscription storage can be registered via <code>.Subscriptions(s => s.StoreIn(...))</code>, which can be useful e.g. in testing scenarios.
     /// </summary>
-    public static void UseInMemoryTransport(this StandardConfigurer<ITransport> configurer, InMemNetwork network, string inputQueueName)
+    public static void UseInMemoryTransport(this StandardConfigurer<ITransport> configurer, InMemNetwork network, string inputQueueName, bool registerSubscriptionStorage = true)
     {
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         if (network == null) throw new ArgumentNullException(nameof(network));
@@ -24,17 +26,22 @@ public static class InMemTransportConfigurationExtensions
         configurer.OtherService<ITransportInspector>()
             .Register(context => context.Get<InMemTransport>());
 
-        configurer
-            .OtherService<ISubscriptionStorage>()
-            .Register(context => context.Get<InMemTransport>());
+        if (registerSubscriptionStorage)
+        {
+            configurer
+                .OtherService<ISubscriptionStorage>()
+                .Register(context => context.Get<InMemTransport>());
+        }
 
         configurer.Register(context => context.Get<InMemTransport>());
     }
 
     /// <summary>
-    /// Configures Rebus to use in-mem message queues, configuring this instance to be a one-way client
+    /// Configures Rebus to use in-mem message queues, configuring this instance to be a one-way client.
+    /// If <paramref name="registerSubscriptionStorage"/> is TRUE, the in-mem network will be used as a subscription storage too, thus providing support for pub/sub without additional configuration.
+    /// If <paramref name="registerSubscriptionStorage"/> is FALSE, another subscription storage can be registered via <code>.Subscriptions(s => s.StoreIn(...))</code>, which can be useful e.g. in testing scenarios.
     /// </summary>
-    public static void UseInMemoryTransportAsOneWayClient(this StandardConfigurer<ITransport> configurer, InMemNetwork network)
+    public static void UseInMemoryTransportAsOneWayClient(this StandardConfigurer<ITransport> configurer, InMemNetwork network, bool registerSubscriptionStorage = true)
     {
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         if (network == null) throw new ArgumentNullException(nameof(network));
@@ -42,9 +49,12 @@ public static class InMemTransportConfigurationExtensions
         configurer.OtherService<InMemTransport>()
             .Register(_ => new InMemTransport(network, null));
 
-        configurer
-            .OtherService<ISubscriptionStorage>()
-            .Register(context => context.Get<InMemTransport>());
+        if (registerSubscriptionStorage)
+        {
+            configurer
+                .OtherService<ISubscriptionStorage>()
+                .Register(context => context.Get<InMemTransport>());
+        }
 
         configurer.Register(context => context.Get<InMemTransport>());
 
