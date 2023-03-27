@@ -4,6 +4,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Retry;
 using Rebus.Retry.Simple;
 using Rebus.Transport;
 
@@ -21,7 +22,7 @@ public static class TransportMessageRoutingConfigurationExtensions
     public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer,
         Func<TransportMessage, Task<ForwardAction>> routingFunction)
     {
-        AddTransportMessageForwarder(configurer, routingFunction, ErrorBehavior.ForwardToErrorQueue);
+        AddTransportMessageForwarder(configurer, routingFunction, ErrorBehavior.Normal);
     }
 
     /// <summary>
@@ -38,12 +39,9 @@ public static class TransportMessageRoutingConfigurationExtensions
                 var pipeline = c.Get<IPipeline>();
                 var transport = c.Get<ITransport>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var errorHandler = c.Get<IErrorHandler>();
 
-                var errorQueueName = c.Has<SimpleRetryStrategySettings>()
-                    ? c.Get<SimpleRetryStrategySettings>().ErrorQueueAddress
-                    : "error";
-
-                var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory, errorQueueName, errorBehavior);
+                var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory, errorBehavior, errorHandler);
 
                 return new PipelineStepConcatenator(pipeline)
                     .OnReceive(stepToAdd, PipelineAbsolutePosition.Front);

@@ -190,7 +190,7 @@ public class TestTransportMessageForwarding : FixtureBase
 
         network.CreateQueue(recipientQueueName);
 
-        var bus = GetFailingBus(activator, network, recipientQueueName, ErrorBehavior.ForwardToErrorQueue);
+        var bus = GetFailingBus(activator, network, recipientQueueName, ErrorBehavior.Normal);
 
         await bus.SendLocal("HEJ MED DIG!!!");
 

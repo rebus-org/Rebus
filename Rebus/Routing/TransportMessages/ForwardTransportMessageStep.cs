@@ -1,10 +1,12 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Retry;
 using Rebus.Transport;
 
 namespace Rebus.Routing.TransportMessages;
@@ -16,21 +18,21 @@ namespace Rebus.Routing.TransportMessages;
 public class ForwardTransportMessageStep : IIncomingStep
 {
     readonly Func<TransportMessage, Task<ForwardAction>> _routingFunction;
-    readonly ITransport _transport;
-    readonly string _errorQueueName;
     readonly ErrorBehavior _errorBehavior;
+    readonly IErrorHandler _errorHandler;
+    readonly ITransport _transport;
     readonly ILog _log;
 
     /// <summary>
     /// Constructs the step
     /// </summary>
-    public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, string errorQueueName, ErrorBehavior errorBehavior)
+    public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, ErrorBehavior errorBehavior, IErrorHandler errorHandler)
     {
         if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _routingFunction = routingFunction ?? throw new ArgumentNullException(nameof(routingFunction));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
-        _errorQueueName = errorQueueName;
         _errorBehavior = errorBehavior;
+        _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         _log = rebusLoggerFactory.GetLogger<ForwardTransportMessageStep>();
     }
 
@@ -49,13 +51,14 @@ public class ForwardTransportMessageStep : IIncomingStep
             switch (actionType)
             {
                 case ActionType.Forward:
-                    var destinationAddresses = routingResult.DestinationAddresses;
+                    var destinationAddresses = routingResult.DestinationQueueNames;
                     var transactionContext = context.Load<ITransactionContext>();
 
                     _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
 
                     await Task.WhenAll(destinationAddresses
                         .Select(address => _transport.Send(address, transportMessage, transactionContext)));
+                    transactionContext.SetResult(commit: true, ack: true);
                     break;
 
                 case ActionType.None:
@@ -64,30 +67,35 @@ public class ForwardTransportMessageStep : IIncomingStep
 
                 case ActionType.Ignore:
                     _log.Debug("Ignoring {messageLabel}", transportMessage.GetMessageLabel());
+                    context.Load<ITransactionContext>().SetResult(commit: true, ack: true);
                     break;
 
                 default:
                     throw new ArgumentException($"Unknown forward action type: {actionType}");
             }
         }
-        catch (Exception e2)
+        catch (Exception exception)
         {
-            if (_errorBehavior == ErrorBehavior.ForwardToErrorQueue)
+            if (_errorBehavior == ErrorBehavior.Normal)
             {
                 transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
-                transportMessage.Headers[Headers.ErrorDetails] = e2.ToString();
+                transportMessage.Headers[Headers.ErrorDetails] = exception.ToString();
+
+                var transactionContext = context.Load<ITransactionContext>();
 
                 try
                 {
-                    var transactionContext = context.Load<ITransactionContext>();
-                    await _transport.Send(_errorQueueName, transportMessage, transactionContext);
+                    transactionContext.SetResult(commit: false, ack: true);
+                    using var scope = new RebusTransactionScope();
+                    await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, exception);
+                    await scope.CompleteAsync();
                     return;
                 }
-                catch (Exception exception)
+                catch (Exception exception2)
                 {
-                    _log.Error(exception, "Could not forward message {messageLabel} to {queueName} - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
+                    transactionContext.SetResult(commit: false, ack: false);
+                    _log.Error(exception2, "Error when passing message {messageLabel} to error handler - waiting 5 s", transportMessage.GetMessageLabel());
                     await Task.Delay(TimeSpan.FromSeconds(5));
-                    context.Load<ITransactionContext>().SetResult(commit: false, ack: false);
                 }
             }
 

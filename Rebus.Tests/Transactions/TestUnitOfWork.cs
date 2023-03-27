@@ -3,14 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
-using Rebus.Pipeline;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -19,34 +16,32 @@ namespace Rebus.Tests.Transactions;
 [TestFixture, Description("Verifies that Rebus can sensibly handle common stuff in a unit of work")]
 public class TestUnitOfWork : FixtureBase
 {
-    BuiltinHandlerActivator _activator;
-    ListLoggerFactory _listLoggerFactory;
-    IBus _bus;
-
-    protected override void SetUp()
-    {
-        _activator = Using(new BuiltinHandlerActivator());
-        _listLoggerFactory = new ListLoggerFactory();
-
-        _bus = Configure.With(_activator)
-            .Logging(l => l.Use(_listLoggerFactory))
-            .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "uow"))
-            .Start();
-    }
-
     [Test]
     public async Task HandlesExceptionOnCommitAsOrdinaryException()
     {
-        _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
+        var network = new InMemNetwork();
+
+        using var activator = new BuiltinHandlerActivator();
+
+        activator.Handle<string>(async (_, context, _) =>
         {
-            MessageContext.Current.TransactionContext.OnCommit(async _ => throw new ConcurrencyException());
+            var transactionContext = context.TransactionContext;
+
+            transactionContext.OnCommit(async _ => throw new ConcurrencyException());
         });
 
-        await _bus.SendLocal("hej!");
+        var listLoggerFactory = new ListLoggerFactory();
 
-        await Task.Delay(1000);
+        var bus = Configure.With(activator)
+            .Logging(l => l.Use(listLoggerFactory))
+            .Transport(t => t.UseInMemoryTransport(network, "uow"))
+            .Start();
 
-        var lines = _listLoggerFactory.ToList();
+        await bus.SendLocal("hej!");
+
+        _ = await network.WaitForNextMessageFrom("error");
+
+        var lines = listLoggerFactory.ToList();
 
         Console.WriteLine("------------------------------------------------------------------------------------------");
         Console.WriteLine(string.Join(Environment.NewLine, lines.Select(line => line.ToString().Limit(200))));

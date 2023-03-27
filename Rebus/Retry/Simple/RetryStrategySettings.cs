@@ -4,12 +4,12 @@ using Rebus.Messages;
 namespace Rebus.Retry.Simple;
 
 /// <summary>
-/// Contains the settings used by <see cref="SimpleRetryStrategy"/>
+/// Contains the settings used by <see cref="DefaultRetryStrategy"/>
 /// </summary>
-public class SimpleRetryStrategySettings
+public class RetryStrategySettings
 {
     /// <summary>
-    /// Name of the default error queue, which will be used unless <see cref="ErrorQueueAddress"/> is set to something else
+    /// Name of the default error queue, which will be used unless <see cref="ErrorQueueName"/> is set to something else
     /// </summary>
     public const string DefaultErrorQueueName = "error";
 
@@ -27,7 +27,7 @@ public class SimpleRetryStrategySettings
     /// Creates the settings with the given error queue address and number of delivery attempts, defaulting to <see cref="DefaultErrorQueueName"/> and <see cref="DefaultNumberOfDeliveryAttempts"/> 
     /// as the error queue address and number of delivery attempts, respectively
     /// </summary>
-    public SimpleRetryStrategySettings(
+    public RetryStrategySettings(
         string errorQueueAddress = DefaultErrorQueueName,
         int maxDeliveryAttempts = DefaultNumberOfDeliveryAttempts,
         bool secondLevelRetriesEnabled = false,
@@ -48,7 +48,7 @@ public class SimpleRetryStrategySettings
             throw new ArgumentOutOfRangeException(nameof(errorTrackingMaxAgeMinutes), errorTrackingMaxAgeMinutes, 
                 "Please specify the max age in minutes of an in-mem error tracking before it gets purged (must be >= 1)");
         }
-        ErrorQueueAddress = errorQueueAddress ?? throw new ArgumentException("Error queue address cannot be NULL");
+        ErrorQueueName = errorQueueAddress ?? throw new ArgumentException("Error queue address cannot be NULL");
         MaxDeliveryAttempts = maxDeliveryAttempts;
         SecondLevelRetriesEnabled = secondLevelRetriesEnabled;
         ErrorDetailsHeaderMaxLength = errorDetailsHeaderMaxLength;
@@ -58,7 +58,7 @@ public class SimpleRetryStrategySettings
     /// <summary>
     /// Name of the error queue
     /// </summary>
-    public string ErrorQueueAddress { get; set; }
+    public string ErrorQueueName { get; set; }
 
     /// <summary>
     /// Number of attempted deliveries to make before moving the poisonous message to the error queue

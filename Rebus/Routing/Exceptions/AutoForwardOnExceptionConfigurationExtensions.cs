@@ -39,7 +39,7 @@ public static class AutoForwardOnExceptionConfigurationExtensions
                 var step = new ForwardOnExceptionsStep(typeof(TException), destinationQueue, transport, rebusLoggerFactory, logLevel, shouldForwardException);
 
                 return new PipelineStepInjector(pipeline)
-                    .OnReceive(step, PipelineRelativePosition.After, typeof(DefaultRetryStrategyStep));
+                    .OnReceive(step, PipelineRelativePosition.After, typeof(DefaultRetryStep));
             });
 
         return configurer;

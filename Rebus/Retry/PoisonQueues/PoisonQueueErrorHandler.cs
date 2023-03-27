@@ -16,18 +16,18 @@ public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
 {
     static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
 
-    readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
+    readonly RetryStrategySettings _retryStrategySettings;
     readonly ITransport _transport;
     readonly ILog _log;
 
     /// <summary>
     /// Creates the error handler
     /// </summary>
-    public PoisonQueueErrorHandler(SimpleRetryStrategySettings simpleRetryStrategySettings, ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
+    public PoisonQueueErrorHandler(RetryStrategySettings retryStrategySettings, ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
     {
         _log = rebusLoggerFactory?.GetLogger<PoisonQueueErrorHandler>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
-        _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
+        _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
     /// </summary>
     public void Initialize()
     {
-        var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
+        var errorQueueAddress = _retryStrategySettings.ErrorQueueName;
 
         _transport.CreateQueue(errorQueueAddress);
     }
@@ -55,7 +55,7 @@ public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
         headers[Headers.ErrorDetails] = GetErrorDetails(exception);
         headers[Headers.SourceQueue] = _transport.Address;
 
-        var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
+        var errorQueueAddress = _retryStrategySettings.ErrorQueueName;
 
         try
         {
@@ -75,7 +75,7 @@ public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
 
     string GetErrorDetails(Exception exception)
     {
-        var maxLength = _simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength;
+        var maxLength = _retryStrategySettings.ErrorDetailsHeaderMaxLength;
 
         // if there's not even room for the placeholder, just cut the crap
         if (maxLength < 5)

@@ -8,9 +8,9 @@ namespace Rebus.Retry.Simple;
 /// <summary>
 /// Implementation of <see cref="IRetryStrategy"/> that tracks errors in memory
 /// </summary>
-public class SimpleRetryStrategy : IRetryStrategy
+public class DefaultRetryStrategy : IRetryStrategy
 {
-    readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
+    readonly RetryStrategySettings _retryStrategySettings;
     readonly IRebusLoggerFactory _rebusLoggerFactory;
     readonly IErrorTracker _errorTracker;
     readonly IErrorHandler _errorHandler;
@@ -20,9 +20,9 @@ public class SimpleRetryStrategy : IRetryStrategy
     /// <summary>
     /// Constructs the retry strategy with the given settings, creating an error queue with the configured name if necessary
     /// </summary>
-    public SimpleRetryStrategy(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IErrorTracker errorTracker, IErrorHandler errorHandler, IFailFastChecker failFastChecker, CancellationToken cancellationToken)
+    public DefaultRetryStrategy(RetryStrategySettings retryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IErrorTracker errorTracker, IErrorHandler errorHandler, IFailFastChecker failFastChecker, CancellationToken cancellationToken)
     {
-        _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
+        _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
         _rebusLoggerFactory = rebusLoggerFactory ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
@@ -31,14 +31,14 @@ public class SimpleRetryStrategy : IRetryStrategy
     }
 
     /// <summary>
-    /// Gets the retry step with appropriate settings for this <see cref="SimpleRetryStrategy"/>
+    /// Gets the retry step with appropriate settings for this <see cref="DefaultRetryStrategy"/>
     /// </summary>
-    public IRetryStrategyStep GetRetryStep() => new DefaultRetryStrategyStep(
+    public IRetryStep GetRetryStep() => new DefaultRetryStep(
         _rebusLoggerFactory,
         _errorHandler,
         _errorTracker,
         _failFastChecker,
-        _simpleRetryStrategySettings.SecondLevelRetriesEnabled,
+        _retryStrategySettings.SecondLevelRetriesEnabled,
         _cancellationToken
     );
 }

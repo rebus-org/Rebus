@@ -34,7 +34,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
     public async Task HasOneWayClient()
     {
         var receiverQueue = TestConfig.GetName("receiver");
-            
+
         var client = _factory.CreateOneWayClient();
         var receiver = _factory.Create(receiverQueue);
 
@@ -179,10 +179,10 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
         if (commitAndExpectTheMessagesToBeSent)
         {
             var receivedMessages = allMessages.OrderBy(s => s).ToArray();
-                
+
             Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
-                
-            Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }), 
+
+            Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }),
                 $@"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
         }
         else
@@ -198,36 +198,33 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         while (receivedNulls < 5)
         {
-            using (var scope = new RebusTransactionScope())
+            using var scope = new RebusTransactionScope();
+            
+            var msg = await input.Receive(scope.TransactionContext, _cancellationToken);
+
+            if (msg != null)
             {
-                var msg = await input.Receive(scope.TransactionContext, _cancellationToken);
-
-                if (msg != null)
-                {
-                    transportMessages.Add(GetStringBody(msg));
-                    await scope.CompleteAsync();
-                    continue;
-                }
-
-                await Task.Delay(100);
-                receivedNulls++;
+                transportMessages.Add(GetStringBody(msg));
+                await scope.CompleteAsync();
+                continue;
             }
+
+            await Task.Delay(100, _cancellationToken);
+            receivedNulls++;
         }
 
         return transportMessages;
     }
 
-    async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
+    static async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
     {
-        using (var scope = new RebusTransactionScope())
-        {
-            await contextAction(scope.TransactionContext);
+        using var context = new TransactionContext();
 
-            if (completeTransaction)
-            {
-                await scope.CompleteAsync();
-            }
-        }
+        await contextAction(context);
+
+        context.SetResult(commit: completeTransaction, ack: completeTransaction);
+
+        await context.Complete();
     }
 
     string GetStringBody(TransportMessage transportMessage)

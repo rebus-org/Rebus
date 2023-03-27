@@ -276,7 +276,7 @@ public class RebusConfigurer
         PossiblyRegisterDefault<IErrorTracker>(c =>
         {
             var transport = c.Get<ITransport>();
-            var settings = c.Get<SimpleRetryStrategySettings>();
+            var settings = c.Get<RetryStrategySettings>();
             var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
             var rebusTime = c.Get<IRebusTime>();
@@ -285,7 +285,7 @@ public class RebusConfigurer
 
         PossiblyRegisterDefault<IErrorHandler>(c =>
         {
-            var settings = c.Get<SimpleRetryStrategySettings>();
+            var settings = c.Get<RetryStrategySettings>();
             var transport = c.Get<ITransport>();
             var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
@@ -295,16 +295,16 @@ public class RebusConfigurer
 
         PossiblyRegisterDefault<IRetryStrategy>(c =>
         {
-            var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
+            var simpleRetryStrategySettings = c.Get<RetryStrategySettings>();
             var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             var errorTracker = c.Get<IErrorTracker>();
             var errorHandler = c.Get<IErrorHandler>();
             var failFastChecker = c.Get<IFailFastChecker>();
             var cancellationToken = c.Get<CancellationToken>();
-            return new SimpleRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, failFastChecker, cancellationToken);
+            return new DefaultRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, failFastChecker, cancellationToken);
         });
 
-        PossiblyRegisterDefault(_ => new SimpleRetryStrategySettings());
+        PossiblyRegisterDefault(_ => new RetryStrategySettings());
 
         PossiblyRegisterDefault(c =>
         {
@@ -329,8 +329,8 @@ public class RebusConfigurer
             var messageTypeNameConvention = c.Get<IMessageTypeNameConvention>();
 
             return new DefaultPipeline()
-                .OnReceive(c.Get<IRetryStrategyStep>())
-                //.OnReceive(new FailFastStep(c.Get<IErrorTracker>(), c.Get<IFailFastChecker>(), c.Get<IErrorHandler>()))
+
+                .OnReceive(c.Get<IRetryStep>())
                 .OnReceive(c.Get<HandleDeferredMessagesStep>())
                 .OnReceive(new HydrateIncomingMessageStep(c.Get<IDataBus>()))
                 .OnReceive(new DeserializeIncomingMessageStep(serializer))

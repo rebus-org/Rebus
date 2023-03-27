@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Transport;
 
-class TransactionContext : ITransactionContext
+class TransactionContext : ITransactionContext, ICanEagerCommit
 {
     // Note: C# generates thread-safe add/remove. They use a compare-and-exchange loop.
     event Func<ITransactionContext, Task> _onCommitted;
@@ -60,8 +60,16 @@ class TransactionContext : ITransactionContext
 
     public void SetResult(bool commit, bool ack)
     {
+        if (_completed) ThrowCompletedException();
         _mustAck = ack;
         _mustCommit = commit;
+    }
+
+    public async Task Commit()
+    {
+        if (_completed) ThrowCompletedException();
+        var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
+        await InvokeAsync(onCommitted);
     }
 
     public async Task Complete()
@@ -74,38 +82,47 @@ class TransactionContext : ITransactionContext
 
         try
         {
-            if (_mustCommit == true)
+            try
             {
-                var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
-                await InvokeAsync(onCommitted);
+                if (_mustCommit == true)
+                {
+                    var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
+                    await InvokeAsync(onCommitted);
+                }
+                else
+                {
+                    var onRollback = Interlocked.Exchange(ref _onRollback, null);
+                    await InvokeAsync(onRollback);
+                }
+            }
+            catch
+            {
+                var onNack = Interlocked.Exchange(ref _onNack, null);
+                try
+                {
+                    await InvokeAsync(onNack);
+                }
+                catch
+                {
+                }
+
+                throw;
+            }
+
+            if (_mustAck == true)
+            {
+                var onAck = Interlocked.Exchange(ref _onAck, null);
+                await InvokeAsync(onAck);
             }
             else
             {
-                var onRollback = Interlocked.Exchange(ref _onRollback, null);
-                await InvokeAsync(onRollback);
-            }
-        }
-        catch
-        {
-            var onNack = Interlocked.Exchange(ref _onNack, null);
-            try
-            {
+                var onNack = Interlocked.Exchange(ref _onNack, null);
                 await InvokeAsync(onNack);
             }
-            catch { }
-
-            throw;
         }
-
-        if (_mustAck == true)
+        finally
         {
-            var onAck = Interlocked.Exchange(ref _onAck, null);
-            await InvokeAsync(onAck);
-        }
-        else
-        {
-            var onNack = Interlocked.Exchange(ref _onNack, null);
-            await InvokeAsync(onNack);
+            _completed = true;
         }
     }
 
@@ -116,53 +133,14 @@ class TransactionContext : ITransactionContext
         try
         {
             _onDisposed?.Invoke(this);
-
-            //if (!_completed)
-            //{
-            //    RaiseAborted();
-            //}
         }
         finally
         {
             _disposed = true;
-
-            //if (!_cleanedUp)
-            //{
-            //    try
-            //    {
-            //        _onDisposed?.Invoke(this);
-            //    }
-            //    finally
-            //    {
-            //        _cleanedUp = true;
-            //    }
-            //}
         }
     }
 
     static void ThrowCompletedException([CallerMemberName] string actionName = null) => throw new InvalidOperationException($"Cannot add {actionName} action on a completed transaction context.");
-
-    //void RaiseAborted()
-    //{
-    //    if (_aborted) return;
-    //    _onRollback?.Invoke(this);
-    //    _aborted = true;
-    //}
-
-    Task RaiseCommitted()
-    {
-        // RaiseCommitted() can be called multiple time.
-        // So we atomically extract the current list of subscribers and reset the event to null (empty)
-        var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
-        return InvokeAsync(onCommitted);
-    }
-
-    async Task RaiseCompleted(bool ack)
-    {
-        await InvokeAsync(ack ? _onAck : _onNack);
-
-        _completed = true;
-    }
 
     async Task InvokeAsync(Func<ITransactionContext, Task> actions)
     {

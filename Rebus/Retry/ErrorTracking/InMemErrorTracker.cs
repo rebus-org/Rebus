@@ -25,7 +25,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     const string BackgroundTaskName = "CleanupTrackedErrors";
 
     readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new();
-    readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
+    readonly RetryStrategySettings _retryStrategySettings;
     readonly IAsyncTask _cleanupOldTrackedErrorsTask;
     readonly ITransport _transport;
     readonly IRebusTime _rebusTime;
@@ -37,12 +37,12 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// <summary>
     /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
     /// </summary>
-    public InMemErrorTracker(SimpleRetryStrategySettings simpleRetryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, ITransport transport, IRebusTime rebusTime)
+    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, ITransport transport, IRebusTime rebusTime)
     {
         if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
 
-        _simpleRetryStrategySettings = simpleRetryStrategySettings ?? throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
+        _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
 
@@ -105,7 +105,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
         if (!hasTrackingForThisMessage) return FalseTaskResult;
 
         var hasFailedTooManyTimes = existingTracking.Final
-                                    || existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
+                                    || existingTracking.ErrorCount >= _retryStrategySettings.MaxDeliveryAttempts;
 
         return Task.FromResult(hasFailedTooManyTimes);
     }
@@ -153,7 +153,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
 
     async Task CleanupOldTrackedErrors()
     {
-        var maxAge = TimeSpan.FromMinutes(_simpleRetryStrategySettings.ErrorTrackingMaxAgeMinutes);
+        var maxAge = TimeSpan.FromMinutes(_retryStrategySettings.ErrorTrackingMaxAgeMinutes);
 
         var messageIdsOfExpiredTrackings = _trackedErrors
             .Where(e => e.Value.ElapsedSinceLastError > maxAge)

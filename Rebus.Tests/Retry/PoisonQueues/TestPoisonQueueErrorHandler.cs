@@ -20,15 +20,15 @@ public class TestPoisonQueueErrorHandler : FixtureBase
 
     PoisonQueueErrorHandler _handler;
     InMemTransport _transport;
-    SimpleRetryStrategySettings _simpleRetryStrategySettings;
+    RetryStrategySettings _retryStrategySettings;
 
     protected override void SetUp()
     {
         _network.Reset();
 
-        _simpleRetryStrategySettings = new SimpleRetryStrategySettings();
+        _retryStrategySettings = new RetryStrategySettings();
         _transport = new InMemTransport(_network, "whatever");
-        _handler = new PoisonQueueErrorHandler(_simpleRetryStrategySettings, _transport, new ConsoleLoggerFactory(false));
+        _handler = new PoisonQueueErrorHandler(_retryStrategySettings, _transport, new ConsoleLoggerFactory(false));
         _handler.Initialize();
     }
 
@@ -52,7 +52,7 @@ public class TestPoisonQueueErrorHandler : FixtureBase
     [Test]
     public async Task TruncatesErrorDetailsIfTheyAreTooLong()
     {
-        _simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength = 300;
+        _retryStrategySettings.ErrorDetailsHeaderMaxLength = 300;
 
         var message = NewMessage("known-id");
         var exception = new IOException(new string('*', 1024));
@@ -86,7 +86,7 @@ The forwarded message contained these error details:
 (length: {truncatedErrorDetails.Length})
 ");
 
-        Assert.That(truncatedErrorDetails.Length, Is.LessThanOrEqualTo(_simpleRetryStrategySettings.ErrorDetailsHeaderMaxLength));
+        Assert.That(truncatedErrorDetails.Length, Is.LessThanOrEqualTo(_retryStrategySettings.ErrorDetailsHeaderMaxLength));
     }
 
     static TransportMessage NewMessage(string messageId = null)
@@ -101,8 +101,8 @@ The forwarded message contained these error details:
 
     async Task WithContext(Func<ITransactionContext, Task> action)
     {
-        var context = new TransactionContext();
-        await action(context);
-        await context.Complete();
+        using var scope = new RebusTransactionScope();
+        await action(scope.TransactionContext);
+        await scope.CompleteAsync();
     }
 }

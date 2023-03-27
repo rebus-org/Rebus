@@ -23,7 +23,7 @@ namespace Rebus.Retry.Simple;
 [StepDocumentation(@"Wraps the invocation of the entire receive pipeline in an exception handler, tracking the number of times the received message has been attempted to be delivered.
 
 If the maximum number of delivery attempts is reached, the message is passed to the error handler, which by default will move the message to the error queue.")]
-public class DefaultRetryStrategyStep : IRetryStrategyStep
+public class DefaultRetryStep : IRetryStep
 {
     /// <summary>
     /// Key of a step context item that indicates that the message must be wrapped in a <see cref="FailedMessageWrapper{TMessage}"/> after being deserialized
@@ -40,9 +40,9 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
     /// <summary>
     /// Creates the step
     /// </summary>
-    public DefaultRetryStrategyStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
+    public DefaultRetryStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
     {
-        _log = rebusLoggerFactory?.GetLogger<DefaultRetryStrategyStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+        _log = rebusLoggerFactory?.GetLogger<DefaultRetryStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
@@ -85,6 +85,11 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
             }
 
             transactionContext.SetResult(commit: true, ack: true);
+
+            if (transactionContext is ICanEagerCommit canEagerCommit)
+            {
+                await canEagerCommit.Commit();
+            }
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {

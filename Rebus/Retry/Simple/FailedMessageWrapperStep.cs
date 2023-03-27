@@ -15,7 +15,7 @@ namespace Rebus.Retry.Simple;
 
 [StepDocumentation(@"When 2nd level retries are enabled, a message that has failed too many times must be dispatched as a IFailed<TMessage>.
 
-This is carried out by having the retry step add the '" + DefaultRetryStrategyStep.DispatchAsFailedMessageKey + @"' key to the context,
+This is carried out by having the retry step add the '" + DefaultRetryStep.DispatchAsFailedMessageKey + @"' key to the context,
 which is then detected by this wrapper step.")]
 class FailedMessageWrapperStep : IIncomingStep
 {
@@ -25,7 +25,7 @@ class FailedMessageWrapperStep : IIncomingStep
 
     public async Task Process(IncomingStepContext context, Func<Task> next)
     {
-        if (context.Load<bool>(DefaultRetryStrategyStep.DispatchAsFailedMessageKey))
+        if (context.Load<bool>(DefaultRetryStep.DispatchAsFailedMessageKey))
         {
             var originalMessage = context.Load<Message>();
 

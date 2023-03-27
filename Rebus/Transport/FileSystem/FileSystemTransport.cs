@@ -21,11 +21,11 @@ namespace Rebus.Transport.FileSystem;
 /// <summary>
 /// File system-based transport implementation
 /// </summary>
-public class FileSystemTransport : ITransport, IInitializable, ITransportInspector, IDisposable
+public class FileSystemTransport : AbstractRebusTransport, IInitializable, ITransportInspector, IDisposable
 {
-    static readonly GenericJsonSerializer Serializer = new GenericJsonSerializer();
+    static readonly GenericJsonSerializer Serializer = new();
 
-    readonly ConcurrentQueue<IncomingMessage> _incomingMessages = new ConcurrentQueue<IncomingMessage>();
+    readonly ConcurrentQueue<IncomingMessage> _incomingMessages = new();
     readonly FileSystemTransportOptions _options;
     readonly IRebusTime _rebusTime;
     readonly string _baseDirectory;
@@ -33,79 +33,26 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
     /// <summary>
     /// Creates the transport using the given <paramref name="baseDirectory"/> to store messages in the form of JSON files
     /// </summary>
-    public FileSystemTransport(string baseDirectory, string inputQueueName, FileSystemTransportOptions options, IRebusTime rebusTime)
+    public FileSystemTransport(string baseDirectory, string inputQueueName, FileSystemTransportOptions options, IRebusTime rebusTime) : base(inputQueueName)
     {
         _baseDirectory = baseDirectory ?? throw new ArgumentNullException(nameof(baseDirectory));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
-        Address = inputQueueName;
     }
 
     /// <summary>
     /// Creates the "queue" with the given <paramref name="address"/>
     /// </summary>
-    public void CreateQueue(string address)
+    public override void CreateQueue(string address)
     {
         if (address == null) throw new ArgumentNullException(nameof(address));
         EnsureDirectoryExists(GetDirectory(address));
     }
 
     /// <summary>
-    /// Sends
-    /// </summary>
-    /// <param name="destinationAddress"></param>
-    /// <param name="message"></param>
-    /// <param name="context"></param>
-    /// <returns></returns>
-    public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
-    {
-        // this timestamp will only be used in the file names of message files written to approach some kind
-        // of global ordering - individual messages sent from this context will have sequence numbers on them
-        // in addition to the timestamp
-        var time = _rebusTime.Now;
-
-        var outgoingMessages = context.GetOrAdd("file-system-transport-outgoing-messages", () =>
-        {
-            var queue = new ConcurrentQueue<OutgoingMessage>();
-
-            context.OnCommit(_ => SendOutgoingMessages(queue, time));
-            context.OnRollback(_ => AbortOutgoingMessages(queue));
-
-            return queue;
-        });
-
-        var outgoingMessage = await OutgoingMessage.WriteTemp(GetDirectory(destinationAddress), message);
-
-        outgoingMessages.Enqueue(outgoingMessage);
-    }
-
-    static async Task AbortOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
-    {
-        foreach (var message in outgoingMessages)
-        {
-            message.Delete();
-        }
-    }
-
-    static async Task SendOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages, DateTimeOffset time)
-    {
-        var unitOfWorkId = Guid.NewGuid();
-
-        // use this index to enforce ordering of sent messages from this transaction context
-        var index = 0;
-
-        foreach (var message in outgoingMessages)
-        {
-            message.Complete(unitOfWorkId, time, index);
-
-            index++;
-        }
-    }
-
-    /// <summary>
     /// Receives the next message from the in-mem prefetch buffer, possibly trying to prefetch into the buffer first
     /// </summary>
-    public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
+    public override async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
     {
         while (true)
         {
@@ -141,16 +88,13 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
                 }
 
                 context.OnAck(async _ => next.Complete());
+                context.OnNack(async _ => _incomingMessages.Enqueue(next));
+                
                 context.OnDisposed(_ =>
                 {
-                    if (next.IsCompleted)
-                    {
-                        next.Dispose();
-                    }
-                    else
-                    {
-                        _incomingMessages.Enqueue(next);
-                    }
+                    if (!next.IsCompleted) return;
+
+                    next.Dispose();
                 });
 
                 return transportMessage;
@@ -176,24 +120,23 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
         {
             try
             {
+                // don't dispose the file stream here, because it'll act as a lock on the message as long as it's open
                 var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Delete);
 
-                using (var reader = new StreamReader(fileStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false,
-                           leaveOpen: true, bufferSize: 4096))
-                {
-                    try
-                    {
-                        var contents = reader.ReadToEnd();
-                        var envelope = Serializer.Deserialize<Envelope>(contents);
+                using var reader = new StreamReader(fileStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true, bufferSize: 4096);
 
-                        _incomingMessages.Enqueue(new IncomingMessage(envelope, fileStream, file.FullName));
-                    }
-                    catch (Exception)
-                    {
-                        // if we can't deserialize the file, skip it
-                        fileStream.Dispose();
-                        continue;
-                    }
+                try
+                {
+                    var contents = reader.ReadToEnd();
+                    var envelope = Serializer.Deserialize<Envelope>(contents);
+
+                    _incomingMessages.Enqueue(new IncomingMessage(envelope, fileStream, file.FullName));
+                }
+                catch (Exception)
+                {
+                    // if we can't deserialize the file, skip it
+                    fileStream.Dispose();
+                    continue;
                 }
             }
             catch (Exception)
@@ -202,11 +145,6 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
             }
         }
     }
-
-    /// <summary>
-    /// Gets the "queue name" of this transport
-    /// </summary>
-    public string Address { get; }
 
     /// <summary>
     /// Initializes the transport by ensuring that its own input queue exists
@@ -221,8 +159,6 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
     /// <summary>
     /// Gets additional information about the transport
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<Dictionary<string, object>> GetProperties(CancellationToken cancellationToken)
     {
         var length = Directory.GetFiles(GetDirectory(Address), "*.json").Length;
@@ -233,10 +169,7 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
         };
     }
 
-    string GetDirectory(string queueName)
-    {
-        return Path.Combine(_baseDirectory, queueName);
-    }
+    string GetDirectory(string queueName) => Path.Combine(_baseDirectory, queueName);
 
     static void EnsureDirectoryExists(string directoryPath)
     {
@@ -256,9 +189,8 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
 
     class IncomingMessage : IDisposable
     {
+        readonly FileStream _source;
         readonly string _filePath;
-
-        FileStream _source;
 
         public IncomingMessage(Envelope envelope, FileStream source, string filePath)
         {
@@ -311,85 +243,113 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
         }
     }
 
-    class OutgoingMessage
+    protected override async Task SendOutgoingMessages(IEnumerable<OutgoingTransportMessage> outgoingMessages, ITransactionContext context)
     {
-        public static async Task<OutgoingMessage> WriteTemp(string destinationDirectoryPath,
-            TransportMessage message)
+        var index = 0;
+        var now = DateTimeOffset.Now;
+        var unitOfWorkId = Guid.NewGuid();
+
+        foreach (var outgoingMessageGroup in outgoingMessages.GroupBy(o => o.DestinationAddress))
         {
-            var filePath = Path.Combine(destinationDirectoryPath, $"{Guid.NewGuid():N}.tmp");
-            try
+            var destinationQueueName = outgoingMessageGroup.Key;
+            var destinationDirectoryPath = GetDirectory(destinationQueueName);
+
+            foreach (var outgoingMessage in outgoingMessageGroup)
             {
-                var outgoingMessage = new OutgoingMessage(destinationDirectoryPath, filePath);
+                var message = outgoingMessage.TransportMessage;
+                var filePath = Path.Combine(destinationDirectoryPath, $"{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.rebusmessage.json");
+
                 var contents = Serializer.Serialize(new Envelope(message.Headers, message.Body));
 
-                using (var destination = File.OpenWrite(filePath))
-                using (var writer = new StreamWriter(destination, Encoding.UTF8))
-                {
-                    writer.Write(contents);
-                }
+                using var destination = File.OpenWrite(filePath);
+                using var writer = new StreamWriter(destination, Encoding.UTF8);
 
-                return outgoingMessage;
-            }
-            catch (Exception exception)
-            {
-                throw new IOException($@"Could not write outgoing message to
-
-    {filePath}
-", exception);
+                await writer.WriteAsync(contents);
+                
+                index++;
             }
         }
 
-        readonly string _destinationDirectoryPath;
-        readonly string _tempFilePath;
-
-        OutgoingMessage(string destinationDirectoryPath, string tempFilePath)
-        {
-            _destinationDirectoryPath = destinationDirectoryPath;
-            _tempFilePath = tempFilePath;
-        }
-
-        public void Complete(Guid unitOfWorkId, DateTimeOffset now, int index)
-        {
-            var finalFilePath = Path.Combine(_destinationDirectoryPath, $"{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.rebusmessage.json");
-            var attempts = 0;
-
-            while (true)
-            {
-                attempts++;
-                try
-                {
-                    File.Move(_tempFilePath, finalFilePath);
-                    return;
-                }
-                catch (Exception) when (attempts < 5)
-                {
-                    Thread.Sleep(500);
-                }
-                catch (Exception exception)
-                {
-                    throw new IOException($@"Could not commit message by renaming temp file
-
-    {_tempFilePath}
-
-into final file
-
-    {finalFilePath}
-
-even after {attempts} attempts
-", exception);
-                }
-            }
-        }
-
-        public void Delete()
-        {
-            try
-            {
-                File.Delete(_tempFilePath);
-            }
-            catch { }
-        }
     }
+
+//    class OutgoingMessage
+//    {
+//        public static async Task<OutgoingMessage> WriteTemp(string destinationDirectoryPath, TransportMessage message)
+//        {
+//            var filePath = Path.Combine(destinationDirectoryPath, $"{Guid.NewGuid():N}.tmp");
+//            try
+//            {
+//                var outgoingMessage = new OutgoingMessage(destinationDirectoryPath, filePath);
+//                var contents = Serializer.Serialize(new Envelope(message.Headers, message.Body));
+
+//                using (var destination = File.OpenWrite(filePath))
+//                using (var writer = new StreamWriter(destination, Encoding.UTF8))
+//                {
+//                    writer.Write(contents);
+//                }
+
+//                return outgoingMessage;
+//            }
+//            catch (Exception exception)
+//            {
+//                throw new IOException($@"Could not write outgoing message to
+
+//    {filePath}
+//", exception);
+//            }
+//        }
+
+//        readonly string _destinationDirectoryPath;
+//        readonly string _tempFilePath;
+
+//        OutgoingMessage(string destinationDirectoryPath, string tempFilePath)
+//        {
+//            _destinationDirectoryPath = destinationDirectoryPath;
+//            _tempFilePath = tempFilePath;
+//        }
+
+//        public void Complete(Guid unitOfWorkId, DateTimeOffset now, int index)
+//        {
+//            var finalFilePath = Path.Combine(_destinationDirectoryPath, $"{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.rebusmessage.json");
+//            var attempts = 0;
+
+//            while (true)
+//            {
+//                attempts++;
+//                try
+//                {
+//                    File.Move(_tempFilePath, finalFilePath);
+//                    return;
+//                }
+//                catch (Exception) when (attempts < 5)
+//                {
+//                    Thread.Sleep(500);
+//                }
+//                catch (Exception exception)
+//                {
+//                    throw new IOException($@"Could not commit message by renaming temp file
+
+//    {_tempFilePath}
+
+//into final file
+
+//    {finalFilePath}
+
+//even after {attempts} attempts
+//", exception);
+//                }
+//            }
+//        }
+
+//        public void Delete()
+//        {
+//            try
+//            {
+//                File.Delete(_tempFilePath);
+//            }
+//            catch { }
+//        }
+//    }
 
     /// <summary>
     /// Disposes the transport by releasing all currently locked messages

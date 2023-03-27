@@ -11,7 +11,7 @@ public class ForwardAction
 {
     ForwardAction(ActionType actionType, params string[] destinationAddresses)
     {
-        DestinationAddresses = destinationAddresses.ToList();
+        DestinationQueueNames = destinationAddresses.ToList();
         ActionType = actionType;
     }
 
@@ -21,34 +21,31 @@ public class ForwardAction
     public static ForwardAction None = new ForwardAction(ActionType.None);
 
     /// <summary>
-    /// Gets an action that causes the message to be forwarded to the queue specified by <paramref name="destinationAddress"/>
+    /// Gets an action that causes the message to be forwarded to the queue specified by <paramref name="destinationQueueName"/>
     /// </summary>
-    public static ForwardAction ForwardTo(string destinationAddress)
+    public static ForwardAction ForwardTo(string destinationQueueName)
     {
-        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress), "Cannot forward message to (NULL) - use ForwardAction.None if you don't intend to forward the message");
+        if (destinationQueueName == null) throw new ArgumentNullException(nameof(destinationQueueName), "Cannot forward message to (NULL) - use ForwardAction.None if you don't intend to forward the message");
 
-        return new ForwardAction(ActionType.Forward, destinationAddress);
+        return new ForwardAction(ActionType.Forward, destinationQueueName);
     }
 
     /// <summary>
-    /// Gets an action that causes the message to be forwarded to the queues specified by <paramref name="destinationAddresses"/>
+    /// Gets an action that causes the message to be forwarded to the queues specified by <paramref name="destinationQueueNames"/>
     /// </summary>
-    public static ForwardAction ForwardTo(IEnumerable<string> destinationAddresses)
+    public static ForwardAction ForwardTo(IEnumerable<string> destinationQueueNames)
     {
-        if (destinationAddresses == null) throw new ArgumentNullException(nameof(destinationAddresses), "Cannot forward message to (NULL) - use ForwardAction.None if you don't intend to forward the message");
+        if (destinationQueueNames == null) throw new ArgumentNullException(nameof(destinationQueueNames), "Cannot forward message to (NULL) - use ForwardAction.None if you don't intend to forward the message");
 
-        return new ForwardAction(ActionType.Forward, destinationAddresses.ToArray());
+        return new ForwardAction(ActionType.Forward, destinationQueueNames.ToArray());
     }
 
     /// <summary>
     /// Gets an action that causes the messge to be ignored. THIS WILL EFFECTIVELY LOSE THE MESSAGE
     /// </summary>
-    public static ForwardAction Ignore()
-    {
-        return new ForwardAction(ActionType.Ignore);
-    }
+    public static ForwardAction Ignore() => new(ActionType.Ignore);
 
-    internal List<string> DestinationAddresses { get; }
+    internal List<string> DestinationQueueNames { get; }
 
     internal ActionType ActionType { get; }
 }

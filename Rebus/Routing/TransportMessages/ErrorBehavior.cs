@@ -13,8 +13,8 @@ public enum ErrorBehavior
     RetryForever,
 
     /// <summary>
-    /// Indicates that the transport message should be forwarded to the error queue in the event that there is an error.
-    /// This is done in a "fail fast"-fashion, so there will be no additional delivery attempts.
+    /// Indicates that the transport message should be passed to the error handler when there is an error, which
+    /// usually means that the message is moved to the error queue.
     /// </summary>
-    ForwardToErrorQueue
+    Normal
 }

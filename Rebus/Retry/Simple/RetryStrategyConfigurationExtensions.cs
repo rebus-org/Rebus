@@ -10,7 +10,7 @@ namespace Rebus.Retry.Simple;
 /// <summary>
 /// Configuration extensions for the simple retry strategy
 /// </summary>
-public static class SimpleRetryStrategyConfigurationExtensions
+public static class RetryStrategyConfigurationExtensions
 {
     /// <summary>
     /// Configures the simple retry strategy, using the specified error queue address and number of delivery attempts
@@ -22,18 +22,18 @@ public static class SimpleRetryStrategyConfigurationExtensions
     /// <param name="errorDetailsHeaderMaxLength">Specifies a MAX length of the error details to be enclosed as the <see cref="Headers.ErrorDetails"/> header. As the enclosed error details can sometimes become very long (especially when using many delivery attempts), depending on the transport's capabilities it might sometimes be necessary to truncate the error details</param>
     /// <param name="errorTrackingMaxAgeMinutes">Specifies the max age of in-mem error trackings, for tracked messages that have not had any activity registered on them.</param>
     public static void SimpleRetryStrategy(this OptionsConfigurer optionsConfigurer,
-        string errorQueueAddress = SimpleRetryStrategySettings.DefaultErrorQueueName,
-        int maxDeliveryAttempts = SimpleRetryStrategySettings.DefaultNumberOfDeliveryAttempts,
+        string errorQueueAddress = RetryStrategySettings.DefaultErrorQueueName,
+        int maxDeliveryAttempts = RetryStrategySettings.DefaultNumberOfDeliveryAttempts,
         bool secondLevelRetriesEnabled = false,
         int errorDetailsHeaderMaxLength = int.MaxValue,
-        int errorTrackingMaxAgeMinutes = SimpleRetryStrategySettings.DefaultErrorTrackingMaxAgeMinutes
+        int errorTrackingMaxAgeMinutes = RetryStrategySettings.DefaultErrorTrackingMaxAgeMinutes
     )
     {
         if (optionsConfigurer == null) throw new ArgumentNullException(nameof(optionsConfigurer));
 
         optionsConfigurer.Register(c =>
         {
-            var settings = new SimpleRetryStrategySettings(
+            var settings = new RetryStrategySettings(
                 errorQueueAddress,
                 maxDeliveryAttempts,
                 secondLevelRetriesEnabled,

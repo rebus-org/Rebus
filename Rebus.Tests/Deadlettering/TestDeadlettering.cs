@@ -125,7 +125,7 @@ public class TestDeadlettering : FixtureBase
     //            var remover = new PipelineStepRemover(pipeline)
     //                .RemoveIncomingStep(s => s is SimpleRetryStrategyStep);
 
-    //            var step = new DefaultRetryStrategyStep(
+    //            var step = new DefaultRetryStep(
     //                rebusLoggerFactory: c.Get<IRebusLoggerFactory>(),
     //                errorHandler: c.Get<IErrorHandler>(),
     //                errorTracker: c.Get<IErrorTracker>(),
