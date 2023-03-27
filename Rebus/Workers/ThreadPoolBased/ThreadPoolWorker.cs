@@ -102,6 +102,8 @@ class ThreadPoolWorker : IWorker
             using (parallelOperation)
             using (var context = new TransactionContextWithOwningBus(_owningBus))
             {
+                context.OnError += exception => _log.Warn(exception, "Error in transaction context");
+
                 var transportMessage = await ReceiveTransportMessage(token, context);
 
                 if (transportMessage == null)

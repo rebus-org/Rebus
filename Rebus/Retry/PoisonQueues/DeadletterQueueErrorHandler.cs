@@ -12,10 +12,8 @@ namespace Rebus.Retry.PoisonQueues;
 /// <summary>
 /// Default <see cref="IErrorHandler"/> that uses a "poison queue" to function as storage for failed messages.
 /// </summary>
-public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
+public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
 {
-    static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
-
     readonly RetryStrategySettings _retryStrategySettings;
     readonly ITransport _transport;
     readonly ILog _log;
@@ -23,9 +21,9 @@ public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
     /// <summary>
     /// Creates the error handler
     /// </summary>
-    public PoisonQueueErrorHandler(RetryStrategySettings retryStrategySettings, ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
+    public DeadletterQueueErrorHandler(RetryStrategySettings retryStrategySettings, ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
     {
-        _log = rebusLoggerFactory?.GetLogger<PoisonQueueErrorHandler>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
+        _log = rebusLoggerFactory?.GetLogger<DeadletterQueueErrorHandler>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
     }
@@ -65,11 +63,14 @@ public class PoisonQueueErrorHandler : IErrorHandler, IInitializable
         }
         catch (Exception forwardException)
         {
-            _log.Error(forwardException, "Could not move message with ID {messageId} to error queue {queueName} - will pause {pauseInterval} to avoid thrashing",
-                messageId, errorQueueAddress, MoveToErrorQueueFailedPause);
+            var cooldownTime = TimeSpan.FromSeconds(_retryStrategySettings.ErrorQueueErrorCooldownTimeSeconds);
+
+            _log.Warn(forwardException, "Could not move message with ID {messageId} to error queue {queueName} - will pause {pauseInterval} to avoid thrashing",
+                messageId, errorQueueAddress, cooldownTime);
 
             // if we can't move to error queue, we need to avoid thrashing over and over
-            await Task.Delay(MoveToErrorQueueFailedPause);
+            await Task.Delay(cooldownTime);
+            throw;
         }
     }
 

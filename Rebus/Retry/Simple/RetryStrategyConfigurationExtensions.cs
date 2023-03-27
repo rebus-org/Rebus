@@ -21,12 +21,14 @@ public static class RetryStrategyConfigurationExtensions
     /// <param name="secondLevelRetriesEnabled">Specifies whether second level retries should be enabled - when enabled, the message will be dispatched wrapped in an <see cref="IFailed{TMessage}"/> after the first <paramref name="maxDeliveryAttempts"/> delivery attempts, allowing a different handler to handle the message. Dispatch of the <see cref="IFailed{TMessage}"/> is subject to the same <paramref name="maxDeliveryAttempts"/> delivery attempts</param>
     /// <param name="errorDetailsHeaderMaxLength">Specifies a MAX length of the error details to be enclosed as the <see cref="Headers.ErrorDetails"/> header. As the enclosed error details can sometimes become very long (especially when using many delivery attempts), depending on the transport's capabilities it might sometimes be necessary to truncate the error details</param>
     /// <param name="errorTrackingMaxAgeMinutes">Specifies the max age of in-mem error trackings, for tracked messages that have not had any activity registered on them.</param>
+    /// <param name="errorQueueErrorCooldownTimeSeconds">Specifies the time in seconds that the bus instance will wait if forwarding to the dead-letter queue fails.</param>
     public static void SimpleRetryStrategy(this OptionsConfigurer optionsConfigurer,
         string errorQueueAddress = RetryStrategySettings.DefaultErrorQueueName,
         int maxDeliveryAttempts = RetryStrategySettings.DefaultNumberOfDeliveryAttempts,
         bool secondLevelRetriesEnabled = false,
         int errorDetailsHeaderMaxLength = int.MaxValue,
-        int errorTrackingMaxAgeMinutes = RetryStrategySettings.DefaultErrorTrackingMaxAgeMinutes
+        int errorTrackingMaxAgeMinutes = RetryStrategySettings.DefaultErrorTrackingMaxAgeMinutes,
+        int errorQueueErrorCooldownTimeSeconds = RetryStrategySettings.DefaultErrorQueueErrorCooldownTimeSeconds
     )
     {
         if (optionsConfigurer == null) throw new ArgumentNullException(nameof(optionsConfigurer));
@@ -38,7 +40,8 @@ public static class RetryStrategyConfigurationExtensions
                 maxDeliveryAttempts,
                 secondLevelRetriesEnabled,
                 errorDetailsHeaderMaxLength,
-                errorTrackingMaxAgeMinutes
+                errorTrackingMaxAgeMinutes,
+                errorQueueErrorCooldownTimeSeconds: errorQueueErrorCooldownTimeSeconds
             );
 
             return settings;

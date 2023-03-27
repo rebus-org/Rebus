@@ -5,7 +5,6 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Retry;
-using Rebus.Retry.Simple;
 using Rebus.Transport;
 
 namespace Rebus.Routing.TransportMessages;

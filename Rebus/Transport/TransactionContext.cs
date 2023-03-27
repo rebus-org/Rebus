@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Bus.Advanced;
+
 // ReSharper disable SuggestBaseTypeForParameter
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable EmptyGeneralCatchClause
@@ -18,8 +20,6 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
     event Func<ITransactionContext, Task> _onRollback;
     event Action<ITransactionContext> _onDisposed;
 
-    //bool _mustAbort;
-
     bool? _mustCommit;
     bool? _mustAck;
 
@@ -27,6 +27,8 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
     bool _disposed;
 
     public ConcurrentDictionary<string, object> Items { get; } = new();
+
+    public event Action<Exception> OnError;
 
     public void OnCommit(Func<ITransactionContext, Task> commitAction)
     {
@@ -98,12 +100,14 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
             catch
             {
                 var onNack = Interlocked.Exchange(ref _onNack, null);
+
                 try
                 {
                     await InvokeAsync(onNack);
                 }
-                catch
+                catch (Exception exception)
                 {
+                    OnError?.Invoke(exception);
                 }
 
                 throw;
@@ -132,7 +136,41 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
 
         try
         {
-            _onDisposed?.Invoke(this);
+            // be sure to alway always always!! invoke rollback/NACK if required to do so 
+            if (_mustCommit == false)
+            {
+                try
+                {
+                    var onRollBack = Interlocked.Exchange(ref _onRollback, null);
+                    AsyncHelpers.RunSync(() => InvokeAsync(onRollBack));
+                }
+                catch (Exception exception)
+                {
+                    OnError?.Invoke(exception);
+                }
+            }
+
+            if (_mustAck == false)
+            {
+                try
+                {
+                    var onNack = Interlocked.Exchange(ref _onNack, null);
+                    AsyncHelpers.RunSync(() => InvokeAsync(onNack));
+                }
+                catch (Exception exception)
+                {
+                    OnError?.Invoke(exception);
+                }
+            }
+
+            try
+            {
+                _onDisposed?.Invoke(this);
+            }
+            catch (Exception exception)
+            {
+                OnError?.Invoke(exception);
+            }
         }
         finally
         {

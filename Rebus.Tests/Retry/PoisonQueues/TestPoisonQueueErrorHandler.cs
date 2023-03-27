@@ -16,9 +16,9 @@ namespace Rebus.Tests.Retry.PoisonQueues;
 [TestFixture]
 public class TestPoisonQueueErrorHandler : FixtureBase
 {
-    readonly InMemNetwork _network = new InMemNetwork(true);
+    readonly InMemNetwork _network = new(true);
 
-    PoisonQueueErrorHandler _handler;
+    DeadletterQueueErrorHandler _handler;
     InMemTransport _transport;
     RetryStrategySettings _retryStrategySettings;
 
@@ -28,7 +28,7 @@ public class TestPoisonQueueErrorHandler : FixtureBase
 
         _retryStrategySettings = new RetryStrategySettings();
         _transport = new InMemTransport(_network, "whatever");
-        _handler = new PoisonQueueErrorHandler(_retryStrategySettings, _transport, new ConsoleLoggerFactory(false));
+        _handler = new DeadletterQueueErrorHandler(_retryStrategySettings, _transport, new ConsoleLoggerFactory(false));
         _handler.Initialize();
     }
 

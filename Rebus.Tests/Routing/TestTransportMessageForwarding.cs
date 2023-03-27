@@ -10,6 +10,7 @@ using Rebus.Config;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Retry.Simple;
 using Rebus.Routing.TransportMessages;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -39,22 +40,28 @@ public class TestTransportMessageForwarding : FixtureBase
 
             sendToErrorQueueAttempts++;
 
+            Console.WriteLine($"{nameof(SendCallback)} invoked - sendToErrorQueueAttempts: {sendToErrorQueueAttempts}");
+
             // fail on the very first attempt
             if (sendToErrorQueueAttempts == 1)
             {
                 throw new ApplicationException("FAILURE ON FIRST ATTEMPT!");
             }
         }
-            
+
         Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(network, "whatever"))
             .Routing(r => r.AddTransportMessageForwarder(async msg => throw new AbandonedMutexException("oh no it's been abandoned")))
-            .Options(o => o.Decorate<ITransport>(c => new FailureTransportDecorator(SendCallback, c.Get<ITransport>())))
+            .Options(o =>
+            {
+                o.Decorate<ITransport>(c => new FailureTransportDecorator(SendCallback, c.Get<ITransport>()));
+                o.SimpleRetryStrategy(errorQueueErrorCooldownTimeSeconds: 1);
+            })
             .Start();
 
         await activator.Bus.SendLocal("HEJ MED DIG MIN VEN");
 
-        var failedMessage = await network.WaitForNextMessageFrom("error", timeoutSeconds: 10);
+        var failedMessage = await network.WaitForNextMessageFrom("error", timeoutSeconds: 5);
         var receivedString = Encoding.UTF8.GetString(failedMessage.Body);
 
         Assert.That(receivedString, Is.EqualTo("\"HEJ MED DIG MIN VEN\""));
@@ -163,16 +170,17 @@ public class TestTransportMessageForwarding : FixtureBase
     public async Task CanRetryForever()
     {
         const string recipientQueueName = "recipient";
+
         var network = new InMemNetwork();
-        var activator = new BuiltinHandlerActivator();
 
-        Using(activator);
+        using (var activator = new BuiltinHandlerActivator())
+        {
+            var bus = GetFailingBus(activator, network, recipientQueueName, ErrorBehavior.RetryForever);
 
-        network.CreateQueue(recipientQueueName);
+            await bus.SendLocal("HEJ MED DIG!!!");
 
-        var bus = GetFailingBus(activator, network, recipientQueueName, ErrorBehavior.RetryForever);
-
-        await bus.SendLocal("HEJ MED DIG!!!");
+            await Task.Delay(TimeSpan.FromSeconds(2));
+        }
 
         var message = await network.WaitForNextMessageFrom(recipientQueueName);
 
@@ -209,7 +217,7 @@ public class TestTransportMessageForwarding : FixtureBase
             .Transport(t => t.UseInMemoryTransport(network, "forwarder"))
             .Routing(t =>
             {
-                t.AddTransportMessageForwarder(async transportMessage =>
+                t.AddTransportMessageForwarder(async _ =>
                 {
                     deliveryAttempts++;
 

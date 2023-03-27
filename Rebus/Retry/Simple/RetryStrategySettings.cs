@@ -24,6 +24,11 @@ public class RetryStrategySettings
     public const int DefaultErrorTrackingMaxAgeMinutes = 10;
 
     /// <summary>
+    /// Default time in seconds the bus instance will wait, if forwarding to dead-letter queue fails.
+    /// </summary>
+    public const int DefaultErrorQueueErrorCooldownTimeSeconds = 10;
+
+    /// <summary>
     /// Creates the settings with the given error queue address and number of delivery attempts, defaulting to <see cref="DefaultErrorQueueName"/> and <see cref="DefaultNumberOfDeliveryAttempts"/> 
     /// as the error queue address and number of delivery attempts, respectively
     /// </summary>
@@ -32,7 +37,8 @@ public class RetryStrategySettings
         int maxDeliveryAttempts = DefaultNumberOfDeliveryAttempts,
         bool secondLevelRetriesEnabled = false,
         int errorDetailsHeaderMaxLength = int.MaxValue,
-        int errorTrackingMaxAgeMinutes = DefaultErrorTrackingMaxAgeMinutes
+        int errorTrackingMaxAgeMinutes = DefaultErrorTrackingMaxAgeMinutes,
+        int errorQueueErrorCooldownTimeSeconds = DefaultErrorQueueErrorCooldownTimeSeconds
     )
     {
         if (errorDetailsHeaderMaxLength < 0)
@@ -45,7 +51,7 @@ public class RetryStrategySettings
         }
         if (errorTrackingMaxAgeMinutes <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(errorTrackingMaxAgeMinutes), errorTrackingMaxAgeMinutes, 
+            throw new ArgumentOutOfRangeException(nameof(errorTrackingMaxAgeMinutes), errorTrackingMaxAgeMinutes,
                 "Please specify the max age in minutes of an in-mem error tracking before it gets purged (must be >= 1)");
         }
         ErrorQueueName = errorQueueAddress ?? throw new ArgumentException("Error queue address cannot be NULL");
@@ -53,33 +59,39 @@ public class RetryStrategySettings
         SecondLevelRetriesEnabled = secondLevelRetriesEnabled;
         ErrorDetailsHeaderMaxLength = errorDetailsHeaderMaxLength;
         ErrorTrackingMaxAgeMinutes = errorTrackingMaxAgeMinutes;
+        ErrorQueueErrorCooldownTimeSeconds = errorQueueErrorCooldownTimeSeconds;
     }
 
     /// <summary>
     /// Name of the error queue
     /// </summary>
-    public string ErrorQueueName { get; set; }
+    public string ErrorQueueName { get; internal set; }
 
     /// <summary>
     /// Number of attempted deliveries to make before moving the poisonous message to the error queue
     /// </summary>
-    public int MaxDeliveryAttempts { get; set; }
+    public int MaxDeliveryAttempts { get; internal set; }
 
     /// <summary>
     /// Configures whether an additional round of delivery attempts should be made with a <see cref="FailedMessageWrapper{TMessage}"/> wrapping the originally failed messageS
     /// </summary>
-    public bool SecondLevelRetriesEnabled { get; set; }
+    public bool SecondLevelRetriesEnabled { get; internal set; }
 
     /// <summary>
     /// Configures the max length of the <see cref="Headers.ErrorDetails"/> header. Depending on the configured number of delivery attempts and the transport's capabilities, it might
     /// be necessary to truncate the value of this header.
     /// </summary>
-    public int ErrorDetailsHeaderMaxLength { get; set; }
+    public int ErrorDetailsHeaderMaxLength { get; internal set; }
 
     /// <summary>
     /// Configures the maximum age in minutes of an in-mem error tracking.
     /// This is a safety precaution, because the in-mem error tracker can end up tracking messages that it never sees
     /// again if multiple bus instances are consuming messages from the same queue.
     /// </summary>
-    public int ErrorTrackingMaxAgeMinutes { get; set; }
+    public int ErrorTrackingMaxAgeMinutes { get; internal set; }
+
+    /// <summary>
+    /// Configures time in seconds the bus instance will wait, if forwarding to dead-letter queue fails.
+    /// </summary>
+    public int ErrorQueueErrorCooldownTimeSeconds { get; internal set; }
 }

@@ -288,7 +288,7 @@ public class RebusConfigurer
             var settings = c.Get<RetryStrategySettings>();
             var transport = c.Get<ITransport>();
             var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-            return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
+            return new DeadletterQueueErrorHandler(settings, transport, rebusLoggerFactory);
         });
 
         PossiblyRegisterDefault<IFailFastChecker>(_ => new FailFastChecker());

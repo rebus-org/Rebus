@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Logging;
@@ -50,25 +49,35 @@ public class ForwardTransportMessageStep : IIncomingStep
 
             switch (actionType)
             {
-                case ActionType.Forward:
-                    var destinationAddresses = routingResult.DestinationQueueNames;
-                    var transactionContext = context.Load<ITransactionContext>();
-
-                    _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
-
-                    await Task.WhenAll(destinationAddresses
-                        .Select(address => _transport.Send(address, transportMessage, transactionContext)));
-                    transactionContext.SetResult(commit: true, ack: true);
-                    break;
-
                 case ActionType.None:
                     await next();
                     break;
 
+                case ActionType.Forward:
+                    {
+                        var destinationAddresses = routingResult.DestinationQueueNames;
+                        var transactionContext = context.Load<ITransactionContext>();
+
+                        _log.Debug("Forwarding {messageLabel} to {queueNames}", transportMessage.GetMessageLabel(), destinationAddresses);
+                        await Task.WhenAll(destinationAddresses.Select(address => _transport.Send(address, transportMessage, transactionContext)));
+
+                        transactionContext.SetResult(commit: true, ack: true);
+                        await CommitIsPossible(transactionContext);
+
+                        break;
+                    }
+
                 case ActionType.Ignore:
-                    _log.Debug("Ignoring {messageLabel}", transportMessage.GetMessageLabel());
-                    context.Load<ITransactionContext>().SetResult(commit: true, ack: true);
-                    break;
+                    {
+                        var transactionContext = context.Load<ITransactionContext>();
+
+                        _log.Debug("Ignoring {messageLabel}", transportMessage.GetMessageLabel());
+
+                        transactionContext.SetResult(commit: true, ack: true);
+                        await CommitIsPossible(transactionContext);
+
+                        break;
+                    }
 
                 default:
                     throw new ArgumentException($"Unknown forward action type: {actionType}");
@@ -76,12 +85,12 @@ public class ForwardTransportMessageStep : IIncomingStep
         }
         catch (Exception exception)
         {
+            var transactionContext = context.Load<ITransactionContext>();
+
             if (_errorBehavior == ErrorBehavior.Normal)
             {
                 transportMessage.Headers[Headers.SourceQueue] = _transport.Address;
                 transportMessage.Headers[Headers.ErrorDetails] = exception.ToString();
-
-                var transactionContext = context.Load<ITransactionContext>();
 
                 try
                 {
@@ -94,12 +103,18 @@ public class ForwardTransportMessageStep : IIncomingStep
                 catch (Exception exception2)
                 {
                     transactionContext.SetResult(commit: false, ack: false);
-                    _log.Error(exception2, "Error when passing message {messageLabel} to error handler - waiting 5 s", transportMessage.GetMessageLabel());
-                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    _log.Error(exception2, "Error when passing message {messageLabel} to error handler", transportMessage.GetMessageLabel());
                 }
             }
 
-            throw;
+            transactionContext.SetResult(commit: false, ack: false);
         }
     }
+
+    async Task CommitIsPossible(ITransactionContext transactionContext)
+    {
+        if (transactionContext is not ICanEagerCommit canEagerCommit) return;
+        await canEagerCommit.Commit();
+    }
+
 }
