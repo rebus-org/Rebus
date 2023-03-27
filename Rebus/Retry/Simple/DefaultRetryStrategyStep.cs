@@ -62,7 +62,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
 
         if (string.IsNullOrWhiteSpace(messageId))
         {
-            transactionContext.SkipCommit();
+            transactionContext.SetResult(commit: false, ack: true);
 
             await PassToErrorHandler(context, new RebusApplicationException(
                 $"Received message with empty or absent '{Headers.MessageId}' header! All messages must carry" +
@@ -84,12 +84,12 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
                 await PassToErrorHandler(context, manualDeadletterCommand.Exception);
             }
 
-            await transactionContext.Commit();
+            transactionContext.SetResult(commit: true, ack: true);
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
             _log.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
-            transactionContext.Abort();
+            transactionContext.SetResult(commit: false, ack: false);
         }
         catch (Exception exception)
         {
@@ -105,7 +105,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
             await _errorTracker.RegisterError(messageId, exception);
             await PassToErrorHandler(context, GetAggregateException(new[] { exception }));
             await _errorTracker.CleanUp(messageId);
-            transactionContext.SkipCommit();
+            transactionContext.SetResult(commit: false, ack: true);
             return;
         }
 
@@ -113,7 +113,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
 
         if (!await _errorTracker.HasFailedTooManyTimes(messageId))
         {
-            transactionContext.Abort();
+            transactionContext.SetResult(commit: false, ack: false);
             return;
         }
 
@@ -122,7 +122,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
             try
             {
                 await DispatchSecondLevelRetry(transactionContext, context, next);
-                await transactionContext.Commit();
+                transactionContext.SetResult(commit: true, ack: true);
                 await _errorTracker.CleanUp(messageId);
                 return;
             }
@@ -135,7 +135,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
                 var exceptions = await _errorTracker.GetExceptions(messageId);
                 await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { secondLevelException })));
                 await _errorTracker.CleanUp(messageId);
-                transactionContext.SkipCommit();
+                transactionContext.SetResult(commit: false, ack: true);
                 return;
             }
         }
@@ -144,7 +144,7 @@ public class DefaultRetryStrategyStep : IRetryStrategyStep
 
         await PassToErrorHandler(context, aggregateException);
         await _errorTracker.CleanUp(messageId);
-        transactionContext.SkipCommit();
+        transactionContext.SetResult(commit: false, ack: true);
     }
 
     static async Task DispatchSecondLevelRetry(ITransactionContext transactionContext, StepContext context, Func<Task> next)

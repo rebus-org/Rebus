@@ -79,7 +79,7 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
         outgoingMessages.Enqueue(outgoingMessage);
     }
 
-    static void AbortOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
+    static async Task AbortOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages)
     {
         foreach (var message in outgoingMessages)
         {

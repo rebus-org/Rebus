@@ -37,7 +37,7 @@ public interface ITransactionContext : IDisposable
     /// Registers a listener to be called when the queue transaction is rolled back.
     /// This is a good place to enlist whatever rollback work needs to be done when the message transaction is about to be rolled back.
     /// </summary>
-    void OnRollback(Action<ITransactionContext> abortedAction);
+    void OnRollback(Func<ITransactionContext, Task> abortedAction);
 
     /// <summary>
     /// Registers a callback to be invoked as an "ACK handler", which is what finishes a message transaction.
@@ -55,16 +55,9 @@ public interface ITransactionContext : IDisposable
     void OnDisposed(Action<ITransactionContext> disposedAction);
 
     /// <summary>
-    /// Signals that something is wrong and the queue transaction must be aborted
+    /// Sets the result of the transaction.
+    /// If <paramref name="commit"/> is true, all commit callbacks registered with <see cref="OnCommit"/> will be invoked. If false, rollback callbacks registered with <see cref="OnRollback"/> will be invoked.
+    /// If <paramref name="ack"/> is true, all ACK callbacks registered with <see cref="OnAck"/> will be invoked. If false, NACK callbacks registered with <see cref="OnNack"/> will be invoked. 
     /// </summary>
-    void Abort();
-
-    /// <summary>
-    /// Marks the queue transaction as one that should not have outgoing messages committed, but still the incoming message will be ACKed.
-    /// Probably only used in the single case where the <see cref="IErrorHandler"/> gets to handle the incoming message (e.g. by moving
-    /// the message to the error queue)
-    /// </summary>
-    void SkipCommit();
-
-    Task Commit();
+    void SetResult(bool commit, bool ack);
 }

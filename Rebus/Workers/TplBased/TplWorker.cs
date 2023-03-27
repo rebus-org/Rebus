@@ -147,16 +147,12 @@ class TplWorker : IWorker
                 _log.Error(exception, "An error occurred when attempting to complete the transaction context");
             }
         }
-        catch (OperationCanceledException exception)
+        catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
-            context.Abort();
-
-            _log.Error(exception, "Worker was aborted while handling message {messageLabel}", transportMessage.GetMessageLabel());
+            _log.Info("Worker was aborted while handling message {messageLabel}", transportMessage.GetMessageLabel());
         }
         catch (Exception exception)
         {
-            context.Abort();
-
             _log.Error(exception, "Unhandled exception while handling message {messageLabel}", transportMessage.GetMessageLabel());
         }
     }

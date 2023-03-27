@@ -183,14 +183,10 @@ class ThreadPoolWorker : IWorker
         }
         catch (OperationCanceledException exception)
         {
-            context.Abort();
-
             _log.Error(exception, "Worker was aborted while handling message {messageLabel}", transportMessage.GetMessageLabel());
         }
         catch (Exception exception)
         {
-            context.Abort();
-
             _log.Error(exception, "Unhandled exception while handling message {messageLabel}", transportMessage.GetMessageLabel());
         }
     }

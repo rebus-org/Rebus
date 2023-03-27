@@ -13,7 +13,7 @@ namespace Rebus.Transport;
 public class RebusTransactionScope : IDisposable
 {
     readonly ITransactionContext _previousTransactionContext = AmbientTransactionContext.Current;
-    readonly TransactionContext _transactionContext = new TransactionContext();
+    readonly TransactionContext _transactionContext = new();
 
     /// <summary>
     /// Creates a new transaction context and mounts it on <see cref="AmbientTransactionContext.Current"/>, making it available for Rebus
@@ -29,12 +29,16 @@ public class RebusTransactionScope : IDisposable
     /// <summary>
     /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion
     /// </summary>
-    public Task CompleteAsync() => _transactionContext.Complete();
+    public Task CompleteAsync()
+    {
+        _transactionContext.SetResult(commit: true, ack: true);
+        return _transactionContext.Complete();
+    }
 
     /// <summary>
     /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion (synchronous version)
     /// </summary>
-    public void Complete() => AsyncHelpers.RunSync(() => _transactionContext.Complete());
+    public void Complete() => AsyncHelpers.RunSync(CompleteAsync);
 
     /// <summary>
     /// Disposes the transaction context and removes it from <see cref="AmbientTransactionContext.Current"/> again

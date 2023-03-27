@@ -45,7 +45,7 @@ public class TransactionContextTests : FixtureBase
             });
 
             // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
-            context.TransactionContext.OnRollback(transactionContext =>
+            context.TransactionContext.OnRollback(async transactionContext =>
             {
                 foundTransactionContextInAbortedCallback = FoundAmbientTransactionContext()
                                                            && transactionContext != null;

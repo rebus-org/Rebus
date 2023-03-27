@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable SuggestBaseTypeForParameter
 // ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.Transport;
 
@@ -14,14 +15,15 @@ class TransactionContext : ITransactionContext
     event Func<ITransactionContext, Task> _onCommitted;
     event Func<ITransactionContext, Task> _onAck;
     event Func<ITransactionContext, Task> _onNack;
-    event Action<ITransactionContext> _onAborted;
+    event Func<ITransactionContext, Task> _onRollback;
     event Action<ITransactionContext> _onDisposed;
 
-    bool _skipCommit;
-    bool _mustAbort;
+    //bool _mustAbort;
+
+    bool? _mustCommit;
+    bool? _mustAck;
+
     bool _completed;
-    bool _aborted;
-    bool _cleanedUp;
     bool _disposed;
 
     public ConcurrentDictionary<string, object> Items { get; } = new();
@@ -29,43 +31,83 @@ class TransactionContext : ITransactionContext
     public void OnCommit(Func<ITransactionContext, Task> commitAction)
     {
         if (_completed) ThrowCompletedException();
-
         _onCommitted += commitAction;
     }
 
     public void OnAck(Func<ITransactionContext, Task> ackAction)
     {
         if (_completed) ThrowCompletedException();
-
         _onAck += ackAction;
     }
 
     public void OnNack(Func<ITransactionContext, Task> nackAction)
     {
         if (_completed) ThrowCompletedException();
-
         _onNack += nackAction;
     }
 
-    public void OnRollback(Action<ITransactionContext> rollbackAction)
+    public void OnRollback(Func<ITransactionContext, Task> rollbackAction)
     {
         if (_completed) ThrowCompletedException();
-
-        _onAborted += rollbackAction;
+        _onRollback += rollbackAction;
     }
 
     public void OnDisposed(Action<ITransactionContext> disposeAction)
     {
         if (_completed) ThrowCompletedException();
-
         _onDisposed += disposeAction;
     }
 
-    public void Abort() => _mustAbort = true;
+    public void SetResult(bool commit, bool ack)
+    {
+        _mustAck = ack;
+        _mustCommit = commit;
+    }
 
-    public Task Commit() => RaiseCommitted();
+    public async Task Complete()
+    {
+        if (_mustCommit == null || _mustAck == null)
+        {
+            throw new InvalidOperationException(
+                $"Tried to complete the transaction context, but {nameof(SetResult)} has not been invoked!");
+        }
 
-    public void SkipCommit() => _skipCommit = true;
+        try
+        {
+            if (_mustCommit == true)
+            {
+                var onCommitted = Interlocked.Exchange(ref _onCommitted, null);
+                await InvokeAsync(onCommitted);
+            }
+            else
+            {
+                var onRollback = Interlocked.Exchange(ref _onRollback, null);
+                await InvokeAsync(onRollback);
+            }
+        }
+        catch
+        {
+            var onNack = Interlocked.Exchange(ref _onNack, null);
+            try
+            {
+                await InvokeAsync(onNack);
+            }
+            catch { }
+
+            throw;
+        }
+
+        if (_mustAck == true)
+        {
+            var onAck = Interlocked.Exchange(ref _onAck, null);
+            await InvokeAsync(onAck);
+        }
+        else
+        {
+            var onNack = Interlocked.Exchange(ref _onNack, null);
+            await InvokeAsync(onNack);
+        }
+    }
 
     public void Dispose()
     {
@@ -73,52 +115,39 @@ class TransactionContext : ITransactionContext
 
         try
         {
-            if (!_completed)
-            {
-                RaiseAborted();
-            }
+            _onDisposed?.Invoke(this);
+
+            //if (!_completed)
+            //{
+            //    RaiseAborted();
+            //}
         }
         finally
         {
             _disposed = true;
 
-            if (!_cleanedUp)
-            {
-                try
-                {
-                    _onDisposed?.Invoke(this);
-                }
-                finally
-                {
-                    _cleanedUp = true;
-                }
-            }
+            //if (!_cleanedUp)
+            //{
+            //    try
+            //    {
+            //        _onDisposed?.Invoke(this);
+            //    }
+            //    finally
+            //    {
+            //        _cleanedUp = true;
+            //    }
+            //}
         }
-    }
-
-    public async Task Complete(bool ack = true)
-    {
-        // if we must abort, just do that
-        if (_mustAbort)
-        {
-            RaiseAborted();
-        }
-        else
-        {
-            await RaiseCommitted();
-        }
-
-        await RaiseCompleted(ack);
     }
 
     static void ThrowCompletedException([CallerMemberName] string actionName = null) => throw new InvalidOperationException($"Cannot add {actionName} action on a completed transaction context.");
 
-    void RaiseAborted()
-    {
-        if (_aborted) return;
-        _onAborted?.Invoke(this);
-        _aborted = true;
-    }
+    //void RaiseAborted()
+    //{
+    //    if (_aborted) return;
+    //    _onRollback?.Invoke(this);
+    //    _aborted = true;
+    //}
 
     Task RaiseCommitted()
     {

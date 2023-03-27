@@ -87,7 +87,7 @@ public class ForwardTransportMessageStep : IIncomingStep
                 {
                     _log.Error(exception, "Could not forward message {messageLabel} to {queueName} - waiting 5 s", transportMessage.GetMessageLabel(), _errorQueueName);
                     await Task.Delay(TimeSpan.FromSeconds(5));
-                    context.Load<ITransactionContext>().Abort();
+                    context.Load<ITransactionContext>().SetResult(commit: false, ack: false);
                 }
             }
 

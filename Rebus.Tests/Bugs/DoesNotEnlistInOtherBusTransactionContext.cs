@@ -137,7 +137,7 @@ immediately when calling bus.....Forward");
 
             if (nextMessage != null)
             {
-                context.OnRollback(_ => networkToUse.Deliver(Address, nextMessage, alwaysQuiet: true));
+                context.OnRollback(async _ => networkToUse.Deliver(Address, nextMessage, alwaysQuiet: true));
 
                 return nextMessage.ToTransportMessage();
             }

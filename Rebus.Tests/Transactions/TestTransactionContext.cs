@@ -30,7 +30,9 @@ public class TestTransactionContext : FixtureBase
             context.OnNack(async _ => events.Enqueue("nack"));
             context.OnDisposed(async _ => events.Enqueue("dispose"));
 
-            await context.Complete(true);
+            context.SetResult(commit: true, ack: true);
+
+            await context.Complete();
         }
 
         Assert.That(events.ToArray(), Is.EqualTo(new[] { "commit", "ack", "dispose" }));
@@ -49,9 +51,9 @@ public class TestTransactionContext : FixtureBase
             context.OnNack(async _ => events.Enqueue("nack"));
             context.OnDisposed(async _ => events.Enqueue("dispose"));
 
-            context.Abort();
+            context.SetResult(commit: false, ack: false);
 
-            await context.Complete(false);
+            await context.Complete();
         }
 
         Assert.That(events.ToArray(), Is.EqualTo(new[] { "rollback", "nack", "dispose" }));
@@ -70,9 +72,9 @@ public class TestTransactionContext : FixtureBase
             context.OnNack(async _ => events.Enqueue("nack"));
             context.OnDisposed(async _ => events.Enqueue("dispose"));
 
-            context.Abort();
+            context.SetResult(commit: false, ack: true);
 
-            await context.Complete(true);
+            await context.Complete();
         }
 
         Assert.That(events.ToArray(), Is.EqualTo(new[] { "rollback", "ack", "dispose" }));

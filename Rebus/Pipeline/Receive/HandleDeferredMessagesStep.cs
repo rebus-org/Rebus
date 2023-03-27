@@ -78,28 +78,27 @@ public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializ
 
     async Task TimerElapsed()
     {
-        using (var result = await _timeoutManager.GetDueMessages())
+        using var result = await _timeoutManager.GetDueMessages();
+
+        foreach (var dueMessage in result)
         {
-            foreach (var dueMessage in result)
+            var transportMessage = dueMessage.ToTransportMessage();
+            var returnAddress = transportMessage.Headers[Headers.DeferredRecipient];
+
+            _log.Debug("Sending due message {messageLabel} to {queueName}",
+                transportMessage.GetMessageLabel(),
+                returnAddress);
+
+            using (var scope = new RebusTransactionScope())
             {
-                var transportMessage = dueMessage.ToTransportMessage();
-                var returnAddress = transportMessage.Headers[Headers.DeferredRecipient];
-
-                _log.Debug("Sending due message {messageLabel} to {queueName}",
-                    transportMessage.GetMessageLabel(),
-                    returnAddress);
-
-                using (var context = new TransactionContext())
-                {
-                    await _transport.Send(returnAddress, transportMessage, context);
-                    await context.Complete();
-                }
-
-                await dueMessage.MarkAsCompleted();
+                await _transport.Send(returnAddress, transportMessage, scope.TransactionContext);
+                await scope.CompleteAsync();
             }
 
-            await result.Complete();
+            await dueMessage.MarkAsCompleted();
         }
+
+        await result.Complete();
     }
 
     /// <summary>
