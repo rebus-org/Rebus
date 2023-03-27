@@ -51,7 +51,7 @@ public class InMemTransport : AbstractRebusTransport, ITransportInspector, IInit
 
         if (nextMessage == null) return null;
 
-        context.OnAborted(_ =>
+        context.OnRollback(_ =>
         {
             _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
         });

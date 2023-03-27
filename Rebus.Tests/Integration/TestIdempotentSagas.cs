@@ -279,7 +279,7 @@ public class TestIdempotentSagas : FixtureBase
 
             if (shouldFailThisTime)
             {
-                context.OnCommitted(async _ => throw new Exception("oh noes!!!!!"));
+                context.OnCommit(async _ => throw new Exception("oh noes!!!!!"));
             }
 
             return transportMessage;

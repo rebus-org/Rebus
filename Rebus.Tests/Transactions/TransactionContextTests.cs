@@ -37,7 +37,7 @@ public class TransactionContextTests : FixtureBase
         activator.Handle<string>(async (bus, context, message) =>
         {
             // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
-            context.TransactionContext.OnCommitted(async transactionContext =>
+            context.TransactionContext.OnCommit(async transactionContext =>
             {
                 foundTransactionContextInCommittedCallback = FoundAmbientTransactionContext()
                                                              && transactionContext != null;
@@ -45,7 +45,7 @@ public class TransactionContextTests : FixtureBase
             });
 
             // this callback can access the transaction context via the ambient tx accessor or via the passed-in tx context
-            context.TransactionContext.OnAborted(transactionContext =>
+            context.TransactionContext.OnRollback(transactionContext =>
             {
                 foundTransactionContextInAbortedCallback = FoundAmbientTransactionContext()
                                                            && transactionContext != null;
@@ -79,9 +79,9 @@ public class TransactionContextTests : FixtureBase
         disposedCallbackCalled.WaitOrDie(TimeSpan.FromSeconds(2));
 
         Assert.That(foundTransactionContextInCommittedCallback, Is.True,
-            "Expected to find an ambient transaction context in the OnCommitted callback from the transaction context");
+            "Expected to find an ambient transaction context in the OnCommit callback from the transaction context");
         Assert.That(foundTransactionContextInAbortedCallback, Is.True,
-            "Expected to find an ambient transaction context in the OnAborted callback from the transaction context");
+            "Expected to find an ambient transaction context in the OnRollback callback from the transaction context");
         Assert.That(foundTransactionContextInDisposedCallback, Is.True,
             "Expected to find an ambient transaction context in the OnDisposed callback from the transaction context");
     }

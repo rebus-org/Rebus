@@ -34,7 +34,7 @@ public abstract class AbstractRebusTransport : ITransport
         {
             var messages = new ConcurrentQueue<OutgoingTransportMessage>();
 
-            context.OnCommitted(async _ => await SendOutgoingMessages(messages, context));
+            context.OnCommit(async _ => await SendOutgoingMessages(messages, context));
 
             return messages;
         });

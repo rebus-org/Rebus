@@ -12,7 +12,8 @@ class TransactionContext : ITransactionContext
 {
     // Note: C# generates thread-safe add/remove. They use a compare-and-exchange loop.
     event Func<ITransactionContext, Task> _onCommitted;
-    event Func<ITransactionContext, Task> _onCompleted;
+    event Func<ITransactionContext, Task> _onAck;
+    event Func<ITransactionContext, Task> _onNack;
     event Action<ITransactionContext> _onAborted;
     event Action<ITransactionContext> _onDisposed;
 
@@ -25,32 +26,39 @@ class TransactionContext : ITransactionContext
 
     public ConcurrentDictionary<string, object> Items { get; } = new();
 
-    public void OnCommitted(Func<ITransactionContext, Task> commitAction)
+    public void OnCommit(Func<ITransactionContext, Task> commitAction)
     {
         if (_completed) ThrowCompletedException();
 
         _onCommitted += commitAction;
     }
 
-    public void OnCompleted(Func<ITransactionContext, Task> completedAction)
+    public void OnAck(Func<ITransactionContext, Task> ackAction)
     {
         if (_completed) ThrowCompletedException();
 
-        _onCompleted += completedAction;
+        _onAck += ackAction;
     }
 
-    public void OnAborted(Action<ITransactionContext> abortedAction)
+    public void OnNack(Func<ITransactionContext, Task> nackAction)
     {
         if (_completed) ThrowCompletedException();
 
-        _onAborted += abortedAction;
+        _onNack += nackAction;
     }
 
-    public void OnDisposed(Action<ITransactionContext> disposedAction)
+    public void OnRollback(Action<ITransactionContext> rollbackAction)
     {
         if (_completed) ThrowCompletedException();
 
-        _onDisposed += disposedAction;
+        _onAborted += rollbackAction;
+    }
+
+    public void OnDisposed(Action<ITransactionContext> disposeAction)
+    {
+        if (_completed) ThrowCompletedException();
+
+        _onDisposed += disposeAction;
     }
 
     public void Abort() => _mustAbort = true;
@@ -88,24 +96,19 @@ class TransactionContext : ITransactionContext
         }
     }
 
-    public async Task Complete()
+    public async Task Complete(bool ack = true)
     {
-        // if we must abort all, just do that
+        // if we must abort, just do that
         if (_mustAbort)
         {
             RaiseAborted();
-            return;
         }
-
-
-        if (!_skipCommit)
+        else
         {
             await RaiseCommitted();
         }
 
-        await RaiseCompleted();
-
-        Dispose();
+        await RaiseCompleted(ack);
     }
 
     static void ThrowCompletedException([CallerMemberName] string actionName = null) => throw new InvalidOperationException($"Cannot add {actionName} action on a completed transaction context.");
@@ -125,9 +128,10 @@ class TransactionContext : ITransactionContext
         return InvokeAsync(onCommitted);
     }
 
-    async Task RaiseCompleted()
+    async Task RaiseCompleted(bool ack)
     {
-        await InvokeAsync(_onCompleted);
+        await InvokeAsync(ack ? _onAck : _onNack);
+
         _completed = true;
     }
 

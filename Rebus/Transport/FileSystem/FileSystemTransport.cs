@@ -68,8 +68,8 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
         {
             var queue = new ConcurrentQueue<OutgoingMessage>();
 
-            context.OnCommitted(_ => SendOutgoingMessages(queue, time));
-            context.OnAborted(_ => AbortOutgoingMessages(queue));
+            context.OnCommit(_ => SendOutgoingMessages(queue, time));
+            context.OnRollback(_ => AbortOutgoingMessages(queue));
 
             return queue;
         });
@@ -140,7 +140,7 @@ public class FileSystemTransport : ITransport, IInitializable, ITransportInspect
                     }
                 }
 
-                context.OnCompleted(async _ => next.Complete());
+                context.OnAck(async _ => next.Complete());
                 context.OnDisposed(_ =>
                 {
                     if (next.IsCompleted)

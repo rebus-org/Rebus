@@ -98,7 +98,7 @@ public class ChangeCurrentPrincipalInPipelineAndTransactionContextCallbacks : Fi
             var customUserPrincipal = new GenericPrincipal(new GenericIdentity(_customUsername), Array.Empty<string>());
             var transactionContext = context.Load<ITransactionContext>();
 
-            transactionContext.OnCommitted(async ctx =>
+            transactionContext.OnCommit(async ctx =>
             {
                 using var _ = new TemporaryPrincipal(customUserPrincipal);
                 SetResult(_futureUsernameInTxCtxCommitted);

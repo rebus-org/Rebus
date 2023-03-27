@@ -92,7 +92,6 @@ public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializ
                 using (var context = new TransactionContext())
                 {
                     await _transport.Send(returnAddress, transportMessage, context);
-
                     await context.Complete();
                 }
 

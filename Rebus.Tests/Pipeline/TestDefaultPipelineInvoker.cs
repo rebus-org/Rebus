@@ -63,24 +63,25 @@ public class TestDefaultPipelineInvoker : FixtureBase
         {
             Items = new ConcurrentDictionary<string, object>();
         }
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
 
         public ConcurrentDictionary<string, object> Items { get; }
-            
-        public void OnCommitted(Func<ITransactionContext, Task> commitAction)
+        
+        public void OnCommit(Func<ITransactionContext, Task> commitAction)
         {
             throw new NotImplementedException();
         }
 
-        public void OnAborted(Action<ITransactionContext> abortedAction)
+        public void OnRollback(Action<ITransactionContext> abortedAction)
         {
             throw new NotImplementedException();
         }
 
-        public void OnCompleted(Func<ITransactionContext, Task> completedAction)
+        public void OnAck(Func<ITransactionContext, Task> completedAction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnNack(Func<ITransactionContext, Task> commitAction)
         {
             throw new NotImplementedException();
         }
@@ -90,17 +91,23 @@ public class TestDefaultPipelineInvoker : FixtureBase
             throw new NotImplementedException();
         }
 
-        public void Abort()
-        {
-            throw new NotImplementedException();
-        }
-
         public Task Commit()
         {
             throw new NotImplementedException();
         }
 
+        public void Abort()
+        {
+            throw new NotImplementedException();
+        }
+
         public void SkipCommit()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public void Dispose()
         {
             throw new NotImplementedException();
         }

@@ -39,7 +39,7 @@ public class TestUnitOfWork : FixtureBase
     {
         _activator.AddHandlerWithBusTemporarilyStopped<string>(async str =>
         {
-            MessageContext.Current.TransactionContext.OnCommitted(async _ => throw new ConcurrencyException());
+            MessageContext.Current.TransactionContext.OnCommit(async _ => throw new ConcurrencyException());
         });
 
         await _bus.SendLocal("hej!");

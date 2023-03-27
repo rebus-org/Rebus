@@ -412,7 +412,7 @@ public partial class RebusBus : IBus
         else
         {
             using var context = new TransactionContextWithOwningBus(this);
-                
+
             await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
             await context.Complete();
         }
@@ -432,7 +432,7 @@ public partial class RebusBus : IBus
         if (transactionContext == null)
         {
             using var context = new TransactionContextWithOwningBus(this);
-                
+
             await _transport.Send(destinationAddress, transportMessage, context);
             await context.Complete();
         }

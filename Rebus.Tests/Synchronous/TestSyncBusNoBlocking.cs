@@ -94,7 +94,7 @@ public class TestSyncBusNoBlocking : FixtureBase
                     try
                     {
                         // enlist some other async thing
-                        scope.TransactionContext.OnCommitted(async _ =>
+                        scope.TransactionContext.OnCommit(async _ =>
                         {
                             Console.WriteLine("waiting....");
                             await Task.Delay(100);

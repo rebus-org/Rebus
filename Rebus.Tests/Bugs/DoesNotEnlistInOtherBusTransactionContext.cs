@@ -126,7 +126,7 @@ immediately when calling bus.....Forward");
                 throw new ArgumentException($"Destination queue address '{destinationAddress}' does not exist!");
             }
 
-            context.OnCommitted(async _ => networkToUse.Deliver(destinationAddress, message.ToInMemTransportMessage()));
+            context.OnCommit(async _ => networkToUse.Deliver(destinationAddress, message.ToInMemTransportMessage()));
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
@@ -137,7 +137,7 @@ immediately when calling bus.....Forward");
 
             if (nextMessage != null)
             {
-                context.OnAborted(_ => networkToUse.Deliver(Address, nextMessage, alwaysQuiet: true));
+                context.OnRollback(_ => networkToUse.Deliver(Address, nextMessage, alwaysQuiet: true));
 
                 return nextMessage.ToTransportMessage();
             }
