@@ -1091,7 +1091,7 @@
 ## 7.1.0
 * Add ability to enable encryption of data bus attachments
 
-## 8.0.0-alpha03
+## 8.0.0-alpha04
 * Change the sequence of events in the retry step, which paves the way for true, distributed error tracking (i.e. tracking delivery attempts across nodes)
 * Refactor transaction context to make distinction between the ACK/NACK protocol and commit/rollback actions more clear
 

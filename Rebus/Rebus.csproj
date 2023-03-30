@@ -24,6 +24,7 @@
 		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
 		<Company>Rebus FM</Company>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 	<ItemGroup Condition="'$(EnableSourceLink)' != 'false'">
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
@@ -37,6 +38,10 @@
 		<None Include="..\artwork\little_rebusbus2_copy-500x500.png">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\README.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
 		</None>
 	</ItemGroup>
 </Project>
