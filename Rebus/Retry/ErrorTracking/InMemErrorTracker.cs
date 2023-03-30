@@ -9,7 +9,7 @@ using Rebus.Logging;
 using Rebus.Retry.Simple;
 using Rebus.Threading;
 using Rebus.Time;
-using Rebus.Transport;
+
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable ArgumentsStyleLiteral
 
@@ -24,26 +24,25 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
 {
     const string BackgroundTaskName = "CleanupTrackedErrors";
 
+    static readonly Task<bool> FalseTaskResult = Task.FromResult(false);
+
     readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new();
     readonly RetryStrategySettings _retryStrategySettings;
     readonly IAsyncTask _cleanupOldTrackedErrorsTask;
-    readonly ITransport _transport;
     readonly IRebusTime _rebusTime;
     readonly ILog _log;
 
     bool _disposed;
-    static readonly Task<bool> FalseTaskResult = Task.FromResult(false);
 
     /// <summary>
     /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
     /// </summary>
-    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, ITransport transport, IRebusTime rebusTime)
+    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, IRebusTime rebusTime)
     {
         if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
 
         _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
-        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
 
         _log = rebusLoggerFactory.GetLogger<InMemErrorTracker>();
@@ -60,9 +59,6 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// </summary>
     public void Initialize()
     {
-        // if it's a one-way client, then there's no reason to start the task
-        if (string.IsNullOrWhiteSpace(_transport.Address)) return;
-
         _cleanupOldTrackedErrorsTask.Start();
     }
 

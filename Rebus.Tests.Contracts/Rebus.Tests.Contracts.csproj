@@ -28,4 +28,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="[12.0.1,14)" />
 		<PackageReference Include="NUnit" Version="3.13.3" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Errors\" />
+	</ItemGroup>
 </Project>

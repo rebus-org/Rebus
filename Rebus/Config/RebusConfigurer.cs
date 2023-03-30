@@ -275,12 +275,11 @@ public class RebusConfigurer
 
         PossiblyRegisterDefault<IErrorTracker>(c =>
         {
-            var transport = c.Get<ITransport>();
             var settings = c.Get<RetryStrategySettings>();
             var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
             var rebusTime = c.Get<IRebusTime>();
-            return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, transport, rebusTime);
+            return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, rebusTime);
         });
 
         PossiblyRegisterDefault<IErrorHandler>(c =>
