@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Rebus.Auditing.Sagas;
 using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas;
 
-public interface ISagaSnapshotStorageFactory
+public interface ISagaSnapshotStorageFactory : IDisposable
 {
     ISagaSnapshotStorage Create();
 

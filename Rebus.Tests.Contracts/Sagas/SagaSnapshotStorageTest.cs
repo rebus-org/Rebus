@@ -28,11 +28,8 @@ public abstract class SagaSnapshotStorageTest<TFactory> : FixtureBase where TFac
 
     protected override void SetUp()
     {
-        _factory = new TFactory();
-
-        _activator = new BuiltinHandlerActivator();
-
-        Using(_activator);
+        _factory = Using(new TFactory());
+        _activator = Using(new BuiltinHandlerActivator());
 
         _logger = new ListLoggerFactory(true);
 
@@ -40,7 +37,7 @@ public abstract class SagaSnapshotStorageTest<TFactory> : FixtureBase where TFac
             .Logging(l => l.Use(_logger))
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_snapshots_integration_testerino"))
             .Sagas(s => s.StoreInMemory())
-            .Options(o => o.EnableSagaAuditing().Register(c => _factory.Create()))
+            .Options(o => o.EnableSagaAuditing().Register(_ => _factory.Create()))
             .Create();
 
         _bus = _starter.Bus;
