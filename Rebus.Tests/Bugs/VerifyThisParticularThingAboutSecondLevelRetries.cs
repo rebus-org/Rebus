@@ -36,7 +36,7 @@ public class VerifyThisParticularThingAboutSecondLevelRetries : FixtureBase
             {
                 o.RetryStrategy(maxDeliveryAttempts: 2,
                     secondLevelRetriesEnabled: true,
-                    errorQueueAddress: "poison");
+                    errorQueueName: "poison");
 
                 o.Decorate<IErrorHandler>(c => new MyErrorHandler(c.Get<IErrorHandler>()));
             })
