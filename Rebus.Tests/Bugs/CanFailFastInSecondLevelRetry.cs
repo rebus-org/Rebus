@@ -33,7 +33,7 @@ public class CanFailFastInSecondLevelRetry : FixtureBase
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "who-cares"))
             .Options(o =>
             {
-                o.SimpleRetryStrategy(secondLevelRetriesEnabled: true);
+                o.SetRetryStrategy(secondLevelRetriesEnabled: true);
                 o.FailFastOn<ArgumentException>();
             })
             .Start();

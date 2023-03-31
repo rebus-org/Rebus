@@ -153,7 +153,7 @@ public class TestInMemDataBusCleanup : FixtureBase
             .DataBus(d => d.StoreInMemory(_inMemDataStore))
             .Options(o =>
             {
-                o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
+                o.SetRetryStrategy(maxDeliveryAttempts: 1);
                 o.SetMaxParallelism(maxParallelism: 1);
             })
             .Start();

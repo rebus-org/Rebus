@@ -49,7 +49,7 @@ public abstract class TestSagaInstanceLockingBase : FixtureBase
             })
             .Options(o =>
             {
-                o.SimpleRetryStrategy(maxDeliveryAttempts: 0);
+                o.SetRetryStrategy(maxDeliveryAttempts: 0);
                 o.SetNumberOfWorkers(1);
                 o.SetMaxParallelism(20);
             })

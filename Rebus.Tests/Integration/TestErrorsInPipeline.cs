@@ -34,7 +34,7 @@ public class TestErrorsInPipeline : FixtureBase
         var bus = Configure.With(_adapter)
             .Logging(l => l.Use(_listLoggerFactory))
             .Transport(t => t.UseInMemoryTransport(_network, "test"))
-            .Options(o => o.SimpleRetryStrategy("error", 3))
+            .Options(o => o.SetRetryStrategy("error", 3))
             .Start();
 
         Using(bus);

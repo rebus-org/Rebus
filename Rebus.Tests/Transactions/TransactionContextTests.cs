@@ -68,7 +68,7 @@ public class TransactionContextTests : FixtureBase
 
         Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "whatever"))
-            .Options(o => o.SimpleRetryStrategy(maxDeliveryAttempts: 1))
+            .Options(o => o.SetRetryStrategy(maxDeliveryAttempts: 1))
             .Start();
 
         await activator.Bus.SendLocal("hej du");

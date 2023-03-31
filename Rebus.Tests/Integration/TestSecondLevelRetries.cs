@@ -35,7 +35,7 @@ public class TestSecondLevelRetries : FixtureBase
 
         _bus = Configure.With(_activator)
             .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
-            .Options(o => o.SimpleRetryStrategy(secondLevelRetriesEnabled: true))
+            .Options(o => o.SetRetryStrategy(secondLevelRetriesEnabled: true))
             .Start();
     }
 

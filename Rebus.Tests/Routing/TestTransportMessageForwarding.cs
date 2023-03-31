@@ -55,7 +55,7 @@ public class TestTransportMessageForwarding : FixtureBase
             .Options(o =>
             {
                 o.Decorate<ITransport>(c => new FailureTransportDecorator(SendCallback, c.Get<ITransport>()));
-                o.SimpleRetryStrategy(errorQueueErrorCooldownTimeSeconds: 1);
+                o.SetRetryStrategy(errorQueueErrorCooldownTimeSeconds: 1);
             })
             .Start();
 

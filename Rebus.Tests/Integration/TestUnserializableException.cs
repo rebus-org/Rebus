@@ -30,7 +30,7 @@ public class TestUnserializableException : FixtureBase
 
             var bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(network, "unserializable exceptions"))
-                .Options(o => o.SimpleRetryStrategy(maxDeliveryAttempts: 1))
+                .Options(o => o.SetRetryStrategy(maxDeliveryAttempts: 1))
                 .Start();
 
             const string knownString = "JUST SOME LISP!!!!11((((((((((((((((((()))))))))))))))))))))))";

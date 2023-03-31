@@ -32,7 +32,7 @@ public class PolymorphicDispatchAndSecondLevelRetries : FixtureBase
 
         Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter"))
-            .Options(o => o.SimpleRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1))
+            .Options(o => o.SetRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1))
             .Start();
 
         await activator.Bus.SendLocal("come on");
@@ -56,7 +56,7 @@ public class PolymorphicDispatchAndSecondLevelRetries : FixtureBase
 
         Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter"))
-            .Options(o => o.SimpleRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1))
+            .Options(o => o.SetRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1))
             .Start();
 
         await activator.Bus.SendLocal("come on");

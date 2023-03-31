@@ -33,7 +33,7 @@ public class TestCannotSendFailedMessageWrapper : FixtureBase
             .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "FAIL"))
             .Options(o =>
             {
-                o.SimpleRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);
+                o.SetRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);
             })
             .Create();
     }

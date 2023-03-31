@@ -34,7 +34,7 @@ public class VerifyThisParticularThingAboutSecondLevelRetries : FixtureBase
             .Timeouts(t => t.StoreInMemory())
             .Options(o =>
             {
-                o.SimpleRetryStrategy(maxDeliveryAttempts: 2,
+                o.SetRetryStrategy(maxDeliveryAttempts: 2,
                     secondLevelRetriesEnabled: true,
                     errorQueueAddress: "poison");
 
