@@ -213,6 +213,8 @@ public class RebusConfigurer
 
         PossiblyRegisterDefault<IRebusTime>(_ => new DefaultRebusTime());
 
+        PossiblyRegisterDefault<IExceptionLogger>(c => new DefaultExceptionLogger(c.Get<IRebusLoggerFactory>()));
+
         //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
         PossiblyRegisterDefault<IAsyncTaskFactory>(c =>
         {
@@ -289,10 +291,10 @@ public class RebusConfigurer
         PossiblyRegisterDefault<IErrorTracker>(c =>
         {
             var settings = c.Get<RetryStrategySettings>();
-            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
             var rebusTime = c.Get<IRebusTime>();
-            return new InMemErrorTracker(settings, rebusLoggerFactory, asyncTaskFactory, rebusTime);
+            var exceptionLogger = c.Get<IExceptionLogger>();
+            return new InMemErrorTracker(settings, asyncTaskFactory, rebusTime, exceptionLogger);
         });
 
         PossiblyRegisterDefault<IErrorHandler>(c =>

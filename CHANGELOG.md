@@ -1091,11 +1091,12 @@
 ## 7.1.0
 * Add ability to enable encryption of data bus attachments
 
-## 8.0.0-alpha08
+## 8.0.0-alpha09
 * Change the sequence of events in the retry step, which paves the way for true, distributed error tracking (i.e. tracking delivery attempts across nodes)
 * Refactor transaction context to make distinction between the ACK/NACK protocol and commit/rollback actions more clear
 * Change error tracking to use `ExceptionInfo` instead of real `Exception`s to provide support for distributed error tracking
 * Introduce `.Errors(e => ...)` configurer as a hook for configuring custom error trackers
+* Add `IExceptionLogger` responsible for logging exceptions to enable consistent exception logging regardless of which error tracker is configured
 
 ---
 

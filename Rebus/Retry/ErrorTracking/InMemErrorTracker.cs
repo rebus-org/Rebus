@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Extensions;
-using Rebus.Logging;
 using Rebus.Retry.Simple;
 using Rebus.Threading;
 using Rebus.Time;
@@ -29,23 +28,21 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new();
     readonly RetryStrategySettings _retryStrategySettings;
     readonly IAsyncTask _cleanupOldTrackedErrorsTask;
+    readonly IExceptionLogger _exceptionLogger;
     readonly IRebusTime _rebusTime;
-    readonly ILog _log;
 
     bool _disposed;
 
     /// <summary>
     /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
     /// </summary>
-    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, IRebusTime rebusTime)
+    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IAsyncTaskFactory asyncTaskFactory, IRebusTime rebusTime, IExceptionLogger exceptionLogger)
     {
-        if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
 
         _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
-
-        _log = rebusLoggerFactory.GetLogger<InMemErrorTracker>();
+        _exceptionLogger = exceptionLogger ?? throw new ArgumentNullException(nameof(exceptionLogger));
 
         _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(
             BackgroundTaskName,
@@ -83,11 +80,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
             id => new ErrorTracking(_rebusTime, exception),
             (id, tracking) => tracking.AddError(_rebusTime, exception, tracking.Final));
 
-        var message = errorTracking.Final
-            ? "Unhandled exception {errorNumber} (FINAL) while handling message with ID {messageId}"
-            : "Unhandled exception {errorNumber} while handling message with ID {messageId}";
-
-        _log.Warn(exception, message, errorTracking.Errors.Count(), messageId);
+        _exceptionLogger.LogException(messageId, exception, errorTracking.ErrorCount, errorTracking.Final);
 
         return Task.CompletedTask;
     }
@@ -189,7 +182,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
             //// don't change anymore if this one is already final
             //if (Final) return this;
 
-            return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { ExceptionInfo.FromException(caughtException),  }), final);
+            return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { ExceptionInfo.FromException(caughtException), }), final);
         }
 
         public TimeSpan ElapsedSinceLastError

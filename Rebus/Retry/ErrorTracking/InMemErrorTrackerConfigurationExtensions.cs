@@ -1,6 +1,5 @@
 ﻿using System;
 using Rebus.Config;
-using Rebus.Logging;
 using Rebus.Retry.Simple;
 using Rebus.Threading;
 using Rebus.Time;
@@ -21,14 +20,14 @@ public static class InMemErrorTrackerConfigurationExtensions
         configurer.Register(c =>
         {
             var retryStrategySettings = c.Get<RetryStrategySettings>();
-            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
             var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
             var rebusTime = c.Get<IRebusTime>();
+            var exceptionLogger = c.Get<IExceptionLogger>();
             return new InMemErrorTracker(
                 retryStrategySettings,
-                rebusLoggerFactory,
                 asyncTaskFactory,
-                rebusTime
+                rebusTime,
+                exceptionLogger
             );
         });
     }

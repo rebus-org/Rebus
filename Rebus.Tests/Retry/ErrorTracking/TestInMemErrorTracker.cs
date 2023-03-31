@@ -6,5 +6,4 @@ namespace Rebus.Tests.Retry.ErrorTracking;
 [TestFixture]
 public class TestInMemErrorTracker : ErrorTrackerTests<InMemErrorTrackerFactory>
 {
-    
 }

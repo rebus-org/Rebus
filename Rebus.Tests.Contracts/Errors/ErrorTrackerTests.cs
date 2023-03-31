@@ -1,24 +1,30 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Retry;
+using Rebus.Retry.Simple;
 
 namespace Rebus.Tests.Contracts.Errors;
 
 public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorTrackerFactory : IErrorTrackerFactory, new()
 {
     TErrorTrackerFactory _factory;
+    FakeExceptionLogger _exceptionLogger;
 
     protected override void SetUp()
     {
         base.SetUp();
 
+        _exceptionLogger = new FakeExceptionLogger();
         _factory = Using(new TErrorTrackerFactory());
     }
 
     [Test]
     public async Task DefaultsToZeroErrors()
     {
-        var tracker = _factory.Create(new());
+        var tracker = Create();
 
         var exceptions = await tracker.GetExceptions(NewRandomId());
 
@@ -28,7 +34,7 @@ public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorT
     [Test]
     public async Task CanTrackExceptions()
     {
-        var tracker = _factory.Create(new());
+        var tracker = Create();
 
         var id1 = NewRandomId();
         var id2 = NewRandomId();
@@ -47,12 +53,42 @@ public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorT
         Assert.That(exceptions2.Count, Is.EqualTo(2));
     }
 
+    [Test]
+    public async Task LogsExceptionWhenRegistered()
+    {
+        var tracker = Create();
+
+        var id1 = NewRandomId();
+
+        var exception1 = new Exception("1");
+        var exception2 = new Exception("2");
+        var exception3 = new Exception("3");
+
+        await tracker.RegisterError(id1, exception1);
+        await tracker.RegisterError(id1, exception2);
+        await tracker.RegisterError(id1, exception3);
+
+        await tracker.RegisterError(NewRandomId(), new Exception("?"));
+        await tracker.RegisterError(NewRandomId(), new Exception("?"));
+        await tracker.RegisterError(NewRandomId(), new Exception("?"));
+
+        var loggedExceptions = _exceptionLogger.LoggedExceptions.Where(e => e.messageId == id1).ToList();
+
+        Assert.That(loggedExceptions.Count, Is.EqualTo(3));
+        Assert.That(loggedExceptions.Select(e => new { e.errorCount, e.exception }), Is.EqualTo(new[]
+        {
+            new{errorCount=1, exception=exception1},
+            new{errorCount=2, exception=exception2},
+            new{errorCount=3, exception=exception3},
+        }));
+    }
+
     [TestCase(3)]
     [TestCase(5)]
     [TestCase(8)]
     public async Task RespectsNumberOfRetries(int maxNumberOfRetries)
     {
-        var tracker = _factory.Create(new(maxDeliveryAttempts: maxNumberOfRetries));
+        var tracker = Create(new(maxDeliveryAttempts: maxNumberOfRetries));
 
         var id1 = NewRandomId();
         var id2 = NewRandomId();
@@ -83,7 +119,7 @@ public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorT
     [Test]
     public async Task CanCleanupErrorsForMessageId()
     {
-        var tracker = _factory.Create(new());
+        var tracker = Create(new());
 
         var id = NewRandomId();
 
@@ -101,7 +137,7 @@ public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorT
     [Test]
     public async Task CanMarkAsFinal()
     {
-        var tracker = _factory.Create(new(maxDeliveryAttempts: 1000));
+        var tracker = Create(new(maxDeliveryAttempts: 1000));
 
         var id = NewRandomId();
 
@@ -114,5 +150,16 @@ public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorT
             $"Expected the tracker to report that {id} had failed too many times, even though it has had only 1 error registered, because it was marked as FINAL");
     }
 
+    IErrorTracker Create(RetryStrategySettings settings = null) => _factory.Create(settings ?? new(), _exceptionLogger);
+
     static string NewRandomId() => Guid.NewGuid().ToString("n");
+
+    class FakeExceptionLogger : IExceptionLogger
+    {
+        public ConcurrentQueue<LoggedException> LoggedExceptions { get; } = new();
+
+        public void LogException(string messageId, Exception exception, int errorCount, bool isFinal) => LoggedExceptions.Enqueue(new(messageId, exception, errorCount, isFinal));
+
+        public record LoggedException(string messageId, Exception exception, int errorCount, bool isFinal);
+    }
 }
