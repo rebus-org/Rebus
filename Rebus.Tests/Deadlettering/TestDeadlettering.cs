@@ -103,7 +103,7 @@ public class TestDeadlettering : FixtureBase
         var bus = Configure.With(activator)
             .Logging(l => l.Console(minLevel: LogLevel))
             .Transport(t => t.UseInMemoryTransport(network, "deadlettering"))
-            .Options(o => o.SetRetryStrategy(secondLevelRetriesEnabled: true))
+            .Options(o => o.RetryStrategy(secondLevelRetriesEnabled: true))
             .Start();
 
         await bus.SendLocal(new MyPoisonousMessage(), new Dictionary<string, string> { ["iknowu"] = "" });

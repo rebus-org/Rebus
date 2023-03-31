@@ -47,7 +47,7 @@ public class TestFailFast : FixtureBase
                 o.SetNumberOfWorkers(1);
                 o.SetMaxParallelism(1);
 
-                o.SetRetryStrategy(maxDeliveryAttempts: numberOfRetries, errorQueueAddress: ErrorQueueName);
+                o.RetryStrategy(maxDeliveryAttempts: numberOfRetries, errorQueueAddress: ErrorQueueName);
 
                 if (failFastChecker != null)
                 {

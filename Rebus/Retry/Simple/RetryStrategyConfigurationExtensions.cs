@@ -22,7 +22,7 @@ public static class RetryStrategyConfigurationExtensions
     /// <param name="errorDetailsHeaderMaxLength">Specifies a MAX length of the error details to be enclosed as the <see cref="Headers.ErrorDetails"/> header. As the enclosed error details can sometimes become very long (especially when using many delivery attempts), depending on the transport's capabilities it might sometimes be necessary to truncate the error details</param>
     /// <param name="errorTrackingMaxAgeMinutes">Specifies the max age of in-mem error trackings, for tracked messages that have not had any activity registered on them.</param>
     /// <param name="errorQueueErrorCooldownTimeSeconds">Specifies the time in seconds that the bus instance will wait if forwarding to the dead-letter queue fails.</param>
-    public static void SetRetryStrategy(this OptionsConfigurer optionsConfigurer,
+    public static void RetryStrategy(this OptionsConfigurer optionsConfigurer,
         string errorQueueAddress = RetryStrategySettings.DefaultErrorQueueName,
         int maxDeliveryAttempts = RetryStrategySettings.DefaultNumberOfDeliveryAttempts,
         bool secondLevelRetriesEnabled = false,

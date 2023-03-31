@@ -35,7 +35,7 @@ public class TestSagasAndPolymorphicCorrelation : FixtureBase
                 o.SetNumberOfWorkers(1);
                 o.SetMaxParallelism(1);
 
-                o.SetRetryStrategy(maxDeliveryAttempts: 1, secondLevelRetriesEnabled: true);
+                o.RetryStrategy(maxDeliveryAttempts: 1, secondLevelRetriesEnabled: true);
 
                 o.LogPipeline(verbose: true);
             })

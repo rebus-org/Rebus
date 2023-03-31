@@ -14,8 +14,7 @@ public class RebusLoggingConfigurer
 
     internal RebusLoggingConfigurer(Injectionist injectionist)
     {
-        if (injectionist == null) throw new ArgumentNullException(nameof(injectionist));
-        _injectionist = injectionist;
+        _injectionist = injectionist ?? throw new ArgumentNullException(nameof(injectionist));
     }
 
     /// <summary>

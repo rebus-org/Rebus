@@ -51,7 +51,7 @@ public class DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryH
             .Timeouts(t => t.StoreInMemory())
             .Options(o =>
             {
-                o.SetRetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);
+                o.RetryStrategy(secondLevelRetriesEnabled: true, maxDeliveryAttempts: 1);
             })
             .Create();
     }

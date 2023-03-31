@@ -156,7 +156,7 @@ to be an empty directory, but found the following files:
             .DataBus(d => d.StoreInFileSystem(_attachmentsBaseDirectory))
             .Options(o =>
             {
-                o.SetRetryStrategy(maxDeliveryAttempts: 1);
+                o.RetryStrategy(maxDeliveryAttempts: 1);
                 o.SetMaxParallelism(maxParallelism: 1);
             })
             .Start();

@@ -40,7 +40,7 @@ public class TestRetry : FixtureBase
             .Logging(l => l.Console(minLevel: LogLevel.Warn))
             .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
             .Routing(r => r.TypeBased().Map<string>(InputQueueName))
-            .Options(o => o.SetRetryStrategy(maxDeliveryAttempts: numberOfRetries, errorQueueAddress: ErrorQueueName))
+            .Options(o => o.RetryStrategy(maxDeliveryAttempts: numberOfRetries, errorQueueAddress: ErrorQueueName))
             .Start();
 
         Using(_bus);

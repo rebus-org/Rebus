@@ -83,6 +83,19 @@ public class RebusConfigurer
     }
 
     /// <summary>
+    /// Configures how Rebus tracks <see cref="Exception"/>s.
+    /// Defaults to tracking exceptions in memory. Trasking errors in memory is easy and does not require any additional configuration,
+    /// but it can lead to excessive retrying in competing consumer scenarios, because each node will count delivery attempts individually.
+    /// It is recommended in most cases to configure some kind of distributed error tracker when running distributed consumers.
+    /// </summary>
+    public RebusConfigurer Errors(Action<StandardConfigurer<IErrorTracker>> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer(new StandardConfigurer<IErrorTracker>(_injectionist, _options));
+        return this;
+    }
+
+    /// <summary>
     /// Enables the data bus and configures which implementation of <see cref="IDataBusStorage"/> to use.
     /// </summary>
     public RebusConfigurer DataBus(Action<StandardConfigurer<IDataBusStorage>> configurer)
