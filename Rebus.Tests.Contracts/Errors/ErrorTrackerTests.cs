@@ -111,7 +111,7 @@ public class ErrorTrackerTests<TErrorTrackerFactory> : FixtureBase where TErrorT
         var exceptions = await tracker.GetExceptions(id);
         Assert.That(exceptions.Count, Is.EqualTo(1));
         Assert.That(await tracker.HasFailedTooManyTimes(id), Is.True,
-            $"Expected the tracker to report that {id} had failed too many times, event though it has had only 1 error registered, because it was marked as FINAL");
+            $"Expected the tracker to report that {id} had failed too many times, even though it has had only 1 error registered, because it was marked as FINAL");
     }
 
     static string NewRandomId() => Guid.NewGuid().ToString("n");
