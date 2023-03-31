@@ -64,11 +64,11 @@ public class DefaultRetryStep : IRetryStep
         {
             transactionContext.SetResult(commit: false, ack: true);
 
-            await PassToErrorHandler(context, new RebusApplicationException(
+            await PassToErrorHandler(context, ExceptionInfo.FromException(new RebusApplicationException(
                 $"Received message with empty or absent '{Headers.MessageId}' header! All messages must carry" +
                 " an ID. If no ID is present, the message cannot be tracked" +
                 " between delivery attempts, and other stuff would also be much harder to" +
-                " do - therefore, it is a requirement that messages carry an ID."));
+                " do - therefore, it is a requirement that messages carry an ID.")));
 
             return;
         }
@@ -81,7 +81,7 @@ public class DefaultRetryStep : IRetryStep
 
             if (manualDeadletterCommand != null)
             {
-                await PassToErrorHandler(context, manualDeadletterCommand.Exception);
+                await PassToErrorHandler(context, ExceptionInfo.FromException(manualDeadletterCommand.Exception));
             }
 
             transactionContext.SetResult(commit: true, ack: true);
@@ -108,7 +108,7 @@ public class DefaultRetryStep : IRetryStep
         {
             await _errorTracker.MarkAsFinal(messageId);
             await _errorTracker.RegisterError(messageId, exception);
-            await PassToErrorHandler(context, GetAggregateException(new[] { exception }));
+            await PassToErrorHandler(context, GetAggregateException(new[] { ExceptionInfo.FromException(exception) }));
             await _errorTracker.CleanUp(messageId);
             transactionContext.SetResult(commit: false, ack: true);
             return;
@@ -138,7 +138,7 @@ public class DefaultRetryStep : IRetryStep
             catch (Exception secondLevelException)
             {
                 var exceptions = await _errorTracker.GetExceptions(messageId);
-                await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { secondLevelException })));
+                await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { ExceptionInfo.FromException(secondLevelException), })));
                 await _errorTracker.CleanUp(messageId);
                 transactionContext.SetResult(commit: false, ack: true);
                 return;
@@ -165,7 +165,7 @@ public class DefaultRetryStep : IRetryStep
         await next();
     }
 
-    async Task PassToErrorHandler(StepContext context, Exception exception)
+    async Task PassToErrorHandler(StepContext context, ExceptionInfo exception)
     {
         var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
         var transportMessage = originalTransportMessage.TransportMessage.Clone();
@@ -175,10 +175,14 @@ public class DefaultRetryStep : IRetryStep
         await scope.CompleteAsync();
     }
 
-    static AggregateException GetAggregateException(IEnumerable<Exception> exceptions)
+    static ExceptionInfo GetAggregateException(IEnumerable<ExceptionInfo> exceptions)
     {
         var list = exceptions.ToList();
 
-        return new AggregateException($"{list.Count} unhandled exceptions", list);
+        return new(typeof(AggregateException).GetSimpleAssemblyQualifiedName(),
+            $"{list.Count} unhandled exceptions",
+            string.Join(Environment.NewLine + Environment.NewLine, list.Select(e => e.GetFullErrorDescription())),
+            DateTimeOffset.Now
+        );
     }
 }

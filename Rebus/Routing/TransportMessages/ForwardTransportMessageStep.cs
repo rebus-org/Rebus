@@ -96,7 +96,7 @@ public class ForwardTransportMessageStep : IIncomingStep
                 {
                     transactionContext.SetResult(commit: false, ack: true);
                     using var scope = new RebusTransactionScope();
-                    await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, exception);
+                    await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, ExceptionInfo.FromException(exception));
                     await scope.CompleteAsync();
                     return;
                 }

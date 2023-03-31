@@ -13,5 +13,5 @@ public interface IErrorHandler
     /// <summary>
     /// Handles the poisonous message in the right way
     /// </summary>
-    Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception);
+    Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, ExceptionInfo exception);
 }

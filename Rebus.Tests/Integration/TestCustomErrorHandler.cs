@@ -59,9 +59,9 @@ public class TestCustomErrorHandler : FixtureBase
 
     class CustomErrorHandlerInTheTest : IErrorHandler
     {
-        public readonly ConcurrentQueue<TransportMessage> FailedMessages = new ConcurrentQueue<TransportMessage>();
+        public readonly ConcurrentQueue<TransportMessage> FailedMessages = new();
 
-        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
+        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, ExceptionInfo exception)
         {
             FailedMessages.Enqueue(transportMessage);
         }

@@ -117,8 +117,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
             return null;
         }
 
-        var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e =>
-            $"{e.Time}: {e.Exception}"));
+        var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e => e.GetFullErrorDescription()));
 
         return $"{errorTracking.Errors.Count()} unhandled exceptions: {fullExceptionInfo}";
     }
@@ -126,16 +125,14 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// <summary>
     /// Gets all caught exceptions for the message ID
     /// </summary>
-    public async Task<IReadOnlyList<Exception>> GetExceptions(string messageId)
+    public async Task<IReadOnlyList<ExceptionInfo>> GetExceptions(string messageId)
     {
         if (!_trackedErrors.TryGetValue(messageId, out var errorTracking))
         {
-            return Array.Empty<Exception>();
+            return Array.Empty<ExceptionInfo>();
         }
 
-        return errorTracking.Errors
-            .Select(e => e.Exception)
-            .ToList();
+        return errorTracking.Errors.ToList();
     }
 
     /// <summary>
@@ -167,9 +164,9 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     class ErrorTracking
     {
         readonly IRebusTime _rebusTime;
-        readonly CaughtException[] _caughtExceptions;
+        readonly ExceptionInfo[] _caughtExceptions;
 
-        ErrorTracking(IRebusTime rebusTime, IEnumerable<CaughtException> caughtExceptions, bool final = false)
+        ErrorTracking(IRebusTime rebusTime, IEnumerable<ExceptionInfo> caughtExceptions, bool final = false)
         {
             _rebusTime = rebusTime;
             Final = final;
@@ -177,7 +174,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
         }
 
         public ErrorTracking(IRebusTime rebusTime, Exception exception = null, bool final = false)
-            : this(rebusTime, exception != null ? new[] { new CaughtException(rebusTime.Now, exception) } : Array.Empty<CaughtException>(), final)
+            : this(rebusTime, exception != null ? new[] { ExceptionInfo.FromException(exception) } : Array.Empty<ExceptionInfo>(), final)
         {
         }
 
@@ -185,14 +182,14 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
 
         public bool Final { get; }
 
-        public IEnumerable<CaughtException> Errors => _caughtExceptions;
+        public IEnumerable<ExceptionInfo> Errors => _caughtExceptions;
 
         public ErrorTracking AddError(IRebusTime rebusTime, Exception caughtException, bool final)
         {
             //// don't change anymore if this one is already final
             //if (Final) return this;
 
-            return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { new CaughtException(_rebusTime.Now, caughtException) }), final);
+            return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { ExceptionInfo.FromException(caughtException),  }), final);
         }
 
         public TimeSpan ElapsedSinceLastError
@@ -208,17 +205,17 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
         public ErrorTracking MarkAsFinal() => new(_rebusTime, _caughtExceptions, final: true);
     }
 
-    class CaughtException
-    {
-        public CaughtException(DateTimeOffset time, Exception exception)
-        {
-            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-            Time = time;
-        }
+    //class CaughtException
+    //{
+    //    public CaughtException(DateTimeOffset time, Exception exception)
+    //    {
+    //        Exception = exception ?? throw new ArgumentNullException(nameof(exception));
+    //        Time = time;
+    //    }
 
-        public Exception Exception { get; }
-        public DateTimeOffset Time { get; }
-    }
+    //    public Exception Exception { get; }
+    //    public DateTimeOffset Time { get; }
+    //}
 
     /// <summary>
     /// Stops the periodic cleanup of tracked messages

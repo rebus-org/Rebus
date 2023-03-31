@@ -10,6 +10,7 @@ using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Handlers;
 using Rebus.Messages;
+using Rebus.Retry;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
@@ -69,7 +70,7 @@ namespace Rebus.Tests.Contracts.Activation
                 headers: headers,
                 message: body,
                 errorDescription: "something went bad",
-                exceptions: new[] { new Exception("oh noes!") }
+                exceptions: new[] { ExceptionInfo.FromException(new Exception("oh noes!")),  }
             );
 
             var handlerActivator = _activationCtx.CreateActivator(r => r.Register<SomeMessageHandler>());
@@ -365,7 +366,7 @@ has failed too many times)
             {
                 var headers = new Dictionary<string, string>();
                 var body = new FailedMessage();
-                var wrapper = new FailedMessageWrapper<FailedMessage>(headers, body, "bla bla", new Exception[0]);
+                var wrapper = new FailedMessageWrapper<FailedMessage>(headers, body, "bla bla", Array.Empty<ExceptionInfo>());
                 var handlers = (await handlerActivator.GetHandlers(wrapper, scope.TransactionContext)).ToList();
 
                 const string message = @"Expected that a single SecondLevelDeliveryHandler instance would have been returned because it implements IHandleMessages<IFailed<FailedMessage>> and we resolved handlers for a FailedMessageWrapper<FailedMessage>";

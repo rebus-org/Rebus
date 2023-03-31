@@ -56,7 +56,7 @@ public class VerifyThisParticularThingAboutSecondLevelRetries : FixtureBase
             _errorHandler = errorHandler;
         }
 
-        public Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
+        public Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, ExceptionInfo exception)
         {
             return _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
         }

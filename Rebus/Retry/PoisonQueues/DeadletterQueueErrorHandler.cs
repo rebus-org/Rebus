@@ -41,7 +41,7 @@ public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
     /// <summary>
     /// Handles the poisonous message by forwarding it to the configured error queue
     /// </summary>
-    public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception)
+    public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, ExceptionInfo exception)
     {
         var headers = transportMessage.Headers;
 
@@ -50,14 +50,17 @@ public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
             messageId = "<unknown>";
         }
 
-        headers[Headers.ErrorDetails] = GetErrorDetails(exception);
+        var errorDetails = GetErrorDetails(exception);
+
+        headers[Headers.ErrorDetails] = errorDetails;
         headers[Headers.SourceQueue] = _transport.Address;
 
         var errorQueueAddress = _retryStrategySettings.ErrorQueueName;
 
         try
         {
-            _log.Error(exception, "Moving message with ID {messageId} to error queue {queueName}", messageId, errorQueueAddress);
+            _log.Error("Moving message with ID {messageId} to error queue {queueName} - error details: {errorDetails}",
+                messageId, errorQueueAddress, errorDetails);
 
             await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
         }
@@ -74,7 +77,7 @@ public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
         }
     }
 
-    string GetErrorDetails(Exception exception)
+    string GetErrorDetails(ExceptionInfo exception)
     {
         var maxLength = _retryStrategySettings.ErrorDetailsHeaderMaxLength;
 
@@ -84,9 +87,9 @@ public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
             return "";
         }
 
-        var errorDetails = exception.ToString().Truncate(maxLength);
+        var errorDetails = $"{exception.Message}: {exception.Details}";
 
-        return errorDetails;
+        return errorDetails.Truncate(maxLength);
     }
 
 }

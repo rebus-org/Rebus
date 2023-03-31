@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Retry;
 using Rebus.Retry.PoisonQueues;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
@@ -40,7 +41,7 @@ public class TestPoisonQueueErrorHandler : FixtureBase
 
         await WithContext(async context =>
         {
-            await _handler.HandlePoisonMessage(message, context, exception);
+            await _handler.HandlePoisonMessage(message, context, ExceptionInfo.FromException(exception));
         });
 
         var failedMessage = _network.GetNextOrNull("error");
@@ -60,7 +61,7 @@ public class TestPoisonQueueErrorHandler : FixtureBase
 
         await WithContext(async context =>
         {
-            await _handler.HandlePoisonMessage(message, context, exception);
+            await _handler.HandlePoisonMessage(message, context, ExceptionInfo.FromException(exception));
         });
 
         var failedMessage = _network.GetNextOrNull("error");

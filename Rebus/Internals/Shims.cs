@@ -11,6 +11,8 @@ static class Shims
 {
     public static string GetSimpleAssemblyQualifiedName(Type type)
     {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+
         var simpleAssemblyQualifiedName = BuildSimpleAssemblyQualifiedName(type, new StringBuilder()).ToString();
 
         // type lookups apparently accept "mscorlib" as an alias for System.Private.CoreLib, so we can make the "simple assembly-qualified type name" consistent across platforms like this

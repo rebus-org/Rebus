@@ -32,7 +32,7 @@ public interface IErrorTracker
     /// <summary>
     /// Gets all caught exceptions for the message ID
     /// </summary>
-    Task<IReadOnlyList<Exception>> GetExceptions(string messageId);
+    Task<IReadOnlyList<ExceptionInfo>> GetExceptions(string messageId);
 
     /// <summary>
     /// Marks the given <paramref name="messageId"/> as "FINAL", meaning that it should be considered as "having failed too many times now"

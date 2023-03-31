@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Rebus.Retry.Simple;
@@ -26,5 +25,5 @@ public interface IFailed<out TMessage>
     /// <summary>
     /// Gets all exceptions that were caught leading to this failed message
     /// </summary>
-    IEnumerable<Exception> Exceptions { get; }
+    IEnumerable<ExceptionInfo> Exceptions { get; }
 }

@@ -18,6 +18,8 @@ public static class TypeExtensions
     /// </summary>
     public static IEnumerable<Type> GetBaseTypes(this Type type)
     {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+
         foreach (var implementedInterface in type.GetInterfaces())
         {
             yield return implementedInterface;

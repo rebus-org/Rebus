@@ -44,7 +44,7 @@ class FailedMessageWrapperStep : IIncomingStep
 
     static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new();
 
-    object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription, IEnumerable<Exception> exceptions)
+    object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription, IEnumerable<ExceptionInfo> exceptions)
     {
         if (headers == null) throw new ArgumentNullException(nameof(headers));
         if (body == null) throw new ArgumentNullException(nameof(body));
@@ -69,7 +69,7 @@ class FailedMessageWrapperStep : IIncomingStep
         }
     }
 
-    IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription, IEnumerable<Exception> exceptions)
+    IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription, IEnumerable<ExceptionInfo> exceptions)
     {
         return new FailedMessageWrapper<TMessage>(headers, body, errorDescription, exceptions);
     }

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Retry;
@@ -48,7 +49,7 @@ public class ManualDeadlettering : FixtureBase
 
         var poisonMessage = await fakeErrorHandler.GetNextPoisonMessage(timeoutSeconds: 2);
 
-        Assert.That(poisonMessage.Item2, Is.TypeOf<AbandonedMutexException>());
+        Assert.That(poisonMessage.Item2.Type, Is.EqualTo(typeof(AbandonedMutexException).GetSimpleAssemblyQualifiedName()));
         Assert.That(poisonMessage.Item2.Message, Is.EqualTo("why did you abandon me?"));
 
         Console.WriteLine("Exception passed to error handler:");
@@ -86,8 +87,8 @@ public class ManualDeadlettering : FixtureBase
 
         var poisonMessage = await fakeErrorHandler.GetNextPoisonMessage(timeoutSeconds: 2);
 
-        Assert.That(poisonMessage.Item2, Is.TypeOf<RebusApplicationException>());
         Assert.That(poisonMessage.Item2.Message, Is.EqualTo("has been manually dead-lettered"));
+        Assert.That(poisonMessage.Item2.Type, Is.EqualTo(typeof(RebusApplicationException).GetSimpleAssemblyQualifiedName()));
 
         Console.WriteLine("Exception passed to error handler:");
         Console.WriteLine(poisonMessage.Item2);
@@ -138,10 +139,10 @@ public class ManualDeadlettering : FixtureBase
 
     class FakeErrorHandler : IErrorHandler
     {
-        readonly ConcurrentQueue<(TransportMessage, Exception)> _poisonMessages = new();
+        readonly ConcurrentQueue<(TransportMessage, ExceptionInfo)> _poisonMessages = new();
 
-        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, Exception exception) => _poisonMessages.Enqueue((transportMessage, exception));
+        public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, ExceptionInfo exception) => _poisonMessages.Enqueue((transportMessage, exception));
 
-        public async Task<(TransportMessage, Exception)> GetNextPoisonMessage(int timeoutSeconds = 5) => await _poisonMessages.DequeueNext(timeoutSeconds: timeoutSeconds);
+        public async Task<(TransportMessage, ExceptionInfo)> GetNextPoisonMessage(int timeoutSeconds = 5) => await _poisonMessages.DequeueNext(timeoutSeconds: timeoutSeconds);
     }
 }
