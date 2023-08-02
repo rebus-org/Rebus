@@ -10,17 +10,23 @@ namespace Rebus.Transport;
 /// </summary>
 public static class AmbientTransactionContext
 {
-    static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new();
-      
-    /// <summary>
-    /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
-    /// </summary>
-    public static readonly Action<ITransactionContext> DefaultSetter = context => AsyncLocalTxContext.Value = context;
+    static readonly AsyncLocal<TransactionContextHolder> AsyncLocalTxContext = new();
 
     /// <summary>
     /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
     /// </summary>
-    public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value;
+    public static readonly Action<ITransactionContext> DefaultSetter = context =>
+    {
+        // cut the reference to any real transaction context currently being held
+        AsyncLocalTxContext.Value?.Clear();
+        // store reference to context in holder
+        AsyncLocalTxContext.Value = new(context);
+    };
+
+    /// <summary>
+    /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
+    /// </summary>
+    public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value?.TransactionContext;
 
     static Action<ITransactionContext> _setCurrent = DefaultSetter;
     static Func<ITransactionContext> _getCurrent = DefaultGetter;
@@ -33,7 +39,7 @@ public static class AmbientTransactionContext
 
     /// <summary>
     /// Sets the current transaction context. Please note that in most cases, it is not necessary to set the context using this method
-    /// - when using <see cref="RebusTransactionScope"/> and <see cref="RebusTransactionScope"/> the ambient transaction context
+    /// - when using <see cref="RebusTransactionScope"/> and <see cref="RebusTransactionScopeSuppressor"/> the ambient transaction context
     /// is automatically set/unset when the object is created/disposed.
     /// </summary>
     public static void SetCurrent(ITransactionContext transactionContext)
@@ -49,5 +55,18 @@ public static class AmbientTransactionContext
     {
         _setCurrent = setter ?? throw new ArgumentNullException(nameof(setter));
         _getCurrent = getter ?? throw new ArgumentNullException(nameof(getter));
+    }
+
+    /// <summary>
+    /// The holder adds an extra layer of indirection, allowing us to cut the reference to <see cref="ITransactionContext"/> by calling <see cref="Clear"/>,
+    /// thus cutting the reference to unintenionally "trapped" transaction context references.
+    /// </summary>
+    class TransactionContextHolder
+    {
+        public TransactionContextHolder(ITransactionContext transactionContext) => TransactionContext = transactionContext;
+
+        public ITransactionContext TransactionContext { get; private set; }
+
+        public void Clear() => TransactionContext = null;
     }
 }

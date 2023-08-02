@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+#pragma warning disable CS1591
 
 namespace Rebus.Tests.Contracts;
 
