@@ -88,7 +88,7 @@ public class TestTransactionContext : FixtureBase
     [Description("Ensures that the callbacks raised from the transaction context are raised at points in time where the ambient transaction context is available")]
     public async Task EnsureTransactionContextIsAvailableInItsOwnCallbacks()
     {
-        bool FoundAmbientTransactionContext() => AmbientTransactionContext.Current != null;
+        static bool FoundAmbientTransactionContext() => AmbientTransactionContext.Current != null;
 
         using var activator = new BuiltinHandlerActivator();
 
@@ -114,7 +114,7 @@ public class TestTransactionContext : FixtureBase
             context.TransactionContext.OnRollback(async transactionContext =>
             {
                 foundTransactionContextInRollbackCallback = FoundAmbientTransactionContext()
-                                                           && transactionContext != null;
+                                                            && transactionContext != null;
                 rollbackCallbackCalled.Set();
             });
 
