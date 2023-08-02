@@ -15,9 +15,9 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
 {
     // Note: C# generates thread-safe add/remove. They use a compare-and-exchange loop.
     event Func<ITransactionContext, Task> _onCommitted;
+    event Func<ITransactionContext, Task> _onRollback;
     event Func<ITransactionContext, Task> _onAck;
     event Func<ITransactionContext, Task> _onNack;
-    event Func<ITransactionContext, Task> _onRollback;
     event Action<ITransactionContext> _onDisposed;
 
     bool? _mustCommit;

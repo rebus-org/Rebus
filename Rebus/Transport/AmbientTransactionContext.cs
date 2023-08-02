@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 // ReSharper disable UnusedMember.Global
+// ReSharper disable JoinNullCheckWithUsage
 
 namespace Rebus.Transport;
 
@@ -10,7 +11,7 @@ namespace Rebus.Transport;
 /// </summary>
 public static class AmbientTransactionContext
 {
-    static readonly AsyncLocal<TransactionContextHolder> AsyncLocalTxContext = new();
+    static readonly AsyncLocal<TransactionContextHolder> AsyncLocalTransactionContextHolder = new();
 
     /// <summary>
     /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
@@ -18,15 +19,15 @@ public static class AmbientTransactionContext
     public static readonly Action<ITransactionContext> DefaultSetter = context =>
     {
         // cut the reference to any real transaction context currently being held
-        AsyncLocalTxContext.Value?.Clear();
-        // store reference to context in holder
-        AsyncLocalTxContext.Value = new(context);
+        AsyncLocalTransactionContextHolder.Value?.Clear();
+        // store reference to context in holder (or NULL if it's being cleared)
+        AsyncLocalTransactionContextHolder.Value = context != null ? new(context) : null;
     };
 
     /// <summary>
     /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
     /// </summary>
-    public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value?.TransactionContext;
+    public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTransactionContextHolder.Value?.TransactionContext;
 
     static Action<ITransactionContext> _setCurrent = DefaultSetter;
     static Func<ITransactionContext> _getCurrent = DefaultGetter;
@@ -42,10 +43,7 @@ public static class AmbientTransactionContext
     /// - when using <see cref="RebusTransactionScope"/> and <see cref="RebusTransactionScopeSuppressor"/> the ambient transaction context
     /// is automatically set/unset when the object is created/disposed.
     /// </summary>
-    public static void SetCurrent(ITransactionContext transactionContext)
-    {
-        _setCurrent(transactionContext);
-    }
+    public static void SetCurrent(ITransactionContext transactionContext) => _setCurrent(transactionContext);
 
     /// <summary>
     /// Sets the accessor functions used by Rebus to set the current transaction when executing handlers and
@@ -53,8 +51,10 @@ public static class AmbientTransactionContext
     /// </summary>
     public static void SetAccessors(Action<ITransactionContext> setter, Func<ITransactionContext> getter)
     {
-        _setCurrent = setter ?? throw new ArgumentNullException(nameof(setter));
-        _getCurrent = getter ?? throw new ArgumentNullException(nameof(getter));
+        if (setter == null) throw new ArgumentNullException(nameof(setter));
+        if (getter == null) throw new ArgumentNullException(nameof(getter));
+        _setCurrent = setter;
+        _getCurrent = getter;
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public static class AmbientTransactionContext
     /// </summary>
     class TransactionContextHolder
     {
-        public TransactionContextHolder(ITransactionContext transactionContext) => TransactionContext = transactionContext;
+        public TransactionContextHolder(ITransactionContext transactionContext) => TransactionContext = transactionContext ?? throw new ArgumentNullException(nameof(transactionContext));
 
         public ITransactionContext TransactionContext { get; private set; }
 

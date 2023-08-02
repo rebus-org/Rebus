@@ -62,7 +62,7 @@ public class ForwardTransportMessageStep : IIncomingStep
                         await Task.WhenAll(destinationAddresses.Select(address => _transport.Send(address, transportMessage, transactionContext)));
 
                         transactionContext.SetResult(commit: true, ack: true);
-                        await CommitIsPossible(transactionContext);
+                        await CommitIfPossible(transactionContext);
 
                         break;
                     }
@@ -74,7 +74,7 @@ public class ForwardTransportMessageStep : IIncomingStep
                         _log.Debug("Ignoring {messageLabel}", transportMessage.GetMessageLabel());
 
                         transactionContext.SetResult(commit: true, ack: true);
-                        await CommitIsPossible(transactionContext);
+                        await CommitIfPossible(transactionContext);
 
                         break;
                     }
@@ -111,7 +111,7 @@ public class ForwardTransportMessageStep : IIncomingStep
         }
     }
 
-    async Task CommitIsPossible(ITransactionContext transactionContext)
+    async Task CommitIfPossible(ITransactionContext transactionContext)
     {
         if (transactionContext is not ICanEagerCommit canEagerCommit) return;
         await canEagerCommit.Commit();

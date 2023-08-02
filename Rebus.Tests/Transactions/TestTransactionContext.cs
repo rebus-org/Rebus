@@ -86,7 +86,7 @@ public class TestTransactionContext : FixtureBase
 
     [Test]
     [Description("Ensures that the callbacks raised from the transaction context are raised at points in time where the ambient transaction context is available")]
-    public async Task EnsureTransactionContextIsAvailableInItsOwnCallbacks()
+    public async Task EnsureTransactionContextIsAvailableInItsOwnCallbacks_Handler()
     {
         static bool FoundAmbientTransactionContext() => AmbientTransactionContext.Current != null;
 
