@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Transport;
 
@@ -9,15 +10,15 @@ namespace Rebus.Transport;
 /// </summary>
 public static class AmbientTransactionContext
 {
-    static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new AsyncLocal<ITransactionContext>();
+    static readonly AsyncLocal<ITransactionContext> AsyncLocalTxContext = new();
       
     /// <summary>
-    /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
+    /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
     /// </summary>
     public static readonly Action<ITransactionContext> DefaultSetter = context => AsyncLocalTxContext.Value = context;
 
     /// <summary>
-    /// Gets the default set function (which is using <see cref="System.Threading.AsyncLocal{T}"/> to do its thing)
+    /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
     /// </summary>
     public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTxContext.Value;
 
