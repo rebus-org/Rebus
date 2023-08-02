@@ -11,23 +11,20 @@ namespace Rebus.Transport;
 /// </summary>
 public static class AmbientTransactionContext
 {
-    static readonly AsyncLocal<TransactionContextHolder> AsyncLocalTransactionContextHolder = new();
+    static readonly AsyncLocal<ITransactionContext> AsyncLocalTransactionContext = new();
 
     /// <summary>
     /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
     /// </summary>
     public static readonly Action<ITransactionContext> DefaultSetter = context =>
     {
-        // cut the reference to any real transaction context currently being held
-        AsyncLocalTransactionContextHolder.Value?.Clear();
-        // store reference to context in holder (or NULL if it's being cleared)
-        AsyncLocalTransactionContextHolder.Value = context != null ? new(context) : null;
+        AsyncLocalTransactionContext.Value = context;
     };
 
     /// <summary>
     /// Gets the default set function (which is using <see cref="AsyncLocal{T}"/> to do its thing)
     /// </summary>
-    public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTransactionContextHolder.Value?.TransactionContext;
+    public static readonly Func<ITransactionContext> DefaultGetter = () => AsyncLocalTransactionContext.Value;
 
     static Action<ITransactionContext> _setCurrent = DefaultSetter;
     static Func<ITransactionContext> _getCurrent = DefaultGetter;
@@ -55,18 +52,5 @@ public static class AmbientTransactionContext
         if (getter == null) throw new ArgumentNullException(nameof(getter));
         _setCurrent = setter;
         _getCurrent = getter;
-    }
-
-    /// <summary>
-    /// The holder adds an extra layer of indirection, allowing us to cut the reference to <see cref="ITransactionContext"/> by calling <see cref="Clear"/>,
-    /// thus cutting the reference to unintenionally "trapped" transaction context references.
-    /// </summary>
-    class TransactionContextHolder
-    {
-        public TransactionContextHolder(ITransactionContext transactionContext) => TransactionContext = transactionContext ?? throw new ArgumentNullException(nameof(transactionContext));
-
-        public ITransactionContext TransactionContext { get; private set; }
-
-        public void Clear() => TransactionContext = null;
     }
 }

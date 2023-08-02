@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
 // ReSharper disable UnusedVariable
+// ReSharper disable ConvertToUsingDeclaration
+// ReSharper disable RedundantAssignment
+#pragma warning disable IDE0059
 
 namespace Rebus.Tests.Transport;
 
@@ -22,55 +23,41 @@ public class TestAmbientTransactionContext : FixtureBase
     [Test]
     public async Task ReproduceInconvenientCopyingOfAsyncLocalStuff()
     {
-        // create an object and stash it in the transaction context
         var obj = new object();
-        var transactionContext = new TransactionContext();
-        transactionContext.Items["who cares"] = obj;
+        var weakObjectReference = new WeakReference(obj);
 
-        // "start an ambient transaction"
-        AmbientTransactionContext.SetCurrent(transactionContext);
+        Assert.That(weakObjectReference.IsAlive, Is.True, "Wait wat?");
 
-        var queue = new ConcurrentQueue<object>();
-        
-        // start an asynchronous task, thus copying the current execution context to it
-        var loop = WaitShortWhileAndEnqueueAmbientTransactionContext(queue);
+        var task = StartSomethingAsync(obj);
 
-        // "end the ambient transaction"
-        AmbientTransactionContext.SetCurrent(null);
-
-        // wait for task to complete
-        await loop;
-
-        // clear the local references
+        // clear this one, so the longevity of the object relies solely on being referenced from the transaction context
         obj = null;
-        transactionContext = null;
 
-        // force collection
         GC.Collect();
+        GC.WaitForPendingFinalizers();
+        Assert.That(weakObjectReference.IsAlive, Is.True, 
+            "One-second task has not finished running yet, so the weak reference should still be alive!");
 
-        // check what we got
-        if (!queue.TryDequeue(out var returnedTransactionContext))
-        {
-            throw new AssertionException("No transaction context was apparently returned");
-        }
+        await task;
 
-        Assert.That(returnedTransactionContext, Is.Null,
-            @"Expected the returned transaction context to have been NULL. 
-
-When it isn't NULL, it means that the 'long-running task' has been capable of returning it after having been running for a while, which
-in turn must mean that the task's execution context is still holding a reference to it somehow.");
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        Assert.That(weakObjectReference.IsAlive, Is.False,
+            "One-second task has finished running, so the transaction context should have been cleared by now, thus rendering the weak reference dead");
     }
 
-    static Task WaitShortWhileAndEnqueueAmbientTransactionContext(ConcurrentQueue<object> transactionContexts)
+    static Task StartSomethingAsync(object obj)
     {
-        var task = Task.Run(async () =>
+        Task task;
+
+        using (var scope = new RebusTransactionScope())
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            scope.TransactionContext.Items["key"] = obj;
 
-            var transactionContext = AmbientTransactionContext.Current;
+            task = Task.Run(async () => await Task.Delay(TimeSpan.FromSeconds(1)));
 
-            transactionContexts.Enqueue(transactionContext);
-        });
+            scope.Complete();
+        }
 
         return task;
     }

@@ -174,6 +174,15 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
         }
         finally
         {
+            // wipe all references rooted in the tx context to avoidf accidentally capturing anything
+            Interlocked.Exchange(ref _onAck, null);
+            Interlocked.Exchange(ref _onNack, null);
+            Interlocked.Exchange(ref _onCommitted, null);
+            Interlocked.Exchange(ref _onRollback, null);
+            Interlocked.Exchange(ref _onDisposed, null);
+            Interlocked.Exchange(ref OnError, null);
+            Items.Clear();
+
             _disposed = true;
         }
     }
