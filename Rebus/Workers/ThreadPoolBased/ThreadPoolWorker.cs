@@ -14,16 +14,16 @@ namespace Rebus.Workers.ThreadPoolBased;
 
 class ThreadPoolWorker : IWorker
 {
-    readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    readonly ManualResetEvent _workerShutDown = new ManualResetEvent(false);
-    readonly ITransport _transport;
-    readonly IPipelineInvoker _pipelineInvoker;
+    readonly CancellationTokenSource _cancellationTokenSource = new();
     readonly ParallelOperationsManager _parallelOperationsManager;
+    readonly CancellationToken _busDisposalCancellationToken;
+    readonly ManualResetEvent _workerShutDown = new(false);
+    readonly IPipelineInvoker _pipelineInvoker;
+    readonly IBackoffStrategy _backoffStrategy;
+    readonly ITransport _transport;
+    readonly Thread _workerThread;
     readonly RebusBus _owningBus;
     readonly Options _options;
-    readonly IBackoffStrategy _backoffStrategy;
-    readonly CancellationToken _busDisposalCancellationToken;
-    readonly Thread _workerThread;
     readonly ILog _log;
 
     internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory,
