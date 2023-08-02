@@ -20,7 +20,7 @@ public static class AmbientTransactionContext
         // cut the reference to any real transaction context currently being held
         AsyncLocalTxContext.Value?.Clear();
         // store reference to context in holder
-        AsyncLocalTxContext.Value = new(context);
+        AsyncLocalTxContext.Value = context != null ? new(context) : null;
     };
 
     /// <summary>
@@ -63,7 +63,7 @@ public static class AmbientTransactionContext
     /// </summary>
     class TransactionContextHolder
     {
-        public TransactionContextHolder(ITransactionContext transactionContext) => TransactionContext = transactionContext;
+        public TransactionContextHolder(ITransactionContext transactionContext) => TransactionContext = transactionContext ?? throw new ArgumentNullException(nameof(transactionContext));
 
         public ITransactionContext TransactionContext { get; private set; }
 
