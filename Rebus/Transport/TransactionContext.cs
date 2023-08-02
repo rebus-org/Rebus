@@ -137,7 +137,7 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
         try
         {
             // be sure to alway always always!! invoke rollback/NACK if required to do so 
-            if (_mustCommit == false)
+            if (_mustCommit != true)
             {
                 try
                 {
