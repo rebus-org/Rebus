@@ -1091,6 +1091,9 @@
 ## 7.1.0
 * Add ability to enable encryption of data bus attachments
 
+## 7.1.1
+* Fix potential ambient transaction context issue that would inadvertently result in keeping a reference to the first transaction context if one or more long-running tasks were lazy-initialized as part of handling the first message
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
