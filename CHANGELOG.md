@@ -1094,7 +1094,7 @@
 ## 7.1.1
 * Fix potential ambient transaction context issue that would inadvertently result in keeping a reference to the first transaction context if one or more long-running tasks were lazy-initialized as part of handling the first message
 
-## 8.0.0-alpha09
+## 8.0.0-alpha10
 * Change the sequence of events in the retry step, which paves the way for true, distributed error tracking (i.e. tracking delivery attempts across nodes)
 * Refactor transaction context to make distinction between the ACK/NACK protocol and commit/rollback actions more clear
 * Change error tracking to use `ExceptionInfo` instead of real `Exception`s to provide support for distributed error tracking
