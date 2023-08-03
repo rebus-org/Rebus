@@ -33,28 +33,13 @@ public class BusLifetimeEvents
     /// </summary>
     public event Action BusDisposed;
 
-    internal void RaiseBusStarting()
-    {
-        BusStarting?.Invoke();
-    }
+    internal void RaiseBusStarting() => BusStarting?.Invoke();
 
-    internal void RaiseBusStarted()
-    {
-        BusStarted?.Invoke();
-    }
+    internal void RaiseBusStarted() => BusStarted?.Invoke();
 
-    internal void RaiseBusDisposing()
-    {
-        BusDisposing?.Invoke();
-    }
+    internal void RaiseBusDisposing() => BusDisposing?.Invoke();
 
-    internal void RaiseBusDisposed()
-    {
-        BusDisposed?.Invoke();
-    }
+    internal void RaiseBusDisposed() => BusDisposed?.Invoke();
 
-    internal void RaiseWorkersStopped()
-    {
-        WorkersStopped?.Invoke();
-    }
+    internal void RaiseWorkersStopped() => WorkersStopped?.Invoke();
 }
