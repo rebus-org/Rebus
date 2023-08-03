@@ -1094,12 +1094,16 @@
 ## 7.1.1
 * Fix potential ambient transaction context issue that would inadvertently result in keeping a reference to the first transaction context if one or more long-running tasks were lazy-initialized as part of handling the first message
 
-## 8.0.0-alpha10
+## 7.2.0
+* Add `Events` configuration method on `OptionsConfigurer` to provide easier access to `BusLifetimeEvents`
+
+## 8.0.0-alpha11
 * Change the sequence of events in the retry step, which paves the way for true, distributed error tracking (i.e. tracking delivery attempts across nodes)
 * Refactor transaction context to make distinction between the ACK/NACK protocol and commit/rollback actions more clear
 * Change error tracking to use `ExceptionInfo` instead of real `Exception`s to provide support for distributed error tracking
 * Introduce `.Errors(e => ...)` configurer as a hook for configuring custom error trackers
 * Add `IExceptionLogger` responsible for logging exceptions to enable consistent exception logging regardless of which error tracker is configured
+
 
 ---
 
