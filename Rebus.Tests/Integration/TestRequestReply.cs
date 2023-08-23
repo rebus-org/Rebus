@@ -8,11 +8,13 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Routing;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+// ReSharper disable AccessToDisposedClosure
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Integration;
@@ -92,6 +94,33 @@ public class TestRequestReply : FixtureBase
         gotMessage.WaitOrDie(TimeSpan.FromSeconds(5));
 
         Assert.That(receivedInReplyToHeaderValue, Is.EqualTo(knownMessageId));
+    }
+
+    [Test]
+    [Repeat(10)]
+    public async Task CanReturnReplyTask()
+    {
+        var network = new InMemNetwork();
+
+        IBus CreateBus(string queueName, Action<TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder> routing = null, Action<BuiltinHandlerActivator> handlers = null)
+        {
+            var activator = new BuiltinHandlerActivator();
+            handlers?.Invoke(activator);
+            return Configure.With(activator)
+                .Transport(t => t.UseInMemoryTransport(network, queueName))
+                .Routing(r => routing?.Invoke(r.TypeBased()))
+                .Start();
+        }
+
+        using var gotTheReply = new ManualResetEventSlim(initialState: false);
+
+        using var sender = CreateBus("sender", routing: r => r.Map<Request>("receiver"), handlers: a => a.Handle<Reply>(async _ => gotTheReply.Set()));
+        using var receiver = CreateBus("receiver", handlers: a => a.Handle<Request>((bus, request) => bus.Reply(new Reply())));
+
+        await sender.Send(new Request());
+
+        if (!gotTheReply.Wait(TimeSpan.FromSeconds(2)))
+            throw new AssertionException("Did not receibe reply within 2 seconds");
     }
 
     class Request { }

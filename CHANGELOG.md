@@ -1097,7 +1097,8 @@
 ## 7.2.0
 * Add `Events` configuration method on `OptionsConfigurer` to provide easier access to `BusLifetimeEvents`
 
-
+## 7.2.1
+* Only clear the transaction context reference when the intention is to clear it.
 
 ---
 

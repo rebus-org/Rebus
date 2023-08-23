@@ -18,9 +18,15 @@ public static class AmbientTransactionContext
     public static readonly Action<ITransactionContext> DefaultSetter = context =>
     {
         // cut the reference to any real transaction context currently being held
-        AsyncLocalTxContext.Value?.Clear();
+        if (context == null)
+        {
+            AsyncLocalTxContext.Value?.Clear();
+            AsyncLocalTxContext.Value = null;
+            return;
+        }
+
         // store reference to context in holder
-        AsyncLocalTxContext.Value = context != null ? new(context) : null;
+        AsyncLocalTxContext.Value = new(context);
     };
 
     /// <summary>
