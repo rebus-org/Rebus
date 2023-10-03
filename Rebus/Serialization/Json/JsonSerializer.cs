@@ -53,15 +53,16 @@ class JsonSerializer : ISerializer
     /// </summary>
     public async Task<TransportMessage> Serialize(Message message)
     {
-        var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
+        var body = message.Body;
+        var jsonText = JsonConvert.SerializeObject(body, _settings);
         var bytes = _encoding.GetBytes(jsonText);
         var headers = message.Headers.Clone();
 
         headers[Headers.ContentType] = _encodingHeaderValue;
 
-        if (!headers.ContainsKey(Headers.Type))
+        if (!headers.ContainsKey(Headers.Type) && body != null)
         {
-            headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(message.Body.GetType());
+            headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(body.GetType());
         }
 
         return new TransportMessage(headers, bytes);
@@ -74,17 +75,17 @@ class JsonSerializer : ISerializer
     {
         var contentType = transportMessage.Headers.GetValue(Headers.ContentType);
 
-        if (contentType.Equals(JsonUtf8ContentType, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(contentType, JsonUtf8ContentType, StringComparison.OrdinalIgnoreCase))
         {
             return GetMessage(transportMessage, DefaultEncoding);
         }
 
-        if (contentType.Equals(_encodingHeaderValue, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(contentType, _encodingHeaderValue, StringComparison.OrdinalIgnoreCase))
         {
             return GetMessage(transportMessage, _encoding);
         }
 
-        if (contentType.StartsWith(JsonContentType))
+        if (contentType != null && contentType.StartsWith(JsonContentType))
         {
             var encoding = GetEncoding(contentType);
             return GetMessage(transportMessage, encoding);

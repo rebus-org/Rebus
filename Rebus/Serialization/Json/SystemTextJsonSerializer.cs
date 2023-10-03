@@ -50,14 +50,15 @@ class SystemTextJsonSerializer : ISerializer
     /// </summary>
     public Task<TransportMessage> Serialize(Message message)
     {
-        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(message.Body, message.Body.GetType(), _options);
+        var body = message.Body ?? throw new ArgumentException($"Sorry, but the System.Text.Json-based message serializer needs a message body to work (i.e. it's not capable of serializing NULL)");
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, body.GetType(), _options);
         var headers = message.Headers.Clone();
 
         headers[Headers.ContentType] = _encodingHeaderValue;
 
         if (!headers.ContainsKey(Headers.Type))
         {
-            headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(message.Body.GetType());
+            headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(body.GetType());
         }
 
         return Task.FromResult(new TransportMessage(headers, bytes));
@@ -70,17 +71,17 @@ class SystemTextJsonSerializer : ISerializer
     {
         var contentType = transportMessage.Headers.GetValue(Headers.ContentType);
 
-        if (contentType.Equals(JsonUtf8ContentType, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(contentType, JsonUtf8ContentType, StringComparison.OrdinalIgnoreCase))
         {
             return Task.FromResult(GetMessage(transportMessage, DefaultEncoding));
         }
 
-        if (contentType.Equals(_encodingHeaderValue, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(contentType, _encodingHeaderValue, StringComparison.OrdinalIgnoreCase))
         {
             return Task.FromResult(GetMessage(transportMessage, _encoding));
         }
 
-        if (contentType.StartsWith(JsonContentType))
+        if (contentType != null && contentType.StartsWith(JsonContentType))
         {
             var encoding = GetEncoding(contentType);
             return Task.FromResult(GetMessage(transportMessage, encoding));
