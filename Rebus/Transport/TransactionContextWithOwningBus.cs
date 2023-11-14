@@ -1,4 +1,5 @@
-﻿using Rebus.Bus;
+﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Transport;
 
@@ -6,7 +7,7 @@ class TransactionContextWithOwningBus : TransactionContext, ITransactionContextW
 {
     public TransactionContextWithOwningBus(RebusBus owningBus)
     {
-        OwningBus = owningBus;
+        OwningBus = owningBus ?? throw new ArgumentNullException(nameof(owningBus));
     }
         
     public IBus OwningBus { get; }

@@ -11,7 +11,7 @@ using Rebus.Bus.Advanced;
 
 namespace Rebus.Transport;
 
-class TransactionContext : ITransactionContext, ICanEagerCommit
+class TransactionContext : ICanEagerCommit
 {
     // Note: C# generates thread-safe add/remove. They use a compare-and-exchange loop.
     event Func<ITransactionContext, Task> _onCommitted;
@@ -67,7 +67,7 @@ class TransactionContext : ITransactionContext, ICanEagerCommit
         _mustCommit = commit;
     }
 
-    public async Task Commit()
+    public async Task CommitAsync()
     {
         if (_completed) ThrowCompletedException();
         var onCommitted = Interlocked.Exchange(ref _onCommitted, null);

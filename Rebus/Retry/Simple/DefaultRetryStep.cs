@@ -88,7 +88,7 @@ public class DefaultRetryStep : IRetryStep
 
             if (transactionContext is ICanEagerCommit canEagerCommit)
             {
-                await canEagerCommit.Commit();
+                await canEagerCommit.CommitAsync();
             }
         }
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)

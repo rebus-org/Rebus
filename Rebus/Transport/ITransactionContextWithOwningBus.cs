@@ -6,7 +6,7 @@ namespace Rebus.Transport;
 /// Extends <see cref="ITransactionContext"/> with an "owning bus", which makes it possible for a bus instance to avoid enlisting
 /// its work in an ongoing transaction if it detects that it's another bus' context
 /// </summary>
-interface ITransactionContextWithOwningBus : ITransactionContext
+public interface ITransactionContextWithOwningBus : ITransactionContext
 {
     /// <summary>
     /// Gets the owning bus instance
