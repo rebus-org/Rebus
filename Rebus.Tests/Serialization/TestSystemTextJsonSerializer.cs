@@ -81,6 +81,24 @@ Made 434064 iterations in 00:00:01
     }
 
     [Test]
+    public void CheckErrorWhenContentTypeHeaderIsMissing()
+    {
+        var jsonBody = Encoding.UTF8.GetBytes("{}");
+        var headersWithEmptyContentType = new Dictionary<string, string> { [Headers.ContentType] = null };
+        var headersWithoutContentType = new Dictionary<string, string>();
+
+        var ex1 = Assert.ThrowsAsync<KeyNotFoundException>(() => _serializer.Deserialize(
+            new TransportMessage(headersWithoutContentType, jsonBody)));
+
+        Console.WriteLine(ex1);
+
+        var ex2 = Assert.ThrowsAsync<FormatException>(() => _serializer.Deserialize(
+            new TransportMessage(headersWithEmptyContentType, jsonBody)));
+
+        Console.WriteLine(ex2);
+    }
+
+    [Test]
     [Description("Serializer would wrongly use its own current encoding when default encoding was detected")]
     public async Task CheckEncodingBug()
     {
