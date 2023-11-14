@@ -1103,6 +1103,7 @@
 * Change error tracking to use `ExceptionInfo` instead of real `Exception`s to provide support for distributed error tracking
 * Introduce `.Errors(e => ...)` configurer as a hook for configuring custom error trackers
 * Add `IExceptionLogger` responsible for logging exceptions to enable consistent exception logging regardless of which error tracker is configured
+* Prevent multiple bus instances from enlisting in the same transaction context, because it will result in undefined behavior
 
 
 ---

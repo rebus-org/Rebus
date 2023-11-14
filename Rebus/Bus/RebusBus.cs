@@ -407,6 +407,17 @@ public partial class RebusBus : IBus
 
         if (currentTransactionContext != null)
         {
+            var enlistedRebusInstance = currentTransactionContext.Items.GetOrAdd("enlisted-rebus-instance", this);
+            
+            if (!Equals(enlistedRebusInstance, this))
+            {
+                throw new InvalidOperationException($@"Cannot enlist bus operations for bus {this} into this transaction context, because another bus instance has already enlisted one or more operations: {enlistedRebusInstance}.
+
+It's not possible to enlist operations from more than one Rebus instance in the same transaction context (e.g. via a {nameof(RebusTransactionScope)} or from inside a Rebus handler), because it can result in undefined behavior.
+
+Please use a {nameof(RebusTransactionScopeSuppressor)} if you really intend to use another bus instance here.");
+            }
+
             await SendUsingTransactionContext(destinationAddresses, logicalMessage, currentTransactionContext);
         }
         else
