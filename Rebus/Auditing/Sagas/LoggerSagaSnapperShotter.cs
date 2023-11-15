@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Logging;
@@ -13,11 +14,15 @@ class LoggerSagaSnapperShotter : ISagaSnapshotStorage
 
     public LoggerSagaSnapperShotter(IRebusLoggerFactory rebusLoggerFactory)
     {
+        if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _log = rebusLoggerFactory.GetLogger<LoggerSagaSnapperShotter>();
     }
 
     public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
     {
+        if (sagaData == null) throw new ArgumentNullException(nameof(sagaData));
+        if (sagaAuditMetadata == null) throw new ArgumentNullException(nameof(sagaAuditMetadata));
+        
         var logData = new
         {
             Data = sagaData,

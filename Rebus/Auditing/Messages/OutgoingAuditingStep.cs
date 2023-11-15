@@ -21,8 +21,8 @@ class OutgoingAuditingStep : IOutgoingStep, IInitializable
     /// </summary>
     public OutgoingAuditingStep(AuditingHelper auditingHelper, ITransport transport)
     {
-        _auditingHelper = auditingHelper;
-        _transport = transport;
+        _auditingHelper = auditingHelper ?? throw new ArgumentNullException(nameof(auditingHelper));
+        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
     }
 
     public void Initialize()
@@ -42,7 +42,7 @@ class OutgoingAuditingStep : IOutgoingStep, IInitializable
 
             _auditingHelper.SetCommonHeaders(clone);
 
-            await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext);
+            await _transport.Send(_auditingHelper.AuditQueueName, clone, transactionContext);
         }
 
         await next();

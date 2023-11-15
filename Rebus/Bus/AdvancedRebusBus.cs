@@ -26,8 +26,8 @@ public partial class RebusBus
 
         public AdvancedApi(RebusBus rebusBus, IRebusTime rebusTime)
         {
-            _rebusBus = rebusBus;
-            _rebusTime = rebusTime;
+            _rebusBus = rebusBus ?? throw new ArgumentNullException(nameof(rebusBus));
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
         }
 
         public IWorkersApi Workers => new WorkersApi(_rebusBus);
@@ -110,7 +110,7 @@ public partial class RebusBus
 
         public SyncApi(RebusBus rebusBus)
         {
-            _rebusBus = rebusBus;
+            _rebusBus = rebusBus ?? throw new ArgumentNullException(nameof(rebusBus));
         }
 
         public void SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null)
@@ -171,8 +171,8 @@ public partial class RebusBus
 
         public RoutingApi(RebusBus rebusBus, IRebusTime rebusTime)
         {
-            _rebusBus = rebusBus;
-            _rebusTime = rebusTime;
+            _rebusBus = rebusBus ?? throw new ArgumentNullException(nameof(rebusBus));
+            _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
         }
 
         public Task Send(string destinationAddress, object explicitlyRoutedMessage, IDictionary<string, string> optionalHeaders = null)

@@ -12,26 +12,28 @@ class AuditingHelper
         
     bool _didInitializeAuditQueue;
 
-    public AuditingHelper(ITransport transport, string auditQueue, IRebusTime rebusTime)
+    public AuditingHelper(ITransport transport, string auditQueueName, IRebusTime rebusTime)
     {
-        AuditQueue = auditQueue;
-        _transport = transport;
-        _rebusTime = rebusTime;
+        AuditQueueName = auditQueueName ?? throw new ArgumentNullException(nameof(auditQueueName));
+        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
     }
 
-    public string AuditQueue { get; }
+    public string AuditQueueName { get; }
 
     public void EnsureAuditQueueHasBeenCreated()
     {
         if (_didInitializeAuditQueue) return;
 
-        _transport.CreateQueue(AuditQueue);
+        _transport.CreateQueue(AuditQueueName);
 
         _didInitializeAuditQueue = true;
     }
 
     public void SetCommonHeaders(TransportMessage transportMessage)
     {
+        if (transportMessage == null) throw new ArgumentNullException(nameof(transportMessage));
+
         var headers = transportMessage.Headers;
 
         if (_transport.Address != null)

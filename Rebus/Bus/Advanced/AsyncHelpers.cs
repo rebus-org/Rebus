@@ -14,6 +14,8 @@ static class AsyncHelpers
     ///  </summary>
     public static void RunSync(Func<Task> task)
     {
+        if (task == null) throw new ArgumentNullException(nameof(task));
+
         var currentContext = SynchronizationContext.Current;
         var customContext = new CustomSynchronizationContext(task);
 

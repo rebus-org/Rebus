@@ -23,9 +23,9 @@ class IncomingAuditingStep : IIncomingStep, IInitializable
     /// </summary>
     public IncomingAuditingStep(AuditingHelper auditingHelper, ITransport transport, IRebusTime rebusTime)
     {
-        _auditingHelper = auditingHelper;
-        _transport = transport;
-        _rebusTime = rebusTime;
+        _auditingHelper = auditingHelper ?? throw new ArgumentNullException(nameof(auditingHelper));
+        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
     }
 
     public void Initialize()
@@ -48,6 +48,6 @@ class IncomingAuditingStep : IIncomingStep, IInitializable
 
         clone.Headers[AuditHeaders.HandleTime] = begin.ToString("O");
 
-        await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext);
+        await _transport.Send(_auditingHelper.AuditQueueName, clone, transactionContext);
     }
 }

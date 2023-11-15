@@ -21,8 +21,8 @@ class SaveSagaDataSnapshotStep : IIncomingStep
 
     public SaveSagaDataSnapshotStep(ISagaSnapshotStorage sagaSnapshotStorage, ITransport transport)
     {
-        _sagaSnapshotStorage = sagaSnapshotStorage;
-        _transport = transport;
+        _sagaSnapshotStorage = sagaSnapshotStorage ?? throw new ArgumentNullException(nameof(sagaSnapshotStorage));
+        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
     }
 
     public async Task Process(IncomingStepContext context, Func<Task> next)

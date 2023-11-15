@@ -53,11 +53,13 @@ public static class SagaAuditingConfigurationExtensions
         configurer.Register(c => new LoggerSagaSnapperShotter(c.Get<IRebusLoggerFactory>()));
     }
 
-    static ITransport GetTransport(IResolutionContext c)
+    static ITransport GetTransport(IResolutionContext context)
     {
+        if (context == null) throw new ArgumentNullException(nameof(context));
+
         try
         {
-            return c.Get<ITransport>();
+            return context.Get<ITransport>();
         }
         catch (Exception exception)
         {
@@ -65,11 +67,13 @@ public static class SagaAuditingConfigurationExtensions
         }
     }
 
-    static ISagaSnapshotStorage GetSagaSnapshotStorage(IResolutionContext c)
+    static ISagaSnapshotStorage GetSagaSnapshotStorage(IResolutionContext context)
     {
+        if (context == null) throw new ArgumentNullException(nameof(context));
+
         try
         {
-            return c.Get<ISagaSnapshotStorage>();
+            return context.Get<ISagaSnapshotStorage>();
         }
         catch (Exception exception)
         {
