@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ public class DestinationAddresses : IEnumerable<string>
     /// </summary>
     public DestinationAddresses(IEnumerable<string> addresses)
     {
+        if (addresses == null) throw new ArgumentNullException(nameof(addresses));
         _addresses = addresses.ToList();
     }
 

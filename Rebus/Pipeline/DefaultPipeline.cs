@@ -8,8 +8,8 @@ namespace Rebus.Pipeline;
 /// </summary>
 public class DefaultPipeline : IPipeline
 {
-    readonly List<IOutgoingStep> _sendSteps = new List<IOutgoingStep>();
-    readonly List<IIncomingStep> _receiveSteps = new List<IIncomingStep>();
+    readonly List<IOutgoingStep> _sendSteps = new();
+    readonly List<IIncomingStep> _receiveSteps = new();
 
     /// <summary>
     /// Creates the pipeline, possibly initializing it from the given <paramref name="initialOutgoingSteps"/> and/or <paramref name="initialIncomingSteps"/>

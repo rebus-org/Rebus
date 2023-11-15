@@ -1,4 +1,5 @@
-﻿using Rebus.Pipeline.Receive;
+﻿using System;
+using Rebus.Pipeline.Receive;
 
 namespace Rebus.Pipeline;
 
@@ -15,6 +16,8 @@ public static class PipelineMessageContextExtensions
     /// </summary>
     public static void AbortDispatch(this IMessageContext messageContext)
     {
+        if (messageContext == null) throw new ArgumentNullException(nameof(messageContext));
+
         messageContext.IncomingStepContext.Save(DispatchIncomingMessageStep.AbortDispatchContextKey, true);
     }
 }

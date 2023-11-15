@@ -8,10 +8,17 @@ class Retrier
 {
     readonly ILog _log;
 
-    public Retrier(IRebusLoggerFactory rebusLoggerFactory) => _log = rebusLoggerFactory.GetLogger<Retrier>();
+    public Retrier(IRebusLoggerFactory rebusLoggerFactory)
+    {
+        if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+        _log = rebusLoggerFactory.GetLogger<Retrier>();
+    }
 
     public void Execute(Action action, Func<Exception, bool> handle, int attempts, int delaySeconds = 1)
     {
+        if (action == null) throw new ArgumentNullException(nameof(action));
+        if (handle == null) throw new ArgumentNullException(nameof(handle));
+
         while (true)
         {
             try

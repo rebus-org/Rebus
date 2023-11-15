@@ -33,6 +33,7 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyOf<TMessage>(string destinationAddress)
     {
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         MapAssemblyOf(typeof (TMessage), destinationAddress);
         return this;
     }
@@ -42,6 +43,8 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyOf(Type messageType, string destinationAddress)
     {
+        if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass))
         {
             SaveMapping(typeToMap, destinationAddress);
@@ -55,6 +58,7 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyDerivedFrom<TDerivedFrom>(string destinationAddress)
     {
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         MapAssemblyDerivedFrom(typeof(TDerivedFrom), destinationAddress);
         return this;
     }
@@ -82,6 +86,7 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyNamespaceOf<TMessage>(string destinationAddress)
     {
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         MapAssemblyNamespaceOf(typeof(TMessage), destinationAddress);
         return this;
     }
@@ -93,6 +98,9 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyNamespaceOf(Type messageType, string destinationAddress)
     {
+        if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+
         foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass && t.Namespace != null && t.Namespace.StartsWith(messageType.Namespace ?? string.Empty)))
         {
             SaveMapping(typeToMap, destinationAddress);
@@ -108,6 +116,7 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyNamespaceOfDerivedFrom<TMessage, TDerivedFrom>(string destinationAddress)
     {
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         MapAssemblyNamespaceOfDerivedFrom(typeof(TMessage), typeof(TDerivedFrom), destinationAddress);
         return this;
     }
@@ -120,6 +129,8 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter MapAssemblyNamespaceOfDerivedFrom(Type messageType, Type derivedFrom, string destinationAddress)
     {
+        if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         foreach (var typeToMap in messageType.GetTypeInfo().Assembly.GetTypes().Where(t => t.IsClass && t.Namespace != null && t.Namespace.StartsWith(messageType.Namespace ?? string.Empty)))
         {
             if (derivedFrom == null || typeToMap != derivedFrom && derivedFrom.IsAssignableFrom(typeToMap))
@@ -135,6 +146,7 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter Map<TMessage>(string destinationAddress)
     {
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         SaveMapping(typeof(TMessage), destinationAddress);
         return this;
     }
@@ -161,6 +173,8 @@ public class TypeBasedRouter : IRouter
     /// </summary>
     public TypeBasedRouter Map(Type messageType, string destinationAddress)
     {
+        if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+        if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
         SaveMapping(messageType, destinationAddress);
         return this;
     }
@@ -222,6 +236,7 @@ public class TypeBasedRouter : IRouter
 
     string GetDestinationAddressForMessageType(Type messageType)
     {
+        if (messageType == null) throw new ArgumentNullException(nameof(messageType));
         if (_messageTypeAddresses.TryGetValue(messageType, out var destinationAddress)) return destinationAddress;
 
         if (_fallbackAddress != null) return _fallbackAddress;

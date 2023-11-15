@@ -11,7 +11,8 @@ class ConcurrentDictionaryExclusiveAccessLock : IExclusiveAccessLock
 {
     static readonly Task<bool> TrueResult = Task.FromResult(true);
     static readonly Task<bool> FalseResult = Task.FromResult(false);
-    readonly ConcurrentDictionary<string, byte> _locks = new ConcurrentDictionary<string, byte>();
+    
+    readonly ConcurrentDictionary<string, byte> _locks = new();
 
     public Task<bool> AcquireLockAsync(string key, CancellationToken cancellationToken) => _locks.TryAdd(key, 1) ? TrueResult : FalseResult;
 

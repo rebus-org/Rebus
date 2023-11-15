@@ -9,8 +9,8 @@ namespace Rebus.Pipeline;
 /// </summary>
 public class PipelineStepRemover : IPipeline
 {
-    readonly List<Func<IIncomingStep, bool>> _incomingStepPredicates = new List<Func<IIncomingStep, bool>>();
-    readonly List<Func<IOutgoingStep, bool>> _outgoingStepPredicates = new List<Func<IOutgoingStep, bool>>();
+    readonly List<Func<IIncomingStep, bool>> _incomingStepPredicates = new();
+    readonly List<Func<IOutgoingStep, bool>> _outgoingStepPredicates = new();
     readonly IPipeline _pipeline;
 
     /// <summary>
@@ -18,24 +18,18 @@ public class PipelineStepRemover : IPipeline
     /// </summary>
     public PipelineStepRemover(IPipeline pipeline)
     {
-        _pipeline = pipeline;
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
     }
 
     /// <summary>
     /// Gets the outgoing steps from the wrapped pipeline, unless those where one of the registered outgoing step predicates match
     /// </summary>
-    public IOutgoingStep[] SendPipeline()
-    {
-        return ComposeSendPipeline().ToArray();
-    }
+    public IOutgoingStep[] SendPipeline() => ComposeSendPipeline().ToArray();
 
     /// <summary>
     /// Gets the incoming steps from the wrapped pipeline, unless those where one of the registered incoming step predicates match
     /// </summary>
-    public IIncomingStep[] ReceivePipeline()
-    {
-        return ComposeReceivePipeline().ToArray();
-    }
+    public IIncomingStep[] ReceivePipeline() => ComposeReceivePipeline().ToArray();
 
     IEnumerable<IIncomingStep> ComposeReceivePipeline()
     {
@@ -93,7 +87,7 @@ public class PipelineStepRemover : IPipeline
         return _incomingStepPredicates.Any(p => p(step));
     }
 
-    readonly HashSet<IDisposable> _alreadyDisposedSteps = new HashSet<IDisposable>();
+    readonly HashSet<IDisposable> _alreadyDisposedSteps = new();
 
     void PossiblyDispose(IStep step)
     {

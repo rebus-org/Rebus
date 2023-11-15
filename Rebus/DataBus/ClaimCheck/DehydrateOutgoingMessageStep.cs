@@ -25,7 +25,7 @@ public class DehydrateOutgoingMessageStep : IOutgoingStep
     /// </summary>
     public DehydrateOutgoingMessageStep(IDataBus dataBus, int messageSizeLimitBytes)
     {
-        _dataBus = dataBus;
+        _dataBus = dataBus ?? throw new ArgumentNullException(nameof(dataBus));
         _messageSizeLimitBytes = messageSizeLimitBytes;
     }
 

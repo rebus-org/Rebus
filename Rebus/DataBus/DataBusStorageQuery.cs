@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Rebus.Extensions;
+// ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.DataBus;
 
@@ -13,6 +15,10 @@ static class DataBusStorageQuery
     /// </summary>
     public static bool IsSatisfied(Dictionary<string, string> metadata, TimeRange readTime, TimeRange saveTime)
     {
+        if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+        if (readTime == null) throw new ArgumentNullException(nameof(readTime));
+        if (saveTime == null) throw new ArgumentNullException(nameof(saveTime));
+
         var fromReadTime = readTime?.From;
         var toReadTime = readTime?.To;
         var fromSaveTime = saveTime?.From;

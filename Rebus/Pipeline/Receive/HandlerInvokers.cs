@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Messages;
@@ -17,7 +18,8 @@ public class HandlerInvokers : IEnumerable<HandlerInvoker>
     /// </summary>
     public HandlerInvokers(Message message, IEnumerable<HandlerInvoker> handlerInvokers)
     {
-        Message = message;
+        if (handlerInvokers == null) throw new ArgumentNullException(nameof(handlerInvokers));
+        Message = message ?? throw new ArgumentNullException(nameof(message));
         _handlerInvokers = handlerInvokers.ToList();
     }
 

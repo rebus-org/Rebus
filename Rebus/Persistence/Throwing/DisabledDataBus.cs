@@ -18,7 +18,7 @@ class DisabledDataBus : IDataBus
 
     public IEnumerable<string> Query(TimeRange readTime = null, TimeRange saveTime = null) => throw GetException();
 
-    static InvalidOperationException GetException() => new InvalidOperationException(@"The data bus has not been enabled. Please configure the data bus with the .DataBus(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new(@"The data bus has not been enabled. Please configure the data bus with the .DataBus(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)

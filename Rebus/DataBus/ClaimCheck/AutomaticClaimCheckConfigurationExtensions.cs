@@ -1,4 +1,5 @@
-﻿using Rebus.Compression;
+﻿using System;
+using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Send;
@@ -31,6 +32,8 @@ public static class AutomaticClaimCheckConfigurationExtensions
     /// </summary>
     public static void SendBigMessagesAsAttachments(this StandardConfigurer<IDataBusStorage> configurer, int bodySizeThresholdBytes)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
         configurer
             .OtherService<IPipeline>()
             .Decorate(c =>

@@ -32,34 +32,37 @@ public partial class RebusBus : IBus
 
     readonly List<IWorker> _workers = new();
     readonly BusLifetimeEvents _busLifetimeEvents;
-    readonly IDataBus _dataBus;
-    readonly IWorkerFactory _workerFactory;
-    readonly IRouter _router;
-    readonly ITransport _transport;
-    readonly IPipelineInvoker _pipelineInvoker;
     readonly ISubscriptionStorage _subscriptionStorage;
-    readonly Options _options;
-    readonly ILog _log;
-    readonly string _busName;
     readonly ITopicNameConvention _topicNameConvention;
+    readonly IPipelineInvoker _pipelineInvoker;
+    readonly IWorkerFactory _workerFactory;
+    readonly ITransport _transport;
     readonly IRebusTime _rebusTime;
+    readonly IDataBus _dataBus;
+    readonly Options _options;
+    readonly IRouter _router;
+    readonly string _busName;
+    readonly ILog _log;
 
     /// <summary>
     /// Constructs the bus.
     /// </summary>
     public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus, ITopicNameConvention topicNameConvention, IRebusTime rebusTime)
     {
-        _workerFactory = workerFactory;
-        _router = router;
-        _transport = transport;
-        _pipelineInvoker = pipelineInvoker;
-        _subscriptionStorage = subscriptionStorage;
-        _options = options;
-        _busLifetimeEvents = busLifetimeEvents;
-        _dataBus = dataBus;
+        if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
+        _workerFactory = workerFactory ?? throw new ArgumentNullException(nameof(workerFactory));
+        _router = router ?? throw new ArgumentNullException(nameof(router));
+        _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        _pipelineInvoker = pipelineInvoker ?? throw new ArgumentNullException(nameof(pipelineInvoker));
+        _subscriptionStorage = subscriptionStorage ?? throw new ArgumentNullException(nameof(subscriptionStorage));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _busLifetimeEvents = busLifetimeEvents ?? throw new ArgumentNullException(nameof(busLifetimeEvents));
+        _dataBus = dataBus ?? throw new ArgumentNullException(nameof(dataBus));
+        _topicNameConvention = topicNameConvention ?? throw new ArgumentNullException(nameof(topicNameConvention));
+        _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
+
         _log = rebusLoggerFactory.GetLogger<RebusBus>();
-        _topicNameConvention = topicNameConvention;
-        _rebusTime = rebusTime;
 
         var defaultBusName = $"Rebus {Interlocked.Increment(ref _busIdCounter)}";
 
@@ -408,7 +411,7 @@ public partial class RebusBus : IBus
         if (currentTransactionContext != null)
         {
             var enlistedRebusInstance = currentTransactionContext.Items.GetOrAdd("enlisted-rebus-instance", this);
-            
+
             if (!Equals(enlistedRebusInstance, this))
             {
                 throw new InvalidOperationException($@"Cannot enlist bus operations for bus {this} into this transaction context, because another bus instance has already enlisted one or more operations: {enlistedRebusInstance}.
@@ -518,25 +521,36 @@ Please use a {nameof(RebusTransactionScopeSuppressor)} if you really intend to u
     /// </summary>
     public void SetNumberOfWorkers(int desiredNumberOfWorkers)
     {
-        if (desiredNumberOfWorkers == GetNumberOfWorkers()) return;
-
-        if (desiredNumberOfWorkers > _options.MaxParallelism)
+        // avoid race conditions when changing number of workers
+        lock (this)
         {
-            _log.Warn("Bus {busName} attempted to set number of workers to {numberOfWorkers}, but the max allowed parallelism is {maxParallelism}",
-                _busName, desiredNumberOfWorkers, _options.MaxParallelism);
+            if (desiredNumberOfWorkers < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(desiredNumberOfWorkers), desiredNumberOfWorkers,
+                    "Please pass a value >= 0");
+            }
 
-            desiredNumberOfWorkers = _options.MaxParallelism;
-        }
+            if (desiredNumberOfWorkers == GetNumberOfWorkers()) return;
 
-        _log.Info("Bus {busName} setting number of workers to {numberOfWorkers}", _busName, desiredNumberOfWorkers);
-        while (desiredNumberOfWorkers > GetNumberOfWorkers())
-        {
-            AddWorker();
-        }
+            if (desiredNumberOfWorkers > _options.MaxParallelism)
+            {
+                _log.Warn(
+                    "Bus {busName} attempted to set number of workers to {numberOfWorkers}, but the max allowed parallelism is {maxParallelism}",
+                    _busName, desiredNumberOfWorkers, _options.MaxParallelism);
 
-        if (desiredNumberOfWorkers < GetNumberOfWorkers())
-        {
-            RemoveWorkers(desiredNumberOfWorkers);
+                desiredNumberOfWorkers = _options.MaxParallelism;
+            }
+
+            _log.Info("Bus {busName} setting number of workers to {numberOfWorkers}", _busName, desiredNumberOfWorkers);
+            while (desiredNumberOfWorkers > GetNumberOfWorkers())
+            {
+                AddWorker();
+            }
+
+            if (desiredNumberOfWorkers < GetNumberOfWorkers())
+            {
+                RemoveWorkers(desiredNumberOfWorkers);
+            }
         }
     }
 

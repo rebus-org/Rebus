@@ -20,6 +20,7 @@ public static class EncryptionConfigurationExtensions
     /// </summary>
     public static void EnableEncryption(this OptionsConfigurer configurer, string key)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         EnableCustomAsyncEncryption(configurer).Register(_ => new RijndaelEncryptor(key));
     }
 
@@ -39,6 +40,7 @@ public static class EncryptionConfigurationExtensions
     /// </summary>
     public static StandardConfigurer<IEncryptor> EnableCustomEncryption(this OptionsConfigurer configurer)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         configurer.EnableCustomAsyncEncryption().Register(c => new DefaultAsyncEncryptor(c.Get<IEncryptor>()));
 
         return StandardConfigurer<IEncryptor>.GetConfigurerFrom(configurer);
@@ -47,6 +49,7 @@ public static class EncryptionConfigurationExtensions
     /// <inheritdoc cref="EnableCustomEncryption" />
     public static StandardConfigurer<IAsyncEncryptor> EnableCustomAsyncEncryption(this OptionsConfigurer configurer)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         configurer.Register(c => new EncryptMessagesOutgoingStep(c.Get<IAsyncEncryptor>()));
         configurer.Register(c => new DecryptMessagesIncomingStep(c.Get<IAsyncEncryptor>()));
 
@@ -64,6 +67,7 @@ public static class EncryptionConfigurationExtensions
     /// <exception cref="RebusConfigurationException"></exception>
     public static void EnableEncryption(this StandardConfigurer<IDataBusStorage> configurer)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         configurer
             .OtherService<IDataBusStorage>()
             .Decorate(c =>

@@ -18,9 +18,10 @@ public static class TransportMessageRoutingConfigurationExtensions
     /// Adds the given routing function - should return <see cref="ForwardAction.None"/> to do nothing, or another action
     /// available on <see cref="ForwardAction"/> in order to do something to the message
     /// </summary>
-    public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer,
-        Func<TransportMessage, Task<ForwardAction>> routingFunction)
+    public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer, Func<TransportMessage, Task<ForwardAction>> routingFunction)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        if (routingFunction == null) throw new ArgumentNullException(nameof(routingFunction));
         AddTransportMessageForwarder(configurer, routingFunction, ErrorBehavior.Normal);
     }
 
@@ -32,7 +33,11 @@ public static class TransportMessageRoutingConfigurationExtensions
         Func<TransportMessage, Task<ForwardAction>> routingFunction,
         ErrorBehavior errorBehavior)
     {
-        configurer.OtherService<IPipeline>()
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        if (routingFunction == null) throw new ArgumentNullException(nameof(routingFunction));
+
+        configurer
+            .OtherService<IPipeline>()
             .Decorate(c =>
             {
                 var pipeline = c.Get<IPipeline>();

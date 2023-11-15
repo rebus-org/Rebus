@@ -17,24 +17,24 @@ class InMemDataBusStorage : IDataBusStorage, IDataBusStorageManagement
     public InMemDataBusStorage(InMemDataStore dataStore, IRebusTime rebusTime)
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
-        _rebusTime = rebusTime;
+        _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
     }
 
     public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
     {
-        using (var destination = new MemoryStream())
+        using var destination = new MemoryStream();
+        
+        await source.CopyToAsync(destination);
+        
+        var bytes = destination.ToArray();
+
+        var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
         {
-            await source.CopyToAsync(destination);
-            var bytes = destination.ToArray();
+            [MetadataKeys.SaveTime] = _rebusTime.Now.ToString("O"),
+            [MetadataKeys.Length] = bytes.Length.ToString()
+        };
 
-            var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
-            {
-                [MetadataKeys.SaveTime] = _rebusTime.Now.ToString("O"),
-                [MetadataKeys.Length] = bytes.Length.ToString()
-            };
-
-            _dataStore.Save(id, bytes, metadataToWrite);
-        }
+        _dataStore.Save(id, bytes, metadataToWrite);
     }
 
     public async Task<Stream> Read(string id)

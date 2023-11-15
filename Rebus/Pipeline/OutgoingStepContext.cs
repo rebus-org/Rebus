@@ -1,3 +1,4 @@
+using System;
 using Rebus.Messages;
 using Rebus.Pipeline.Send;
 using Rebus.Transport;
@@ -14,6 +15,10 @@ public class OutgoingStepContext : StepContext
     /// </summary>
     public OutgoingStepContext(Message logicalMessage, ITransactionContext transactionContext, DestinationAddresses destinationAddresses)
     {
+        if (logicalMessage == null) throw new ArgumentNullException(nameof(logicalMessage));
+        if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
+        if (destinationAddresses == null) throw new ArgumentNullException(nameof(destinationAddresses));
+
         Save(logicalMessage);
         Save(destinationAddresses);
         Save(transactionContext);

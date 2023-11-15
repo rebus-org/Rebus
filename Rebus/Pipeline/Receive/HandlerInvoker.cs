@@ -23,6 +23,8 @@ public abstract class HandlerInvoker
     /// </summary>
     public bool CanBeInitiatedBy(Type messageType)
     {
+        if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+
         // checks if IAmInitiatedBy<TMessage> is implemented by the saga
         return CanBeInitiatedByCache
             .GetOrAdd($"{Handler.GetType().FullName}::{messageType.FullName}", _ =>

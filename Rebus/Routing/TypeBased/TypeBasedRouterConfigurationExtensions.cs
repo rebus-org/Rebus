@@ -16,6 +16,7 @@ public static class TypeBasedRouterConfigurationExtensions
     /// </summary>
     public static TypeBasedRouterConfigurationBuilder TypeBased(this StandardConfigurer<IRouter> configurer)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         var builder = new TypeBasedRouterConfigurationBuilder();
         configurer.Register(c => builder.Build(c.Get<IRebusLoggerFactory>()));
         return builder;
@@ -29,7 +30,7 @@ public static class TypeBasedRouterConfigurationExtensions
         /// <summary>
         /// We use this way of storing configuration actions in order to preserve the order
         /// </summary>
-        readonly List<Action<TypeBasedRouter>> _configurationActions = new List<Action<TypeBasedRouter>>();
+        readonly List<Action<TypeBasedRouter>> _configurationActions = new();
 
         internal TypeBasedRouterConfigurationBuilder()
         {
@@ -40,6 +41,7 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder Map<TMessage>(string destinationAddress)
         {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.Map<TMessage>(destinationAddress));
             return this;
         }
@@ -49,6 +51,8 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder Map(Type messageType, string destinationAddress)
         {
+            if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.Map(messageType, destinationAddress));
             return this;
         }
@@ -58,6 +62,7 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyOf<TMessage>(string destinationAddress)
         {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyOf<TMessage>(destinationAddress));
             return this;
         }
@@ -67,6 +72,8 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyOf(Type messageType, string destinationAddress)
         {
+            if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyOf(messageType, destinationAddress));
             return this;
         }
@@ -77,6 +84,7 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyDerivedFrom<TDerivedFrom>(string destinationAddress)
         {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyDerivedFrom<TDerivedFrom>(destinationAddress));
             return this;
         }
@@ -88,6 +96,7 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyNamespaceOf<TMessage>(string destinationAddress)
         {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyNamespaceOf<TMessage>(destinationAddress));
             return this;
         }
@@ -99,6 +108,8 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyNamespaceOf(Type messageType, string destinationAddress)
         {
+            if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyNamespaceOf(messageType, destinationAddress));
             return this;
         }
@@ -110,6 +121,7 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyNamespaceOfDerivedFrom<TMessage, TDerivedFrom>(string destinationAddress)
         {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyNamespaceOfDerivedFrom<TMessage, TDerivedFrom>(destinationAddress));
             return this;
         }
@@ -121,6 +133,8 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapAssemblyNamespaceOfDerivedFrom(Type messageType, Type derivedFrom, string destinationAddress)
         {
+            if (messageType == null) throw new ArgumentNullException(nameof(messageType));
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapAssemblyNamespaceOfDerivedFrom(messageType, derivedFrom, destinationAddress));
             return this;
         }
@@ -130,12 +144,14 @@ public static class TypeBasedRouterConfigurationExtensions
         /// </summary>
         public TypeBasedRouterConfigurationBuilder MapFallback(string destinationAddress)
         {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
             _configurationActions.Add(r => r.MapFallback(destinationAddress));
             return this;
         }
 
         internal TypeBasedRouter Build(IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             var router = new TypeBasedRouter(rebusLoggerFactory);
 
             foreach (var action in _configurationActions)

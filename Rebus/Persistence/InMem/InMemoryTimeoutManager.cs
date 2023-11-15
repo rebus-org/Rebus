@@ -18,8 +18,8 @@ namespace Rebus.Persistence.InMem;
 /// </summary>
 public class InMemoryTimeoutManager : ITimeoutManager, IEnumerable<InMemoryTimeoutManager.DeferredMessage>
 {
+    readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new();
     readonly IRebusTime _rebusTime;
-    readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
 
     /// <summary>
     /// Creates the in-mem timeout manager
@@ -55,28 +55,33 @@ public class InMemoryTimeoutManager : ITimeoutManager, IEnumerable<InMemoryTimeo
         {
             var keyValuePairsToRemove = _deferredMessages
                 .Where(v => _rebusTime.Now >= v.Value.DueTime)
-                .ToHashSet();
+                .ToList();
 
-            var result = new DueMessagesResult(keyValuePairsToRemove
-                    .Select(kvp =>
-                    {
-                        var dueMessage = new DueMessage(kvp.Value.Headers, kvp.Value.Body,
-                            async () => keyValuePairsToRemove.Remove(kvp));
+            DueMessage GetDueMessage(KeyValuePair<string, DeferredMessage> kvp)
+            {
+                var dueMessage = new DueMessage(
+                    headers: kvp.Value.Headers,
+                    body: kvp.Value.Body,
+                    completeAction: async () => keyValuePairsToRemove.Remove(kvp)
+                );
 
-                        return dueMessage;
-                    }),
-                async () =>
+                return dueMessage;
+            }
+
+            async Task Cleanup()
+            {
+                // when this method is called, keyValuePairsToRemove has all the messages that weren't
+                // completed - therefore, put them back
+                foreach (var kvp in keyValuePairsToRemove)
                 {
-                    // put back if the result was not completed
-                    foreach (var kvp in keyValuePairsToRemove)
-                    {
-                        _deferredMessages[kvp.Key] = kvp.Value;
-                    }
-                });
+                    _deferredMessages[kvp.Key] = kvp.Value;
+                }
+            }
+
+            var result = new DueMessagesResult(keyValuePairsToRemove.Select(GetDueMessage), cleanupAction: Cleanup);
 
             foreach (var kvp in keyValuePairsToRemove)
             {
-                DeferredMessage _;
                 _deferredMessages.TryRemove(kvp.Key, out _);
             }
 

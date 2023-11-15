@@ -9,6 +9,7 @@ class DefaultExceptionLogger : IExceptionLogger
 
     public DefaultExceptionLogger(IRebusLoggerFactory rebusLoggerFactory)
     {
+        if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _log = rebusLoggerFactory.GetLogger<DefaultExceptionLogger>();
     }
 

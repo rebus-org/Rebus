@@ -17,6 +17,8 @@ class ActionPipelineInvoker : IPipelineInvoker
 
     public ActionPipelineInvoker(IPipeline pipeline)
     {
+        if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
+
         _invokeReceivePipeline = GenerateReceiveFunction(
             pipeline.ReceivePipeline()
         );
@@ -28,11 +30,13 @@ class ActionPipelineInvoker : IPipelineInvoker
 
     public Task Invoke(IncomingStepContext context)
     {
+        if (context == null) throw new ArgumentNullException(nameof(context));
         return _invokeReceivePipeline(context);
     }
 
     public Task Invoke(OutgoingStepContext context)
     {
+        if (context == null) throw new ArgumentNullException(nameof(context));
         return _invokeSendPipeline(context);
     }
 

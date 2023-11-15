@@ -15,7 +15,7 @@ class DisabledSagaStorage : ISagaStorage
 
     public Task Delete(ISagaData sagaData) => throw GetException();
 
-    static InvalidOperationException GetException() => new InvalidOperationException(@"A saga storage has not been configured. Please configure a saga storage with the .Sagas(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new(@"A saga storage has not been configured. Please configure a saga storage with the .Sagas(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)

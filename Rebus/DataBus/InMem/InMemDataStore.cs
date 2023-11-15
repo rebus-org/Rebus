@@ -12,7 +12,7 @@ namespace Rebus.DataBus.InMem;
 /// </summary>
 public class InMemDataStore
 {
-    readonly ConcurrentDictionary<string, InMemBlob> _data = new ConcurrentDictionary<string, InMemBlob>();
+    readonly ConcurrentDictionary<string, InMemBlob> _data = new();
 
     /// <summary>
     /// Gets the total size in bytes 

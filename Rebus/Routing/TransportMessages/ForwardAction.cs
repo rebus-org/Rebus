@@ -11,6 +11,7 @@ public class ForwardAction
 {
     ForwardAction(ActionType actionType, params string[] destinationAddresses)
     {
+        if (destinationAddresses == null) throw new ArgumentNullException(nameof(destinationAddresses));
         DestinationQueueNames = destinationAddresses.ToList();
         ActionType = actionType;
     }
@@ -18,7 +19,7 @@ public class ForwardAction
     /// <summary>
     /// Gets an action that causes the message to be handled normally
     /// </summary>
-    public static ForwardAction None = new ForwardAction(ActionType.None);
+    public static ForwardAction None = new(ActionType.None);
 
     /// <summary>
     /// Gets an action that causes the message to be forwarded to the queue specified by <paramref name="destinationQueueName"/>

@@ -11,7 +11,7 @@ class DisabledTimeoutManager : ITimeoutManager
 
     public Task<DueMessagesResult> GetDueMessages() => throw GetException();
 
-    static InvalidOperationException GetException() => new InvalidOperationException(@"A timeout manager has not been configured. Please configure a timeout manager with the .Timeouts(...) configurer, e.g. like so:
+    static InvalidOperationException GetException() => new(@"A timeout manager has not been configured. Please configure a timeout manager with the .Timeouts(...) configurer, e.g. like so:
 
 Configure.With(..)
     .(...)

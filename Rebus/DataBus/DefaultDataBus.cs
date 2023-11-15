@@ -13,7 +13,7 @@ class DefaultDataBus : IDataBus
     public DefaultDataBus(IDataBusStorage dataBusStorage, IDataBusStorageManagement dataBusStorageManagement)
     {
         _dataBusStorage = dataBusStorage ?? throw new ArgumentNullException(nameof(dataBusStorage));
-        _dataBusStorageManagement = dataBusStorageManagement;
+        _dataBusStorageManagement = dataBusStorageManagement ?? throw new ArgumentNullException(nameof(dataBusStorageManagement));
     }
 
     public async Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null)

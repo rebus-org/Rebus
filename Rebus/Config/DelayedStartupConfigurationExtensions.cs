@@ -1,4 +1,5 @@
-﻿using Rebus.Bus;
+﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Config;
 
@@ -14,6 +15,8 @@ public static class DelayedStartupConfigurationExtensions
     /// </summary>
     public static IBusStarter Create(this RebusConfigurer configurer)
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
         var desiredNumberOfWorkersWhenStarted = 0;
 
         var bus = configurer
@@ -44,7 +47,7 @@ public static class DelayedStartupConfigurationExtensions
 
         public BusStarter(IBus bus, int desiredNumberOfWorkersWhenStarted)
         {
-            _bus = bus;
+            _bus = bus ?? throw new ArgumentNullException(nameof(bus));
             _desiredNumberOfWorkersWhenStarted = desiredNumberOfWorkersWhenStarted;
         }
 

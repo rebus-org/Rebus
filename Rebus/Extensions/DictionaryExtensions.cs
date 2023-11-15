@@ -34,6 +34,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static Dictionary<string, string> Clone(this Dictionary<string, string> dictionary)
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         return new Dictionary<string, string>(dictionary);
     }
 
@@ -43,6 +44,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static string GetValue(this Dictionary<string, string> dictionary, string key)
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         if (dictionary.TryGetValue(key, out var value)) return value;
 
         throw new KeyNotFoundException($"Could not find the key '{key}' - have the following keys only: {string.Join(", ", dictionary.Keys.Select(k => $"'{k}'"))}");
@@ -53,6 +55,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static string GetValueOrNull(this Dictionary<string, string> dictionary, string key)
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         return dictionary.TryGetValue(key, out var value)
             ? value
             : null;
@@ -64,6 +67,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static TItem GetOrAdd<TItem, TBase>(this Dictionary<string, TBase> dictionary, string key, Func<TItem> newItemFactory) where TItem : TBase
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         if (dictionary.TryGetValue(key, out var item)) return (TItem)item;
 
         var newItem = newItemFactory();
@@ -76,6 +80,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static async Task<TItem> GetOrAddAsync<TItem, TBase>(this Dictionary<string, TBase> dictionary, string key, Func<Task<TItem>> newItemFactory) where TItem : TBase
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         if (dictionary.TryGetValue(key, out var item)) return (TItem)item;
 
         var newItem = await newItemFactory();
@@ -88,6 +93,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TKey, TValue>(this IEnumerable<TValue> items, Func<TValue, TKey> keyFunction)
     {
+        if (items == null) throw new ArgumentNullException(nameof(items));
         return new ConcurrentDictionary<TKey, TValue>(items.Select(i => new KeyValuePair<TKey, TValue>(keyFunction(i), i)));
     }
 
@@ -97,6 +103,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static T GetOrThrow<T>(this IDictionary<string, object> dictionary, string key)
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         if (!dictionary.TryGetValue(key, out var item))
         {
             throw new KeyNotFoundException($"Could not find an item with the key '{key}'");
@@ -116,6 +123,7 @@ public static class DictionaryExtensions
     /// </summary>
     public static T GetOrNull<T>(this Dictionary<string, object> dictionary, string key) where T : class
     {
+        if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
         if (!dictionary.TryGetValue(key, out var item))
         {
             return default(T);

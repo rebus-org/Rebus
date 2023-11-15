@@ -12,12 +12,8 @@ namespace Rebus.Pipeline;
 /// </summary>
 public class PipelineStepInjector : IPipeline
 {
-    readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IOutgoingStep>>> _outgoingInjectedSteps =
-        new ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IOutgoingStep>>>();
-
-    readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IIncomingStep>>> _incomingInjectedSteps =
-        new ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IIncomingStep>>>();
-
+    readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IOutgoingStep>>> _outgoingInjectedSteps = new();
+    readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IIncomingStep>>> _incomingInjectedSteps = new();
     readonly IPipeline _pipeline;
 
     /// <summary>
@@ -25,27 +21,20 @@ public class PipelineStepInjector : IPipeline
     /// </summary>
     public PipelineStepInjector(IPipeline pipeline)
     {
-        if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
-        _pipeline = pipeline;
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
     }
 
     /// <summary>
     /// Gets the ordered sequence of <see cref="IOutgoingStep"/> that makes up the outgoing pipeline, injecting any configured outgoing steps
     /// at their appropriate places
     /// </summary>
-    public IOutgoingStep[] SendPipeline()
-    {
-        return ComposeSendPipeline().ToArray();
-    }
+    public IOutgoingStep[] SendPipeline() => ComposeSendPipeline().ToArray();
 
     /// <summary>
     /// Gets the ordered sequence of <see cref="IIncomingStep"/> that makes up the incoming pipeline, injecting any configured incoming steps
     /// at their appropriate places
     /// </summary>
-    public IIncomingStep[] ReceivePipeline()
-    {
-        return ComposeReceivePipeline().ToArray();
-    }
+    public IIncomingStep[] ReceivePipeline() => ComposeReceivePipeline().ToArray();
 
     IEnumerable<IIncomingStep> ComposeReceivePipeline()
     {
@@ -57,9 +46,7 @@ public class PipelineStepInjector : IPipeline
 
             encounteredStepTypes.Add(currentStepType);
 
-            List<Tuple<PipelineRelativePosition, IIncomingStep>> injectedStep;
-
-            if (_incomingInjectedSteps.TryGetValue(currentStepType, out injectedStep))
+            if (_incomingInjectedSteps.TryGetValue(currentStepType, out var injectedStep))
             {
                 foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.Before))
                 {
@@ -119,9 +106,7 @@ If you require the ultimate flexibility, you will probably need to decorate IPip
 
             encounteredStepTypes.Add(currentStepType);
 
-            List<Tuple<PipelineRelativePosition, IOutgoingStep>> injectedStep;
-
-            if (_outgoingInjectedSteps.TryGetValue(currentStepType, out injectedStep))
+            if (_outgoingInjectedSteps.TryGetValue(currentStepType, out var injectedStep))
             {
                 foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.Before))
                 {

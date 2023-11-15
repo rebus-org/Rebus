@@ -14,7 +14,7 @@ namespace Rebus.Pipeline.Receive;
 /// <summary>
 /// Incoming message step that gets relevant handlers for the message
 /// </summary>
-[StepDocumentation(@"Looks at the incoming message and decides how to handle it. A HandlerInvokers object is saved to the context to be invoked later.")]
+[StepDocumentation("Looks at the incoming message and decides how to handle it. A HandlerInvokers object is saved to the context to be invoked later.")]
 public class ActivateHandlersStep : IIncomingStep
 {
     readonly ConcurrentDictionary<Type, MethodInfo> _dispatchMethods = new();

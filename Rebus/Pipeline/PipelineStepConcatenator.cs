@@ -9,10 +9,10 @@ namespace Rebus.Pipeline;
 /// </summary>
 public class PipelineStepConcatenator : IPipeline
 {
-    readonly List<IIncomingStep> _incomingFrontSteps = new List<IIncomingStep>();
-    readonly List<IIncomingStep> _incomingBackSteps = new List<IIncomingStep>();
-    readonly List<IOutgoingStep> _outgoingFrontSteps = new List<IOutgoingStep>();
-    readonly List<IOutgoingStep> _outgoingBackSteps = new List<IOutgoingStep>();
+    readonly List<IIncomingStep> _incomingFrontSteps = new();
+    readonly List<IIncomingStep> _incomingBackSteps = new();
+    readonly List<IOutgoingStep> _outgoingFrontSteps = new();
+    readonly List<IOutgoingStep> _outgoingBackSteps = new();
     readonly IPipeline _pipeline;
 
     /// <summary>
@@ -21,8 +21,7 @@ public class PipelineStepConcatenator : IPipeline
     /// <param name="pipeline"></param>
     public PipelineStepConcatenator(IPipeline pipeline)
     {
-        if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
-        _pipeline = pipeline;
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
     }
 
     /// <summary>

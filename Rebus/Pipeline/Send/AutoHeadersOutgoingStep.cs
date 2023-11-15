@@ -17,7 +17,7 @@ namespace Rebus.Pipeline.Send;
 Headers already on the message will not be overwritten.")]
 public class AutoHeadersOutgoingStep : IOutgoingStep
 {
-    readonly ConcurrentDictionary<Type, HeaderAttribute[]> _headersToAssign = new ConcurrentDictionary<Type, HeaderAttribute[]>();
+    readonly ConcurrentDictionary<Type, HeaderAttribute[]> _headersToAssign = new();
 
     /// <summary>
     /// Carries out the auto-header logic

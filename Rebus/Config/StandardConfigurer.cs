@@ -27,10 +27,8 @@ public class StandardConfigurer<TService>
 
     internal StandardConfigurer(Injectionist injectionist, Options options)
     {
-        if (injectionist == null) throw new ArgumentNullException(nameof(injectionist));
-        if (options == null) throw new ArgumentNullException(nameof(options));
-        _injectionist = injectionist;
-        _options = options;
+        _injectionist = injectionist ?? throw new ArgumentNullException(nameof(injectionist));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     internal Options Options => _options;

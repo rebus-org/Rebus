@@ -24,6 +24,9 @@ public static class AutoForwardOnExceptionConfigurationExtensions
     public static StandardConfigurer<IRouter> ForwardOnException<TException>(this StandardConfigurer<IRouter> configurer, string destinationQueue, LogLevel logLevel, Func<TException, bool> shouldForward = null)
         where TException : Exception
     {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        if (destinationQueue == null) throw new ArgumentNullException(nameof(destinationQueue));
+
         configurer
             .OtherService<IPipeline>()
             .Decorate(c =>
@@ -32,11 +35,14 @@ public static class AutoForwardOnExceptionConfigurationExtensions
                 var transport = c.Get<ITransport>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
-                var shouldForwardException = shouldForward != null
-                    ? (Func<Exception, bool>)(exception => shouldForward((TException)exception))
-                    : (exception => true);
-
-                var step = new ForwardOnExceptionsStep(typeof(TException), destinationQueue, transport, rebusLoggerFactory, logLevel, shouldForwardException);
+                var step = new ForwardOnExceptionsStep(
+                    exceptionType: typeof(TException),
+                    destinationQueue: destinationQueue,
+                    transport: transport,
+                    rebusLoggerFactory: rebusLoggerFactory,
+                    logLevel: logLevel,
+                    shouldForward: shouldForward != null ? exception => shouldForward((TException)exception) : _ => true
+                );
 
                 return new PipelineStepInjector(pipeline)
                     .OnReceive(step, PipelineRelativePosition.After, typeof(DefaultRetryStep));
@@ -57,12 +63,13 @@ public static class AutoForwardOnExceptionConfigurationExtensions
 
         public ForwardOnExceptionsStep(Type exceptionType, string destinationQueue, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, LogLevel logLevel, Func<Exception, bool> shouldForward)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            _exceptionType = exceptionType ?? throw new ArgumentNullException(nameof(exceptionType));
+            _destinationQueue = destinationQueue ?? throw new ArgumentNullException(nameof(destinationQueue));
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _logger = rebusLoggerFactory.GetLogger<ForwardOnExceptionsStep>();
-            _exceptionType = exceptionType;
-            _destinationQueue = destinationQueue;
-            _transport = transport;
             _logLevel = logLevel;
-            _shouldForward = shouldForward;
+            _shouldForward = shouldForward ?? throw new ArgumentNullException(nameof(shouldForward));
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)

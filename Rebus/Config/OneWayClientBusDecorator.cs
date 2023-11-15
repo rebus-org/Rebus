@@ -10,71 +10,39 @@ namespace Rebus.Config;
 
 class OneWayClientBusDecorator : IBus
 {
-    readonly IBus _innerBus;
     readonly AdvancedApiDecorator _advancedApiDecorator;
+    readonly IBus _innerBus;
 
     public OneWayClientBusDecorator(IBus innerBus, IRebusLoggerFactory rebusLoggerFactory)
     {
-        _innerBus = innerBus;
+        if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+        _innerBus = innerBus ?? throw new ArgumentNullException(nameof(innerBus));
         _advancedApiDecorator = new AdvancedApiDecorator(_innerBus.Advanced, rebusLoggerFactory);
     }
 
-    public void Dispose()
-    {
-        _innerBus.Dispose();
-    }
+    public Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _innerBus.SendLocal(commandMessage, optionalHeaders);
 
-    public Task SendLocal(object commandMessage, IDictionary<string, string> optionalHeaders = null)
-    {
-        return _innerBus.SendLocal(commandMessage, optionalHeaders);
-    }
+    public Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null) => _innerBus.Send(commandMessage, optionalHeaders);
 
-    public Task Send(object commandMessage, IDictionary<string, string> optionalHeaders = null)
-    {
-        return _innerBus.Send(commandMessage, optionalHeaders);
-    }
+    public Task Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null) => _innerBus.Reply(replyMessage, optionalHeaders);
 
-    public Task Reply(object replyMessage, IDictionary<string, string> optionalHeaders = null)
-    {
-        return _innerBus.Reply(replyMessage, optionalHeaders);
-    }
+    public Task Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null) => _innerBus.Defer(delay, message, optionalHeaders);
 
-    public Task Defer(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
-    {
-        return _innerBus.Defer(delay, message, optionalHeaders);
-    }
-
-    public Task DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null)
-    {
-        return _innerBus.DeferLocal(delay, message, optionalHeaders);
-    }
+    public Task DeferLocal(TimeSpan delay, object message, IDictionary<string, string> optionalHeaders = null) => _innerBus.DeferLocal(delay, message, optionalHeaders);
 
     public IAdvancedApi Advanced => _advancedApiDecorator;
 
-    public Task Subscribe<TEvent>()
-    {
-        return _innerBus.Subscribe<TEvent>();
-    }
+    public Task Subscribe<TEvent>() => _innerBus.Subscribe<TEvent>();
 
-    public Task Subscribe(Type eventType)
-    {
-        return _innerBus.Subscribe(eventType);
-    }
+    public Task Subscribe(Type eventType) => _innerBus.Subscribe(eventType);
 
-    public Task Unsubscribe<TEvent>()
-    {
-        return _innerBus.Unsubscribe<TEvent>();
-    }
+    public Task Unsubscribe<TEvent>() => _innerBus.Unsubscribe<TEvent>();
 
-    public Task Unsubscribe(Type eventType)
-    {
-        return _innerBus.Unsubscribe(eventType);
-    }
+    public Task Unsubscribe(Type eventType) => _innerBus.Unsubscribe(eventType);
 
-    public Task Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null)
-    {
-        return _innerBus.Publish(eventMessage, optionalHeaders);
-    }
+    public Task Publish(object eventMessage, IDictionary<string, string> optionalHeaders = null) => _innerBus.Publish(eventMessage, optionalHeaders);
+
+    public void Dispose() => _innerBus.Dispose();
 
     class AdvancedApiDecorator : IAdvancedApi
     {
@@ -83,8 +51,8 @@ class OneWayClientBusDecorator : IBus
 
         public AdvancedApiDecorator(IAdvancedApi innerAdvancedApi, IRebusLoggerFactory rebusLoggerFactory)
         {
-            _innerAdvancedApi = innerAdvancedApi;
-            _rebusLoggerFactory = rebusLoggerFactory;
+            _innerAdvancedApi = innerAdvancedApi ?? throw new ArgumentNullException(nameof(innerAdvancedApi));
+            _rebusLoggerFactory = rebusLoggerFactory ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         }
 
         public IWorkersApi Workers => new OneWayClientWorkersApi(_rebusLoggerFactory);
@@ -106,6 +74,7 @@ class OneWayClientBusDecorator : IBus
 
         public OneWayClientWorkersApi(IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _log = rebusLoggerFactory.GetLogger<OneWayClientWorkersApi>();
         }
 

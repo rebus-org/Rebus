@@ -22,14 +22,11 @@ public class OptionsConfigurer
 
     internal OptionsConfigurer(Options options, Injectionist injectionist)
     {
-        _options = options;
-        _injectionist = injectionist;
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _injectionist = injectionist ?? throw new ArgumentNullException(nameof(injectionist));
     }
 
-    internal StandardConfigurer<TService> GetConfigurer<TService>()
-    {
-        return new StandardConfigurer<TService>(_injectionist, _options);
-    }
+    internal StandardConfigurer<TService> GetConfigurer<TService>() => new(_injectionist, _options);
 
     /// <summary>
     /// Configures the number of workers to start competing over the input queue

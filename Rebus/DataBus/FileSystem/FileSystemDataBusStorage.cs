@@ -27,7 +27,7 @@ public class FileSystemDataBusStorage : IDataBusStorage, IDataBusStorageManageme
     const string MetadataFileExtension = "meta";
     const string FilePrefix = "data-";
 
-    readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
+    readonly DictionarySerializer _dictionarySerializer = new();
     readonly string _directoryPath;
     readonly IRebusTime _rebusTime;
     readonly Retrier _retrier;
