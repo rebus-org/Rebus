@@ -1097,15 +1097,16 @@
 ## 7.2.0
 * Add `Events` configuration method on `OptionsConfigurer` to provide easier access to `BusLifetimeEvents`
 
-## 8.0.0
+## 8.0.1
 * Change the sequence of events in the retry step, which paves the way for true, distributed error tracking (i.e. tracking delivery attempts across nodes)
 * Refactor transaction context to make distinction between the ACK/NACK protocol and commit/rollback actions more clear
 * Change error tracking to use `ExceptionInfo` instead of real `Exception`s to provide support for distributed error tracking
 * Introduce `.Errors(e => ...)` configurer as a hook for configuring custom error trackers
 * Add `IExceptionLogger` responsible for logging exceptions to enable consistent exception logging regardless of which error tracker is configured
 * Prevent multiple bus instances from enlisting in the same transaction context, because it will result in undefined behavior
-* Update accepted version range for System.Text.Json to include 8
+* Update accepted version range for System.Text.Json to include 8 and start with 6 (because 5 has dependency on lib reported as vulnerable)
 * Update Newtonsoft.JSON accepted version to start at 13 because 12 is considered vulnerable
+
 
 
 ---
