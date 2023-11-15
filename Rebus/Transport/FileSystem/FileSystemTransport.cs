@@ -243,6 +243,9 @@ public class FileSystemTransport : AbstractRebusTransport, IInitializable, ITran
         }
     }
 
+    /// <summary>
+    /// Sends the outgoing messages by writing them as files in the file system
+    /// </summary>
     protected override async Task SendOutgoingMessages(IEnumerable<OutgoingTransportMessage> outgoingMessages, ITransactionContext context)
     {
         var index = 0;
@@ -271,85 +274,6 @@ public class FileSystemTransport : AbstractRebusTransport, IInitializable, ITran
         }
 
     }
-
-//    class OutgoingMessage
-//    {
-//        public static async Task<OutgoingMessage> WriteTemp(string destinationDirectoryPath, TransportMessage message)
-//        {
-//            var filePath = Path.Combine(destinationDirectoryPath, $"{Guid.NewGuid():N}.tmp");
-//            try
-//            {
-//                var outgoingMessage = new OutgoingMessage(destinationDirectoryPath, filePath);
-//                var contents = Serializer.Serialize(new Envelope(message.Headers, message.Body));
-
-//                using (var destination = File.OpenWrite(filePath))
-//                using (var writer = new StreamWriter(destination, Encoding.UTF8))
-//                {
-//                    writer.Write(contents);
-//                }
-
-//                return outgoingMessage;
-//            }
-//            catch (Exception exception)
-//            {
-//                throw new IOException($@"Could not write outgoing message to
-
-//    {filePath}
-//", exception);
-//            }
-//        }
-
-//        readonly string _destinationDirectoryPath;
-//        readonly string _tempFilePath;
-
-//        OutgoingMessage(string destinationDirectoryPath, string tempFilePath)
-//        {
-//            _destinationDirectoryPath = destinationDirectoryPath;
-//            _tempFilePath = tempFilePath;
-//        }
-
-//        public void Complete(Guid unitOfWorkId, DateTimeOffset now, int index)
-//        {
-//            var finalFilePath = Path.Combine(_destinationDirectoryPath, $"{now:yyyyMMdd}-{now:HHmmss}-{unitOfWorkId:N}-{index:000000}.rebusmessage.json");
-//            var attempts = 0;
-
-//            while (true)
-//            {
-//                attempts++;
-//                try
-//                {
-//                    File.Move(_tempFilePath, finalFilePath);
-//                    return;
-//                }
-//                catch (Exception) when (attempts < 5)
-//                {
-//                    Thread.Sleep(500);
-//                }
-//                catch (Exception exception)
-//                {
-//                    throw new IOException($@"Could not commit message by renaming temp file
-
-//    {_tempFilePath}
-
-//into final file
-
-//    {finalFilePath}
-
-//even after {attempts} attempts
-//", exception);
-//                }
-//            }
-//        }
-
-//        public void Delete()
-//        {
-//            try
-//            {
-//                File.Delete(_tempFilePath);
-//            }
-//            catch { }
-//        }
-//    }
 
     /// <summary>
     /// Disposes the transport by releasing all currently locked messages
