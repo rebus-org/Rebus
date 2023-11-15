@@ -16,8 +16,6 @@ static class DataBusStorageQuery
     public static bool IsSatisfied(Dictionary<string, string> metadata, TimeRange readTime, TimeRange saveTime)
     {
         if (metadata == null) throw new ArgumentNullException(nameof(metadata));
-        if (readTime == null) throw new ArgumentNullException(nameof(readTime));
-        if (saveTime == null) throw new ArgumentNullException(nameof(saveTime));
 
         var fromReadTime = readTime?.From;
         var toReadTime = readTime?.To;
