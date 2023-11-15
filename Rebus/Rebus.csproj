@@ -24,7 +24,7 @@
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="[13,14)" />
+		<PackageReference Include="Newtonsoft.Json" Version="[13.0.1,14)" />
 		<PackageReference Include="system.text.json" Version="[5,9)" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
