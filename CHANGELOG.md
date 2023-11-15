@@ -1104,6 +1104,8 @@
 * Introduce `.Errors(e => ...)` configurer as a hook for configuring custom error trackers
 * Add `IExceptionLogger` responsible for logging exceptions to enable consistent exception logging regardless of which error tracker is configured
 * Prevent multiple bus instances from enlisting in the same transaction context, because it will result in undefined behavior
+* Update accepted version range for System.Text.Json to include 8
+* Update Newtonsoft.JSON accepted version to start at 13 because 12 is considered vulnerable
 
 
 ---
