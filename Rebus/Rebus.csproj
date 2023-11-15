@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
-		<LangVersion>10</LangVersion>
+		<LangVersion>11</LangVersion>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
@@ -11,14 +11,8 @@
 		<PackageDescription>Rebus is a lean service bus for .NET</PackageDescription>
 		<RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-
-		<!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-
-		<!-- Optional: Embed source files that are not tracked by the source control manager in the PDB -->
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-
-		<!-- Optional: Include the PDB in the built .nupkg -->
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
@@ -31,7 +25,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="[12.0.1,14)" />
-		<PackageReference Include="system.text.json" Version="[5,8)" />
+		<PackageReference Include="system.text.json" Version="[5,9)" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 	<ItemGroup>
