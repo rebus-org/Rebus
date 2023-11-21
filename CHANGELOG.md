@@ -1107,8 +1107,9 @@
 * Update accepted version range for System.Text.Json to include 8 and start with 6 (because 5 has dependency on lib reported as vulnerable)
 * Update Newtonsoft.JSON accepted version to start at 13 because 12 is considered vulnerable
 
-
-
+## 8.0.2
+* Make `IsExternalInit` internal to avoid interfering with other tools that happen to be über sensitive
+ 
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
