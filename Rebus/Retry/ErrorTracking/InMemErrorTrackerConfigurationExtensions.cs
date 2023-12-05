@@ -23,11 +23,13 @@ public static class InMemErrorTrackerConfigurationExtensions
             var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
             var rebusTime = c.Get<IRebusTime>();
             var exceptionLogger = c.Get<IExceptionLogger>();
+            var exceptionInfoFactory = c.Get<IExceptionInfoFactory>();
             return new InMemErrorTracker(
                 retryStrategySettings,
                 asyncTaskFactory,
                 rebusTime,
-                exceptionLogger
+                exceptionLogger,
+                exceptionInfoFactory
             );
         });
     }

@@ -295,7 +295,8 @@ public class RebusConfigurer
             var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
             var rebusTime = c.Get<IRebusTime>();
             var exceptionLogger = c.Get<IExceptionLogger>();
-            return new InMemErrorTracker(settings, asyncTaskFactory, rebusTime, exceptionLogger);
+            var exceptionInfoFactory = c.Get<IExceptionInfoFactory>();
+            return new InMemErrorTracker(settings, asyncTaskFactory, rebusTime, exceptionLogger, exceptionInfoFactory);
         });
 
         PossiblyRegisterDefault<IExceptionInfoFactory>(c => new ToStringExceptionInfoFactory());
@@ -317,8 +318,9 @@ public class RebusConfigurer
             var errorTracker = c.Get<IErrorTracker>();
             var errorHandler = c.Get<IErrorHandler>();
             var failFastChecker = c.Get<IFailFastChecker>();
+            var exceptionInfoFactory = c.Get<IExceptionInfoFactory>();
             var cancellationToken = c.Get<CancellationToken>();
-            return new DefaultRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, failFastChecker, cancellationToken);
+            return new DefaultRetryStrategy(simpleRetryStrategySettings, rebusLoggerFactory, errorTracker, errorHandler, failFastChecker, exceptionInfoFactory, cancellationToken);
         });
 
         PossiblyRegisterDefault(_ => new RetryStrategySettings());

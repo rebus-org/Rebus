@@ -44,8 +44,9 @@ public static class TransportMessageRoutingConfigurationExtensions
                 var transport = c.Get<ITransport>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var errorHandler = c.Get<IErrorHandler>();
+                var exceptionInfoFactory = c.Get<IExceptionInfoFactory>();
 
-                var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory, errorBehavior, errorHandler);
+                var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory, errorBehavior, errorHandler, exceptionInfoFactory);
 
                 return new PipelineStepConcatenator(pipeline)
                     .OnReceive(stepToAdd, PipelineAbsolutePosition.Front);
