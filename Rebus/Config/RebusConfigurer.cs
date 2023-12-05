@@ -35,6 +35,7 @@ using Rebus.Workers.ThreadPoolBased;
 using Rebus.Retry.FailFast;
 using Rebus.Time;
 using Rebus.Topic;
+using Rebus.Retry.Info;
 // ReSharper disable EmptyGeneralCatchClause
 // ReSharper disable ArgumentsStyleNamedExpression
 
@@ -296,6 +297,8 @@ public class RebusConfigurer
             var exceptionLogger = c.Get<IExceptionLogger>();
             return new InMemErrorTracker(settings, asyncTaskFactory, rebusTime, exceptionLogger);
         });
+
+        PossiblyRegisterDefault<IExceptionInfoFactory>(c => new ToStringExceptionInfoFactory());
 
         PossiblyRegisterDefault<IErrorHandler>(c =>
         {

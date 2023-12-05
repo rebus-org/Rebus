@@ -17,6 +17,7 @@ namespace Rebus.Routing.TransportMessages;
 public class ForwardTransportMessageStep : IIncomingStep
 {
     readonly Func<TransportMessage, Task<ForwardAction>> _routingFunction;
+    readonly IExceptionInfoFactory _exceptionInfoFactory;
     readonly ErrorBehavior _errorBehavior;
     readonly IErrorHandler _errorHandler;
     readonly ITransport _transport;
@@ -25,13 +26,14 @@ public class ForwardTransportMessageStep : IIncomingStep
     /// <summary>
     /// Constructs the step
     /// </summary>
-    public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, ErrorBehavior errorBehavior, IErrorHandler errorHandler)
+    public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, ErrorBehavior errorBehavior, IErrorHandler errorHandler, IExceptionInfoFactory exceptionInfoFactory)
     {
         if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _routingFunction = routingFunction ?? throw new ArgumentNullException(nameof(routingFunction));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
         _errorBehavior = errorBehavior;
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
+        _exceptionInfoFactory = exceptionInfoFactory ?? throw new ArgumentNullException(nameof(exceptionInfoFactory));
         _log = rebusLoggerFactory.GetLogger<ForwardTransportMessageStep>();
     }
 
@@ -96,7 +98,7 @@ public class ForwardTransportMessageStep : IIncomingStep
                 {
                     transactionContext.SetResult(commit: false, ack: true);
                     using var scope = new RebusTransactionScope();
-                    await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, ExceptionInfo.FromException(exception));
+                    await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, _exceptionInfoFactory.CreateInfo(exception));
                     await scope.CompleteAsync();
                     return;
                 }
