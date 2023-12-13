@@ -76,14 +76,7 @@ public class DefaultRetryStep : IRetryStep
         try
         {
             await next();
-
-            var manualDeadletterCommand = context.Load<ManualDeadletterCommand>();
-
-            if (manualDeadletterCommand != null)
-            {
-                await PassToErrorHandler(context, ExceptionInfo.FromException(manualDeadletterCommand.Exception));
-            }
-
+            await HandleManualDeadlettering(context);
             transactionContext.SetResult(commit: true, ack: true);
 
             if (transactionContext is ICanEagerCommit canEagerCommit)
@@ -127,6 +120,7 @@ public class DefaultRetryStep : IRetryStep
             try
             {
                 await DispatchSecondLevelRetry(transactionContext, context, next);
+                await HandleManualDeadlettering(context);
                 transactionContext.SetResult(commit: true, ack: true);
                 await _errorTracker.CleanUp(messageId);
                 return;
@@ -150,6 +144,15 @@ public class DefaultRetryStep : IRetryStep
         await PassToErrorHandler(context, aggregateException);
         await _errorTracker.CleanUp(messageId);
         transactionContext.SetResult(commit: false, ack: true);
+    }
+
+    async Task HandleManualDeadlettering(IncomingStepContext context)
+    {
+        var manualDeadletterCommand = context.Load<ManualDeadletterCommand>();
+
+        if (manualDeadletterCommand == null) return;
+
+        await PassToErrorHandler(context, ExceptionInfo.FromException(manualDeadletterCommand.Exception));
     }
 
     static async Task DispatchSecondLevelRetry(ITransactionContext transactionContext, StepContext context, Func<Task> next)

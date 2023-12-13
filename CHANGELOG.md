@@ -1110,6 +1110,9 @@
 ## 8.0.2
 * Make `IsExternalInit` internal to avoid interfering with other tools that happen to be über sensitive
  
+## 8.0.3
+* Fix bug that prevented manually dead-lettering messages from a second-level retry handler
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
