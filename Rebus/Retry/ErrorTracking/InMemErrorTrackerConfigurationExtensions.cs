@@ -38,9 +38,9 @@ public static class InMemErrorTrackerConfigurationExtensions
     /// <summary>
     /// Configures Rebus to use in-mem exception infos that provide the original exception via <see cref="ExceptionInfo.ConvertTo{TExceptionInfo}"/>
     /// </summary>
-    public static void UseInMemExceptionInfos(this StandardConfigurer<IExceptionInfoFactory> configurer)
+    public static void UseInMemExceptionInfos(this StandardConfigurer<IErrorTracker> configurer)
     {
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
-        configurer.Register(c => new InMemExceptionInfoFactory());
+        configurer.OtherService<IExceptionInfoFactory>().Register(c => new InMemExceptionInfoFactory());
     }
 }
