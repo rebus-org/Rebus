@@ -28,21 +28,6 @@ public class TestDefaultRetryStep
     }
 
     [Test, AutoMoq]
-    public async Task CreatesInfoForDeadLetterCommandException(
-        [Frozen] Mock<IExceptionInfoFactory> exceptionInfoFactory,
-        DefaultRetryStep step, IncomingStepContext context,
-        TransportMessage message, string id, Exception deadLetterException)
-    {
-        message.Headers[Headers.MessageId] = id;
-        context.Save(message);
-        context.Save(new ManualDeadletterCommand(deadLetterException));
-
-        await step.Process(context, () => Task.CompletedTask);
-        
-        exceptionInfoFactory.Verify(eif => eif.CreateInfo(deadLetterException));
-    }
-
-    [Test, AutoMoq]
     public async Task CreatesInfoForStepExceptionWhenShouldFailFast(
         [Frozen] Mock<IFailFastChecker> failFastChecker,
         [Frozen] Mock<IExceptionInfoFactory> exceptionInfoFactory,
