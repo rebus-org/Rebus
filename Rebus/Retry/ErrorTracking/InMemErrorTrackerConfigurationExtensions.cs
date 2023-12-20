@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus.Config;
+using Rebus.Retry.Info;
 using Rebus.Retry.Simple;
 using Rebus.Threading;
 using Rebus.Time;
@@ -32,5 +33,14 @@ public static class InMemErrorTrackerConfigurationExtensions
                 exceptionInfoFactory
             );
         });
+    }
+
+    /// <summary>
+    /// Configures Rebus to use in-mem exception infos that provide the original exception via <see cref="ExceptionInfo.ConvertTo{TExceptionInfo}"/>
+    /// </summary>
+    public static void UseInMemExceptionInfos(this StandardConfigurer<IExceptionInfoFactory> configurer)
+    {
+        if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+        configurer.Register(c => new InMemExceptionInfoFactory());
     }
 }
