@@ -34,18 +34,20 @@ public class DefaultRetryStep : IRetryStep
     readonly IErrorHandler _errorHandler;
     readonly IErrorTracker _errorTracker;
     readonly IFailFastChecker _failFastChecker;
+    readonly IExceptionInfoFactory _exceptionInfoFactory;
     readonly bool _secondLevelRetriesEnabled;
     readonly ILog _log;
 
     /// <summary>
     /// Creates the step
     /// </summary>
-    public DefaultRetryStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
+    public DefaultRetryStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, IExceptionInfoFactory exceptionInfoFactory, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
     {
         _log = rebusLoggerFactory?.GetLogger<DefaultRetryStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
+        _exceptionInfoFactory = exceptionInfoFactory ?? throw new ArgumentNullException(nameof(exceptionInfoFactory));
         _secondLevelRetriesEnabled = secondLevelRetriesEnabled;
         _cancellationToken = cancellationToken;
     }
@@ -64,7 +66,7 @@ public class DefaultRetryStep : IRetryStep
         {
             transactionContext.SetResult(commit: false, ack: true);
 
-            await PassToErrorHandler(context, ExceptionInfo.FromException(new RebusApplicationException(
+            await PassToErrorHandler(context, _exceptionInfoFactory.CreateInfo(new RebusApplicationException(
                 $"Received message with empty or absent '{Headers.MessageId}' header! All messages must carry" +
                 " an ID. If no ID is present, the message cannot be tracked" +
                 " between delivery attempts, and other stuff would also be much harder to" +
@@ -101,7 +103,7 @@ public class DefaultRetryStep : IRetryStep
         {
             await _errorTracker.MarkAsFinal(messageId);
             await _errorTracker.RegisterError(messageId, exception);
-            await PassToErrorHandler(context, GetAggregateException(new[] { ExceptionInfo.FromException(exception) }));
+            await PassToErrorHandler(context, GetAggregateException(new[] { _exceptionInfoFactory.CreateInfo(exception) }));
             await _errorTracker.CleanUp(messageId);
             transactionContext.SetResult(commit: false, ack: true);
             return;
@@ -132,7 +134,7 @@ public class DefaultRetryStep : IRetryStep
             catch (Exception secondLevelException)
             {
                 var exceptions = await _errorTracker.GetExceptions(messageId);
-                await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { ExceptionInfo.FromException(secondLevelException), })));
+                await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { _exceptionInfoFactory.CreateInfo(secondLevelException), })));
                 await _errorTracker.CleanUp(messageId);
                 transactionContext.SetResult(commit: false, ack: true);
                 return;

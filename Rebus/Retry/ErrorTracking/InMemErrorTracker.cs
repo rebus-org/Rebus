@@ -29,6 +29,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     readonly RetryStrategySettings _retryStrategySettings;
     readonly IAsyncTask _cleanupOldTrackedErrorsTask;
     readonly IExceptionLogger _exceptionLogger;
+    readonly IExceptionInfoFactory _exceptionInfoFactory;
     readonly IRebusTime _rebusTime;
 
     bool _disposed;
@@ -36,13 +37,14 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     /// <summary>
     /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
     /// </summary>
-    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IAsyncTaskFactory asyncTaskFactory, IRebusTime rebusTime, IExceptionLogger exceptionLogger)
+    public InMemErrorTracker(RetryStrategySettings retryStrategySettings, IAsyncTaskFactory asyncTaskFactory, IRebusTime rebusTime, IExceptionLogger exceptionLogger, IExceptionInfoFactory exceptionInfoFactory)
     {
         if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
 
         _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
         _exceptionLogger = exceptionLogger ?? throw new ArgumentNullException(nameof(exceptionLogger));
+        _exceptionInfoFactory = exceptionInfoFactory ?? throw new ArgumentNullException(nameof(exceptionInfoFactory));
 
         _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(
             BackgroundTaskName,
@@ -77,8 +79,8 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     public Task RegisterError(string messageId, Exception exception)
     {
         var errorTracking = _trackedErrors.AddOrUpdate(messageId,
-            id => new ErrorTracking(_rebusTime, exception),
-            (id, tracking) => tracking.AddError(_rebusTime, exception, tracking.Final));
+            id => new ErrorTracking(_rebusTime, _exceptionInfoFactory.CreateInfo(exception)),
+            (id, tracking) => tracking.AddError(_rebusTime, _exceptionInfoFactory.CreateInfo(exception), tracking.Final));
 
         _exceptionLogger.LogException(messageId, exception, errorTracking.ErrorCount, errorTracking.Final);
 
@@ -166,8 +168,8 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
             _caughtExceptions = caughtExceptions.ToArray();
         }
 
-        public ErrorTracking(IRebusTime rebusTime, Exception exception = null, bool final = false)
-            : this(rebusTime, exception != null ? new[] { ExceptionInfo.FromException(exception) } : Array.Empty<ExceptionInfo>(), final)
+        public ErrorTracking(IRebusTime rebusTime, ExceptionInfo exception = null, bool final = false)
+            : this(rebusTime, exception != null ? new[] { exception } : Array.Empty<ExceptionInfo>(), final)
         {
         }
 
@@ -177,12 +179,12 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
 
         public IEnumerable<ExceptionInfo> Errors => _caughtExceptions;
 
-        public ErrorTracking AddError(IRebusTime rebusTime, Exception caughtException, bool final)
+        public ErrorTracking AddError(IRebusTime rebusTime, ExceptionInfo caughtException, bool final)
         {
             //// don't change anymore if this one is already final
             //if (Final) return this;
 
-            return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { ExceptionInfo.FromException(caughtException), }), final);
+            return new ErrorTracking(rebusTime, _caughtExceptions.Concat(new[] { caughtException, }), final);
         }
 
         public TimeSpan ElapsedSinceLastError

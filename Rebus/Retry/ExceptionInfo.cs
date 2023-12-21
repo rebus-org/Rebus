@@ -27,4 +27,14 @@ public record ExceptionInfo(string Type, string Message, string Details, DateTim
     /// Gets the full details of this exception info
     /// </summary>
     public string GetFullErrorDescription() => $"{Time}: {Details}";
+
+    /// <summary>
+    /// Treats the current exception info as an info of type <typeparamref name="TExceptionInfo"/>.
+    /// </summary>
+    /// <typeparam name="TExceptionInfo">Exception info subtype to convert to.</typeparam>
+    /// <returns>This exception info cast to <typeparamref name="TExceptionInfo"/>.</returns>
+    public TExceptionInfo ConvertTo<TExceptionInfo>() where TExceptionInfo : ExceptionInfo
+    {
+        return this as TExceptionInfo ?? throw new ArgumentException($"Exception info type '{GetType().Name}' cannot be cast to '{typeof(TExceptionInfo).Name}'");
+    }
 }
