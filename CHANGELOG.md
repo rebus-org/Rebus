@@ -1113,6 +1113,9 @@
 ## 8.0.3
 * Fix bug that prevented manually dead-lettering messages from a second-level retry handler
 
+## 8.1.0
+* Introduce IExceptionInfoFactory to enable keeping real `Exception` objects alongside exception details when tracking errors purely in-mem - thanks [ladenedge]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1142,6 +1145,7 @@
 [kendallb]: https://github.com/kendallb
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
+[ladenedge]: https://github.com/ladenedge
 [Liero]: https://github.com/Liero
 [madstt]: https://github.com/madstt
 [maeserichar]: https://github.com/maeserichar

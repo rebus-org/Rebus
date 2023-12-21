@@ -24,5 +24,5 @@ public record InMemExceptionInfo : ExceptionInfo
     /// <summary>
     /// Gets or sets the original exception.
     /// </summary>
-    public Exception Exception { get; set; }
+    public Exception Exception { get; }
 }
