@@ -30,25 +30,25 @@ public class DefaultRetryStep : IRetryStep
     /// </summary>
     public const string DispatchAsFailedMessageKey = "dispatch-as-failed-message";
 
+    readonly RetryStrategySettings _retryStrategySettings;
+    readonly IExceptionInfoFactory _exceptionInfoFactory;
     readonly CancellationToken _cancellationToken;
+    readonly IFailFastChecker _failFastChecker;
     readonly IErrorHandler _errorHandler;
     readonly IErrorTracker _errorTracker;
-    readonly IFailFastChecker _failFastChecker;
-    readonly IExceptionInfoFactory _exceptionInfoFactory;
-    readonly bool _secondLevelRetriesEnabled;
     readonly ILog _log;
 
     /// <summary>
     /// Creates the step
     /// </summary>
-    public DefaultRetryStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, IExceptionInfoFactory exceptionInfoFactory, bool secondLevelRetriesEnabled, CancellationToken cancellationToken)
+    public DefaultRetryStep(IRebusLoggerFactory rebusLoggerFactory, IErrorHandler errorHandler, IErrorTracker errorTracker, IFailFastChecker failFastChecker, IExceptionInfoFactory exceptionInfoFactory, RetryStrategySettings retryStrategySettings, CancellationToken cancellationToken)
     {
         _log = rebusLoggerFactory?.GetLogger<DefaultRetryStep>() ?? throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
         _errorTracker = errorTracker ?? throw new ArgumentNullException(nameof(errorTracker));
         _failFastChecker = failFastChecker ?? throw new ArgumentNullException(nameof(failFastChecker));
         _exceptionInfoFactory = exceptionInfoFactory ?? throw new ArgumentNullException(nameof(exceptionInfoFactory));
-        _secondLevelRetriesEnabled = secondLevelRetriesEnabled;
+        _retryStrategySettings = retryStrategySettings ?? throw new ArgumentNullException(nameof(retryStrategySettings));
         _cancellationToken = cancellationToken;
     }
 
@@ -64,13 +64,36 @@ public class DefaultRetryStep : IRetryStep
 
         if (string.IsNullOrWhiteSpace(messageId))
         {
-            transactionContext.SetResult(commit: false, ack: true);
-
             await PassToErrorHandler(context, _exceptionInfoFactory.CreateInfo(new RebusApplicationException(
                 $"Received message with empty or absent '{Headers.MessageId}' header! All messages must carry" +
                 " an ID. If no ID is present, the message cannot be tracked" +
                 " between delivery attempts, and other stuff would also be much harder to" +
                 " do - therefore, it is a requirement that messages carry an ID.")));
+
+            transactionContext.SetResult(commit: false, ack: true);
+
+            return;
+        }
+
+        if (transportMessage.Headers.TryGetValue(Headers.DeliveryCount, out var value) && int.TryParse(value, out var deliveryCount))
+        {
+            var maxDeliveryAttempts = _retryStrategySettings.SecondLevelRetriesEnabled
+                ? 2 * _retryStrategySettings.MaxDeliveryAttempts
+                : _retryStrategySettings.MaxDeliveryAttempts;
+
+            var exceptions = await _errorTracker.GetExceptions(messageId);
+            var maxDescription = _retryStrategySettings.SecondLevelRetriesEnabled
+                ? $"which is {maxDeliveryAttempts}, i.e. 2 x {_retryStrategySettings.MaxDeliveryAttempts} because 2nd level retries are enabled"
+                : $"which is {maxDeliveryAttempts}";
+
+            var exceptionMessage = exceptions.Any()
+                ? $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription})"
+                : $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription}) – the error tracker did not provide additional information about the errors, which may/may not be because the errors happened on another Rebus instance.";
+
+            var exceptionInfo = _exceptionInfoFactory.CreateInfo(new RebusApplicationException(exceptionMessage));
+            await PassToErrorHandler(context, GetAggregateException(new[] { exceptionInfo }.Concat(exceptions)));
+            await _errorTracker.CleanUp(messageId);
+            transactionContext.SetResult(commit: false, ack: true);
 
             return;
         }
@@ -117,7 +140,7 @@ public class DefaultRetryStep : IRetryStep
             return;
         }
 
-        if (_secondLevelRetriesEnabled)
+        if (_retryStrategySettings.SecondLevelRetriesEnabled)
         {
             try
             {

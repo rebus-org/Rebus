@@ -18,6 +18,5 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="DataBus\Encryption\" />
-	  <Folder Include="Retry\ErrorTracking\" />
 	</ItemGroup>
 </Project>

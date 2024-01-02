@@ -51,7 +51,7 @@ public class Options
     public int MaxParallelism { get; set; } = DefaultMaxParallelism;
 
     /// <summary>
-    /// Configures the maximum number of conflict resolution attempts made when invoking the conflict resolution handler of a saga. This setting deat
+    /// Configures the maximum number of conflict resolution attempts made when invoking the conflict resolution handler of a saga.
     /// </summary>
     public int MaxConflictResolutionAttempts { get; set; } = DefaultConflictResolutionAttempts;
 

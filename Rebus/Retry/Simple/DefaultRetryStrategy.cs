@@ -41,7 +41,7 @@ public class DefaultRetryStrategy : IRetryStrategy
         _errorTracker,
         _failFastChecker,
         _exceptionInfoFactory,
-        _retryStrategySettings.SecondLevelRetriesEnabled,
+        _retryStrategySettings,
         _cancellationToken
     );
 }

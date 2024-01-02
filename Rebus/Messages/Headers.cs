@@ -134,4 +134,9 @@ public static class Headers
     /// Header that contains the ID of a data bus attachment, which was used to store the message body
     /// </summary>
     public const string MessagePayloadAttachmentId = "rbs2-payload-attachment-id";
+
+    /// <summary>
+    /// Optional header that can be provided on incoming messages by transports that have native support for counting attempted deliveries.
+    /// </summary>
+    public const string DeliveryCount = "rbs2-delivery-count";
 }

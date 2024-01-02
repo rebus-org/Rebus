@@ -23,7 +23,7 @@ public class TestDefaultRetryStep
         DefaultRetryStep step, IncomingStepContext context)
     {
         await step.Process(context, () => Task.CompletedTask);
-        
+
         exceptionInfoFactory.Verify(eif => eif.CreateInfo(It.Is<RebusApplicationException>(e => e.Message.Contains("empty"))));
     }
 
@@ -56,7 +56,7 @@ public class TestDefaultRetryStep
     {
         failFastChecker.Setup(ffc => ffc.ShouldFailFast(It.IsAny<string>(), It.IsAny<Exception>())).Returns(false);
         errorTracker.Setup(et => et.HasFailedTooManyTimes(It.IsAny<string>())).ReturnsAsync(true);
-        var step = new DefaultRetryStep(rebusLoggerFactory.Object, errorHandler.Object, errorTracker.Object, failFastChecker.Object, exceptionInfoFactory.Object, true, CancellationToken.None);
+        var step = new DefaultRetryStep(rebusLoggerFactory.Object, errorHandler.Object, errorTracker.Object, failFastChecker.Object, exceptionInfoFactory.Object, new(secondLevelRetriesEnabled: true), CancellationToken.None);
         message.Headers[Headers.MessageId] = id;
         context.Save(message);
 
