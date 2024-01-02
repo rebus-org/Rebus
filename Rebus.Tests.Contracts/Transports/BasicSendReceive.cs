@@ -15,11 +15,9 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
     readonly Encoding _defaultEncoding = Encoding.UTF8;
 
     TTransportFactory _factory;
-    CancellationToken _cancellationToken;
 
     protected override void SetUp()
     {
-        _cancellationToken = new CancellationTokenSource().Token;
         _factory = new TTransportFactory();
     }
 
@@ -45,7 +43,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await receiver.Receive(context, _cancellationToken);
+            var transportMessage = await receiver.Receive(context, CancellationToken.None);
 
             Assert.That(transportMessage, Is.Not.Null);
 
@@ -62,7 +60,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
+            var transportMessage = await emptyQueue.Receive(context, CancellationToken.None);
 
             Assert.That(transportMessage, Is.Null);
         });
@@ -84,7 +82,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var transportMessage = await input2.Receive(context, CancellationToken.None);
             var stringBody = GetStringBody(transportMessage);
 
             Assert.That(stringBody, Is.EqualTo("hej"));
@@ -108,7 +106,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var transportMessage = await input2.Receive(context, CancellationToken.None);
 
             Assert.That(transportMessage, Is.Null);
         });
@@ -134,7 +132,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var transportMessage = await input2.Receive(context, CancellationToken.None);
             var stringBody = GetStringBody(transportMessage);
 
             Assert.That(stringBody, Is.EqualTo("hej"));
@@ -144,7 +142,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var transportMessage = await input2.Receive(context, CancellationToken.None);
             var stringBody = GetStringBody(transportMessage);
 
             Assert.That(stringBody, Is.EqualTo("hej"));
@@ -154,7 +152,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
 
         await WithContext(async context =>
         {
-            var transportMessage = await input2.Receive(context, _cancellationToken);
+            var transportMessage = await input2.Receive(context, CancellationToken.None);
 
             Assert.That(transportMessage, Is.Null);
         });
@@ -183,7 +181,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
             Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
 
             Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }),
-                $@"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
+                $"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");
         }
         else
         {
@@ -200,7 +198,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
         {
             using var scope = new RebusTransactionScope();
             
-            var msg = await input.Receive(scope.TransactionContext, _cancellationToken);
+            var msg = await input.Receive(scope.TransactionContext, CancellationToken.None);
 
             if (msg != null)
             {
@@ -209,7 +207,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
                 continue;
             }
 
-            await Task.Delay(100, _cancellationToken);
+            await Task.Delay(100, CancellationToken.None);
             receivedNulls++;
         }
 
