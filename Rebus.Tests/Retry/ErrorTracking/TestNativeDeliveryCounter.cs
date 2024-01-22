@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -16,7 +17,8 @@ namespace Rebus.Tests.Retry.ErrorTracking;
 public class TestNativeDeliveryCounter : FixtureBase
 {
     InMemNetwork _network;
-    IBus _bus;
+    IBusStarter _starter;
+    BuiltinHandlerActivator _activator;
 
     protected override void SetUp()
     {
@@ -24,18 +26,20 @@ public class TestNativeDeliveryCounter : FixtureBase
 
         _network = new();
 
-        var activator = Using(new BuiltinHandlerActivator());
+        _activator = Using(new BuiltinHandlerActivator());
 
-        _bus = Configure.With(activator)
+        _starter = Configure.With(_activator)
             .Transport(t => t.UseInMemoryTransport(_network, "some-queue"))
             .Options(o => o.RetryStrategy(maxDeliveryAttempts: 3))
-            .Start();
+            .Create();
     }
 
     [Test]
     public async Task ImmediatelyDeadlettersWhenDeliveryCountHeaderExceedsMaxRetries()
     {
-        await _bus.SendLocal("HEJ", new Dictionary<string, string> { [Headers.DeliveryCount] = "4" });
+        var bus = _starter.Start();
+
+        await bus.SendLocal("HEJ", new Dictionary<string, string> { [Headers.DeliveryCount] = "4" });
 
         var errorMessage = await _network.WaitForNextMessageFrom("error");
 
@@ -43,5 +47,18 @@ public class TestNativeDeliveryCounter : FixtureBase
 
         Assert.That(errorMessage.Headers[Headers.DeliveryCount], Is.EqualTo("4"));
         Assert.That(messageWasConsumed, Is.Zero, "Queue count was not 0 - looks like the message was not properly consumed");
+    }
+
+    [Test]
+    [Explicit]
+    public async Task DoesNotImmediatelyDeadlettersWhenDeliveryCountHeaderDoesNotExceedMaxRetries()
+    {
+        var bus = _starter.Start();
+
+        await bus.SendLocal("HEJ", new Dictionary<string, string> { [Headers.DeliveryCount] = "1" });
+
+        var errorMessage = await _network.WaitForNextMessageFrom("error");
+        var messageWasConsumed = _network.GetCount("some-queue");
+
     }
 }

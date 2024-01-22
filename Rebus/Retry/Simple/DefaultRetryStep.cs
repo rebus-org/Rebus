@@ -81,21 +81,24 @@ public class DefaultRetryStep : IRetryStep
                 ? 2 * _retryStrategySettings.MaxDeliveryAttempts
                 : _retryStrategySettings.MaxDeliveryAttempts;
 
-            var exceptions = await _errorTracker.GetExceptions(messageId);
-            var maxDescription = _retryStrategySettings.SecondLevelRetriesEnabled
-                ? $"which is {maxDeliveryAttempts}, i.e. 2 x {_retryStrategySettings.MaxDeliveryAttempts} because 2nd level retries are enabled"
-                : $"which is {maxDeliveryAttempts}";
+            if (deliveryCount >= maxDeliveryAttempts)
+            {
+                var exceptions = await _errorTracker.GetExceptions(messageId);
+                var maxDescription = _retryStrategySettings.SecondLevelRetriesEnabled
+                    ? $"which is {maxDeliveryAttempts}, i.e. 2 x {_retryStrategySettings.MaxDeliveryAttempts} because 2nd level retries are enabled"
+                    : $"which is {maxDeliveryAttempts}";
 
-            var exceptionMessage = exceptions.Any()
-                ? $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription})"
-                : $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription}) – the error tracker did not provide additional information about the errors, which may/may not be because the errors happened on another Rebus instance.";
+                var exceptionMessage = exceptions.Any()
+                    ? $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription})"
+                    : $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription}) – the error tracker did not provide additional information about the errors, which may/may not be because the errors happened on another Rebus instance.";
 
-            var exceptionInfo = _exceptionInfoFactory.CreateInfo(new RebusApplicationException(exceptionMessage));
-            await PassToErrorHandler(context, GetAggregateException(new[] { exceptionInfo }.Concat(exceptions)));
-            await _errorTracker.CleanUp(messageId);
-            transactionContext.SetResult(commit: false, ack: true);
+                var exceptionInfo = _exceptionInfoFactory.CreateInfo(new RebusApplicationException(exceptionMessage));
+                await PassToErrorHandler(context, GetAggregateException(new[] {exceptionInfo}.Concat(exceptions)));
+                await _errorTracker.CleanUp(messageId);
+                transactionContext.SetResult(commit: false, ack: true);
 
-            return;
+                return;
+            }
         }
 
         try
