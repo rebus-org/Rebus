@@ -1116,7 +1116,7 @@
 ## 8.1.0
 * Introduce IExceptionInfoFactory to enable keeping real `Exception` objects alongside exception details when tracking errors purely in-mem - thanks [ladenedge]
 
-## 8.2.1
+## 8.2.2
 * Add optional `rbs2-delivery-count` header, which may be provided by transports that are capable of counting deliveries natively
 
 ---

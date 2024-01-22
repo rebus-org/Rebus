@@ -81,7 +81,7 @@ public class DefaultRetryStep : IRetryStep
                 ? 2 * _retryStrategySettings.MaxDeliveryAttempts
                 : _retryStrategySettings.MaxDeliveryAttempts;
 
-            if (deliveryCount >= maxDeliveryAttempts)
+            if (deliveryCount > maxDeliveryAttempts)
             {
                 var exceptions = await _errorTracker.GetExceptions(messageId);
                 var maxDescription = _retryStrategySettings.SecondLevelRetriesEnabled
