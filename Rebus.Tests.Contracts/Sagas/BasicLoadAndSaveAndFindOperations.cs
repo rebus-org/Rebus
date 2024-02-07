@@ -61,6 +61,15 @@ namespace Rebus.Tests.Contracts.Sagas
             Assert.That(resultLookingForData2, Is.Null);
         }
 
+        [Test]
+        [Description("Just verifies that querying for saga data with CorrelationId == NULL does not result in an error")]
+        public async Task CanFindByNullPropertyValue()
+        {
+            var result = await _sagaStorage.Find(typeof(Data1), nameof(Data1.CorrelationId), null);
+
+            Assert.That(result, Is.Null);
+        }
+
         class Data1 : SagaData { public string CorrelationId { get; set; } }
         class Data2 : SagaData { public string CorrelationId { get; set; } }
 
@@ -347,10 +356,10 @@ namespace Rebus.Tests.Contracts.Sagas
             {
                 GetCorrelationProperty(d => d.CorrelateByString),
 
-                GetCorrelationProperty(d => d.CorrelateByBool), 
-                GetCorrelationProperty(d => d.CorrelateByShort), 
-                GetCorrelationProperty(d => d.CorrelateByInt), 
-                GetCorrelationProperty(d => d.CorrelateByLong), 
+                GetCorrelationProperty(d => d.CorrelateByBool),
+                GetCorrelationProperty(d => d.CorrelateByShort),
+                GetCorrelationProperty(d => d.CorrelateByInt),
+                GetCorrelationProperty(d => d.CorrelateByLong),
                 GetCorrelationProperty(d => d.CorrelateByByte), 
                 
                 //GetCorrelationProperty(d => d.CorrelateByDecimal), 
