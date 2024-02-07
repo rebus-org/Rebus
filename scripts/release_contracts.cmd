@@ -39,7 +39,7 @@ if %ERRORLEVEL% neq 0 (
 dotnet pack "%root%/Rebus.Tests.Contracts" -c Release -o "%deploydir%" -p:PackageVersion=%version%;Version=%version% --no-restore
 if %ERRORLEVEL% neq 0 (
 	popd
-	echo Could pack Rebus.Tests.Contracts
+	echo Could not pack Rebus.Tests.Contracts
  	goto exit_fail
 )
 
