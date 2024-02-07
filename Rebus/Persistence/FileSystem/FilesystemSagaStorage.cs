@@ -41,7 +41,10 @@ public class FileSystemSagaStorage : ISagaStorage
             var index = new FileSystemSagaIndex(_basePath);
             if (propertyName == IdPropertyName)
             {
-                var sagaData = index.FindById((Guid) propertyValue);
+                if (propertyValue == null) return null;
+
+                var guidPropertyValue = GetGuidValue(propertyValue);
+                var sagaData = index.FindById(guidPropertyValue);
 
                 if (!sagaDataType.IsInstanceOfType(sagaData))
                 {
@@ -51,6 +54,25 @@ public class FileSystemSagaStorage : ISagaStorage
                 return sagaData;
             }
             return index.Find(sagaDataType, propertyName, propertyValue);
+        }
+
+        Guid GetGuidValue(object value)
+        {
+            if (value is Guid guid) return guid;
+
+            if (value is string {Length: > 0} str)
+            {
+                try
+                {
+                    return Guid.Parse(str);
+                }
+                catch (Exception exception)
+                {
+                    throw new FormatException($"Could not parse the string value '{str}' into a GUID", exception);
+                }
+            }
+
+            throw new InvalidCastException($"The value {value} is not a Guid or a string-encoded Guid");
         }
     }
 

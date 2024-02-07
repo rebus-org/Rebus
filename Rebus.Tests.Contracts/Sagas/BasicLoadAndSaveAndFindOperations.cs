@@ -62,8 +62,17 @@ namespace Rebus.Tests.Contracts.Sagas
         }
 
         [Test]
+        [Description("Just verifies that querying for saga data with Id == NULL does not result in an error")]
+        public async Task CanFindByNullPropertyValue_CorrelationById()
+        {
+            var result = await _sagaStorage.Find(typeof(Data1), nameof(Data1.Id), null);
+
+            Assert.That(result, Is.Null);
+        }
+
+        [Test]
         [Description("Just verifies that querying for saga data with CorrelationId == NULL does not result in an error")]
-        public async Task CanFindByNullPropertyValue()
+        public async Task CanFindByNullPropertyValue_CorrelationByCustomProperty()
         {
             var result = await _sagaStorage.Find(typeof(Data1), nameof(Data1.CorrelationId), null);
 
