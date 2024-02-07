@@ -6,7 +6,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Rebus\Rebus.csproj" />
-		<ProjectReference Include="..\Rebus.Tests.Contracts\Rebus.Tests.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="AutoFixture.AutoMoq" Version="4.18.1" />
@@ -15,8 +14,6 @@
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="NUnit" Version="3.14.0" />
 		<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="DataBus\Encryption\" />
+		<PackageReference Include="Rebus.Tests.Contracts" Version="8.2.2" />
 	</ItemGroup>
 </Project>
