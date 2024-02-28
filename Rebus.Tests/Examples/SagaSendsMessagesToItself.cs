@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,8 +32,11 @@ public class SagaSendsMessagesToItself : FixtureBase
 
         activator.Register((bus, _) => new MySaga(bus, gotTheMessages, messageCount: 10));
 
+        var network = new InMemNetwork();
+        var randomQueueName = $"queue-{Guid.NewGuid():N}";
+
         var bus = Configure.With(activator)
-            .Transport(t => t.UseInMemoryTransport(new(), "whatever"))
+            .Transport(t => t.UseInMemoryTransport(network, randomQueueName))
             .Sagas(s => s.StoreInMemory())
             .Options(o =>
             {
@@ -47,19 +51,30 @@ public class SagaSendsMessagesToItself : FixtureBase
 
         await bus.SendLocal(new StartTheSaga(Guid.NewGuid().ToString("N")));
 
-        gotTheMessages.WaitOrDie(TimeSpan.FromSeconds(5));
+        gotTheMessages.WaitOrDie(TimeSpan.FromSeconds(5), 
+            errorMessage: "Expected that all the messages should have been properly handled within 5 s, even though there's lots of optimistic concurrency exceptions going on");
+
+        await Task.Delay(TimeSpan.FromSeconds(1));
+
+        Assert.That(network.GetCount(randomQueueName), Is.Zero, "Expected that the input queue should have been empty after running");
     }
 
     record StartTheSaga(string CorrelationId);
 
     record IncrementHandledMessages(string CorrelationId);
 
-    class MySaga(IBus bus, ManualResetEvent gotTheMessages, int messageCount) : Saga<MySagaData>, IAmInitiatedBy<StartTheSaga>, IHandleMessages<IncrementHandledMessages>
+    record EndTheSaga(string CorrelationId);
+
+    class MySaga(IBus bus, ManualResetEvent gotTheMessages, int messageCount) : Saga<MySagaData>, 
+        IAmInitiatedBy<StartTheSaga>, 
+        IHandleMessages<IncrementHandledMessages>,
+        IHandleMessages<EndTheSaga>
     {
         protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
         {
             config.Correlate<StartTheSaga>(m => m.CorrelationId, d => d.CorrelationId);
             config.Correlate<IncrementHandledMessages>(m => m.CorrelationId, d => d.CorrelationId);
+            config.Correlate<EndTheSaga>(m => m.CorrelationId, d => d.CorrelationId);
         }
 
         public async Task Handle(StartTheSaga message)
@@ -80,10 +95,17 @@ public class SagaSendsMessagesToItself : FixtureBase
             // artificial delay to increase concurrency
             await Task.Delay(TimeSpan.FromMilliseconds(23));
 
-            if (Data.HandledMessages == messageCount)
+            if (Data.HandledMessages != messageCount)
             {
-                gotTheMessages.Set();
+                return;
             }
+
+            await bus.SendLocal(new EndTheSaga(Data.CorrelationId));
+        }
+
+        public async Task Handle(EndTheSaga message)
+        {
+            gotTheMessages.Set();
         }
     }
 
