@@ -46,4 +46,40 @@ public class FailFastStillInvokesSecondLevelRetries : FixtureBase
         }));
 
     }
+
+    [Test]
+    public async Task WhatHappensIfSecondLevelHandlerThrowsFailFastToo()
+    {
+        var events = new ConcurrentQueue<string>();
+
+        using var activator = new BuiltinHandlerActivator();
+
+        activator.Handle<string>(async _ =>
+        {
+            events.Enqueue("1st level handler");
+            throw new FailFastException("wooH00 1");
+        });
+
+        activator.Handle<IFailed<string>>(async _ =>
+        {
+            events.Enqueue("2nd level handler");
+            throw new FailFastException("wooH00 2");
+        });
+
+        var bus = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new(), "whatever"))
+            .Options(o => o.RetryStrategy(secondLevelRetriesEnabled: true))
+            .Start();
+
+        await bus.SendLocal("🙂");
+
+        await events.WaitUntil(e => e.Count >= 2);
+
+        Assert.That(events, Is.EqualTo(new[]
+        {
+            "1st level handler",
+            "2nd level handler",
+        }));
+
+    }
 }

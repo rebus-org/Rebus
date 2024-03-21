@@ -1119,6 +1119,9 @@
 ## 8.2.2
 * Add optional `rbs2-delivery-count` header, which may be provided by transports that are capable of counting deliveries natively
 
+## 8.2.3
+* Fix behavior of fail-fast combined with 2nd level retries to be like before (i.e. failing fast will immediately trigger 2nd level retry)
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

@@ -200,18 +200,6 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
         public ErrorTracking MarkAsFinal() => new(_rebusTime, _caughtExceptions, final: true);
     }
 
-    //class CaughtException
-    //{
-    //    public CaughtException(DateTimeOffset time, Exception exception)
-    //    {
-    //        Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-    //        Time = time;
-    //    }
-
-    //    public Exception Exception { get; }
-    //    public DateTimeOffset Time { get; }
-    //}
-
     /// <summary>
     /// Stops the periodic cleanup of tracked messages
     /// </summary>

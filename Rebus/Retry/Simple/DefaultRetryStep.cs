@@ -127,6 +127,13 @@ public class DefaultRetryStep : IRetryStep
     {
         if (_failFastChecker.ShouldFailFast(messageId, exception))
         {
+            // special case - it we're supposed to fail fast, AND 2nd level retries are enabled, AND this is the first delivery attempt, try to dispatch as 2nd level:
+            if (_retryStrategySettings.SecondLevelRetriesEnabled)
+            {
+                await DispatchSecondLevelRetry(transactionContext, messageId, context, next);
+                return;
+            }
+
             await _errorTracker.MarkAsFinal(messageId);
             await _errorTracker.RegisterError(messageId, exception);
             await PassToErrorHandler(context, GetAggregateException(new[] { _exceptionInfoFactory.CreateInfo(exception) }));
@@ -145,26 +152,8 @@ public class DefaultRetryStep : IRetryStep
 
         if (_retryStrategySettings.SecondLevelRetriesEnabled)
         {
-            try
-            {
-                await DispatchSecondLevelRetry(transactionContext, context, next);
-                await HandleManualDeadlettering(context);
-                transactionContext.SetResult(commit: true, ack: true);
-                await _errorTracker.CleanUp(messageId);
-                return;
-            }
-            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
-            {
-                _log.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
-            }
-            catch (Exception secondLevelException)
-            {
-                var exceptions = await _errorTracker.GetExceptions(messageId);
-                await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { _exceptionInfoFactory.CreateInfo(secondLevelException), })));
-                await _errorTracker.CleanUp(messageId);
-                transactionContext.SetResult(commit: false, ack: true);
-                return;
-            }
+            await DispatchSecondLevelRetry(transactionContext, messageId, context, next);
+            return;
         }
 
         var aggregateException = GetAggregateException(await _errorTracker.GetExceptions(messageId));
@@ -172,6 +161,38 @@ public class DefaultRetryStep : IRetryStep
         await PassToErrorHandler(context, aggregateException);
         await _errorTracker.CleanUp(messageId);
         transactionContext.SetResult(commit: false, ack: true);
+    }
+
+    async Task DispatchSecondLevelRetry(ITransactionContext transactionContext, string messageId, IncomingStepContext context, Func<Task> next)
+    {
+        try
+        {
+            await DispatchSecondLevelRetry(transactionContext, context, next);
+            await HandleManualDeadlettering(context);
+            transactionContext.SetResult(commit: true, ack: true);
+            await _errorTracker.CleanUp(messageId);
+        }
+        catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
+        {
+            _log.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
+        }
+        catch (Exception secondLevelException)
+        {
+            if (_failFastChecker.ShouldFailFast(messageId, secondLevelException))
+            {
+                await _errorTracker.MarkAsFinal(messageId);
+                await _errorTracker.RegisterError(messageId, secondLevelException);
+                await PassToErrorHandler(context, GetAggregateException(new[] { _exceptionInfoFactory.CreateInfo(secondLevelException) }));
+                await _errorTracker.CleanUp(messageId);
+                transactionContext.SetResult(commit: false, ack: true);
+                return;
+            }
+
+            var exceptions = await _errorTracker.GetExceptions(messageId);
+            await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { _exceptionInfoFactory.CreateInfo(secondLevelException), })));
+            await _errorTracker.CleanUp(messageId);
+            transactionContext.SetResult(commit: false, ack: true);
+        }
     }
 
     async Task HandleManualDeadlettering(IncomingStepContext context)
