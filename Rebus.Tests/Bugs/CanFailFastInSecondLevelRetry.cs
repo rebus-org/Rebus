@@ -48,11 +48,14 @@ public class CanFailFastInSecondLevelRetry : FixtureBase
 
         var warnings = loggerFactory.Where(l => l.Level == LogLevel.Warn).ToList();
 
-        Assert.That(warnings.Count, Is.EqualTo(1),
-            "Expected only one WARNing, because the fail-fast exception should cause it to be marked as FINAL");
+        Assert.That(warnings.Count, Is.EqualTo(2),
+            "Expected exactly TWO WARNings, because the both the 1st and the 2nd level handlers threw fail-fast exceptions which should both be marked as FINAL");
 
-        Assert.That(warnings.First().Text, Contains.Substring("FINAL"),
-            "Expected the single WARNing to contain the substring 'FINAL'");
+        Assert.That(warnings[0].Text, Contains.Substring("FINAL"),
+            "Expected the first WARNing to contain the substring 'FINAL'");
+        
+        Assert.That(warnings[1].Text, Contains.Substring("FINAL"),
+            "Expected the second WARNing to contain the substring 'FINAL'");
 
         Assert.That(loggerFactory.Count(l => l.Level == LogLevel.Error), Is.EqualTo(1),
             "Expected exactly one ERROR, because the message is only dead-lettered once");

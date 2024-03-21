@@ -130,6 +130,7 @@ public class DefaultRetryStep : IRetryStep
             // special case - it we're supposed to fail fast, AND 2nd level retries are enabled, AND this is the first delivery attempt, try to dispatch as 2nd level:
             if (_retryStrategySettings.SecondLevelRetriesEnabled)
             {
+                await _errorTracker.MarkAsFinal(messageId);
                 await _errorTracker.RegisterError(messageId, exception);
                 await DispatchSecondLevelRetry(transactionContext, messageId, context, next);
                 return;
