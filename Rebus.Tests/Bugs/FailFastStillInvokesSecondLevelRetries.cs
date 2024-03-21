@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -43,6 +44,33 @@ public class FailFastStillInvokesSecondLevelRetries : FixtureBase
         {
             "string handled the first time - throwing FailFastException!",
             "2nd level delivery attempt!",
+        }));
+
+    }
+
+    [Test]
+    public async Task SecondLevelRetryAfterFailFastExceptionStillHasTheCaughtExceptions()
+    {
+        var events = new ConcurrentQueue<string>();
+
+        using var activator = new BuiltinHandlerActivator();
+
+        activator.Handle<string>(async _ => throw new FailFastException("wooH00"));
+
+        activator.Handle<IFailed<string>>(async failed => events.Enqueue($"Tracker had {failed.Exceptions.Count()} exceptions"));
+
+        var bus = Configure.With(activator)
+            .Transport(t => t.UseInMemoryTransport(new(), "whatever"))
+            .Options(o => o.RetryStrategy(secondLevelRetriesEnabled: true))
+            .Start();
+
+        await bus.SendLocal("🙂");
+
+        await events.WaitUntil(e => e.Count >= 1);
+
+        Assert.That(events, Is.EqualTo(new[]
+        {
+            "Tracker had 1 exceptions",
         }));
 
     }

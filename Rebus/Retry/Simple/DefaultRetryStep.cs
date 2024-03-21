@@ -93,7 +93,7 @@ public class DefaultRetryStep : IRetryStep
                     : $"Received message with native delivery count header value = {deliveryCount} thus exceeding MAX number of delivery attempts ({maxDescription}) – the error tracker did not provide additional information about the errors, which may/may not be because the errors happened on another Rebus instance.";
 
                 var exceptionInfo = _exceptionInfoFactory.CreateInfo(new RebusApplicationException(exceptionMessage));
-                await PassToErrorHandler(context, GetAggregateException(new[] {exceptionInfo}.Concat(exceptions)));
+                await PassToErrorHandler(context, GetAggregateException(new[] { exceptionInfo }.Concat(exceptions)));
                 await _errorTracker.CleanUp(messageId);
                 transactionContext.SetResult(commit: false, ack: true);
 
@@ -130,6 +130,7 @@ public class DefaultRetryStep : IRetryStep
             // special case - it we're supposed to fail fast, AND 2nd level retries are enabled, AND this is the first delivery attempt, try to dispatch as 2nd level:
             if (_retryStrategySettings.SecondLevelRetriesEnabled)
             {
+                await _errorTracker.RegisterError(messageId, exception);
                 await DispatchSecondLevelRetry(transactionContext, messageId, context, next);
                 return;
             }
