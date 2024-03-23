@@ -43,6 +43,14 @@ public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
     /// </summary>
     public async Task HandlePoisonMessage(TransportMessage transportMessage, ITransactionContext transactionContext, ExceptionInfo exception)
     {
+        // creating a separate Transaction to not enlish the Send to ErrorQueue in the original transaction that is NOT going to be commited
+        // note: there is the window where the message is sent to DeadLetter but then not ACKed due to transient network 
+        //       which lead to the original message to be handled again even if already DeadLettered.
+        using var scope = new RebusTransactionScope();
+
+        transportMessage = transportMessage.Clone();
+        transactionContext = scope.TransactionContext;
+
         var headers = transportMessage.Headers;
 
         if (!headers.TryGetValue(Headers.MessageId, out var messageId))
@@ -63,6 +71,7 @@ public class DeadletterQueueErrorHandler : IErrorHandler, IInitializable
                 messageId, errorQueueAddress, errorDetails);
 
             await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
+            await scope.CompleteAsync();
         }
         catch (Exception forwardException)
         {
