@@ -221,12 +221,10 @@ public class DefaultRetryStep : IRetryStep
 
     async Task PassToErrorHandler(StepContext context, ExceptionInfo exception)
     {
-        var originalTransportMessage = context.Load<OriginalTransportMessage>() ?? throw new RebusApplicationException("Could not find the original transport message in the current incoming step context");
-        var transportMessage = originalTransportMessage.TransportMessage.Clone();
-
-        using var scope = new RebusTransactionScope();
-        await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, exception);
-        await scope.CompleteAsync();
+        var transactionContext = context.Load<ITransactionContext>() ?? throw new RebusApplicationException("Could not find a transaction context in the current incoming step context");
+        var transportMessage = context.Load<TransportMessage>() ?? throw new RebusApplicationException("Could not find a transport message in the current incoming step context");
+        
+        await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, exception);
     }
 
     static ExceptionInfo GetAggregateException(IEnumerable<ExceptionInfo> exceptions)
