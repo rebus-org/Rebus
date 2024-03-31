@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
 		<LangVersion>11</LangVersion>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>mookid8000</Authors>
@@ -25,6 +25,8 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="[13.0.1,14)" />
+	</ItemGroup>
+	<ItemGroup  Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="system.text.json" Version="[6,9)" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
