@@ -95,11 +95,9 @@ public class ForwardTransportMessageStep : IIncomingStep
                 transportMessage.Headers[Headers.ErrorDetails] = exception.ToString();
 
                 try
-                {
+                {                    
+                    await _errorHandler.HandlePoisonMessage(transportMessage, transactionContext, _exceptionInfoFactory.CreateInfo(exception));
                     transactionContext.SetResult(commit: false, ack: true);
-                    using var scope = new RebusTransactionScope();
-                    await _errorHandler.HandlePoisonMessage(transportMessage, scope.TransactionContext, _exceptionInfoFactory.CreateInfo(exception));
-                    await scope.CompleteAsync();
                     return;
                 }
                 catch (Exception exception2)
