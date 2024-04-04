@@ -17,7 +17,7 @@ namespace Rebus.Tests.Examples;
 
 [TestFixture]
 [Description("Demonstrates in full how the current principal can be changed in the pipeline and in some relevant transaction context callbacks")]
-public class ChangeCurrentPrincipalInPipelineAndTransactionContextCallbacks : FixtureBase
+public class ModifyCurrentPrincipalInPipelineAndTransactionContextCallbacks : FixtureBase
 {
     [Test]
     public async Task CheckHowItWorks()

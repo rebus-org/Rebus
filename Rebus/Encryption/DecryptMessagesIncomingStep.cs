@@ -31,16 +31,24 @@ public class DecryptMessagesIncomingStep : IIncomingStep
     public async Task Process(IncomingStepContext context, Func<Task> next)
     {
         var transportMessage = context.Load<TransportMessage>();
+        var originalHeaders = transportMessage.Headers;
 
-        if (transportMessage.Headers.TryGetValue(EncryptionHeaders.ContentEncryption, out var contentEncryptionValue)
+        if (originalHeaders.TryGetValue(EncryptionHeaders.ContentEncryption, out var contentEncryptionValue)
             && contentEncryptionValue == _encryptor.ContentEncryptionValue)
         {
-            var headers = transportMessage.Headers.Clone();
-            var encryptedBodyBytes = transportMessage.Body;
+            var headers = originalHeaders.Clone();
 
-            headers.TryGetValue(EncryptionHeaders.KeyId, out var keyId);
-                
-            var iv = GetIv(headers);
+            // remove these to prevent subsequent invocations of the pipeline to decrypt the transport message again
+            headers.Remove(EncryptionHeaders.ContentEncryption);
+            headers.Remove(EncryptionHeaders.ContentInitializationVector);
+            headers.Remove(EncryptionHeaders.KeyId);
+
+            // must look for key ID and IV in original headers :)
+            originalHeaders.TryGetValue(EncryptionHeaders.KeyId, out var keyId);
+            
+            var iv = GetIv(originalHeaders);
+
+            var encryptedBodyBytes = transportMessage.Body;
             var bodyBytes = await _encryptor.Decrypt(new EncryptedData(encryptedBodyBytes, iv, keyId));
 
             context.Save(new TransportMessage(headers, bodyBytes));

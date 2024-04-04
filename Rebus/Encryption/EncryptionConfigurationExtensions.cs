@@ -83,7 +83,7 @@ public static class EncryptionConfigurationExtensions
                     catch (Exception exception)
                     {
                         throw new RebusConfigurationException(exception,
-                            @"Could not get IAsyncEncryptor to use when enabling encryption on the data bus storage. Please either enable encryption on the transport (via .Options(o => o.EnableEncryption(...))) to have an IAsyncEncryptor registered.");
+                            "Could not get IAsyncEncryptor to use when enabling encryption on the data bus storage. Please either enable encryption on the transport (via .Options(o => o.EnableEncryption(...))) to have an IAsyncEncryptor registered.");
                     }
                 }
 
