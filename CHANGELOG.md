@@ -1122,6 +1122,9 @@
 ## 8.2.4
 * Fix behavior of fail-fast combined with 2nd level retries to be like before (i.e. failing fast will immediately trigger 2nd level retry)
 
+## 8.3.0
+* Alter how the message transaction context is managed when dead-lettering (i.e. the failing message context is now passed to `IErrorHandler` - it is now up to the error handler to create its own scope if it so desires) - thanks [AndreaCuneo]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
