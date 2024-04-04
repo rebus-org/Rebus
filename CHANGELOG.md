@@ -1125,6 +1125,9 @@
 ## 8.3.0
 * Alter how the message transaction context is managed when dead-lettering (i.e. the failing message context is now passed to `IErrorHandler` - it is now up to the error handler to create its own scope if it so desires) - thanks [AndreaCuneo]
 
+## 8.4.0
+* Add .NET 6 as compilation target to enable stripping dependencies that are included in the BCL - thanks [thompson-tomo]
+ 
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1184,6 +1187,7 @@
 [Rzpeg]: https://github.com/Rzpeg
 [seankearon]: https://github.com/seankearon
 [SvenVandenbrande]: https://github.com/SvenVandenbrande
+[thompson-tomo]: https://github.com/thompson-tomo
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor
 [torangel]: https://github.com/torangel
