@@ -1128,6 +1128,9 @@
 ## 8.4.0
 * Add .NET 6 as compilation target to enable stripping dependencies that are included in the BCL - thanks [thompson-tomo]
  
+## 8.4.1
+* Fix bug that would cause the decryption step to try to decrypt un-encrypted contents when using encryption together with 2nd level retries
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
