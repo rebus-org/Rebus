@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Encryption;
+using Rebus.Retry.FailFast;
 using Rebus.Retry.Simple;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
@@ -39,6 +40,7 @@ public class VerifySecondLevelRetriesAndEncryptionAreCool : FixtureBase
             {
                 o.RetryStrategy(secondLevelRetriesEnabled: true);
                 o.EnableEncryption(SecretKey);
+                o.FailFastOn<IndexOutOfRangeException>();
             })
             .Start();
 
