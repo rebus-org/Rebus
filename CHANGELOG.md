@@ -1131,6 +1131,9 @@
 ## 8.4.1
 * Fix bug that would cause the decryption step to try to decrypt un-encrypted contents when using encryption together with 2nd level retries
 
+## 8.4.2
+* Fix bug that would prevent using a default return address on a one-way client
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

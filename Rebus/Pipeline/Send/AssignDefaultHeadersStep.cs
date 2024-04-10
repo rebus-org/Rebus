@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Rebus.Serialization;
 using Rebus.Transport;
 using Rebus.Time;
+// ReSharper disable CanSimplifyDictionaryLookupWithTryAdd
 
 namespace Rebus.Pipeline.Send;
 
@@ -31,7 +32,8 @@ public class AssignDefaultHeadersStep : IOutgoingStep
     readonly IRebusTime _rebusTime;
     readonly string _senderAddress;
     readonly string _returnAddress;
-    readonly bool _hasOwnAddress;
+    readonly bool _hasSenderAddress;
+    readonly bool _hasReturnAddress;
 
     /// <summary>
     /// Constructs the step, getting the input queue address from the given <see cref="ITransport"/>
@@ -42,7 +44,8 @@ public class AssignDefaultHeadersStep : IOutgoingStep
         _messageTypeNameConvention = messageTypeNameConvention ?? throw new ArgumentNullException(nameof(messageTypeNameConvention));
         _senderAddress = transport.Address;
         _returnAddress = defaultReturnAddressOrNull ?? transport.Address;
-        _hasOwnAddress = !string.IsNullOrWhiteSpace(_senderAddress);
+        _hasSenderAddress = !string.IsNullOrWhiteSpace(_senderAddress);
+        _hasReturnAddress = !string.IsNullOrWhiteSpace(_returnAddress);
     }
 
     /// <summary>
@@ -58,7 +61,7 @@ public class AssignDefaultHeadersStep : IOutgoingStep
             headers[Headers.MessageId] = Guid.NewGuid().ToString();
         }
 
-        if (_hasOwnAddress && !headers.ContainsKey(Headers.ReturnAddress))
+        if (_hasReturnAddress && !headers.ContainsKey(Headers.ReturnAddress))
         {
             headers[Headers.ReturnAddress] = _returnAddress;
         }
@@ -68,7 +71,7 @@ public class AssignDefaultHeadersStep : IOutgoingStep
             headers[Headers.SentTime] = _rebusTime.Now.ToString("O");
         }
 
-        if (_hasOwnAddress)
+        if (_hasSenderAddress)
         {
             headers[Headers.SenderAddress] = _senderAddress;
         }
