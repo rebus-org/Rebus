@@ -9,6 +9,7 @@ using Rebus.Routing.TypeBased;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Extensions;
 using Rebus.Transport.InMem;
+// ReSharper disable AccessToDisposedClosure
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Routing;
@@ -32,7 +33,8 @@ public class TestDefaultReturnAddress : FixtureBase
         var receiver = Using(new BuiltinHandlerActivator());
 
         var returnAddress = "";
-        var done = new ManualResetEvent(false);
+        
+        using var done = new ManualResetEvent(false);
 
         receiver.Handle<string>(async (bus, context, message) =>
         {
