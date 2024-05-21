@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ClassLibraryWithCustomName;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Extensions;
@@ -25,6 +26,22 @@ public class TestSystemTextJsonSerializer : FixtureBase
     protected override void SetUp()
     {
         _serializer = new SystemTextJsonSerializer(new SimpleAssemblyQualifiedMessageTypeNameConvention());
+    }
+
+    [Test]
+    public async Task VerifyMessageFromAssemblyWithCustomizedNameCanBeRoundtripped()
+    {
+        var recognizableValue = Guid.NewGuid();
+
+        var body = new MyFavoriteMessage(RecognizableValue: recognizableValue);
+        var message = new Message(new(), body);
+
+        var transportMessage = await _serializer.Serialize(message);
+        Console.WriteLine($"{Headers.Type}: {transportMessage.Headers[Headers.Type]}");
+        var roundtrippedMessage = await _serializer.Deserialize(transportMessage);
+        var roundtrippedBody = (MyFavoriteMessage)roundtrippedMessage.Body;
+
+        Assert.That(roundtrippedBody.RecognizableValue, Is.EqualTo(recognizableValue));
     }
 
     /*

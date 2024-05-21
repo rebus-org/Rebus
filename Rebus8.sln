@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EAB8CED5
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rebus", "Rebus\Rebus.csproj", "{319215F6-B626-4271-8EDA-E31B876F65C0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibraryWithCustomName", "ClassLibraryWithCustomName\ClassLibraryWithCustomName.csproj", "{49ACBC0A-7B66-4BB7-A271-A20E2EA0D75A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{319215F6-B626-4271-8EDA-E31B876F65C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{319215F6-B626-4271-8EDA-E31B876F65C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{319215F6-B626-4271-8EDA-E31B876F65C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49ACBC0A-7B66-4BB7-A271-A20E2EA0D75A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49ACBC0A-7B66-4BB7-A271-A20E2EA0D75A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49ACBC0A-7B66-4BB7-A271-A20E2EA0D75A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49ACBC0A-7B66-4BB7-A271-A20E2EA0D75A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{959C65AB-D21A-4582-BC4F-06D1425FF274} = {EAB8CED5-4383-48F3-AB54-E57278CDD93B}
 		{F1CFF884-8176-48C2-9D51-E9DAAC8E11FB} = {63AB64A3-A453-4663-BDB6-530F2136609D}
 		{319215F6-B626-4271-8EDA-E31B876F65C0} = {63AB64A3-A453-4663-BDB6-530F2136609D}
+		{49ACBC0A-7B66-4BB7-A271-A20E2EA0D75A} = {EAB8CED5-4383-48F3-AB54-E57278CDD93B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FEDAD2E7-01F9-45C3-AA52-85FE700C676B}
