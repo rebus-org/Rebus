@@ -1134,6 +1134,9 @@
 ## 8.4.2
 * Fix bug that would prevent using a default return address on a one-way client
 
+## 8.4.3
+* Fix bug in `EnforceExclusiveSagaAccessIncomingStepBase` that would cause lock buckets to be picked in an unstable way (in modern .NET, at least). Now using custom-implemented stable hash based on MD5
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

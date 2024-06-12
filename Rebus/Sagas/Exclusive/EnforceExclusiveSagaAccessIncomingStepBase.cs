@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Messages;
@@ -53,7 +55,7 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
                 CorrelationPropertyValue = a.correlationProperty.GetValueFromMessage(messageContext, message)
             })
             .Select(a => a.ToString())
-            .Select(lockId => Math.Abs(lockId.GetHashCode()) % _maxLockBuckets)
+            .Select(lockId => GetHashCodeStable(lockId) % _maxLockBuckets)
             .Distinct() // avoid accidentally acquiring the same lock twice, because a bucket got hit more than once
             .OrderBy(str => str) // enforce consistent ordering to avoid deadlocks
             .ToArray();
@@ -67,6 +69,18 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
         {
             await ReleaseLocks(locksToObtain);
         }
+    }
+
+    /// <summary>
+    /// Cannot use <see cref="object.GetHashCode"/>, because it's not stable across processes in modern .NET
+    /// </summary>
+    static int GetHashCodeStable(string lockId)
+    {
+        using var hasher = MD5.Create();
+
+        var hash = hasher.ComputeHash(Encoding.UTF8.GetBytes(lockId));
+
+        return Math.Abs(BitConverter.ToInt32(hash, startIndex: 0));
     }
 
     protected abstract Task<bool> AcquireLockAsync(int lockId);
