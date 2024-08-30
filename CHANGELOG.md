@@ -1137,7 +1137,12 @@
 ## 8.4.3
 * Fix bug in `EnforceExclusiveSagaAccessIncomingStepBase` that would cause lock buckets to be picked in an unstable way (in modern .NET, at least). Now using custom-implemented stable hash based on MD5
 
+## 8.4.4
+* Flatten hierarchy when looking up the dispatch method to better enable extension/alteration by inheritance - thanks [X509Whatever]
+
+
 ---
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -1201,6 +1206,7 @@
 [tobiaxor]: https://github.com/tobiaxor
 [torangel]: https://github.com/torangel
 [trevorreeves]: https://github.com/trevorreeves
+[X509Whatever]: https://github.com/X509Whatever
 [xenoputtss]: https://github.com/xenoputtss
 [zabulus]: https://github.com/zabulus
 [zlepper]: https://github.com/zlepper
