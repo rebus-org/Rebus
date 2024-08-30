@@ -70,7 +70,7 @@ public class ActivateHandlersStep : IIncomingStep
     {
         const string methodName = nameof(GetHandlerInvokers);
 
-        var genericDispatchMethod = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance)
+        var genericDispatchMethod = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                                     ?? throw new ArgumentException($"Could not find the {methodName} method?!");
 
         return genericDispatchMethod.MakeGenericMethod(messageType);
