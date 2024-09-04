@@ -47,7 +47,10 @@ public class ActivateHandlersStep : IIncomingStep
         await next();
     }
 
-    async Task<HandlerInvokers> GetHandlerInvokers<TMessage>(TMessage message, ITransactionContext transactionContext, Message logicalMessage)
+    /// <summary>
+    /// Returns an instance of <see cref="HandlerInvokers"/> containing the list of handlers that will process this message.
+    /// </summary>
+    protected virtual async Task<HandlerInvokers> GetHandlerInvokers<TMessage>(TMessage message, ITransactionContext transactionContext, Message logicalMessage)
     {
         var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
