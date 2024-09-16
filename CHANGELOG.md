@@ -1140,9 +1140,10 @@
 ## 8.4.4
 * Flatten hierarchy when looking up the dispatch method to better enable extension/alteration by inheritance - thanks [X509Whatever]
 
+## 8.5.0
+* Make a bunch of internal tweaks and improvements to improve performance across the board - thanks [Henr1k80]
 
 ---
-
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -1162,6 +1163,7 @@
 [Hangsolow]: https://github.com/Hangsolow
 [heberop]: https://github.com/heberop
 [hellfirehd]: https://github.com/hellfirehd
+[Henr1k80]: https://github.com/Henr1k80
 [jasperdk]: https://github.com/jasperdk
 [jeffreyabecker]: https://github.com/jeffreyabecker
 [jods4]: https://github.com/jods4
