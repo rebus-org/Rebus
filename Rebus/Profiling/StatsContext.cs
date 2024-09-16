@@ -7,7 +7,7 @@ using Rebus.Pipeline;
 
 namespace Rebus.Profiling;
 
-class StatsContext
+sealed class StatsContext
 {
     readonly ConcurrentStack<Measurement> _measurements = new ConcurrentStack<Measurement>();
 
@@ -27,7 +27,7 @@ class StatsContext
 
     internal IDisposable Measure(IIncomingStep nextStep) => new StatsContextDisposable(this, nextStep);
 
-    class StatsContextDisposable : IDisposable
+    sealed class StatsContextDisposable : IDisposable
     {
         readonly StatsContext _statsContext;
         readonly IIncomingStep _nextStep;

@@ -7,7 +7,7 @@ namespace Rebus.Retry.Simple;
 /// <summary>
 /// Wraps a failed message that is to be retried
 /// </summary>
-class FailedMessageWrapper<TMessage> : IFailed<TMessage>
+sealed class FailedMessageWrapper<TMessage> : IFailed<TMessage>
 {
     /// <summary>
     /// Gets the message that failed

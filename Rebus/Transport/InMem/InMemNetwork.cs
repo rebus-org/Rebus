@@ -186,10 +186,8 @@ public class InMemNetwork
 
     static bool MessageIsExpired(InMemTransportMessage message)
     {
-        var headers = message.Headers;
-        if (!headers.ContainsKey(Headers.TimeToBeReceived)) return false;
+        if (!message.Headers.TryGetValue(Headers.TimeToBeReceived, out var timeToBeReceived)) return false;
 
-        var timeToBeReceived = headers[Headers.TimeToBeReceived];
         var maximumAge = TimeSpan.Parse(timeToBeReceived);
 
         return message.Age > maximumAge;

@@ -5,7 +5,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.Persistence.Throwing;
 
-class DisabledTimeoutManager : ITimeoutManager
+sealed class DisabledTimeoutManager : ITimeoutManager
 {
     public Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body) => throw GetException();
 

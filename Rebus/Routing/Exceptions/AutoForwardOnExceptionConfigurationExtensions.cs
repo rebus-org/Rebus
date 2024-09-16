@@ -52,7 +52,7 @@ public static class AutoForwardOnExceptionConfigurationExtensions
     }
 
     [StepDocumentation("Wraps the invocation of the rest of the pipeline in a try-catch block, immediately forwarding the message to another queue when some specific exception (or any derived exception type) is caught.")]
-    class ForwardOnExceptionsStep : IIncomingStep
+    sealed class ForwardOnExceptionsStep : IIncomingStep
     {
         readonly Type _exceptionType;
         readonly string _destinationQueue;

@@ -13,7 +13,7 @@ using Rebus.Transport;
 namespace Rebus.Auditing.Sagas;
 
 [StepDocumentation("Saves a snapshot of each piece of saga data to the selected snapshot storage.")]
-class SaveSagaDataSnapshotStep : IIncomingStep
+sealed class SaveSagaDataSnapshotStep : IIncomingStep
 {
     readonly ISagaSnapshotStorage _sagaSnapshotStorage;
     readonly ITransport _transport;

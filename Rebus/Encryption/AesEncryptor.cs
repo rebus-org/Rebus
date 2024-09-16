@@ -9,7 +9,7 @@ namespace Rebus.Encryption;
 /// <summary>
 /// Helps with encrypting/decrypting byte arrays, using the <see cref="Aes"/> algorithm
 /// </summary>
-class AesEncryptor : IAsyncEncryptor
+sealed class AesEncryptor : IAsyncEncryptor
 {
     readonly IEncryptionKeyProvider _keyProvider;
 

@@ -5,7 +5,7 @@ using Rebus.Transport;
 
 namespace Rebus.Auditing.Messages;
 
-class AuditingHelper
+sealed class AuditingHelper
 {
     readonly ITransport _transport;
     readonly IRebusTime _rebusTime;

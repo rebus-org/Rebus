@@ -47,7 +47,7 @@ public class PipelineStepProfiler : IPipeline
     }
 
     [StepDocumentation("Collected profiler measurements and registers them with the stats collector")]
-    class RegisterCollectedProfilerStatsStep : IIncomingStep
+    sealed class RegisterCollectedProfilerStatsStep : IIncomingStep
     {
         readonly PipelineStepProfilerStats _profilerStats;
 
@@ -67,7 +67,7 @@ public class PipelineStepProfiler : IPipeline
     }
 
     [StepDocumentation("Measures time spent in the rest of the pipeline")]
-    class ProfilerStep : IIncomingStep
+    sealed class ProfilerStep : IIncomingStep
     {
         readonly IIncomingStep _nextStep;
 

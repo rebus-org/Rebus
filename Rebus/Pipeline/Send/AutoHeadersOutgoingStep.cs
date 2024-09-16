@@ -31,7 +31,7 @@ public class AutoHeadersOutgoingStep : IOutgoingStep
 
         var messageType = body.GetType();
 
-        var headersToAssign = _headersToAssign.GetOrAdd(messageType, type => messageType
+        var headersToAssign = _headersToAssign.GetOrAdd(messageType, nonCapturedMessageType => nonCapturedMessageType
             .GetTypeInfo()
             .GetCustomAttributes(typeof (HeaderAttribute), true)
             .OfType<HeaderAttribute>()

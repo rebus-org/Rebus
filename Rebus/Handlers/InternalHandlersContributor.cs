@@ -13,7 +13,7 @@ namespace Rebus.Handlers;
 /// Decoration of <see cref="IHandlerActivator"/> that adds a few special handlers when an incoming message can be recognized
 /// as a special Rebus message
 /// </summary>
-class InternalHandlersContributor : IHandlerActivator
+sealed class InternalHandlersContributor : IHandlerActivator
 {
     readonly IHandlerActivator _innerHandlerActivator;
     readonly Dictionary<Type, IHandleMessages[]> _internalHandlers;
@@ -48,7 +48,7 @@ class InternalHandlersContributor : IHandlerActivator
             : Enumerable.Empty<IHandleMessages<TMessage>>();
     }
 
-    class SubscribeRequestHandler : IHandleMessages<SubscribeRequest>
+    sealed class SubscribeRequestHandler : IHandleMessages<SubscribeRequest>
     {
         readonly ISubscriptionStorage _subscriptionStorage;
 
@@ -63,7 +63,7 @@ class InternalHandlersContributor : IHandlerActivator
         }
     }
 
-    class UnsubscribeRequestHandler : IHandleMessages<UnsubscribeRequest>
+    sealed class UnsubscribeRequestHandler : IHandleMessages<UnsubscribeRequest>
     {
         readonly ISubscriptionStorage _subscriptionStorage;
 

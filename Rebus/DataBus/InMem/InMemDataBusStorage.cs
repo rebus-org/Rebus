@@ -9,7 +9,7 @@ using Rebus.Time;
 
 namespace Rebus.DataBus.InMem;
 
-class InMemDataBusStorage : IDataBusStorage, IDataBusStorageManagement
+sealed class InMemDataBusStorage : IDataBusStorage, IDataBusStorageManagement
 {
     readonly InMemDataStore _dataStore;
     readonly IRebusTime _rebusTime;

@@ -8,7 +8,7 @@ using Rebus.Logging;
 
 namespace Rebus.Config;
 
-class OneWayClientBusDecorator : IBus
+sealed class OneWayClientBusDecorator : IBus
 {
     readonly AdvancedApiDecorator _advancedApiDecorator;
     readonly IBus _innerBus;
@@ -44,7 +44,7 @@ class OneWayClientBusDecorator : IBus
 
     public void Dispose() => _innerBus.Dispose();
 
-    class AdvancedApiDecorator : IAdvancedApi
+    sealed class AdvancedApiDecorator : IAdvancedApi
     {
         readonly IAdvancedApi _innerAdvancedApi;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
@@ -68,7 +68,7 @@ class OneWayClientBusDecorator : IBus
         public ISyncBus SyncBus => _innerAdvancedApi.SyncBus;
     }
 
-    class OneWayClientWorkersApi : IWorkersApi
+    sealed class OneWayClientWorkersApi : IWorkersApi
     {
         readonly ILog _log;
 

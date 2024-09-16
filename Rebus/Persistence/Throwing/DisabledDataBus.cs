@@ -6,7 +6,7 @@ using Rebus.DataBus;
 
 namespace Rebus.Persistence.Throwing;
 
-class DisabledDataBus : IDataBus
+sealed class DisabledDataBus : IDataBus
 {
     public Task<DataBusAttachment> CreateAttachment(Stream source, Dictionary<string, string> optionalMetadata = null) => throw GetException();
 

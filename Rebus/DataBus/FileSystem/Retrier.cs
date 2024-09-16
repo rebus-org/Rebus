@@ -4,7 +4,7 @@ using Rebus.Logging;
 
 namespace Rebus.DataBus.FileSystem;
 
-class Retrier
+sealed class Retrier
 {
     readonly ILog _log;
 

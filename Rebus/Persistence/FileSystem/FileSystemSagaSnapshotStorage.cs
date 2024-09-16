@@ -69,7 +69,7 @@ public class FileSystemSagaSnapshotStorage : ISagaSnapshotStorage, IInitializabl
         }
     }
 
-    class Snapshot
+    sealed class Snapshot
     {
         public Dictionary<string, string> Metadata { get; set; }
         public ISagaData Data { get; set; }

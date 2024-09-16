@@ -5,7 +5,7 @@ using Rebus.Logging;
 
 namespace Rebus.Persistence.FileSystem;
 
-class FileSystemExclusiveLock : IDisposable
+sealed class FileSystemExclusiveLock : IDisposable
 {
     readonly FileStream _fileStream;
     bool _disposed;

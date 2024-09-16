@@ -187,7 +187,7 @@ public class FileSystemTransport : AbstractRebusTransport, IInitializable, ITran
         }
     }
 
-    class IncomingMessage : IDisposable
+    sealed class IncomingMessage : IDisposable
     {
         readonly FileStream _source;
         readonly string _filePath;
@@ -231,7 +231,7 @@ public class FileSystemTransport : AbstractRebusTransport, IInitializable, ITran
         }
     }
 
-    class Envelope
+    sealed class Envelope
     {
         public Dictionary<string, string> Headers { get; }
         public byte[] Body { get; }

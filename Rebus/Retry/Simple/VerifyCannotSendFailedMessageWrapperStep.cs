@@ -8,7 +8,7 @@ using Rebus.Pipeline;
 namespace Rebus.Retry.Simple;
 
 [StepDocumentation("When 2nd level retries are enabled, it is easy to accidentally Send/Defer the incoming IFailed<TMessage> instead of the TMessage. This step prohibits that.")]
-class VerifyCannotSendFailedMessageWrapperStep : IOutgoingStep
+sealed class VerifyCannotSendFailedMessageWrapperStep : IOutgoingStep
 {
     public async Task Process(OutgoingStepContext context, Func<Task> next)
     {

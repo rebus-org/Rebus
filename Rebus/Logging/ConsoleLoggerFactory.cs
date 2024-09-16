@@ -108,7 +108,7 @@ public class ConsoleLoggerFactory : AbstractRebusLoggerFactory
     /// </summary>
     protected override ILog GetLogger(Type type) => Loggers.GetOrAdd(type, _ => new ConsoleLogger(type, _colors, this, _showTimestamps));
 
-    class ConsoleLogger : ILog
+    sealed class ConsoleLogger : ILog
     {
         readonly LoggingColors _loggingColors;
         readonly ConsoleLoggerFactory _factory;

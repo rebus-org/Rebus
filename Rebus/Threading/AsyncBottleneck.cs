@@ -28,7 +28,7 @@ public class AsyncBottleneck
         return new Releaser(_semaphore);
     }
 
-    class Releaser : IDisposable
+    sealed class Releaser : IDisposable
     {
         readonly SemaphoreSlim _semaphore;
 

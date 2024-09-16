@@ -6,7 +6,7 @@ namespace Rebus.Encryption;
 /// <summary>
 /// Default implementation of <see cref="IAsyncEncryptor"/> which wraps an instance of <see cref="IEncryptor"/>.
 /// </summary>
-class DefaultAsyncEncryptor : IAsyncEncryptor
+sealed class DefaultAsyncEncryptor : IAsyncEncryptor
 {
     readonly IEncryptor _encryptor;
 

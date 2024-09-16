@@ -37,7 +37,7 @@ public class ActivateHandlersStep : IIncomingStep
         var message = context.Load<Message>();
         var body = message.Body;
         var messageType = body.GetType();
-        var methodToInvoke = _dispatchMethods.GetOrAdd(messageType, _ => GetDispatchMethod(messageType));
+        var methodToInvoke = _dispatchMethods.GetOrAdd(messageType, GetDispatchMethod);
 
         var args = new[] { body, transactionContext, message };
         var handlerInvokers = await (Task<HandlerInvokers>)methodToInvoke.Invoke(this, args);
@@ -55,8 +55,7 @@ public class ActivateHandlersStep : IIncomingStep
         var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
         var listOfHandlerInvokers = handlers
-            .Select(handler => CreateHandlerInvoker(handler, message, transactionContext, logicalMessage))
-            .ToList();
+            .Select(handler => CreateHandlerInvoker(handler, message, transactionContext, logicalMessage));
 
         return new HandlerInvokers(logicalMessage, listOfHandlerInvokers);
     }

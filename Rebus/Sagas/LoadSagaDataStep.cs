@@ -238,7 +238,7 @@ public class LoadSagaDataStep : IIncomingStep
         }
     }
 
-    class RelevantSagaInfo
+    sealed class RelevantSagaInfo
     {
         public RelevantSagaInfo(ISagaData sagaData, IEnumerable<CorrelationProperty> correlationProperties, Saga saga)
         {

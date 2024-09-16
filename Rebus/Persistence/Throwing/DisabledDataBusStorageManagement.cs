@@ -5,7 +5,7 @@ using Rebus.DataBus;
 
 namespace Rebus.Persistence.Throwing;
 
-class DisabledDataBusStorageManagement : IDataBusStorageManagement
+sealed class DisabledDataBusStorageManagement : IDataBusStorageManagement
 {
     public Task Delete(string id) => throw GetException();
 

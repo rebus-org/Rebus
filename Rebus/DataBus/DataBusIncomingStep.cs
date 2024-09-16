@@ -4,7 +4,7 @@ using Rebus.Pipeline;
 
 namespace Rebus.DataBus;
 
-class DataBusIncomingStep : IIncomingStep
+sealed class DataBusIncomingStep : IIncomingStep
 {
     public const string DataBusStorageKey = "rebus-databus-storage";
 

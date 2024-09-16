@@ -34,7 +34,7 @@ static class AsyncHelpers
     /// <summary>
     /// Synchronization context that can be "pumped" in order to have it execute continuations posted back to it
     /// </summary>
-    class CustomSynchronizationContext : SynchronizationContext
+    sealed class CustomSynchronizationContext : SynchronizationContext
     {
         readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _items = new();
         readonly AutoResetEvent _workItemsWaiting = new(initialState: false);

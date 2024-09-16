@@ -3,7 +3,7 @@ using Rebus.Bus;
 
 namespace Rebus.Transport;
 
-class TransactionContextWithOwningBus : TransactionContext, ITransactionContextWithOwningBus
+sealed class TransactionContextWithOwningBus : TransactionContext, ITransactionContextWithOwningBus
 {
     public TransactionContextWithOwningBus(RebusBus owningBus)
     {

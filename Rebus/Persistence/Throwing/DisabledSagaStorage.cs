@@ -5,7 +5,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Persistence.Throwing;
 
-class DisabledSagaStorage : ISagaStorage
+sealed class DisabledSagaStorage : ISagaStorage
 {
     public Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue) => throw GetException();
 

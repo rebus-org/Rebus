@@ -16,7 +16,7 @@ public class TraceLoggerFactory : AbstractRebusLoggerFactory
         return new TraceLogger(type, this);
     }
 
-    class TraceLogger : ILog
+    sealed class TraceLogger : ILog
     {
         readonly Type _type;
         readonly TraceLoggerFactory _loggerFactory;

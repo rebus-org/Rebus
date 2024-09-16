@@ -89,7 +89,7 @@ public class FileSystemTimeoutManager : ITimeoutManager
         return new DueMessagesResult(items, async () => { lockItem.Dispose(); });
     }
 
-    class Timeout
+    sealed class Timeout
     {
         public Dictionary<string, string> Headers { get; set; }
         public byte[] Body { get; set; }

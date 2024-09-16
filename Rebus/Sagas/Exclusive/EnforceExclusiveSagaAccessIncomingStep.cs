@@ -7,7 +7,7 @@ using Rebus.Pipeline;
 namespace Rebus.Sagas.Exclusive;
 
 [StepDocumentation("Enforces exclusive access to saga data in the rest of the pipeline by acquiring locks for the relevant correlation properties.")]
-class EnforceExclusiveSagaAccessIncomingStep : EnforceExclusiveSagaAccessIncomingStepBase
+sealed class EnforceExclusiveSagaAccessIncomingStep : EnforceExclusiveSagaAccessIncomingStepBase
 {
     readonly IExclusiveAccessLock _lockHandler;
     readonly string _lockPrefix;

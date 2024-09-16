@@ -6,7 +6,7 @@ using Rebus.Transport;
 
 namespace Rebus.Activation;
 
-class EmptyActivator : IHandlerActivator
+sealed class EmptyActivator : IHandlerActivator
 {
     public Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext) =>
         Task.FromResult(Enumerable.Empty<IHandleMessages<TMessage>>());

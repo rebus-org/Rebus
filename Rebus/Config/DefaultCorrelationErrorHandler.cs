@@ -8,7 +8,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Config;
 
-class DefaultCorrelationErrorHandler : ICorrelationErrorHandler
+sealed class DefaultCorrelationErrorHandler : ICorrelationErrorHandler
 {
     readonly ILog _log;
 

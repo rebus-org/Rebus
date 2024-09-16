@@ -7,7 +7,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Persistence.FileSystem;
 
-class FileSystemSagaIndex
+sealed class FileSystemSagaIndex
 {
     readonly string _basePath;
 
@@ -40,7 +40,7 @@ class FileSystemSagaIndex
         var indexItems = ReadIndexItems();
 
         var item = indexItems
-            .FirstOrDefault(i => i.SagaType == sagaDataType.FullName
+            .Find(i => i.SagaType == sagaDataType.FullName
                                  && i.PropertyName == propertyName
                                  && i.PropertyValue == propertyValue?.ToString());
 
@@ -126,7 +126,7 @@ class FileSystemSagaIndex
         return obj;
     }
 
-    class SagaIndexItem
+    sealed class SagaIndexItem
     {
         public string SagaType { get; set; }
         public string PropertyName { get; set; }

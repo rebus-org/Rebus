@@ -48,7 +48,7 @@ public class IdempotencyData
     /// </summary>
     public IEnumerable<OutgoingMessage> GetOutgoingMessages(string messageId)
     {
-        var outgoingMessages = OutgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
+        var outgoingMessages = OutgoingMessages.Find(o => o.MessageId == messageId);
 
         return outgoingMessages != null
             ? outgoingMessages.MessagesToSend
@@ -75,7 +75,7 @@ public class IdempotencyData
     {
         HandledMessageIds.Add(messageId);
 
-        var outgoingMessages = OutgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
+        var outgoingMessages = OutgoingMessages.Find(o => o.MessageId == messageId);
 
         if (outgoingMessages != null) return outgoingMessages;
 

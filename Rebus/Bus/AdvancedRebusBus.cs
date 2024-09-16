@@ -19,7 +19,7 @@ namespace Rebus.Bus;
 /// </summary>
 public partial class RebusBus
 {
-    class AdvancedApi : IAdvancedApi
+    sealed class AdvancedApi : IAdvancedApi
     {
         readonly RebusBus _rebusBus;
         readonly IRebusTime _rebusTime;
@@ -43,7 +43,7 @@ public partial class RebusBus
         public ISyncBus SyncBus => new SyncApi(_rebusBus);
     }
 
-    class TransportMessageApi : ITransportMessageApi
+    sealed class TransportMessageApi : ITransportMessageApi
     {
         readonly RebusBus _rebusBus;
         readonly IRebusTime _rebusTime;
@@ -104,7 +104,7 @@ public partial class RebusBus
         }
     }
 
-    class SyncApi : ISyncBus
+    sealed class SyncApi : ISyncBus
     {
         readonly RebusBus _rebusBus;
 
@@ -164,7 +164,7 @@ public partial class RebusBus
         }
     }
 
-    class RoutingApi : IRoutingApi
+    sealed class RoutingApi : IRoutingApi
     {
         readonly RebusBus _rebusBus;
         readonly IRebusTime _rebusTime;
@@ -217,7 +217,7 @@ public partial class RebusBus
                 destinationAddresses.Add(itinerary.GetReturnAddress);
             }
 
-            var first = destinationAddresses.First();
+            var first = destinationAddresses[0];
             var rest = destinationAddresses.Skip(1);
 
             var value = string.Join(";", rest);
@@ -230,7 +230,7 @@ public partial class RebusBus
         }
     }
 
-    class WorkersApi : IWorkersApi
+    sealed class WorkersApi : IWorkersApi
     {
         readonly RebusBus _rebusBus;
 
@@ -247,7 +247,7 @@ public partial class RebusBus
         }
     }
 
-    class TopicsApi : ITopicsApi
+    sealed class TopicsApi : ITopicsApi
     {
         readonly RebusBus _rebusBus;
 

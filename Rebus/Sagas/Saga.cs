@@ -126,7 +126,7 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
     {
     }
 
-    class CorrelationConfiguration : ICorrelationConfig<TSagaData>
+    sealed class CorrelationConfiguration : ICorrelationConfig<TSagaData>
     {
         readonly Type _sagaType;
 

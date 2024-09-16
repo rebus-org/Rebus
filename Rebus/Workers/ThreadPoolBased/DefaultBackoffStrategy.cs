@@ -7,7 +7,7 @@ using Rebus.Config;
 
 namespace Rebus.Workers.ThreadPoolBased;
 
-class DefaultBackoffStrategy : IBackoffStrategy
+sealed class DefaultBackoffStrategy : IBackoffStrategy
 {
     readonly TimeSpan[] _backoffTimes;
     readonly Options _options;

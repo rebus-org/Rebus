@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rebus.Pipeline.Invokers;
@@ -8,10 +6,8 @@ namespace Rebus.Pipeline.Invokers;
 /// <summary>
 /// Action-based pipeline invoker that recursively composes actions to invoke the pipelines
 /// </summary>
-class ActionPipelineInvoker : IPipelineInvoker
+sealed class ActionPipelineInvoker : IPipelineInvoker
 {
-    static readonly Task CompletedTask = Task.FromResult(0);
-
     readonly Func<IncomingStepContext, Task> _invokeReceivePipeline;
     readonly Func<OutgoingStepContext, Task> _invokeSendPipeline;
 
@@ -40,16 +36,16 @@ class ActionPipelineInvoker : IPipelineInvoker
         return _invokeSendPipeline(context);
     }
 
-    static Func<IncomingStepContext, Task> GenerateReceiveFunction(IReadOnlyList<IIncomingStep> steps)
+    static Func<IncomingStepContext, Task> GenerateReceiveFunction(Span<IIncomingStep> steps)
     {
-        if (!steps.Any())
+        if (steps.IsEmpty)
         {
-            Task CompletedFunction(IncomingStepContext context) => CompletedTask;
+            Task CompletedFunction(IncomingStepContext context) => Task.CompletedTask;
             return CompletedFunction;
         }
 
-        var head = steps.First();
-        var tail = steps.Skip(1).ToList();
+        var head = steps[0];
+        var tail = steps.Slice(1);
         var invokeTail = GenerateReceiveFunction(tail);
 
         Task ReceiveFunction(IncomingStepContext context)
@@ -61,16 +57,16 @@ class ActionPipelineInvoker : IPipelineInvoker
         return ReceiveFunction;
     }
 
-    static Func<OutgoingStepContext, Task> GenerateSendFunction(IReadOnlyList<IOutgoingStep> steps)
+    static Func<OutgoingStepContext, Task> GenerateSendFunction(Span<IOutgoingStep> steps)
     {
-        if (!steps.Any())
+        if (steps.IsEmpty)
         {
-            Task CompletedFunction(OutgoingStepContext context) => CompletedTask;
+            Task CompletedFunction(OutgoingStepContext context) => Task.CompletedTask;
             return CompletedFunction;
         }
 
-        var head = steps.First();
-        var tail = steps.Skip(1).ToList();
+        var head = steps[0];
+        var tail = steps.Slice(1);
         var invokeTail = GenerateSendFunction(tail);
 
         Task SendFunction(OutgoingStepContext context)

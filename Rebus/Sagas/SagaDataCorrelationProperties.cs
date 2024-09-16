@@ -34,9 +34,9 @@ public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
 
         var messageType = body.GetType();
 
-        return _cachedCorrelationProperties.GetOrAdd(messageType, _ =>
+        return _cachedCorrelationProperties.GetOrAdd(messageType, nonCapturedMessageType =>
         {
-            var potentialCorrelationProperties = new[] { messageType }.Concat(messageType.GetBaseTypes())
+            var potentialCorrelationProperties = new[] { nonCapturedMessageType }.Concat(nonCapturedMessageType.GetBaseTypes())
                 .SelectMany(type => _correlationProperties.TryGetValue(type, out var potentialCorrelationproperties)
                     ? potentialCorrelationproperties
                     : Array.Empty<CorrelationProperty>())
@@ -45,7 +45,7 @@ public class SagaDataCorrelationProperties : IEnumerable<CorrelationProperty>
             if (!potentialCorrelationProperties.Any())
             {
                 throw new ArgumentException(
-                    $"Could not find any correlation properties for message {messageType} and saga data {_sagaDataType}");
+                    $"Could not find any correlation properties for message {nonCapturedMessageType} and saga data {_sagaDataType}");
             }
 
             return potentialCorrelationProperties;
