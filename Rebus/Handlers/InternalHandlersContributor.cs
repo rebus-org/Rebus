@@ -13,7 +13,7 @@ namespace Rebus.Handlers;
 /// Decoration of <see cref="IHandlerActivator"/> that adds a few special handlers when an incoming message can be recognized
 /// as a special Rebus message
 /// </summary>
-class InternalHandlersContributor : IHandlerActivator
+sealed class InternalHandlersContributor : IHandlerActivator
 {
     readonly IHandlerActivator _innerHandlerActivator;
     readonly Dictionary<Type, IHandleMessages[]> _internalHandlers;

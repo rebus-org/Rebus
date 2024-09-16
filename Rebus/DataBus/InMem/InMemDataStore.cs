@@ -101,7 +101,7 @@ public class InMemDataStore
         _data.Clear();
     }
 
-    class InMemBlob
+    sealed class InMemBlob
     {
         public InMemBlob(Dictionary<string, string> metadata, byte[] data)
         {

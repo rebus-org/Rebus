@@ -8,7 +8,7 @@ namespace Rebus.Pipeline.Invokers;
 /// <summary>
 /// Action-based pipeline invoker that recursively composes actions to invoke the pipelines
 /// </summary>
-class ActionPipelineInvoker : IPipelineInvoker
+sealed class ActionPipelineInvoker : IPipelineInvoker
 {
     static readonly Task CompletedTask = Task.FromResult(0);
 
@@ -48,7 +48,7 @@ class ActionPipelineInvoker : IPipelineInvoker
             return CompletedFunction;
         }
 
-        var head = steps.First();
+        var head = steps[0];
         var tail = steps.Skip(1).ToList();
         var invokeTail = GenerateReceiveFunction(tail);
 
@@ -69,7 +69,7 @@ class ActionPipelineInvoker : IPipelineInvoker
             return CompletedFunction;
         }
 
-        var head = steps.First();
+        var head = steps[0];
         var tail = steps.Skip(1).ToList();
         var invokeTail = GenerateSendFunction(tail);
 

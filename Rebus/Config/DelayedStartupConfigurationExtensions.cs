@@ -40,7 +40,7 @@ public static class DelayedStartupConfigurationExtensions
         return new BusStarter(bus, desiredNumberOfWorkersWhenStarted);
     }
 
-    class BusStarter : IBusStarter
+    sealed class BusStarter : IBusStarter
     {
         readonly IBus _bus;
         readonly int _desiredNumberOfWorkersWhenStarted;

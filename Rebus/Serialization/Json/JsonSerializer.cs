@@ -15,7 +15,7 @@ namespace Rebus.Serialization.Json;
 /// (i.e. full type info is included in the serialized format in order to support deserializing "unknown" types like
 /// implementations of interfaces, etc)
 /// </summary>
-class JsonSerializer : ISerializer
+sealed class JsonSerializer : ISerializer
 {
     /// <summary>
     /// Proper content type when a message has been serialized with this serializer (or another compatible JSON serializer) and it uses the standard UTF8 encoding

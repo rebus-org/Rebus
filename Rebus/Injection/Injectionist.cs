@@ -96,9 +96,7 @@ public class Injectionist
     {
         var key = typeof(TService);
 
-        if (!resolvers.ContainsKey(key)) return false;
-
-        var handler = resolvers[key];
+        if (!resolvers.TryGetValue(key, out var handler)) return false;
 
         if (handler.PrimaryResolver != null) return true;
 

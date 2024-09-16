@@ -12,7 +12,7 @@ using Rebus.Transport;
 
 namespace Rebus.Workers.ThreadPoolBased;
 
-class ThreadPoolWorker : IWorker
+sealed class ThreadPoolWorker : IWorker
 {
     readonly CancellationTokenSource _cancellationTokenSource = new();
     readonly ParallelOperationsManager _parallelOperationsManager;

@@ -4,7 +4,7 @@ using Rebus.Extensions;
 
 namespace Rebus.Serialization;
 
-class SimpleAssemblyQualifiedMessageTypeNameConvention : IMessageTypeNameConvention
+sealed class SimpleAssemblyQualifiedMessageTypeNameConvention : IMessageTypeNameConvention
 {
     readonly ConcurrentDictionary<Type, string> _typeToName = new ConcurrentDictionary<Type, string>();
     readonly ConcurrentDictionary<string, Type> _nameToType = new ConcurrentDictionary<string, Type>();

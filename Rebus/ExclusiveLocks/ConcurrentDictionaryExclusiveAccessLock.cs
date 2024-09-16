@@ -7,7 +7,7 @@ namespace Rebus.ExclusiveLocks;
 /// <summary>
 /// ConcurrentDictionary implementation of <see cref="IExclusiveAccessLock"/>
 /// </summary>
-class ConcurrentDictionaryExclusiveAccessLock : IExclusiveAccessLock
+sealed class ConcurrentDictionaryExclusiveAccessLock : IExclusiveAccessLock
 {
     static readonly Task<bool> TrueResult = Task.FromResult(true);
     static readonly Task<bool> FalseResult = Task.FromResult(false);

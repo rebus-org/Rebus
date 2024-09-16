@@ -12,7 +12,7 @@ using Rebus.Workers.ThreadPoolBased;
 
 namespace Rebus.Workers.TplBased;
 
-class TplWorker : IWorker
+sealed class TplWorker : IWorker
 {
     readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     readonly ManualResetEvent _workerStopped = new ManualResetEvent(false);

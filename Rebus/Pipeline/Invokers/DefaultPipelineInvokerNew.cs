@@ -6,7 +6,7 @@ namespace Rebus.Pipeline.Invokers;
 /// <summary>
 /// give me a pipeline and I'll invoke it
 /// </summary>
-class DefaultPipelineInvokerNew : IPipelineInvoker
+sealed class DefaultPipelineInvokerNew : IPipelineInvoker
 {
     static readonly Task Noop = Task.CompletedTask;
 

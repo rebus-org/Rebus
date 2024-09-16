@@ -184,11 +184,11 @@ public class TypeBasedRouter : IRouter
         if (messageType == null) throw new ArgumentNullException(nameof(messageType));
         if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
 
-        if (_messageTypeAddresses.ContainsKey(messageType) &&
-            _messageTypeAddresses[messageType] != destinationAddress)
+        if (_messageTypeAddresses.TryGetValue(messageType, out var messageTypeAddress) &&
+            messageTypeAddress != destinationAddress)
         {
             _log.Warn("Existing endpoint mapping {messageType} -> {queueName} changed to -> {newQueueName}",
-                messageType, _messageTypeAddresses[messageType], destinationAddress);
+                messageType, messageTypeAddress, destinationAddress);
         }
         else
         {

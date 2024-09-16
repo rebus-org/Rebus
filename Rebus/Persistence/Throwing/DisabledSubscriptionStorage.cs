@@ -5,7 +5,7 @@ using Rebus.Subscriptions;
 
 namespace Rebus.Persistence.Throwing;
 
-class DisabledSubscriptionStorage : ISubscriptionStorage
+sealed class DisabledSubscriptionStorage : ISubscriptionStorage
 {
     public Task<IReadOnlyList<string>> GetSubscriberAddresses(string topic) => throw GetException();
 

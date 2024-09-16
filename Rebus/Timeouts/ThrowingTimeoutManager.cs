@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Timeouts;
 
-class ThrowingTimeoutManager : ITimeoutManager
+sealed class ThrowingTimeoutManager : ITimeoutManager
 {
     public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
     {

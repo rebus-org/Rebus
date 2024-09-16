@@ -8,7 +8,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Auditing.Sagas;
 
-class LoggerSagaSnapperShotter : ISagaSnapshotStorage
+sealed class LoggerSagaSnapperShotter : ISagaSnapshotStorage
 {
     readonly ILog _log;
 

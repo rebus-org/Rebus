@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.DataBus;
 
-class DefaultDataBus : IDataBus
+sealed class DefaultDataBus : IDataBus
 {
     readonly IDataBusStorage _dataBusStorage;
     readonly IDataBusStorageManagement _dataBusStorageManagement;

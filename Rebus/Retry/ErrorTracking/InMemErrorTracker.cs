@@ -156,7 +156,7 @@ public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
 
     void RemoveTracking(string messageId) => _trackedErrors.TryRemove(messageId, out _);
 
-    class ErrorTracking
+    sealed class ErrorTracking
     {
         readonly IRebusTime _rebusTime;
         readonly ExceptionInfo[] _caughtExceptions;

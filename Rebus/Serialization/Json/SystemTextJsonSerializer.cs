@@ -11,7 +11,7 @@ namespace Rebus.Serialization.Json;
 /// <summary>
 /// Implementation of <see cref="ISerializer"/> that uses .NET System.Text.Json internally
 /// </summary>
-class SystemTextJsonSerializer : ISerializer
+sealed class SystemTextJsonSerializer : ISerializer
 {
     static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
@@ -118,9 +118,19 @@ class SystemTextJsonSerializer : ISerializer
 
     Message GetMessage(TransportMessage transportMessage, Encoding bodyEncoding)
     {
-        var bodyString = bodyEncoding.GetString(transportMessage.Body);
         var type = GetTypeOrNull(transportMessage);
-        var bodyObject = Deserialize(bodyString, type);
+        object bodyObject;
+        if (Equals(bodyEncoding, Encoding.UTF8))
+        {
+            // we can avoid the intermediate string representation (UTF16 = 2x the size of the bytes)
+            // and deserialize directly from the bytes
+            bodyObject = System.Text.Json.JsonSerializer.Deserialize(transportMessage.Body, type, _options);
+        }
+        else
+        {
+            var bodyString = bodyEncoding.GetString(transportMessage.Body);
+            bodyObject = Deserialize(bodyString, type);
+        }
         var headers = transportMessage.Headers.Clone();
         return new Message(headers, bodyObject);
     }

@@ -7,7 +7,7 @@ using Rebus.Serialization;
 
 namespace Rebus.Compression;
 
-class UnzippingSerializerDecorator : ZipDecoratorBase, ISerializer
+sealed class UnzippingSerializerDecorator : ZipDecoratorBase, ISerializer
 {
     readonly ISerializer _serializer;
     readonly Zipper _zipper;

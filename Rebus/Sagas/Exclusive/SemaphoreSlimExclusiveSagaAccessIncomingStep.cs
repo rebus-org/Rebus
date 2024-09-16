@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Sagas.Exclusive;
 
-class SemaphoreSlimExclusiveSagaAccessIncomingStep : EnforceExclusiveSagaAccessIncomingStepBase, IDisposable
+sealed class SemaphoreSlimExclusiveSagaAccessIncomingStep : EnforceExclusiveSagaAccessIncomingStepBase, IDisposable
 {
     readonly SemaphoreSlim[] _locks;
 

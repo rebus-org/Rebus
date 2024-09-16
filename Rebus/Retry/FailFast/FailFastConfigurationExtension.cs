@@ -24,7 +24,7 @@ public static class FailFastConfigurationExtension
         });
     }
 
-    class FailFastOnSpecificExceptionTypeAndPredicate<TException> : IFailFastChecker where TException : Exception
+    sealed class FailFastOnSpecificExceptionTypeAndPredicate<TException> : IFailFastChecker where TException : Exception
     {
         readonly IFailFastChecker _failFastChecker;
         readonly Func<TException, bool> _predicate;

@@ -17,7 +17,7 @@ namespace Rebus.Retry.Simple;
 
 This is carried out by having the retry step add the '" + DefaultRetryStep.DispatchAsFailedMessageKey + @"' key to the context,
 which is then detected by this wrapper step.")]
-class FailedMessageWrapperStep : IIncomingStep
+sealed class FailedMessageWrapperStep : IIncomingStep
 {
     readonly IErrorTracker _errorTracker;
 

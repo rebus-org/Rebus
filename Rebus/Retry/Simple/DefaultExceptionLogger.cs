@@ -3,7 +3,7 @@ using Rebus.Logging;
 
 namespace Rebus.Retry.Simple;
 
-class DefaultExceptionLogger : IExceptionLogger
+sealed class DefaultExceptionLogger : IExceptionLogger
 {
     readonly ILog _log;
 

@@ -9,7 +9,7 @@ namespace Rebus.Encryption;
 /// <summary>
 /// Helps with encrypting/decrypting byte arrays, using the <see cref="RijndaelManaged"/> algorithm (which is actually AES with 256 bits key size)
 /// </summary>
-class RijndaelEncryptor : IAsyncEncryptor
+sealed class RijndaelEncryptor : IAsyncEncryptor
 {
     readonly IEncryptionKeyProvider _keyProvider;
 

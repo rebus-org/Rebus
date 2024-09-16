@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Rebus.Serialization.Custom;
 
-class CustomTypeNameConvention : IMessageTypeNameConvention
+sealed class CustomTypeNameConvention : IMessageTypeNameConvention
 {
     static string CodeExample(Type type = null, string name = null)
     {

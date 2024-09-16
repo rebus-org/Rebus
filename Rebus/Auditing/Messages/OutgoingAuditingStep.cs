@@ -11,7 +11,7 @@ namespace Rebus.Auditing.Messages;
 /// Implementation of <see cref="IIncomingStep"/> and <see cref="IOutgoingStep"/> that handles message auditing
 /// </summary>
 [StepDocumentation("Forwards a copy of published messages to the configured audit queue, including some useful headers.")]
-class OutgoingAuditingStep : IOutgoingStep, IInitializable
+sealed class OutgoingAuditingStep : IOutgoingStep, IInitializable
 {
     readonly AuditingHelper _auditingHelper;
     readonly ITransport _transport;

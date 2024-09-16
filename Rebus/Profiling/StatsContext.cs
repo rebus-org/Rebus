@@ -7,7 +7,7 @@ using Rebus.Pipeline;
 
 namespace Rebus.Profiling;
 
-class StatsContext
+sealed class StatsContext
 {
     readonly ConcurrentStack<Measurement> _measurements = new ConcurrentStack<Measurement>();
 
