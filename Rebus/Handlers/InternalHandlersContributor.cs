@@ -48,7 +48,7 @@ sealed class InternalHandlersContributor : IHandlerActivator
             : Enumerable.Empty<IHandleMessages<TMessage>>();
     }
 
-    class SubscribeRequestHandler : IHandleMessages<SubscribeRequest>
+    sealed class SubscribeRequestHandler : IHandleMessages<SubscribeRequest>
     {
         readonly ISubscriptionStorage _subscriptionStorage;
 
@@ -63,7 +63,7 @@ sealed class InternalHandlersContributor : IHandlerActivator
         }
     }
 
-    class UnsubscribeRequestHandler : IHandleMessages<UnsubscribeRequest>
+    sealed class UnsubscribeRequestHandler : IHandleMessages<UnsubscribeRequest>
     {
         readonly ISubscriptionStorage _subscriptionStorage;
 

@@ -12,7 +12,7 @@ namespace Rebus.Injection;
 /// </summary>
 public class Injectionist
 {
-    class Handler
+    sealed class Handler
     {
         public Handler()
         {
@@ -145,7 +145,7 @@ public class Injectionist
         public bool IsDecorator { get; private set; }
     }
 
-    class Resolver<TService> : Resolver
+    sealed class Resolver<TService> : Resolver
     {
         readonly Func<IResolutionContext, TService> _resolver;
         readonly string _description;
@@ -173,7 +173,7 @@ public class Injectionist
         }
     }
 
-    class ResolutionContext : IResolutionContext
+    sealed class ResolutionContext : IResolutionContext
     {
         readonly Dictionary<Type, int> _decoratorDepth = new Dictionary<Type, int>();
         readonly Dictionary<Type, Handler> _resolvers;

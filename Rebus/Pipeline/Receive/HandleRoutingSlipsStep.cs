@@ -15,6 +15,7 @@ namespace Rebus.Pipeline.Receive;
 [StepDocumentation("If the message being handled is a routing slip with an itinerary, this step ensures that the routing slip is forwarded to the next destination.")]
 public class HandleRoutingSlipsStep : IIncomingStep
 {
+    static readonly char[] Separators = { ';' };
     readonly ITransport _transport;
     readonly ISerializer _serialier;
 
@@ -64,8 +65,8 @@ public class HandleRoutingSlipsStep : IIncomingStep
 
         transportMessage.Headers[Headers.RoutingSlipItinerary] = string.Join(";", remainingDestinations);
 
-        var travelogue = GetDestinations(transportMessage.Headers, Headers.RoutingSlipTravelogue);
-        travelogue.Add(_transport.Address);
+        IEnumerable<string> travelogue = GetDestinations(transportMessage.Headers, Headers.RoutingSlipTravelogue);
+        travelogue = travelogue.Append(_transport.Address);
 
         transportMessage.Headers[Headers.RoutingSlipTravelogue] = string.Join(";", travelogue);
         transportMessage.Headers[Headers.CorrelationSequence] = GetNextSequenceNumber(transportMessage.Headers);
@@ -79,6 +80,6 @@ public class HandleRoutingSlipsStep : IIncomingStep
             ? (sequenceNumber + 1).ToString()
             : "0";
 
-    static List<string> GetDestinations(Dictionary<string, string> headers, string headerKey) => 
-        headers.GetValue(headerKey).Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+    static string[] GetDestinations(Dictionary<string, string> headers, string headerKey) => 
+        headers.GetValue(headerKey).Split(Separators, StringSplitOptions.RemoveEmptyEntries);
 }

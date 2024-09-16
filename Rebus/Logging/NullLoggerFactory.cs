@@ -17,7 +17,7 @@ public class NullLoggerFactory : AbstractRebusLoggerFactory
         return Logger;
     }
 
-    class NullLogger : ILog
+    sealed class NullLogger : ILog
     {
         public void Debug(string message, params object[] objs)
         {

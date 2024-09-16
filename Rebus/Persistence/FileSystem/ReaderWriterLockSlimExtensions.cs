@@ -15,7 +15,7 @@ static class ReaderWriterLockSlimExtensions
         return new DisposableWriteLock(readerWriterLockSlim);
     }
 
-    class DisposableReadLock : IDisposable
+    sealed class DisposableReadLock : IDisposable
     {
         readonly ReaderWriterLockSlim _readerWriterLockSlim;
 
@@ -31,7 +31,7 @@ static class ReaderWriterLockSlimExtensions
         }
     }
 
-    class DisposableWriteLock : IDisposable
+    sealed class DisposableWriteLock : IDisposable
     {
         readonly ReaderWriterLockSlim _readerWriterLockSlim;
 

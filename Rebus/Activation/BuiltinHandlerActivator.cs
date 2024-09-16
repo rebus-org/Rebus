@@ -139,7 +139,7 @@ public class BuiltinHandlerActivator : IContainerAdapter, IDisposable
         return this;
     }
 
-    class Handler<TMessage> : IHandleMessages<TMessage>
+    sealed class Handler<TMessage> : IHandleMessages<TMessage>
     {
         readonly Func<IBus, TMessage, Task> _handlerFunction;
         readonly Func<IBus> _getBus;

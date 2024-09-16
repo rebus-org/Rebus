@@ -27,7 +27,7 @@ sealed class StatsContext
 
     internal IDisposable Measure(IIncomingStep nextStep) => new StatsContextDisposable(this, nextStep);
 
-    class StatsContextDisposable : IDisposable
+    sealed class StatsContextDisposable : IDisposable
     {
         readonly StatsContext _statsContext;
         readonly IIncomingStep _nextStep;

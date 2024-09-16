@@ -55,8 +55,7 @@ public class ActivateHandlersStep : IIncomingStep
         var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
         var listOfHandlerInvokers = handlers
-            .Select(handler => CreateHandlerInvoker(handler, message, transactionContext, logicalMessage))
-            .ToList();
+            .Select(handler => CreateHandlerInvoker(handler, message, transactionContext, logicalMessage));
 
         return new HandlerInvokers(logicalMessage, listOfHandlerInvokers);
     }

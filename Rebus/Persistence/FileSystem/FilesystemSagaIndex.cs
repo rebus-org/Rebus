@@ -126,7 +126,7 @@ sealed class FileSystemSagaIndex
         return obj;
     }
 
-    class SagaIndexItem
+    sealed class SagaIndexItem
     {
         public string SagaType { get; set; }
         public string PropertyName { get; set; }
