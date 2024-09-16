@@ -124,7 +124,7 @@ sealed class SystemTextJsonSerializer : ISerializer
         {
             // we can avoid the intermediate string representation (UTF16 = 2x the size of the bytes)
             // and deserialize directly from the bytes
-            bodyObject = System.Text.Json.JsonSerializer.Deserialize(transportMessage.Body, type, _options);
+            bodyObject = DeserializeUtf8(transportMessage.Body, type);
         }
         else
         {
@@ -142,6 +142,23 @@ sealed class SystemTextJsonSerializer : ISerializer
         var type = _messageTypeNameConvention.GetType(typeName) ?? throw new FormatException($"Could not get .NET type named '{typeName}'");
 
         return type;
+    }
+
+    object DeserializeUtf8(byte[] body, Type type)
+    {
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize(body, type, _options);
+        }
+        catch (Exception exception)
+        {
+            if (body.Length > 32768)
+            {
+                throw new FormatException($"Could not deserialize JSON text (original length: {body.Length}): '{Limit(Encoding.UTF8.GetString(body), 5000)}'", exception);
+            }
+
+            throw new FormatException($"Could not deserialize JSON text: '{Encoding.UTF8.GetString(body)}'", exception);
+        }
     }
 
     object Deserialize(string bodyString, Type type)
