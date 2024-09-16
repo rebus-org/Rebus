@@ -8,8 +8,6 @@ namespace Rebus.Pipeline.Invokers;
 /// </summary>
 sealed class ActionPipelineInvoker : IPipelineInvoker
 {
-    static readonly Task CompletedTask = Task.FromResult(0);
-
     readonly Func<IncomingStepContext, Task> _invokeReceivePipeline;
     readonly Func<OutgoingStepContext, Task> _invokeSendPipeline;
 
@@ -42,7 +40,7 @@ sealed class ActionPipelineInvoker : IPipelineInvoker
     {
         if (steps.IsEmpty)
         {
-            Task CompletedFunction(IncomingStepContext context) => CompletedTask;
+            Task CompletedFunction(IncomingStepContext context) => Task.CompletedTask;
             return CompletedFunction;
         }
 
@@ -63,7 +61,7 @@ sealed class ActionPipelineInvoker : IPipelineInvoker
     {
         if (steps.IsEmpty)
         {
-            Task CompletedFunction(OutgoingStepContext context) => CompletedTask;
+            Task CompletedFunction(OutgoingStepContext context) => Task.CompletedTask;
             return CompletedFunction;
         }
 
