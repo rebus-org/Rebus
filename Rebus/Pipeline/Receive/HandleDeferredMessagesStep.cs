@@ -122,7 +122,7 @@ public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializ
             {
                 throw new RebusApplicationException(
                     $"Received message {headers[Headers.MessageId]} with the '{Headers.DeferredUntil}' header" +
-                    $" set to '{headers[Headers.DeferredUntil]}', but the message had no" +
+                    $" set to '{deferredUntil}', but the message had no" +
                     $" '{Headers.DeferredRecipient}' header!");
             }
 
