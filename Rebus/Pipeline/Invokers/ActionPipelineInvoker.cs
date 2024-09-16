@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rebus.Pipeline.Invokers;
@@ -40,16 +38,16 @@ sealed class ActionPipelineInvoker : IPipelineInvoker
         return _invokeSendPipeline(context);
     }
 
-    static Func<IncomingStepContext, Task> GenerateReceiveFunction(IReadOnlyList<IIncomingStep> steps)
+    static Func<IncomingStepContext, Task> GenerateReceiveFunction(Span<IIncomingStep> steps)
     {
-        if (!steps.Any())
+        if (steps.IsEmpty)
         {
             Task CompletedFunction(IncomingStepContext context) => CompletedTask;
             return CompletedFunction;
         }
 
         var head = steps[0];
-        var tail = steps.Skip(1).ToList();
+        var tail = steps.Slice(1);
         var invokeTail = GenerateReceiveFunction(tail);
 
         Task ReceiveFunction(IncomingStepContext context)
@@ -61,16 +59,16 @@ sealed class ActionPipelineInvoker : IPipelineInvoker
         return ReceiveFunction;
     }
 
-    static Func<OutgoingStepContext, Task> GenerateSendFunction(IReadOnlyList<IOutgoingStep> steps)
+    static Func<OutgoingStepContext, Task> GenerateSendFunction(Span<IOutgoingStep> steps)
     {
-        if (!steps.Any())
+        if (steps.IsEmpty)
         {
             Task CompletedFunction(OutgoingStepContext context) => CompletedTask;
             return CompletedFunction;
         }
 
         var head = steps[0];
-        var tail = steps.Skip(1).ToList();
+        var tail = steps.Slice(1);
         var invokeTail = GenerateSendFunction(tail);
 
         Task SendFunction(OutgoingStepContext context)

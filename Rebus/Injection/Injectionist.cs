@@ -251,6 +251,6 @@ public class Injectionist
             }
         }
 
-        public IEnumerable TrackedInstances => _resolvedInstances.ToList();
+        public IEnumerable TrackedInstances => _resolvedInstances.ToArray();
     }
 }
