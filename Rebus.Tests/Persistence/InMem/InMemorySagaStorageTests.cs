@@ -18,7 +18,7 @@ public class InMemorySagaStorageTests
     public void SetUp()
     {
         _inMemorySagaStorage = new InMemorySagaStorage();
-        _correlationProperties = new TestSaga().GetCorrelationProperties();
+        _correlationProperties = Saga.GetCorrelationProperties();
     }
 
     [Test]

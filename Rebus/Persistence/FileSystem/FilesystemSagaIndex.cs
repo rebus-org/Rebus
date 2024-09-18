@@ -119,7 +119,7 @@ sealed class FileSystemSagaIndex
         {
             var propertyInfo = obj.GetType().GetProperty(dot);
             if (propertyInfo == null) return null;
-            obj = propertyInfo.GetValue(obj, new object[0]);
+            obj = propertyInfo.GetValue(obj, Array.Empty<object>());
             if (obj == null) break;
         }
 

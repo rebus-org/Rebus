@@ -119,10 +119,11 @@ public class LoadSagaDataStep : IIncomingStep
         var correlationProperties = _sagaHelper.GetCorrelationProperties(sagaInvoker.Saga);
         var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body).ToArray();
 
+        Type sagaDataType = sagaInvoker.Saga.GetSagaDataType();
         foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
         {
             var valueFromMessage = correlationProperty.GetValueFromMessage(new MessageContext(transactionContext), message);
-            var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
+            var sagaData = await _sagaStorage.Find(sagaDataType, correlationProperty.PropertyName, valueFromMessage);
 
             if (sagaData == null) continue;
 

@@ -42,7 +42,7 @@ static class Shims
         {
             sb.Append(i == 0 ? "[" : ", [");
             BuildSimpleAssemblyQualifiedName(arguments[i], sb);
-            sb.Append("]");
+            sb.Append(']');
         }
 
         sb.Append($"], {type.Assembly.GetName().Name}");

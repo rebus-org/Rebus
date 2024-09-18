@@ -109,12 +109,12 @@ public static class DictionaryExtensions
             throw new KeyNotFoundException($"Could not find an item with the key '{key}'");
         }
 
-        if (!(item is T))
+        if (!(item is T value))
         {
             throw new ArgumentException($"Found item with key '{key}' but it was a {item.GetType()} and not of type {typeof (T)} as expected");
         }
 
-        return (T)item;
+        return value;
     }
 
     /// <summary>

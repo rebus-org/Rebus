@@ -14,7 +14,7 @@ namespace Rebus.Config;
 /// </code>
 /// way of configuring Rebus instead.
 /// </summary>
-public class Configure
+public static class Configure
 {
     /// <summary>
     /// Call this method with the chosen implementation of <see cref="IHandlerActivator"/> (e.g. <see cref="BuiltinHandlerActivator"/>, or one 

@@ -111,7 +111,7 @@ public class ForwardTransportMessageStep : IIncomingStep
         }
     }
 
-    async Task CommitIfPossible(ITransactionContext transactionContext)
+    static async Task CommitIfPossible(ITransactionContext transactionContext)
     {
         if (transactionContext is not ICanEagerCommit canEagerCommit) return;
         

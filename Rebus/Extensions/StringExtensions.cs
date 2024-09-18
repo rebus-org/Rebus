@@ -59,7 +59,7 @@ static class StringExtensions
                 }
                 else
                 {
-                    builder.Append(" ");
+                    builder.Append(' ');
                     currentLineLength++;
                 }
             }
