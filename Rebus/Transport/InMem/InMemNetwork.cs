@@ -92,7 +92,7 @@ public class InMemNetwork
         {
             var messageId = msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
-            _log.Info($"{messageId} ---> {destinationAddress} ({_networkId})");
+            _log.Info("{messageId} ---> {destinationAddress} ({_networkId})", messageId, destinationAddress, _networkId);
         }
 
         _queues.GetOrAdd(destinationAddress, _ => new ConcurrentQueue<InMemTransportMessage>()).Enqueue(msg);

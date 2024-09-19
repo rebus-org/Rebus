@@ -44,7 +44,11 @@ sealed class FailedMessageWrapperStep : IIncomingStep
 
     static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new();
 
-    object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription, IEnumerable<ExceptionInfo> exceptions)
+    static readonly MethodInfo GenericWrapMethod =
+        typeof(FailedMessageWrapperStep).GetMethod(nameof(Wrap), BindingFlags.Static | BindingFlags.NonPublic)
+        ?? throw new InvalidProgramException($"Could not find non-public instance method named {nameof(Wrap)} on {typeof(FailedMessageWrapperStep)}");
+
+    static object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription, IEnumerable<ExceptionInfo> exceptions)
     {
         if (headers == null) throw new ArgumentNullException(nameof(headers));
         if (body == null) throw new ArgumentNullException(nameof(body));
@@ -52,16 +56,8 @@ sealed class FailedMessageWrapperStep : IIncomingStep
         try
         {
             return WrapperMethods
-                .GetOrAdd(body.GetType(), type =>
-                {
-                    const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
-
-                    var genericWrapMethod = GetType().GetMethod(nameof(Wrap), bindingFlags)
-                        ?? throw new ArgumentException($"Could not find non-public instance method named {nameof(Wrap)} on {GetType()}");
-
-                    return genericWrapMethod.MakeGenericMethod(type);
-                })
-                .Invoke(this, new[] { headers, body, errorDescription, exceptions });
+                .GetOrAdd(body.GetType(), type => GenericWrapMethod.MakeGenericMethod(type))
+                .Invoke(null, new[] { headers, body, errorDescription, exceptions });
         }
         catch (Exception exception)
         {
@@ -69,7 +65,7 @@ sealed class FailedMessageWrapperStep : IIncomingStep
         }
     }
 
-    IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription, IEnumerable<ExceptionInfo> exceptions)
+    static IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription, IEnumerable<ExceptionInfo> exceptions)
     {
         return new FailedMessageWrapper<TMessage>(headers, body, errorDescription, exceptions);
     }

@@ -176,7 +176,7 @@ public class ConsoleLoggerFactory : AbstractRebusLoggerFactory
             }
         }
 
-        string LevelString(LogLevel level)
+        static string LevelString(LogLevel level)
         {
             switch (level)
             {

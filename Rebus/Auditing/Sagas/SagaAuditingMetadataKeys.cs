@@ -3,7 +3,7 @@
 /// <summary>
 /// Contains keys of metadata elements that can be found alongside saga data snapshots when saga auditing has been enabled
 /// </summary>
-public class SagaAuditingMetadataKeys
+public static class SagaAuditingMetadataKeys
 {
     /// <summary>
     /// Key of the input queue address of the endpoint that handled the message that brought the saga data to the current state

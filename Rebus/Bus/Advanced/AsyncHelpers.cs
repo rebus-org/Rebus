@@ -17,7 +17,7 @@ static class AsyncHelpers
         if (task == null) throw new ArgumentNullException(nameof(task));
 
         var currentContext = SynchronizationContext.Current;
-        var customContext = new CustomSynchronizationContext(task);
+        using var customContext = new CustomSynchronizationContext(task);
 
         try
         {
@@ -34,9 +34,9 @@ static class AsyncHelpers
     /// <summary>
     /// Synchronization context that can be "pumped" in order to have it execute continuations posted back to it
     /// </summary>
-    sealed class CustomSynchronizationContext : SynchronizationContext
+    sealed class CustomSynchronizationContext : SynchronizationContext, IDisposable
     {
-        readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _items = new();
+        readonly ConcurrentQueue<(SendOrPostCallback function, object state)> _items = new();
         readonly AutoResetEvent _workItemsWaiting = new(initialState: false);
         readonly Func<Task> _task;
 
@@ -51,7 +51,7 @@ static class AsyncHelpers
 
         public override void Post(SendOrPostCallback function, object state)
         {
-            _items.Enqueue(Tuple.Create(function, state));
+            _items.Enqueue((function, state));
             _workItemsWaiting.Set();
         }
 
@@ -81,9 +81,9 @@ static class AsyncHelpers
 
             while (!_done)
             {
-                if (_items.TryDequeue(out var task))
+                if (_items.TryDequeue(out (SendOrPostCallback function, object state) task))
                 {
-                    task.Item1(task.Item2);
+                    task.function(task.state);
 
                     if (_caughtException == null) continue;
 
@@ -99,5 +99,9 @@ static class AsyncHelpers
         public override void Send(SendOrPostCallback d, object state) => throw new NotSupportedException("Cannot send to same thread");
 
         public override SynchronizationContext CreateCopy() => this;
+        public void Dispose()
+        {
+            _workItemsWaiting.Dispose();
+        }
     }
 }

@@ -123,14 +123,12 @@ public class InMemorySagaStorage : ISagaStorage
 
         lock (_lock)
         {
-            if (!_data.ContainsKey(id))
+            if (!_data.TryGetValue(id, out var existingCopy))
             {
                 throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be updated");
             }
 
             VerifyCorrelationPropertyUniqueness(sagaData, correlationProperties);
-
-            var existingCopy = _data[id];
 
             if (existingCopy.Revision != sagaData.Revision)
             {
@@ -151,10 +149,11 @@ public class InMemorySagaStorage : ISagaStorage
         {
             var valueFromSagaData = Reflect.Value(sagaData, property.PropertyName);
 
+            var sagaDataType = sagaData.GetType();
             foreach (var existingSagaData in _data.Values)
             {
                 if (existingSagaData.Id == sagaData.Id) continue;
-                if (existingSagaData.GetType() != sagaData.GetType()) continue;
+                if (existingSagaData.GetType() != sagaDataType) continue;
 
                 var valueFromExistingInstance = Reflect.Value(existingSagaData, property.PropertyName);
 
@@ -175,14 +174,13 @@ public class InMemorySagaStorage : ISagaStorage
 
         lock (_lock)
         {
-            if (!_data.ContainsKey(id))
-            {
-                throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be deleted");
-            }
-
             if (_data.TryRemove(id, out var temp))
             {
                 Deleted?.Invoke(temp);
+            }
+            else
+            {
+                throw new ConcurrencyException($"Saga data with ID {id} no longer exists and cannot be deleted");
             }
             sagaData.Revision++;
         }

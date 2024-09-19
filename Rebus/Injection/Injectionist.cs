@@ -203,7 +203,7 @@ public class Injectionist
                 return (TService)existingInstance;
             }
 
-            if (!_resolvers.ContainsKey(serviceType))
+            if (!_resolvers.TryGetValue(serviceType, out var handlerForThisType))
             {
                 throw new ResolutionException($"Could not find resolver for {serviceType}");
             }
@@ -214,7 +214,6 @@ public class Injectionist
                 _serviceTypeRequested(serviceType);
             }
 
-            var handlerForThisType = _resolvers[serviceType];
             var depth = _decoratorDepth[serviceType]++;
 
             try

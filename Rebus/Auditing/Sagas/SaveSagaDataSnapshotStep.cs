@@ -34,11 +34,11 @@ sealed class SaveSagaDataSnapshotStep : IIncomingStep
 
         var createdAndUpdatedSagaData = handlerInvokers
             .Where(i => i.HasSaga)
-            .Select(i => new
-            {
+            .Select(i =>
+            (
                 i.Handler,
-                SagaData = i.GetSagaData()
-            })
+                SagaData: i.GetSagaData()
+            ))
             .Where(a => a.SagaData != null)
             .ToList();
 

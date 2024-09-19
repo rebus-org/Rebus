@@ -116,7 +116,7 @@ public static class Headers
     /// <summary>
     /// Contains the possible values for the <see cref="Headers.Intent"/> header
     /// </summary>
-    public class IntentOptions
+    public static class IntentOptions
     {
         /// <summary>
         /// This value indicates that the message was sent to one specific recipient, i.e. either by sending or replying

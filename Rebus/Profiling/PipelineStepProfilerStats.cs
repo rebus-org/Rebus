@@ -40,11 +40,11 @@ public class PipelineStepProfilerStats
     public List<StepStat> GetStats()
     {
         var stats = _stats
-            .Select(kvp => new
-            {
-                Type = kvp.Key,
-                Elapsed = kvp.Value
-            })
+            .Select(kvp =>
+            (
+                Type: kvp.Key,
+                Elapsed: kvp.Value
+            ))
             .ToList();
 
         if (!stats.Any()) return new List<StepStat>();

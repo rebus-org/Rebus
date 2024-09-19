@@ -9,7 +9,7 @@ namespace Rebus.Config;
 /// Helper that gives a backdoor to the configuration <see cref="Options"/>, allowing for one-way client settings
 /// to be set.
 /// </summary>
-public class OneWayClientBackdoor
+public static class OneWayClientBackdoor
 {
     const string OneWayDecoratorDescription = "IBus was decorated with OneWayClientBusDecorator in order to disable the ability to change the number of workers";
 

@@ -12,8 +12,8 @@ namespace Rebus.Pipeline;
 /// </summary>
 public class PipelineStepInjector : IPipeline
 {
-    readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IOutgoingStep>>> _outgoingInjectedSteps = new();
-    readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IIncomingStep>>> _incomingInjectedSteps = new();
+    readonly ConcurrentDictionary<Type, List<(PipelineRelativePosition position, IOutgoingStep outgoingStep)>> _outgoingInjectedSteps = new();
+    readonly ConcurrentDictionary<Type, List<(PipelineRelativePosition position, IIncomingStep incomingStep)>> _incomingInjectedSteps = new();
     readonly IPipeline _pipeline;
 
     /// <summary>
@@ -48,16 +48,16 @@ public class PipelineStepInjector : IPipeline
 
             if (_incomingInjectedSteps.TryGetValue(currentStepType, out var injectedStep))
             {
-                foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.Before))
+                foreach (var stepToInject in injectedStep.Where(i => i.position == PipelineRelativePosition.Before))
                 {
-                    yield return stepToInject.Item2;
+                    yield return stepToInject.incomingStep;
                 }
 
                 yield return step;
 
-                foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.After))
+                foreach (var stepToInject in injectedStep.Where(i => i.position == PipelineRelativePosition.After))
                 {
-                    yield return stepToInject.Item2;
+                    yield return stepToInject.incomingStep;
                 }
             }
             else
@@ -69,17 +69,17 @@ public class PipelineStepInjector : IPipeline
         var typesNotEncountered = _incomingInjectedSteps.Keys.Except(encounteredStepTypes);
 
         var errors = typesNotEncountered
-            .Select(type => new
-            {
-                MissingStepType = type,
-                StepsToInject = _incomingInjectedSteps[type]
-            })
-            .SelectMany(a => a.StepsToInject.Select(s => new
-            {
+            .Select(type =>
+            (
+                MissingStepType: type,
+                StepsToInject: _incomingInjectedSteps[type]
+            ))
+            .SelectMany(a => a.StepsToInject.Select(s =>
+            (
                 a.MissingStepType,
-                StepToInject = s.Item2,
-                Position = s.Item1
-            }))
+                StepToInject: s.incomingStep,
+                Position: s.position
+            )))
             .Select(a => $"    {a.StepToInject} => {a.Position} => {a.MissingStepType}")
             .ToList();
 
@@ -108,16 +108,16 @@ If you require the ultimate flexibility, you will probably need to decorate IPip
 
             if (_outgoingInjectedSteps.TryGetValue(currentStepType, out var injectedStep))
             {
-                foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.Before))
+                foreach (var stepToInject in injectedStep.Where(i => i.position == PipelineRelativePosition.Before))
                 {
-                    yield return stepToInject.Item2;
+                    yield return stepToInject.outgoingStep;
                 }
 
                 yield return step;
 
-                foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.After))
+                foreach (var stepToInject in injectedStep.Where(i => i.position == PipelineRelativePosition.After))
                 {
-                    yield return stepToInject.Item2;
+                    yield return stepToInject.outgoingStep;
                 }
             }
             else
@@ -129,17 +129,17 @@ If you require the ultimate flexibility, you will probably need to decorate IPip
         var typesNotEncountered = _outgoingInjectedSteps.Keys.Except(encounteredStepTypes);
 
         var errors = typesNotEncountered
-            .Select(type => new
-            {
-                MissingStepType = type,
-                StepsToInject = _outgoingInjectedSteps[type]
-            })
-            .SelectMany(a => a.StepsToInject.Select(s => new
-            {
+            .Select(type =>
+            (
+                MissingStepType: type,
+                StepsToInject: _outgoingInjectedSteps[type]
+            ))
+            .SelectMany(a => a.StepsToInject.Select(s =>
+            (
                 a.MissingStepType,
-                StepToInject = s.Item2,
-                Position = s.Item1
-            }))
+                StepToInject: s.outgoingStep,
+                Position: s.position
+            )))
             .Select(a => $"    {a.StepToInject} => {a.Position} => {a.MissingStepType}")
             .ToList();
 
@@ -167,8 +167,8 @@ If you require the ultimate flexibility, you will probably need to decorate IPip
         if (anchorStep == null) throw new ArgumentNullException(nameof(anchorStep));
 
         _outgoingInjectedSteps
-            .GetOrAdd(anchorStep, _ => new List<Tuple<PipelineRelativePosition, IOutgoingStep>>())
-            .Add(Tuple.Create(position, step));
+            .GetOrAdd(anchorStep, _ => new List<(PipelineRelativePosition position, IOutgoingStep outgoingStep)>())
+            .Add((position, step));
 
         return this;
     }
@@ -184,8 +184,8 @@ If you require the ultimate flexibility, you will probably need to decorate IPip
         if (anchorStep == null) throw new ArgumentNullException(nameof(anchorStep));
 
         _incomingInjectedSteps
-            .GetOrAdd(anchorStep, _ => new List<Tuple<PipelineRelativePosition, IIncomingStep>>())
-            .Add(Tuple.Create(position, step));
+            .GetOrAdd(anchorStep, _ => new List<(PipelineRelativePosition position, IIncomingStep incomingStep)>())
+            .Add((position, step));
 
         return this;
     }

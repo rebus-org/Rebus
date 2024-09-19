@@ -116,7 +116,8 @@ public class TplAsyncTask : IAsyncTask
         if (!_task.Wait(5000 /*ms*/))
         {
             _log.Warn("Periodic task {taskDescription} did not finish within 5 second timeout!", _description);
-        }            
+        }
+        _tokenSource.Dispose();
     }
 
     void LogStartStop(string message, params object[] objs)

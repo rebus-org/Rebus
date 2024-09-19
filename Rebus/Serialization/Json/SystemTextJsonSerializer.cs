@@ -51,14 +51,15 @@ sealed class SystemTextJsonSerializer : ISerializer
     public Task<TransportMessage> Serialize(Message message)
     {
         var body = message.Body ?? throw new ArgumentException($"Sorry, but the System.Text.Json-based message serializer needs a message body to work (i.e. it's not capable of serializing NULL)");
-        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, body.GetType(), _options);
+        var bodyType = body.GetType();
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, bodyType, _options);
         var headers = message.Headers.Clone();
 
         headers[Headers.ContentType] = _encodingHeaderValue;
 
         if (!headers.ContainsKey(Headers.Type))
         {
-            headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(body.GetType());
+            headers[Headers.Type] = _messageTypeNameConvention.GetTypeName(bodyType);
         }
 
         return Task.FromResult(new TransportMessage(headers, bytes));

@@ -11,7 +11,7 @@ namespace Rebus.Logging;
 /// </summary>
 public abstract class AbstractRebusLoggerFactory : IRebusLoggerFactory
 {
-    static readonly Regex PlaceholderRegex = new Regex(@"{\w*[\:(\w|\.|\d|\-)*]+}", RegexOptions.Compiled);
+    static readonly Regex PlaceholderRegex = new(@"{\w*[\:(\w|\.|\d|\-)*]+}", RegexOptions.Compiled);
 
     /// <summary>
     /// Must get a logger instance for the given <paramref name="type"/>
@@ -67,27 +67,27 @@ public abstract class AbstractRebusLoggerFactory : IRebusLoggerFactory
         {
             return $@"""{obj}""";
         }
-        if (obj is IEnumerable)
+        if (obj is IEnumerable enumerable)
         {
-            var valueStrings = ((IEnumerable)obj).Cast<object>().Select(o => FormatObject(o, format));
+            var valueStrings = enumerable.Cast<object>().Select(o => FormatObject(o, format));
 
             return $"[{string.Join(", ", valueStrings)}]";
         }
-        if (obj is DateTime)
+        if (obj is DateTime dateTime)
         {
-            return ((DateTime)obj).ToString(format ?? "O");
+            return dateTime.ToString(format ?? "O");
         }
-        if (obj is DateTimeOffset)
+        if (obj is DateTimeOffset dateTimeOffset)
         {
-            return ((DateTimeOffset)obj).ToString(format ?? "O");
+            return dateTimeOffset.ToString(format ?? "O");
         }
-        if (obj is IFormattable)
+        if (obj is IFormattable formattable)
         {
-            return ((IFormattable)obj).ToString(format, CultureInfo.InvariantCulture);
+            return formattable.ToString(format, CultureInfo.InvariantCulture);
         }
-        if (obj is IConvertible)
+        if (obj is IConvertible convertible)
         {
-            return ((IConvertible)obj).ToString(CultureInfo.InvariantCulture);
+            return convertible.ToString(CultureInfo.InvariantCulture);
         }
         return obj.ToString();
     }
