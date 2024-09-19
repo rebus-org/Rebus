@@ -1143,6 +1143,9 @@
 ## 8.5.0
 * Make a bunch of internal tweaks and improvements to improve performance across the board - thanks [Henr1k80]
 
+## 8.6.0
+* Another bunch of internal tweaks and improvements to improve performance across the board - thanks [Henr1k80]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
