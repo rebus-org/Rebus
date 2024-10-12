@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Rebus.Tests.Contracts.Extensions;
 using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+// ReSharper disable AccessToDisposedClosure
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Encryption;
@@ -23,12 +25,15 @@ public class TestEncryption : FixtureBase
     BuiltinHandlerActivator _builtinHandlerActivator;
     TransportTap _tap;
     IBusStarter _starter;
+    InMemNetwork _network;
 
     protected override void SetUp()
     {
         _builtinHandlerActivator = new BuiltinHandlerActivator();
 
         Using(_builtinHandlerActivator);
+
+        _network = new InMemNetwork();
 
         _starter = Configure.With(_builtinHandlerActivator)
             .Transport(t =>
@@ -38,7 +43,7 @@ public class TestEncryption : FixtureBase
                     _tap = new TransportTap(c.Get<ITransport>());
                     return _tap;
                 });
-                t.UseInMemoryTransport(new InMemNetwork(), "bimse");
+                t.UseInMemoryTransport(_network, "bimse");
             })
             .Options(o =>
             {
@@ -54,12 +59,9 @@ public class TestEncryption : FixtureBase
     {
         const string plainTextMessage = "hej med dig min ven!!!";
 
-        var gotTheMessage = new ManualResetEvent(false);
+        using var gotTheMessage = new ManualResetEvent(false);
 
-        _builtinHandlerActivator.Handle<string>(async str =>
-        {
-            gotTheMessage.Set();
-        });
+        _builtinHandlerActivator.Handle<string>(async _ => gotTheMessage.Set());
 
         var bus = _starter.Start();
         await bus.Advanced.Routing.Send("bimse", plainTextMessage);
@@ -74,5 +76,20 @@ public class TestEncryption : FixtureBase
 
         Assert.That(sentMessageBodyAsString, Does.Not.Contain(plainTextMessage));
         Assert.That(receivedMessageBodyAsString, Does.Not.Contain(plainTextMessage));
+    }
+
+    [Test]
+    public async Task DeadletteredMessageIsAlsoUnreadable()
+    {
+        const string plainTextMessage = "hej med dig min ven!!!";
+
+        var bus = _starter.Start();
+        await bus.Advanced.Routing.Send("bimse", plainTextMessage);
+
+        var failedMessage = await _network.WaitForNextMessageFrom("error");
+
+        var failedMessageBodyAsString = Encoding.UTF8.GetString(failedMessage.Body);
+
+        Assert.That(failedMessageBodyAsString, Does.Not.Contain(plainTextMessage));
     }
 }
