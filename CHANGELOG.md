@@ -1146,6 +1146,9 @@
 ## 8.6.0
 * Another bunch of internal tweaks and improvements to improve performance across the board - thanks [Henr1k80]
 
+## 8.6.1
+* Fix regression that caused encrypted messages to end up unencrypted when dead-lettered
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
