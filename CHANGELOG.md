@@ -1149,6 +1149,9 @@
 ## 8.6.1
 * Fix regression that caused encrypted messages to end up unencrypted when dead-lettered
 
+## 8.7.0
+* Add additional compile targets and bump System.Text.Json dependency to at least 8.0.5 because almost all the previous versions have weaknesses
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

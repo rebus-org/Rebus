@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-		<LangVersion>11</LangVersion>
+		<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+		<LangVersion>13</LangVersion>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
@@ -27,7 +27,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="[13.0.1,14)" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="system.text.json" Version="[6,9)" />
+		<PackageReference Include="system.text.json" Version="[8.0.5,10)" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 	<ItemGroup>
