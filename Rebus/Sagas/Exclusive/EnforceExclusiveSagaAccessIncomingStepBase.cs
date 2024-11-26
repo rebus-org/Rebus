@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -60,15 +61,17 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
             .OrderBy(str => str) // enforce consistent ordering to avoid deadlocks
             .ToArray();
 
-        try
-        {
-            await WaitForLocks(locksToObtain);
-            await next();
-        }
-        finally
-        {
-            await ReleaseLocks(locksToObtain);
-        }
+        var obtainedLocks = new List<int>();
+		try
+		{
+		    await WaitForLocks(locksToObtain, obtainedLocks);
+		
+		    await next();
+		}
+		finally
+		{
+	        await ReleaseLocks(obtainedLocks.ToArray());
+		}
     }
 
     /// <summary>
@@ -87,7 +90,7 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
 
     protected abstract Task<bool> ReleaseLockAsync(int lockId);
 
-    async Task WaitForLocks(int[] lockIds)
+    async Task WaitForLocks(int[] lockIds, List<int> obtainedLockIds)
     {
         for (var index = 0; index < lockIds.Length; index++)
         {
@@ -95,6 +98,7 @@ abstract class EnforceExclusiveSagaAccessIncomingStepBase : IIncomingStep
             {
                 await Task.Yield();
             }
+            obtainedLockIds.Add(lockIds[index]);
         }
     }
 
