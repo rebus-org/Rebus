@@ -1152,6 +1152,10 @@
 ## 8.7.0
 * Add additional compile targets and bump System.Text.Json dependency to at least 8.0.5 because almost all the previous versions have weaknesses
 
+## 8.7.1
+* Fix error during shutdown when saga locks were obtained - thanks [xhafan]
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1219,5 +1223,6 @@
 [trevorreeves]: https://github.com/trevorreeves
 [X509Whatever]: https://github.com/X509Whatever
 [xenoputtss]: https://github.com/xenoputtss
+[xhafan]: https://github.com/xhafan
 [zabulus]: https://github.com/zabulus
 [zlepper]: https://github.com/zlepper
