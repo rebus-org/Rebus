@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Rebus.Injection;
 
@@ -12,24 +11,15 @@ public class ResolutionException : Exception
     /// <summary>
     /// Constructs the exception
     /// </summary>
-    public ResolutionException(string message)
-        : base(message)
+    public ResolutionException(string message) : base(message)
     {
     }
 
     /// <summary>
     /// Constructs the exception
     /// </summary>
-    public ResolutionException(Exception innerException, string message)
-        : base(message, innerException)
+    public ResolutionException(Exception innerException, string message) : base(message, innerException)
     {
     }
 
-    /// <summary>
-    /// Constructs the exception
-    /// </summary>
-    public ResolutionException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
-    {
-    }
 }

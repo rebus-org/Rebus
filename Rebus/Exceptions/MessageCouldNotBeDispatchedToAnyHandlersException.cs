@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Rebus.Exceptions;
 
@@ -13,14 +12,6 @@ public class MessageCouldNotBeDispatchedToAnyHandlersException : RebusApplicatio
     /// Constructs the exception with the given message
     /// </summary>
     public MessageCouldNotBeDispatchedToAnyHandlersException(string message) : base(message)
-    {
-    }
-
-    /// <summary>
-    /// Happy cross-domain serialization!
-    /// </summary>
-    public MessageCouldNotBeDispatchedToAnyHandlersException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
     {
     }
 }

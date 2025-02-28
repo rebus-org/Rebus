@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Rebus.Exceptions;
 
@@ -12,24 +11,14 @@ public class ConcurrencyException : Exception
     /// <summary>
     /// Constructs the exception
     /// </summary>
-    public ConcurrencyException(string message)
-        : base(message)
+    public ConcurrencyException(string message) : base(message)
     {
     }
 
     /// <summary>
     /// Constructs the exception
     /// </summary>
-    public ConcurrencyException(Exception innerException, string message)
-        : base(message, innerException)
-    {
-    }
-
-    /// <summary>
-    /// Constructs the exception
-    /// </summary>
-    public ConcurrencyException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
+    public ConcurrencyException(Exception innerException, string message) : base(message, innerException)
     {
     }
 }

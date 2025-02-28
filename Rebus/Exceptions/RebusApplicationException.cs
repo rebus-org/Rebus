@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Rebus.Exceptions;
 
@@ -12,24 +11,14 @@ public class RebusApplicationException : Exception
     /// <summary>
     /// Constructs the exception with the given message
     /// </summary>
-    public RebusApplicationException(string message)
-        :base(message)
+    public RebusApplicationException(string message) :base(message)
     {
     }
 
     /// <summary>
     /// Constructs the exception with the given message and inner exception
     /// </summary>
-    public RebusApplicationException(Exception innerException, string message)
-        :base(message, innerException)
-    {
-    }
-
-    /// <summary>
-    /// Happy cross-domain serialization!
-    /// </summary>
-    public RebusApplicationException(SerializationInfo info, StreamingContext context)
-        :base(info, context)
+    public RebusApplicationException(Exception innerException, string message) :base(message, innerException)
     {
     }
 }
