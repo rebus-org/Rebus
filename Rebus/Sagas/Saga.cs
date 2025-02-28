@@ -50,7 +50,7 @@ public abstract class Saga
 
     internal abstract Type GetSagaDataType();
 
-    internal abstract ISagaData CreateNewSagaData();
+    internal abstract ISagaData CreateNewSagaData(ISagaDataIdFactory sagaDataIdFactory);
 
     internal bool WasMarkedAsComplete { get; set; }
 
@@ -150,7 +150,7 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
                 try
                 {
                     var body = message.Body;
-                    return messageValueExtractorFunction((TMessage) body);
+                    return messageValueExtractorFunction((TMessage)body);
                 }
                 catch (Exception exception)
                 {
@@ -220,11 +220,11 @@ public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
         return typeof(TSagaData);
     }
 
-    internal override ISagaData CreateNewSagaData()
+    internal override ISagaData CreateNewSagaData(ISagaDataIdFactory sagaDataIdFactory)
     {
         var newSagaData = new TSagaData
         {
-            Id = Guid.NewGuid()
+            Id = sagaDataIdFactory.NewId()
         };
 
         HoldsNewSagaDataInstance = true;

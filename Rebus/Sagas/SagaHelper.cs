@@ -30,7 +30,7 @@ public class SagaHelper
     /// <summary>
     /// Creates a new instance of the saga's saga data
     /// </summary>
-    public ISagaData CreateNewSagaData(Saga saga) => saga.CreateNewSagaData();
+    public ISagaData CreateNewSagaData(Saga saga, ISagaDataIdFactory sagaDataIdFactory) => saga.CreateNewSagaData(sagaDataIdFactory);
 
     static Dictionary<Type, IReadOnlyList<CorrelationProperty>> GetCorrelationPropertiesForSagaHandler(Saga saga)
     {

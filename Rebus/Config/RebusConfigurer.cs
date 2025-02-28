@@ -36,8 +36,10 @@ using Rebus.Retry.FailFast;
 using Rebus.Time;
 using Rebus.Topic;
 using Rebus.Retry.Info;
+using Rebus.Sagas.Ids;
 // ReSharper disable EmptyGeneralCatchClause
 // ReSharper disable ArgumentsStyleNamedExpression
+// ReSharper disable RedundantTypeArgumentsOfMethod
 
 namespace Rebus.Config;
 
@@ -337,6 +339,8 @@ public class RebusConfigurer
         PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
 
         PossiblyRegisterDefault<ICorrelationErrorHandler>(c => new DefaultCorrelationErrorHandler(c.Get<IRebusLoggerFactory>()));
+        
+        PossiblyRegisterDefault<ISagaDataIdFactory>(_ => DefaultSagaIdFactoryFactory.GetDefault());
 
         PossiblyRegisterDefault<IPipeline>(c =>
         {
@@ -355,7 +359,7 @@ public class RebusConfigurer
                 .OnReceive(new DeserializeIncomingMessageStep(serializer))
                 .OnReceive(new HandleRoutingSlipsStep(transport, serializer))
                 .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
-                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), c.Get<ICorrelationErrorHandler>(), rebusLoggerFactory, options))
+                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), c.Get<ICorrelationErrorHandler>(), c.Get<ISagaDataIdFactory>(), rebusLoggerFactory, options))
                 .OnReceive(new DispatchIncomingMessageStep(rebusLoggerFactory))
 
                 .OnSend(new AssignDefaultHeadersStep(transport, rebusTime, messageTypeNameConvention, options.DefaultReturnAddressOrNull))

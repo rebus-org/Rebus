@@ -1152,6 +1152,9 @@
 ## 8.7.0
 * Add additional compile targets and bump System.Text.Json dependency to at least 8.0.5 because almost all the previous versions have weaknesses
 
+## 8.8.0
+* Generate saga data IDs in `ISagaDataIdFactory`, which has now become configurable (via `.Sagas(s => s.UseSagaDataIdFactory(customFactory))`). IDs will not by default be sequential (i.e. be based on `Guid.CreateVersion7()` when on .NET 9 and based on `SqlServerSagaIdFactory` on versions before 9)
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

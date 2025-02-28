@@ -35,6 +35,7 @@ public class LoadSagaDataStep : IIncomingStep
     };
 
     readonly ICorrelationErrorHandler _correlationErrorHandler;
+    readonly ISagaDataIdFactory _sagaDataIdFactory;
     readonly SagaHelper _sagaHelper = new();
     readonly ISagaStorage _sagaStorage;
     readonly Options _options;
@@ -43,11 +44,12 @@ public class LoadSagaDataStep : IIncomingStep
     /// <summary>
     /// Constructs the step with the given saga storage
     /// </summary>
-    public LoadSagaDataStep(ISagaStorage sagaStorage, ICorrelationErrorHandler correlationErrorHandler, IRebusLoggerFactory rebusLoggerFactory, Options options)
+    public LoadSagaDataStep(ISagaStorage sagaStorage, ICorrelationErrorHandler correlationErrorHandler, ISagaDataIdFactory sagaDataIdFactory, IRebusLoggerFactory rebusLoggerFactory, Options options)
     {
         if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
         _sagaStorage = sagaStorage ?? throw new ArgumentNullException(nameof(sagaStorage));
         _correlationErrorHandler = correlationErrorHandler ?? throw new ArgumentNullException(nameof(correlationErrorHandler));
+        _sagaDataIdFactory = sagaDataIdFactory ?? throw new ArgumentNullException(nameof(sagaDataIdFactory));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _log = rebusLoggerFactory.GetLogger<LoadSagaDataStep>();
     }
@@ -142,7 +144,7 @@ public class LoadSagaDataStep : IIncomingStep
 
             if (canBeInitiatedByThisMessageType)
             {
-                var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
+                var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga, _sagaDataIdFactory);
 
                 // if there's exacly one correlation property that points to a property on the saga data, we can set it
                 if (correlationPropertiesRelevantForMessage.Length == 1)
