@@ -80,7 +80,7 @@ public class OptionsConfigurer
     /// Configures the interval between polling the endpoint's configured <see cref="ITimeoutManager"/> for due timeouts.
     /// Defaults to <see cref="Options.DefaultDueTimeoutsPollInterval"/>
     /// </summary>
-    public void SetDueTimeoutsPollInteval(TimeSpan dueTimeoutsPollInterval)
+    public void SetDueTimeoutsPollInterval(TimeSpan dueTimeoutsPollInterval)
     {
         _options.DueTimeoutsPollInterval = dueTimeoutsPollInterval;
     }

@@ -20,7 +20,7 @@ public class CustomizeDueTimeoutsPollInterval : FixtureBase
         Configure.With(activator)
             .Transport(t => t.UseInMemoryTransport(new(), "whatever"))
             .Timeouts(t => t.StoreInMemory())
-            .Options(o => o.SetDueTimeoutsPollInteval(TimeSpan.FromMinutes(1)))
+            .Options(o => o.SetDueTimeoutsPollInterval(TimeSpan.FromMinutes(1)))
             .Start();
     }
 }
