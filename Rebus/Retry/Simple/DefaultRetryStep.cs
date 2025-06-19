@@ -102,6 +102,12 @@ public class DefaultRetryStep : IRetryStep
 
         if (await _errorTracker.HasFailedTooManyTimes(messageId))
         {
+            if (_retryStrategySettings.SecondLevelRetriesEnabled)
+            {
+                await DispatchSecondLevelRetry(transactionContext, messageId, context, next);
+                return;
+            }
+
             var aggregateException = GetAggregateException(await _errorTracker.GetExceptions(messageId));
 
             await PassToErrorHandler(context, aggregateException);
@@ -154,18 +160,6 @@ public class DefaultRetryStep : IRetryStep
         }
 
         await _errorTracker.RegisterError(messageId, exception);
-
-        if (!await _errorTracker.HasFailedTooManyTimes(messageId))
-        {
-            transactionContext.SetResult(commit: false, ack: false);
-            return;
-        }
-
-        if (_retryStrategySettings.SecondLevelRetriesEnabled)
-        {
-            await DispatchSecondLevelRetry(transactionContext, messageId, context, next);
-            return;
-        }
 
         transactionContext.SetResult(commit: false, ack: false);
     }

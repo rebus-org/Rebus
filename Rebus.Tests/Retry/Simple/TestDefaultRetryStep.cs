@@ -52,7 +52,7 @@ public class TestDefaultRetryStep
         Mock<IExceptionInfoFactory> exceptionInfoFactory,
         IncomingStepContext context,
         TransportMessage message, string id,
-        Exception[] nextExceptions)
+        Exception nextException)
     {
         failFastChecker.Setup(ffc => ffc.ShouldFailFast(It.IsAny<string>(), It.IsAny<Exception>())).Returns(false);
         errorTracker.Setup(et => et.HasFailedTooManyTimes(It.IsAny<string>())).ReturnsAsync(true);
@@ -61,8 +61,8 @@ public class TestDefaultRetryStep
         context.Save(message);
 
         int i = 0;
-        await step.Process(context, () => throw nextExceptions[i++]);
+        await step.Process(context, () => throw nextException);
 
-        exceptionInfoFactory.Verify(eif => eif.CreateInfo(nextExceptions[1]));
+        exceptionInfoFactory.Verify(eif => eif.CreateInfo(nextException));
     }
 }
