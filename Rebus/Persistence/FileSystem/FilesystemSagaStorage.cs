@@ -39,12 +39,19 @@ public class FileSystemSagaStorage : ISagaStorage
         using (new FileSystemExclusiveLock(_lockFile, _log))
         {
             var index = new FileSystemSagaIndex(_basePath);
+            
             if (propertyName == IdPropertyName)
             {
                 if (propertyValue == null) return null;
 
                 var guidPropertyValue = GetGuidValue(propertyValue);
-                var sagaData = index.FindById(guidPropertyValue);
+                
+                if (!guidPropertyValue.HasValue)
+                {
+                    return null;
+                }
+
+                var sagaData = index.FindById(guidPropertyValue.Value);
 
                 if (!sagaDataType.IsInstanceOfType(sagaData))
                 {
@@ -53,15 +60,18 @@ public class FileSystemSagaStorage : ISagaStorage
 
                 return sagaData;
             }
+            
             return index.Find(sagaDataType, propertyName, propertyValue);
         }
 
-        Guid GetGuidValue(object value)
+        Guid? GetGuidValue(object value)
         {
             if (value is Guid guid) return guid;
 
-            if (value is string {Length: > 0} str)
+            if (value is string str)
             {
+                if (string.IsNullOrWhiteSpace(str)) return null;
+
                 try
                 {
                     return Guid.Parse(str);
