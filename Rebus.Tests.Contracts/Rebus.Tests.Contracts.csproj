@@ -24,6 +24,6 @@
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="NUnit" Version="4.4.0" />
-		<PackageReference Include="Rebus" Version="8.8.0" />
+		<PackageReference Include="Rebus" Version="8.9.0-b02" />
 	</ItemGroup>
 </Project>
