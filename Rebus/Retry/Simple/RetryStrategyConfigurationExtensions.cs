@@ -108,7 +108,8 @@ public static class RetryStrategyConfigurationExtensions
                 secondLevelRetriesEnabled,
                 errorDetailsHeaderMaxLength,
                 errorTrackingMaxAgeMinutes,
-                errorQueueErrorCooldownTimeSeconds: errorQueueErrorCooldownTimeSeconds
+                errorQueueErrorCooldownTimeSeconds: errorQueueErrorCooldownTimeSeconds,
+                useRebusTransactionScope: false
             );
 
             return settings;

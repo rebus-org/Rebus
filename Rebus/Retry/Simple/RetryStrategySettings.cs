@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus.Messages;
+using Rebus.Transport;
 
 namespace Rebus.Retry.Simple;
 
@@ -38,7 +39,8 @@ public class RetryStrategySettings
         bool secondLevelRetriesEnabled = false,
         int errorDetailsHeaderMaxLength = int.MaxValue,
         int errorTrackingMaxAgeMinutes = DefaultErrorTrackingMaxAgeMinutes,
-        int errorQueueErrorCooldownTimeSeconds = DefaultErrorQueueErrorCooldownTimeSeconds
+        int errorQueueErrorCooldownTimeSeconds = DefaultErrorQueueErrorCooldownTimeSeconds,
+        bool useRebusTransactionScope = true
     )
     {
         if (errorDetailsHeaderMaxLength < 0)
@@ -60,6 +62,7 @@ public class RetryStrategySettings
         ErrorDetailsHeaderMaxLength = errorDetailsHeaderMaxLength;
         ErrorTrackingMaxAgeMinutes = errorTrackingMaxAgeMinutes;
         ErrorQueueErrorCooldownTimeSeconds = errorQueueErrorCooldownTimeSeconds;
+        UseRebusTransactionScope = useRebusTransactionScope;
     }
 
     /// <summary>
@@ -94,4 +97,9 @@ public class RetryStrategySettings
     /// Configures time in seconds the bus instance will wait, if forwarding to dead-letter queue fails.
     /// </summary>
     public int ErrorQueueErrorCooldownTimeSeconds { get; internal set; }
+
+    /// <summary>
+    /// Configures whether the dead-lettering implementation of <see cref="IErrorHandler"/> should do its work within a new, fresh <see cref="RebusTransactionScope"/>
+    /// </summary>
+    public bool UseRebusTransactionScope { get; internal set; }
 }

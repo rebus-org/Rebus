@@ -112,7 +112,9 @@ public class LegacyRetryStep : IRetryStep
 
             await PassToErrorHandler(context, aggregateException);
             await _errorTracker.CleanUp(messageId);
+            
             transactionContext.SetResult(commit: false, ack: true);
+            
             return;
         }
 
