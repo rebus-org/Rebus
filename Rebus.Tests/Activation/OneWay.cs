@@ -27,7 +27,7 @@ public class ClientOnly : FixtureBase
                 .Start();
         });
 
-        Assert.That(resolutionException!.InnerException, Is.TypeOf<InvalidOperationException>());
+        Assert.That(resolutionException.InnerException, Is.TypeOf<InvalidOperationException>());
 
         var invalidOperationException = (InvalidOperationException)resolutionException.InnerException;
 

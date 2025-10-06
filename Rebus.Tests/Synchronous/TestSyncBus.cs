@@ -74,8 +74,8 @@ public class TestSyncBus : FixtureBase
 
         if (commitTransaction)
         {
-            Assert.That(receivedMessages, Contains.Item("hej med dig min ven"));
-            Assert.That(receivedMessages, Contains.Item("her er endnu en besked"));
+            Assert.That(receivedMessages, Does.Contain("hej med dig min ven"));
+            Assert.That(receivedMessages, Does.Contain("her er endnu en besked"));
         }
         else
         {

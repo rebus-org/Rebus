@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<LangVersion>10</LangVersion>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
@@ -23,7 +23,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageReference Include="NUnit" Version="3.14.0" />
+		<PackageReference Include="NUnit" Version="4.4.0" />
 		<PackageReference Include="Rebus" Version="8.8.0" />
 	</ItemGroup>
 </Project>

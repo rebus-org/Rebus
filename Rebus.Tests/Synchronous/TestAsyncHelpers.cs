@@ -15,7 +15,7 @@ public class TestAsyncHelpers
 
         Console.WriteLine(overflowException);
 
-        Assert.That(overflowException.ToString(), Contains.Substring("overflowofawesomenecessissity"));
+        Assert.That(overflowException.ToString(), Does.Contain("overflowofawesomenecessissity"));
     }
 
     async Task AnAsynchronousMethod()
