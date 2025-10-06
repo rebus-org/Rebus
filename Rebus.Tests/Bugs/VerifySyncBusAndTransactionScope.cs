@@ -6,7 +6,6 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Messages;
-using Rebus.Persistence.InMem;
 using Rebus.Tests.Contracts;
 using Rebus.Transport;
 using Rebus.Transport.InMem;

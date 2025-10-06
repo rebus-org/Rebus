@@ -1158,6 +1158,9 @@
 ## 8.8.0
 * Generate saga data IDs in `ISagaDataIdFactory`, which has now become configurable (via `.Sagas(s => s.UseSagaDataIdFactory(customFactory))`). IDs will not by default be sequential (i.e. be based on `Guid.CreateVersion7()` when on .NET 9 and based on `SqlServerSagaIdFactory` on versions before 9)
 
+## 8.9.0
+* Add ability to switch back to "legacy retry strategy", where the error tracker is checked BEFORE dispatching the message. This yields slightly slower performance for the sunshine scenario, but it works in scenarios where the transport is actually a database, and all work is enlisted in the same DB transaction.
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
