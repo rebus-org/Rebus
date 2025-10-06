@@ -1158,6 +1158,9 @@
 ## 8.8.0
 * Generate saga data IDs in `ISagaDataIdFactory`, which has now become configurable (via `.Sagas(s => s.UseSagaDataIdFactory(customFactory))`). IDs will not by default be sequential (i.e. be based on `Guid.CreateVersion7()` when on .NET 9 and based on `SqlServerSagaIdFactory` on versions before 9)
 
+## 8.9.0-b02
+* Introduce "mode" in retry strategy, which indicates WHEN a message is dead-lettered: Either IMMEDIATELY after the final exception has been caught, or on NEXT DELIVERY (which is how Rebus worked in versions < 8). Makes it possible for Rebus' retry strategy to work in scenarios where user work and transport operations are enlisted in the same transaction, e.g. like when using the SQL transport in the same transaction as the work being done in a handler.
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

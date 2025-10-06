@@ -61,6 +61,7 @@ public class DefaultRetryStep : IRetryStep
         var transportMessage = context.Load<TransportMessage>() ?? throw new RebusApplicationException("Could not find a transport message in the current incoming step context");
         var messageId = transportMessage.Headers.GetValueOrNull(Headers.MessageId);
 
+        // if there's no message ID, we can't track the message - just deadletter it
         if (string.IsNullOrWhiteSpace(messageId))
         {
             await PassToErrorHandler(context, _exceptionInfoFactory.CreateInfo(new RebusApplicationException(
@@ -74,6 +75,7 @@ public class DefaultRetryStep : IRetryStep
             return;
         }
 
+        // if there's a native delivery count, and it exceeds our configured MAX, deadletter it
         if (transportMessage.Headers.TryGetValue(Headers.DeliveryCount, out var value) && int.TryParse(value, out var deliveryCount))
         {
             var maxDeliveryAttempts = _retryStrategySettings.SecondLevelRetriesEnabled
@@ -96,6 +98,30 @@ public class DefaultRetryStep : IRetryStep
                 await _errorTracker.CleanUp(messageId);
                 transactionContext.SetResult(commit: false, ack: true);
 
+                return;
+            }
+        }
+
+        // if the mode says to check now, do it - and if it exceeds, deadletter it
+        if (_retryStrategySettings.ErrorHandlerMode == ErrorHandlerMode.NextDelivery)
+        {
+            if (await _errorTracker.HasFailedTooManyTimes(messageId))
+            {
+                // if enabled, see if we should dispatch as 2nd level retry
+                if (_retryStrategySettings.SecondLevelRetriesEnabled)
+                {
+                    var secondLevelMessageId = $"2ndlevel/{messageId}";
+
+                    if (!await _errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
+                    {
+                        await DispatchSecondLevelRetry(transactionContext, secondLevelMessageId, context, next);
+                        return;
+                    }
+                }
+
+                await PassToErrorHandler(context, GetAggregateException(await _errorTracker.GetExceptions(messageId)));
+                await _errorTracker.CleanUp(messageId);
+                transactionContext.SetResult(commit: false, ack: true);
                 return;
             }
         }
@@ -124,6 +150,17 @@ public class DefaultRetryStep : IRetryStep
 
     async Task HandleException(Exception exception, ITransactionContext transactionContext, string messageId, IncomingStepContext context, Func<Task> next)
     {
+        if (_retryStrategySettings.ErrorHandlerMode == ErrorHandlerMode.NextDelivery)
+        {
+            await _errorTracker.RegisterError(messageId, exception);
+            if (_failFastChecker.ShouldFailFast(messageId, exception))
+            {
+                await _errorTracker.MarkAsFinal(messageId);
+            }
+            transactionContext.SetResult(commit: false, ack: false);
+            return;
+        }
+
         if (_failFastChecker.ShouldFailFast(messageId, exception))
         {
             // special case - it we're supposed to fail fast, AND 2nd level retries are enabled, AND this is the first delivery attempt, try to dispatch as 2nd level:
@@ -137,7 +174,7 @@ public class DefaultRetryStep : IRetryStep
 
             await _errorTracker.MarkAsFinal(messageId);
             await _errorTracker.RegisterError(messageId, exception);
-            await PassToErrorHandler(context, GetAggregateException(new[] { _exceptionInfoFactory.CreateInfo(exception) }));
+            await PassToErrorHandler(context, GetAggregateException([_exceptionInfoFactory.CreateInfo(exception)]));
             await _errorTracker.CleanUp(messageId);
             transactionContext.SetResult(commit: false, ack: true);
             return;
@@ -179,18 +216,29 @@ public class DefaultRetryStep : IRetryStep
         }
         catch (Exception secondLevelException)
         {
+            if (_retryStrategySettings.ErrorHandlerMode == ErrorHandlerMode.NextDelivery)
+            {
+                await _errorTracker.RegisterError(messageId, secondLevelException);
+                if (_failFastChecker.ShouldFailFast(messageId, secondLevelException))
+                {
+                    await _errorTracker.MarkAsFinal(messageId);
+                }
+                transactionContext.SetResult(commit: false, ack: false);
+                return;
+            }
+
             if (_failFastChecker.ShouldFailFast(messageId, secondLevelException))
             {
                 await _errorTracker.MarkAsFinal(messageId);
                 await _errorTracker.RegisterError(messageId, secondLevelException);
-                await PassToErrorHandler(context, GetAggregateException(new[] { _exceptionInfoFactory.CreateInfo(secondLevelException) }));
+                await PassToErrorHandler(context, GetAggregateException([_exceptionInfoFactory.CreateInfo(secondLevelException)]));
                 await _errorTracker.CleanUp(messageId);
                 transactionContext.SetResult(commit: false, ack: true);
                 return;
             }
 
             var exceptions = await _errorTracker.GetExceptions(messageId);
-            await PassToErrorHandler(context, GetAggregateException(exceptions.Concat(new[] { _exceptionInfoFactory.CreateInfo(secondLevelException), })));
+            await PassToErrorHandler(context, GetAggregateException(exceptions.Concat([_exceptionInfoFactory.CreateInfo(secondLevelException)])));
             await _errorTracker.CleanUp(messageId);
             transactionContext.SetResult(commit: false, ack: true);
         }

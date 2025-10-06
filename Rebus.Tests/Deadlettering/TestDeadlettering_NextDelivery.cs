@@ -17,7 +17,7 @@ using Rebus.Transport.InMem;
 namespace Rebus.Tests.Deadlettering;
 
 [TestFixture]
-public class TestDeadlettering : FixtureBase
+public class TestDeadlettering_NextDelivery : FixtureBase
 {
     const LogLevel LogLevel = Rebus.Logging.LogLevel.Error;
 
@@ -29,7 +29,7 @@ public class TestDeadlettering : FixtureBase
         Configure.With(activator)
             .Logging(l => l.Console())
             .Transport(t => t.UseInMemoryTransport(new(), "deadlettering"))
-            //.Options(o => UseNewRetryStrategy(o))
+            .Options(o => o.RetryStrategy(errorHandlerMode: ErrorHandlerMode.NextDelivery))
             .Start();
 
     }
@@ -46,7 +46,7 @@ public class TestDeadlettering : FixtureBase
         var bus = Configure.With(activator)
             .Logging(l => l.Console(minLevel: LogLevel))
             .Transport(t => t.UseInMemoryTransport(network, "deadlettering"))
-            //.Options(o => UseNewRetryStrategy(o))
+            .Options(o => o.RetryStrategy(errorHandlerMode: ErrorHandlerMode.NextDelivery))
             .Start();
 
         await bus.SendLocal(new MyPoisonousMessage(), new Dictionary<string, string> { ["iknowu"] = "" });
@@ -74,7 +74,7 @@ public class TestDeadlettering : FixtureBase
             .Logging(l => l.Console(minLevel: LogLevel))
             .Transport(t => t.UseInMemoryTransport(network, "deadlettering"))
             .Routing(r => r.TypeBased().Map<MessageSentFromHandler>("sent-from-handler"))
-            //.Options(o => UseNewRetryStrategy(o))
+            .Options(o => o.RetryStrategy(errorHandlerMode: ErrorHandlerMode.NextDelivery))
             .Start();
 
         await bus.SendLocal(new MyPoisonousMessage(), new Dictionary<string, string> { ["iknowu"] = "" });
@@ -99,7 +99,7 @@ public class TestDeadlettering : FixtureBase
         var bus = Configure.With(activator)
             .Logging(l => l.Console(minLevel: LogLevel))
             .Transport(t => t.UseInMemoryTransport(network, "deadlettering"))
-            .Options(o => o.RetryStrategy(secondLevelRetriesEnabled: true))
+            .Options(o => o.RetryStrategy(secondLevelRetriesEnabled: true, errorHandlerMode: ErrorHandlerMode.NextDelivery))
             .Start();
 
         await bus.SendLocal(new MyPoisonousMessage(), new Dictionary<string, string> { ["iknowu"] = "" });
@@ -109,7 +109,7 @@ public class TestDeadlettering : FixtureBase
             errorMessage: "The failing MyPoisonousMessage message was not dispatched as IFailed<MyPoisonousMessage> within 3 s"
         );
     }
-
+    
     record MyPoisonousMessage;
 
     record MessageSentFromHandler;
