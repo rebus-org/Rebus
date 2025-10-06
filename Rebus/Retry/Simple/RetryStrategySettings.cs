@@ -38,7 +38,8 @@ public class RetryStrategySettings
         bool secondLevelRetriesEnabled = false,
         int errorDetailsHeaderMaxLength = int.MaxValue,
         int errorTrackingMaxAgeMinutes = DefaultErrorTrackingMaxAgeMinutes,
-        int errorQueueErrorCooldownTimeSeconds = DefaultErrorQueueErrorCooldownTimeSeconds
+        int errorQueueErrorCooldownTimeSeconds = DefaultErrorQueueErrorCooldownTimeSeconds,
+        ErrorHandlerMode errorHandlerMode = ErrorHandlerMode.Immediately
     )
     {
         if (errorDetailsHeaderMaxLength < 0)
@@ -60,6 +61,7 @@ public class RetryStrategySettings
         ErrorDetailsHeaderMaxLength = errorDetailsHeaderMaxLength;
         ErrorTrackingMaxAgeMinutes = errorTrackingMaxAgeMinutes;
         ErrorQueueErrorCooldownTimeSeconds = errorQueueErrorCooldownTimeSeconds;
+        ErrorHandlerMode = errorHandlerMode;
     }
 
     /// <summary>
@@ -94,4 +96,10 @@ public class RetryStrategySettings
     /// Configures time in seconds the bus instance will wait, if forwarding to dead-letter queue fails.
     /// </summary>
     public int ErrorQueueErrorCooldownTimeSeconds { get; internal set; }
+
+    /// <summary>
+    /// Configures whether the message is deadlettered - <see cref="Simple.ErrorHandlerMode.Immediately"/> after having caught the final exception,
+    /// or on the <see cref="Simple.ErrorHandlerMode.NextDelivery"/>.
+    /// </summary>
+    public ErrorHandlerMode ErrorHandlerMode { get; internal set; }
 }
