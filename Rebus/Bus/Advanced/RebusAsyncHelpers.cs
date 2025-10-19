@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Bus.Advanced;
 
-static class AsyncHelpers
+static class RebusAsyncHelpers
 {
     /// <summary>
     /// Executes a task synchronously on the calling thread by installing a temporary synchronization context that queues continuations

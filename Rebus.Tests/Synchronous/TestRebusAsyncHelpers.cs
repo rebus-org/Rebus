@@ -6,12 +6,12 @@ using Rebus.Bus.Advanced;
 namespace Rebus.Tests.Synchronous;
 
 [TestFixture]
-public class TestAsyncHelpers
+public class TestRebusAsyncHelpers
 {
     [Test]
     public void ExceptionsLookFine()
     {
-        var overflowException = Assert.Throws<OverflowException>(() => AsyncHelpers.RunSync(AnAsynchronousMethod));
+        var overflowException = Assert.Throws<OverflowException>(() => RebusAsyncHelpers.RunSync(AnAsynchronousMethod));
 
         Console.WriteLine(overflowException);
 

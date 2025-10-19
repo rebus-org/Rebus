@@ -38,7 +38,7 @@ public class RebusTransactionScope : IDisposable
     /// <summary>
     /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion (synchronous version)
     /// </summary>
-    public void Complete() => AsyncHelpers.RunSync(CompleteAsync);
+    public void Complete() => RebusAsyncHelpers.RunSync(CompleteAsync);
 
     /// <summary>
     /// Disposes the transaction context and removes it from <see cref="AmbientTransactionContext.Current"/> again

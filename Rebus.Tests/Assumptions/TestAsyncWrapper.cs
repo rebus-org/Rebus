@@ -63,7 +63,7 @@ public class TestAsyncWrapper
             case InvocationMode.AsyncHelpers:
                 for (var counter = 0; counter < iterations; counter++)
                 {
-                    AsyncHelpers.RunSync(AsyncMethod);
+                    RebusAsyncHelpers.RunSync(AsyncMethod);
                 }
                 break;
             default:
