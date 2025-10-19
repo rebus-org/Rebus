@@ -121,7 +121,7 @@ public class DefaultRetryStep : IRetryStep
 
                 await PassToErrorHandler(context, GetAggregateException(await _errorTracker.GetExceptions(messageId)));
                 await _errorTracker.CleanUp(messageId);
-                transactionContext.SetResult(commit: false, ack: true);
+                transactionContext.SetResult(commit: true, ack: true);
                 return;
             }
         }
