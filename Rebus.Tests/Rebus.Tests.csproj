@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFrameworks>net9.0</TargetFrameworks>
-		<LangVersion>13</LangVersion>
+		<TargetFrameworks>net10.0</TargetFrameworks>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\ClassLibraryWithCustomName\ClassLibraryWithCustomName.csproj" />

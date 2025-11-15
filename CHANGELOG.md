@@ -1161,6 +1161,9 @@
 ## 8.9.0
 * Introduce "mode" in retry strategy, which indicates WHEN a message is dead-lettered: Either IMMEDIATELY after the final exception has been caught, or on NEXT DELIVERY (which is how Rebus worked in versions < 8). Makes it possible for Rebus' retry strategy to work in scenarios where user work and transport operations are enlisted in the same transaction, e.g. like when using the SQL transport in the same transaction as the work being done in a handler.
 
+## 8.9.1
+* Use sequential GUID generator in .NET 10 too
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
