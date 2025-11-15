@@ -6,11 +6,17 @@ cache:
   - packages -> **\packages.config
   - '%LocalAppData%\NuGet\Cache'
 
+install: 
+- ps: |
+    Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
+    & $env:temp\dotnet-install.ps1 -Architecture x64 -Version '10.0.100' -InstallDir "$env:ProgramFiles\dotnet"  # until it is available in the build agent image (https://github.com/appveyor/ci/issues/3984)
+
 before_build:
   - appveyor-retry dotnet restore -v Minimal
+  - cmd: dotnet --version ## Verify that the correct .NET SDK version is being used
 
 build_script:
   - dotnet build -c Release --no-restore
 
 test_script:
-  - dotnet test Rebus.Tests -c Release --no-restore
+  - dotnet test -c Release --no-restore
