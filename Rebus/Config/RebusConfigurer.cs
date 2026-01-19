@@ -87,7 +87,7 @@ public class RebusConfigurer
 
     /// <summary>
     /// Configures how Rebus tracks <see cref="Exception"/>s.
-    /// Defaults to tracking exceptions in memory. Trasking errors in memory is easy and does not require any additional configuration,
+    /// Defaults to tracking exceptions in memory. Tracking errors in memory is easy and does not require any additional configuration,
     /// but it can lead to excessive retrying in competing consumer scenarios, because each node will count delivery attempts individually.
     /// It is recommended in most cases to configure some kind of distributed error tracker when running distributed consumers.
     /// </summary>
