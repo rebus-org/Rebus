@@ -34,7 +34,7 @@ public class IdempotencyData
     public List<OutgoingMessages> OutgoingMessages { get; } = new List<OutgoingMessages>();
 
     /// <summary>
-    /// Getst the IDs of all messages that have been handled
+    /// Gets the IDs of all messages that have been handled
     /// </summary>
     public HashSet<string> HandledMessageIds { get; } = new HashSet<string>();
 
