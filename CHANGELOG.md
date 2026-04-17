@@ -1164,6 +1164,9 @@
 ## 8.9.1
 * Use sequential GUID generator in .NET 10 too
 
+## 8.9.2
+* Update System.Text.Json dependency to 10.0.6
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
