@@ -94,7 +94,7 @@ public static class Headers
     public const string DeferCount = "rbs2-defer-count";
         
     /// <summary>
-    /// Indicates a time span (as a string, on the form hh:MM:ss) after which the queueing system can safely delete the message and thus never deliver it
+    /// Indicates a time span (as a string, on the form HH:mm:ss) after which the queueing system can safely delete the message and thus never deliver it
     /// </summary>
     public const string TimeToBeReceived = "rbs2-time-to-be-received";
 
