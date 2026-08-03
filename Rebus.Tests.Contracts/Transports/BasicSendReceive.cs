@@ -178,7 +178,7 @@ public abstract class BasicSendReceive<TTransportFactory> : FixtureBase where TT
         {
             var receivedMessages = allMessages.OrderBy(s => s).ToArray();
 
-            Assert.That(receivedMessages.Count, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
+            Assert.That(receivedMessages.Length, Is.EqualTo(2), "Two messages were sent, so we expected two messages to be received");
 
             Assert.That(receivedMessages, Is.EqualTo(new[] { "hej1", "hej2" }),
                 $"Expected that the messages 'hej1' and 'hej2' would have been received, but instead we got this: {string.Join(", ", receivedMessages)}");

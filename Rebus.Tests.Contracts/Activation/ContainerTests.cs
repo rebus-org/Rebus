@@ -121,10 +121,10 @@ has failed too many times)
 
             containerAdapter.SetBus(new FakeBus());
 
-            var exception = Assert.Throws<InvalidOperationException>(() =>
+            var exception = Assert.Throws<InvalidOperationException>(new TestDelegate(() =>
             {
                 containerAdapter.SetBus(new FakeBus());
-            }, "Expected that the second call to SetBus on the container adapter with another bus instance would throw an exception");
+            }), "Expected that the second call to SetBus on the container adapter with another bus instance would throw an exception");
 
             Console.WriteLine(exception);
         }

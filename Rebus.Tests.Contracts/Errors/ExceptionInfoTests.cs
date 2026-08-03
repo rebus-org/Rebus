@@ -19,7 +19,7 @@ public class ExceptionInfoTests<TExceptionInfoFactory> : FixtureBase where TExce
     [Test]
     public async Task ThrowsOnNullException()
     {
-        Assert.That(() => _factory.CreateInfo(null), Throws.TypeOf<ArgumentNullException>());
+        Assert.Throws<ArgumentNullException>(new TestDelegate(() => _factory.CreateInfo(null)));
     }
 
     [Test]
@@ -61,7 +61,7 @@ public class ExceptionInfoTests<TExceptionInfoFactory> : FixtureBase where TExce
     public async Task ConvertToThrowsOnUnexpectedInfoType()
     {
         var info = _factory.CreateInfo(new Exception("a"));
-        Assert.That(() => info.ConvertTo<UnexpectedExceptionInfo>(), Throws.TypeOf<ArgumentException>());
+        Assert.Throws<ArgumentException>(new TestDelegate(() => info.ConvertTo<UnexpectedExceptionInfo>()));
     }
 
     record UnexpectedExceptionInfo : ExceptionInfo

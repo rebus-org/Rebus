@@ -109,7 +109,7 @@ namespace Rebus.Tests.Contracts.Sagas
         [Test]
         public void ChecksRevisionOnFirstInsert()
         {
-            var ex = Assert.Throws<AggregateException>(() =>
+            var ex = Assert.Throws<AggregateException>(new TestDelegate(() =>
             {
                 _sagaStorage
                     .Insert(new JustSomeSagaData
@@ -118,7 +118,7 @@ namespace Rebus.Tests.Contracts.Sagas
                         Revision = 1
                     }, _noCorrelationProperties)
                     .Wait();
-            });
+            }));
 
             var invalidOperationException = ex.InnerExceptions.OfType<InvalidOperationException>().Single();
             Console.WriteLine(ex);
@@ -173,10 +173,10 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaDataWithDefaultId = new AnotherSagaData { Id = Guid.Empty };
 
-            var aggregateException = Assert.Throws<AggregateException>(() =>
+            var aggregateException = Assert.Throws<AggregateException>(new TestDelegate(() =>
             {
                 _sagaStorage.Insert(sagaDataWithDefaultId, _noCorrelationProperties).Wait();
-            });
+            }));
 
             var baseException = aggregateException.GetBaseException();
 

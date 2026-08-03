@@ -104,13 +104,13 @@ Made 434064 iterations in 00:00:01
         var headersWithEmptyContentType = new Dictionary<string, string> { [Headers.ContentType] = null };
         var headersWithoutContentType = new Dictionary<string, string>();
 
-        var ex1 = Assert.ThrowsAsync<KeyNotFoundException>(() => _serializer.Deserialize(
-            new TransportMessage(headersWithoutContentType, jsonBody)));
+        var ex1 = Assert.ThrowsAsync<KeyNotFoundException>(new Func<System.Threading.Tasks.Task>(() => _serializer.Deserialize(
+            new TransportMessage(headersWithoutContentType, jsonBody))));
 
         Console.WriteLine(ex1);
 
-        var ex2 = Assert.ThrowsAsync<FormatException>(() => _serializer.Deserialize(
-            new TransportMessage(headersWithEmptyContentType, jsonBody)));
+        var ex2 = Assert.ThrowsAsync<FormatException>(new Func<System.Threading.Tasks.Task>(() => _serializer.Deserialize(
+            new TransportMessage(headersWithEmptyContentType, jsonBody))));
 
         Console.WriteLine(ex2);
     }
