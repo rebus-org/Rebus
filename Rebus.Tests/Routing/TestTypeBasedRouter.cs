@@ -25,7 +25,7 @@ namespace Rebus.Tests.Routing
         [Test]
         public void ThrowsByDefaultWhenRoutingUnmappedTopic()
         {
-            var aggregateException = Assert.Throws<AggregateException>(new TestDelegate(() =>
+            var aggregateException = Assert.Throws<AggregateException>((Action)(() =>
             {
                 _router.GetDestinationAddress(new Message(NoHeaders, "STRING BODY")).Wait();
             }));
@@ -97,11 +97,11 @@ namespace Rebus.Tests.Routing
             Assert.That(GetDestinationForBody(new TestNamespaceRouting.SubNamespace.AssemblyMessageSubNamespace()), Is.EqualTo("AssemblyDestination"));
 
             // These ones should NOT be mapped
-            Assert.Throws<AggregateException>(new TestDelegate(() =>
+            Assert.Throws<AggregateException>((Action)(() =>
             {
                 GetDestinationForBody(new TestNamespaceRouting.AssemblyMessageTwo());
             }));
-            Assert.Throws<AggregateException>(new TestDelegate(() =>
+            Assert.Throws<AggregateException>((Action)(() =>
             {
                 GetDestinationForBody(new OtherNamespaceRouting.AssemblyMessageOtherNamespace());
             }));
@@ -118,7 +118,7 @@ namespace Rebus.Tests.Routing
             Assert.That(GetDestinationForBody(new TestNamespaceRouting.SubNamespace.AssemblyMessageSubNamespace()), Is.EqualTo("AssemblyDestination"));
 
             // This one should NOT be mapped
-            Assert.Throws<AggregateException>(new TestDelegate(() =>
+            Assert.Throws<AggregateException>((Action)(() =>
             {
                 GetDestinationForBody(new OtherNamespaceRouting.AssemblyMessageOtherNamespace());
             }));

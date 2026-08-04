@@ -44,7 +44,7 @@ public abstract class ConcurrencyHandling<TFactory> : FixtureBase where TFactory
 
         await _sagaStorage.Update(loadedData1, _noCorrelationProperties);
 
-        var aggregateException = Assert.Throws<AggregateException>(new TestDelegate(() => _sagaStorage.Update(loadedData2, _noCorrelationProperties).Wait()));
+        var aggregateException = Assert.Throws<AggregateException>((Action)(() => _sagaStorage.Update(loadedData2, _noCorrelationProperties).Wait()));
 
         var baseException = aggregateException.GetBaseException();
 
