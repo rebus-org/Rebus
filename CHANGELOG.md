@@ -1167,6 +1167,9 @@
 ## 8.9.2
 * Update System.Text.Json dependency to 10.0.6
 
+## 8.9.3
+* Pass exception properly to when logging the warning in thread pool worker
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

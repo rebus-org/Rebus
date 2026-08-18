@@ -156,7 +156,7 @@ sealed class ThreadPoolWorker : IWorker
         }
         catch (Exception exception)
         {
-            _log.Warn("An error occurred when attempting to receive the next message: {exception}", exception);
+            _log.Warn(exception, "An error occurred when attempting to receive the next message");
 
             await _backoffStrategy.WaitErrorAsync(token);
 
