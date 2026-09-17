@@ -9,6 +9,7 @@ using Rebus.Pipeline;
 using Rebus.Threading;
 using Rebus.Transport;
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
+// ReSharper disable DisposeOnUsingVariable
 
 namespace Rebus.Workers.ThreadPoolBased;
 
@@ -116,7 +117,7 @@ sealed class ThreadPoolWorker : IWorker
                     // no need for another thread to rush in and discover that there is no message
                     //parallelOperation.Dispose();
 
-                    await _backoffStrategy.WaitNoMessageAsync(token);
+                    await _backoffStrategy.WaitNoMessageAsync(token).ConfigureAwait(false);
                     return;
                 }
 

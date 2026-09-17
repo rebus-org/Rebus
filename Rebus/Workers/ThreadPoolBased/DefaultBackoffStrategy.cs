@@ -86,7 +86,7 @@ sealed class DefaultBackoffStrategy : IBackoffStrategy
     {
         var backoffTime = GetNextBackoffTime();
 
-        await Task.Delay(backoffTime, token);
+        await Task.Delay(backoffTime, token).ConfigureAwait(false);
     }
 
     void InnerWait(CancellationToken token)

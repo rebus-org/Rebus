@@ -1170,6 +1170,9 @@
 ## 8.9.3
 * Pass exception properly to when logging the warning in thread pool worker
 
+## 8.9.4
+* Fix potential worker stall when running under a SynchronizationContext, caused by the no-message backoff capturing the ambient context and preventing parallel-operation permits from being released
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
