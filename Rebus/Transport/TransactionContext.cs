@@ -150,7 +150,7 @@ class TransactionContext : ICanEagerCommit
                 }
             }
 
-            if (_mustAck == false)
+            if (_mustAck != true)
             {
                 try
                 {
