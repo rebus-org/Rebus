@@ -1173,6 +1173,9 @@
 ## 8.9.4
 * Fix potential worker stall when running under a SynchronizationContext, caused by the no-message backoff capturing the ambient context and preventing parallel-operation permits from being released
 
+## 8.9.5
+* Fixed an issue where error handler failures could cause consumers to stall or messages to be lost, ensuring unacknowledged messages are NACKed and redelivered - thanks [zlepper]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
