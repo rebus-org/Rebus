@@ -61,6 +61,21 @@ public class DefaultRetryStep : IRetryStep
         var transportMessage = context.Load<TransportMessage>() ?? throw new RebusApplicationException("Could not find a transport message in the current incoming step context");
         var messageId = transportMessage.Headers.GetValueOrNull(Headers.MessageId);
 
+        try
+        {
+            await ProcessWithRetries(context, next, transactionContext, transportMessage, messageId);
+        }
+        catch
+        {
+            // an exception escaping here (e.g. from IErrorHandler or IErrorTracker) means that the message could neither be
+            // handled nor dead-lettered - NACK it, so it is returned to the queue instead of being left without ACK or NACK
+            transactionContext.SetResult(commit: false, ack: false);
+            throw;
+        }
+    }
+
+    async Task ProcessWithRetries(IncomingStepContext context, Func<Task> next, ITransactionContext transactionContext, TransportMessage transportMessage, string messageId)
+    {
         // if there's no message ID, we can't track the message - just deadletter it
         if (string.IsNullOrWhiteSpace(messageId))
         {
@@ -213,6 +228,7 @@ public class DefaultRetryStep : IRetryStep
         catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
         {
             _log.Info("Dispatch of message with ID {messageId} was cancelled", messageId);
+            transactionContext.SetResult(commit: false, ack: false);
         }
         catch (Exception secondLevelException)
         {
