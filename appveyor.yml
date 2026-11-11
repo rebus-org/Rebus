@@ -10,6 +10,7 @@ install:
 - ps: |
     Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
     & $env:temp\dotnet-install.ps1 -Architecture x64 -Version '10.0.100' -InstallDir "$env:ProgramFiles\dotnet"  # until it is available in the build agent image (https://github.com/appveyor/ci/issues/3984)
+    & $env:temp\dotnet-install.ps1 -Architecture x64 -Version '11.0.100' -InstallDir "$env:ProgramFiles\dotnet"  # until it is available in the build agent image
 
 before_build:
   - appveyor-retry dotnet restore -v Minimal
