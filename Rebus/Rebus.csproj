@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
-		<LangVersion>14</LangVersion>
+		<TargetFrameworks>netstandard2.0;net6.0;net8.0;net10.0;net11.0</TargetFrameworks>
+		<LangVersion>15</LangVersion>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
@@ -20,12 +20,12 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0'">
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0' OR '$(TargetFramework)' == 'net11.0'">
 		<DefineConstants>HASGUIDV7</DefineConstants>
 	</PropertyGroup>
-	<ItemGroup Condition="'$(EnableSourceLink)' != 'false'">
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.202" PrivateAssets="All" />
-	</ItemGroup>
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net11.0'">
+		<Features>$(Features);runtime-async=on</Features>
+	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>

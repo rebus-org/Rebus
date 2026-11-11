@@ -1176,6 +1176,9 @@
 ## 8.9.5
 * Fixed an issue where error handler failures could cause consumers to stall or messages to be lost, ensuring unacknowledged messages are NACKed and redelivered - thanks [zlepper]
 
+## 8.10.0
+* Add .NET 11 compilation target with runtime async ON
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

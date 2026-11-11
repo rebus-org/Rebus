@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFrameworks>net6.0</TargetFrameworks>
-		<LangVersion>10</LangVersion>
+		<TargetFrameworks>net6.0;net8.0;net10.0;net11.0</TargetFrameworks>
+		<LangVersion>15</LangVersion>
 		<Authors>mookid8000</Authors>
 		<PackageProjectUrl>https://rebus.fm/what-is-rebus/</PackageProjectUrl>
 		<Copyright>Copyright Rebus FM ApS 2012</Copyright>
@@ -14,6 +14,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net11.0'">
+		<Features>$(Features);runtime-async=on</Features>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="..\artwork\little_rebusbus2_copy-500x500.png">
