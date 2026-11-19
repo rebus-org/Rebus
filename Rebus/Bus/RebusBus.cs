@@ -456,23 +456,20 @@ Please use a {nameof(RebusTransactionScopeSuppressor)} if you really intend to u
         }
     }
 
-    bool _disposing;
-    bool _disposed;
+    int _disposed;
 
     /// <summary>
     /// Stops all workers, allowing them to finish handling the current message (for up to 1 minute) before exiting
     /// </summary>
     public void Dispose()
     {
-        // this Dispose may be called when the Disposed event is raised - therefore, we need
-        // to guard against recursively entering this method
-        if (_disposing) return;
-        if (_disposed) return;
+        // this Dispose may be called when the Disposed event is raised, and it may be called from more than one
+        // thread at the same time (e.g. when a host is stopped from two places) - therefore, we need to make sure
+        // that only the first call gets to run the code below
+        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
 
         try
         {
-            _disposing = true;
-
             _busLifetimeEvents.RaiseBusDisposing();
 
             // signal to all the workers that they must stop
@@ -489,9 +486,6 @@ Please use a {nameof(RebusTransactionScopeSuppressor)} if you really intend to u
         }
         finally
         {
-            _disposing = false;
-            _disposed = true;
-
             _busLifetimeEvents.RaiseBusDisposed();
 
             _log.Info("Bus {busName} stopped", _busName);
